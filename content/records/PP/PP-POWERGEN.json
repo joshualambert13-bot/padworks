@@ -12,7 +12,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: fleet options noted"
   },
   "hazards": [
     {
@@ -37,7 +37,7 @@
   ],
   "function": "The gas turbines, reciprocating gensets, or grid tie that supply an electric frac fleet, replacing the diesel engines on the pump trailers.",
   "tabs": {
-    "overview": "An electric fleet runs its pumps, blender, and support units on electric motors fed from a power plant on location: turbine generators burning field gas, gas reciprocating gensets, or a utility line where available. Fuel cost, noise, and emissions drop; the power plant and switchgear become critical equipment.",
+    "overview": "An electric fleet runs its pumps, blender, and support units on electric motors fed from a power plant on location: turbine generators burning field gas, gas reciprocating gensets, or a utility line where available. Fuel cost, noise, and emissions drop; the power plant and switchgear become critical equipment.\n\nThe simulator draws the power unit for the fleet chosen in Pad Setup: turbine generators with switchgear, reciprocating gensets, a grid substation, a gas conditioning skid for dual fuel, or a fuel trailer for diesel (see PP-POWERGEN-TURBINE, PP-POWERGEN-GENSET, PP-POWERGEN-GASSKID).\n\nThe simulator draws the power unit for the fleet chosen in Pad Setup: turbine generators with switchgear, reciprocating gensets, a grid substation, a gas conditioning skid for dual fuel, or a fuel trailer for diesel (see PP-POWERGEN-TURBINE, PP-POWERGEN-GENSET, PP-POWERGEN-GASSKID).\n\nThe simulator draws the power unit for the fleet chosen in Pad Setup: turbine generators with switchgear, reciprocating gensets, a grid substation, a gas conditioning skid for dual fuel, or a fuel trailer for diesel (see PP-POWERGEN-TURBINE, PP-POWERGEN-GENSET, PP-POWERGEN-GASSKID).",
     "engineering": "Tens of megawatts per fleet; medium-voltage switchgear and cables; variable-frequency drives at the pumps.",
     "connections": "Gas supply or grid; power cables to every unit.",
     "safety": "High-voltage cables and switchgear; gas handling at the turbines.",

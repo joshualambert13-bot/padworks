@@ -12,7 +12,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: model bound"
   },
   "hazards": [
     {
@@ -36,10 +36,14 @@
   ],
   "function": "The header that collects every pump discharge into the treating line, with check valves, transducers, and the pressure relief valve.",
   "tabs": {
-    "overview": "Pump discharge lines enter through check valves so a stopped pump cannot be backflowed; the outlet goes to the treating line. Pressure is read here for the data van and the kickout setting.",
+    "overview": "The discharge header down the centerline of the deck: junction fittings, one per pump position, joined by flanged spools, each fitting with a radial feed port to each side. Everything on this side of the missile is at treating pressure.",
     "engineering": "Rated to the treating pressure; erosion-checked at the outlet turn.",
     "safety": "Center of the red zone; PRV discharge routed to a safe point.",
     "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
   },
-  "scene": "PP-MISSILE-HPHEADER"
+  "scene": "PP-MISSILE-HPHEADER",
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-HPHEADER"
+  ]
 }

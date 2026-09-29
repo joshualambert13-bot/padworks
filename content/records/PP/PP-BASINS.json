@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S36",
+    "S37",
+    "S38"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [],
+  "id": "PP-BASINS",
+  "parent": "PP-JOBDESIGN",
+  "group": "job-design",
+  "level": "equipment",
+  "name": "Basins and typical conditions",
+  "aliases": [
+    "basins",
+    "Permian",
+    "Delaware Basin",
+    "Midland Basin",
+    "Eagle Ford",
+    "Bakken",
+    "Haynesville",
+    "Marcellus",
+    "Utica",
+    "DJ Basin",
+    "Niobrara",
+    "SCOOP",
+    "STACK play",
+    "Powder River"
+  ],
+  "function": "The producing regions the simulator offers and the typical conditions each loads into Pad Setup: terrain, target depth, fracture gradient, tree rating, lateral, stage design, fleet, and fluids.",
+  "tabs": {
+    "overview": "The list follows the public regions that the US Energy Information Administration reports on (Anadarko, Appalachia, Bakken, Eagle Ford, Haynesville, Niobrara, Permian), with the Permian split into its Delaware and Midland basins and Appalachia into Marcellus and Utica, plus the Powder River. Picking a basin repaints the terrain to match its country (desert caliche and creosote, brush country, prairie, pine forest on red clay, hardwood hills, high plains, sage steppe) and loads typical starting values, all editable. Haynesville loads the deepest, hottest, highest-pressure case where 15K iron is the rule; Marcellus and the DJ the shallowest; the Bakken loads a sliding sleeve completion because openhole sleeve systems were common there.",
+    "engineering": "Values are rounded public ranges for training. Nothing in the table comes from a specific operator, well, or service company.",
+    "safety": "The point of the table is the pressure check: the deeper and higher-gradient basins push expected treating pressure past a 10K rating.",
+    "evidence": "EIA regions (S38); design trends (S36); fleet trends (S37)."
+  }
+}

@@ -268,5 +268,77 @@
     "access": "Paid standard",
     "tier": "E1",
     "url": ""
+  },
+  {
+    "id": "S31",
+    "title": "US Patent 10,982,523, Frac manifold missile and fitting (junction fittings with radial feed bores; suction lines with multiple outlets; missile discharge to a single line to the zipper manifold)",
+    "publisher": "Justia Patents (public record)",
+    "edition": "2021",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://patents.justia.com/patent/10982523"
+  },
+  {
+    "id": "S32",
+    "title": "US 2022/0307362 A1, Frac manifold isolation tool (per-well configuration units with a hydraulic and a manual valve, zipper spools between wells, supply header from the pump output)",
+    "publisher": "Patsnap Eureka (public patent record)",
+    "edition": "2022",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://eureka.patsnap.com/patent-US20220307362A1"
+  },
+  {
+    "id": "S33",
+    "title": "Vertical zipper manifold frac rental page (vertical design that reduces footprint and limits sand accumulation)",
+    "publisher": "SPM Oil and Gas (Caterpillar) product page",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.spmoilandgas.com/en_US/products/new/spm-oil-and-gas/well-service-frac/frac-rental/114084.html"
+  },
+  {
+    "id": "S34",
+    "title": "Completion Codes: plug and perf versus sliding sleeve systems, ball drop, coil-shifted and annular fracturing, dissolving balls",
+    "publisher": "Hart Energy",
+    "edition": "2013 article",
+    "access": "Public",
+    "tier": "E3",
+    "url": "https://hartenergy.com/exclusives/completion-codes-12498"
+  },
+  {
+    "id": "S35",
+    "title": "US Patent 10,161,218, Ball injector for frac tree (ball cartridge, pressure isolation chamber between two valves, push rod launch)",
+    "publisher": "Google Patents (public record)",
+    "edition": "2018",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://patents.google.com/patent/US10161218"
+  },
+  {
+    "id": "S36",
+    "title": "Data Illustrates Evolution of Fracturing Designs in Resource Plays (stage spacing, stage count, proppant and fluid intensity, rate per foot, slickwater and mesh trends)",
+    "publisher": "The American Oil and Gas Reporter",
+    "edition": "2018",
+    "access": "Public",
+    "tier": "E3",
+    "url": "https://www.aogr.com/magazine/cover-story/data-illustrates-evolution-of-fracturing-designs-in-resource-plays"
+  },
+  {
+    "id": "S37",
+    "title": "Electric Frac Fleets Continue Evolving (dual fuel, turbine and reciprocating generation, hybrid and grid power, horsepower per unit)",
+    "publisher": "The American Oil and Gas Reporter",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E3",
+    "url": "https://www.aogr.com/magazine/frac-facts/electric-frac-fleets-continue-evolving"
+  },
+  {
+    "id": "S38",
+    "title": "Drilling Productivity Report regions (Anadarko, Appalachia, Bakken, Eagle Ford, Haynesville, Niobrara, Permian)",
+    "publisher": "US Energy Information Administration",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.eia.gov/petroleum/drilling/"
   }
 ]

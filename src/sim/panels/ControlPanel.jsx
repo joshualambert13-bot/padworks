@@ -1,14 +1,15 @@
-import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Droplets, Zap, ArrowRightCircle, CheckCircle2, Lock } from 'lucide-react';
-import { useSim, PHASES, STAGE_COUNT, WELL, FRAC_MODES, BORES, MAX_WELLS, padRoles } from '../store.js';
+import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, CheckCircle2, Lock, ListChecks, Circle, Settings2 } from 'lucide-react';
+import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals } from '../store.js';
+import SetupPanel from './SetupPanel.jsx';
 
-function ValveRow({ id, v, onCommand }) {
+function ValveRow({ id, v, onCommand, hot }) {
   const open = v.pos > 0.99, closed = v.pos < 0.01;
   const state = open ? 'OPEN' : closed ? 'CLOSED' : v.target === 1 ? 'OPENING' : 'CLOSING';
   const color = open ? 'text-ok' : closed ? 'text-bad' : 'text-warn';
   return (
-    <div className="flex items-center gap-2 py-1 border-b border-line/60">
+    <div className={'flex items-center gap-2 py-1 border-b border-line/60 ' + (hot ? 'bg-accent/10 -mx-1 px-1 rounded ring-1 ring-accent/60' : '')}>
       <div className="flex-1 min-w-0">
-        <div className="text-xs truncate">{v.label}</div>
+        <div className={'text-xs truncate ' + (hot ? 'text-accent' : '')}>{hot ? '▶ ' : ''}{v.label}</div>
         <div className="h-1 mt-1 rounded bg-line overflow-hidden"><div className="h-full bg-ok" style={{ width: (v.pos * 100) + '%' }} /></div>
       </div>
       <span className={'mono text-[10px] w-14 text-right ' + color}>{state}</span>
@@ -30,10 +31,14 @@ function Readout({ label, value, unit, warn }) {
 
 export default function ControlPanel() {
   const s = useSim();
+  if (s.phase === 'setup') return <SetupPanel />;
+  const PH = phasesFor(s.setup).filter(p => p.id !== 'setup');
   const st = s.stages[s.stage];
-  const phaseIdx = PHASES.findIndex(p => p.id === s.phase);
-  const nextPhase = PHASES[phaseIdx + 1];
-  const canFrac = s.phase === 'frac' && st.perforated;
+  const count = s.stages.length;
+  const WELL = wellParams(s);
+  const sleeve = s.setup.completion === 'sleeve';
+  const phaseIdx = PH.findIndex(p => p.id === s.phase);
+  const nextPhase = PH[phaseIdx + 1];
   const allFracked = s.stages.every(x => x.fracComplete);
   const stageFracDone = st.fracComplete;
   const mode = FRAC_MODES.find(m => m.id === s.pad.mode) || FRAC_MODES[0];
@@ -41,6 +46,14 @@ export default function ControlPanel() {
   const fracWells = roles.filter(r => r.role === 'frac').length + (s.phase === 'frac' ? 1 : 0);
   const wlWells = roles.filter(r => r.role === 'wireline').length + (s.phase === 'wireline' ? 1 : 0);
   const liveRate = s.pumpsOnline && !s.alarms.kickout ? s.pumpRate : 0;
+  const guide = nextSteps(s);
+  const current = guide.steps.find(x => !x.done);
+  const hotValve = current && current.valve ? current.valve : null;
+  const basin = basinOf(s);
+  const spread = spreadSizing(s);
+  const totals = designTotals(s);
+  const completion = COMPLETIONS.find(c => c.id === s.setup.completion) || COMPLETIONS[0];
+  const fleet = FLEETS.find(f => f.id === s.setup.fleet) || FLEETS[0];
 
   return (
     <div className="h-full overflow-y-auto p-3 space-y-3 text-sm">
@@ -50,45 +63,60 @@ export default function ControlPanel() {
         <select className="btn" value={s.speed} onChange={e => s.setSpeed(Number(e.target.value))}>
           {[0.5, 1, 2, 4].map(x => <option key={x} value={x}>{x}x</option>)}
         </select>
-        <button className="btn flex items-center gap-1 ml-auto" onClick={s.reset}><RotateCcw size={14} />Reset</button>
+        <button className="btn flex items-center gap-1 ml-auto" onClick={s.reset} title="Back to pad setup"><RotateCcw size={14} />Reset</button>
       </div>
 
-      {/* pad configuration */}
-      <div className="card p-2 space-y-2">
-        <div className="text-[10px] uppercase tracking-wide text-mute">Pad configuration</div>
-        <label className="block text-xs">Wells on the pad <span className="mono">{s.pad.wells}</span>
-          <input type="range" min={1} max={MAX_WELLS} step={1} value={s.pad.wells} onChange={e => s.setPad({ wells: Number(e.target.value) })} />
-        </label>
-        <div className="grid grid-cols-5 gap-1">
-          {FRAC_MODES.map(m => (
-            <button key={m.id} className={'btn text-[11px] px-1 ' + (s.pad.mode === m.id ? 'btn-primary' : '')} disabled={s.pad.wells < m.fracSlots + m.wlSlots} title={m.blurb} onClick={() => s.setPad({ mode: m.id })}>{m.short}</button>
-          ))}
+      {/* next steps: what still has to happen, in order, for the job to continue */}
+      <div className={'card p-2 space-y-1 ' + (guide.blocked ? 'border-bad/70 bg-bad/10' : 'border-accent/40')}>
+        <div className={'flex items-center gap-1 text-xs font-semibold ' + (guide.blocked ? 'text-bad' : 'text-accent')}>
+          {guide.blocked ? <AlertTriangle size={14} /> : <ListChecks size={14} />}
+          <span>{guide.blocked ? 'Job stopped: ' : 'Next steps: '}{guide.title}</span>
         </div>
-        <div className="text-[11px] text-mute">{mode.blurb}</div>
-        <label className="block text-xs">Tree bore and rating
-          <select className="btn w-full mt-1" value={s.pad.bore} onChange={e => s.setPad({ bore: e.target.value })}>
-            {BORES.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
-          </select>
-        </label>
-        <div className="text-[11px] text-mute">Well 1 is yours to operate. The other wells follow the crews: <span className="mono text-white">{fracWells}</span> pumping, <span className="mono text-white">{wlWells}</span> on wireline right now.</div>
+        {guide.why && <div className="text-[11px] text-mute">{guide.why}</div>}
+        <ol className="space-y-1">
+          {guide.steps.map((step, i) => {
+            const isCurrent = step === current;
+            return (
+              <li key={i} className={'flex items-start gap-2 text-xs ' + (step.done ? 'text-mute line-through' : isCurrent ? 'text-white' : 'text-mute')}>
+                {step.done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-accent' : '')} />}
+                <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
+                {isCurrent && step.action && (
+                  <button className="btn btn-primary text-[11px] px-2 py-0.5" disabled={step.gate === false} onClick={() => s.guide(step.action)}>{step.label || 'Do it'}</button>
+                )}
+                {isCurrent && step.valve && !step.action && (
+                  <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.commandValve(step.valve, s.valves[step.valve].target === 1 ? 0 : 1)}>{s.valves[step.valve].target === 1 ? 'Close' : 'Open'}</button>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+
+      {/* job summary from setup */}
+      <div className="card p-2 space-y-1">
+        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-mute">Job<button className="btn ml-auto text-[11px] px-2 py-0.5 flex items-center gap-1" onClick={s.backToSetup} title="Back to pad setup (restarts the job)"><Settings2 size={12} />Change setup</button></div>
+        <div className="text-[11px] text-mute"><span className="text-white">{basin.label}</span> · {s.pad.wells} well{s.pad.wells > 1 ? 's' : ''}, {mode.label.toLowerCase()} · {(BORES.find(b => b.id === s.pad.bore) || BORES[5]).label} tree</div>
+        <div className="text-[11px] text-mute">{completion.label}{sleeve ? ', ' + (s.setup.sleeveSystem === 'openhole' ? 'openhole packers' : 'cemented') : ''}, {s.setup.plugs === 'dissolvable' ? 'dissolvable' : 'millable'} · {s.setup.lateralFt.toLocaleString()} ft lateral, {totals.stages} stages by design, {s.setup.clusters} {sleeve ? 'ports' : 'clusters'} each</div>
+        <div className="text-[11px] text-mute">{fleet.label}: {spread.pumps} pumps, {spread.availableHhp.toLocaleString()} hhp · {s.setup.proppantLbFt.toLocaleString()} lb/ft, {s.setup.fluidBblFt} bbl/ft</div>
+        <div className="text-[11px] text-mute">Well 1 is yours to operate. The other wells follow the crews: <span className="mono text-white">{fracWells}</span> pumping, <span className="mono text-white">{wlWells}</span> on {sleeve ? 'ball drop' : 'wireline'} right now.</div>
       </div>
 
       {/* phase selection */}
       <div className="card p-2">
         <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Phase</div>
         <div className="grid grid-cols-3 gap-1">
-          {PHASES.map(p => (
+          {PH.map(p => (
             <button key={p.id} className={'btn text-xs ' + (s.phase === p.id ? 'btn-primary' : '')} onClick={() => s.setPhase(p.id)}>{p.short}</button>
           ))}
         </div>
-        <div className="mt-2 text-xs text-mute">Stage <span className="mono text-white">{s.stage + 1}</span> of {STAGE_COUNT} · {PHASES[phaseIdx].label}</div>
+        <div className="mt-2 text-xs text-mute">Stage <span className="mono text-white">{s.stage + 1}</span> of {count} shown · {PH[phaseIdx].label}</div>
         {nextPhase && s.phase !== 'frac' && s.phase !== 'wireline' && (
           <button className="btn mt-2 w-full flex items-center justify-center gap-1" onClick={() => s.setPhase(nextPhase.id)}><ArrowRightCircle size={14} />Next: {nextPhase.short}</button>
         )}
       </div>
 
-      {/* wireline controls */}
-      {s.phase === 'wireline' && (
+      {/* wireline or ball-drop controls */}
+      {s.phase === 'wireline' && !sleeve && (
         <div className="card p-2 space-y-2">
           <div className="text-[10px] uppercase tracking-wide text-mute">Wireline run (stage {s.stage + 1})</div>
           <div className="text-xs text-mute">Sequence: pump down, set plug toe-ward of the new perfs, fire clusters bottom-up, pull out. Pump-down pumps supply rate through the tree.</div>
@@ -104,11 +132,26 @@ export default function ControlPanel() {
           {s.wl.step === 'done' && <button className="btn btn-primary w-full" onClick={() => s.setPhase('frac')}>Swap to frac (close swab, rig down lubricator)</button>}
         </div>
       )}
+      {s.phase === 'wireline' && sleeve && (
+        <div className="card p-2 space-y-2">
+          <div className="text-[10px] uppercase tracking-wide text-mute">{s.stage === 0 ? 'Toe sleeve (stage 1)' : 'Ball drop (stage ' + (s.stage + 1) + ')'}</div>
+          <div className="text-xs text-mute">{s.stage === 0 ? 'The toe sleeve opens on casing pressure: no ball, no wireline. Pump at a low rate until the ports open and pressure drops.' : 'Release the next larger ball from the launcher on the tree while pumping. It lands on its seat, shears the sleeve open, and isolates the stages below.'}</div>
+          <div className="flex items-center gap-2">
+            <button className={'btn ' + (s.pumpsOnline ? 'btn-danger' : 'btn-primary')} onClick={() => s.setPumpsOnline(!s.pumpsOnline)} disabled={s.alarms.kickout}>{s.pumpsOnline ? 'Pumps offline' : 'Pumps online'}</button>
+            <button className="btn btn-primary" disabled={s.wl.step !== 'idle' || st.perforated} onClick={s.startWirelineRun}>{s.stage === 0 ? 'Pressure up' : 'Release ball ' + s.stage}</button>
+          </div>
+          <div className="mono text-xs">Step: {s.wl.step} {s.wl.step !== 'idle' && s.wl.step !== 'done' ? Math.round(s.wl.progress * 100) + '%' : ''} · balls dropped {s.ballsDropped}</div>
+          <label className="block text-xs">Rate <span className="mono">{s.pumpRate.toFixed(0)} bpm</span>
+            <input type="range" min={0} max={30} step={1} value={s.pumpRate} onChange={e => s.setPumpRate(Number(e.target.value))} />
+          </label>
+          {s.wl.step === 'done' && <button className="btn btn-primary w-full" onClick={() => s.setPhase('frac')}>Swap to frac (keep pumping)</button>}
+        </div>
+      )}
 
-      {/* frac tree valves */}
+      {/* frac tree, missile, and zipper valves */}
       <div className="card p-2">
-        <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Frac tree and zipper valves (two-position)</div>
-        {Object.entries(s.valves).map(([id, v]) => <ValveRow key={id} id={id} v={v} onCommand={s.commandValve} />)}
+        <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Tree, missile, and zipper valves (two-position)</div>
+        {Object.entries(s.valves).map(([id, v]) => <ValveRow key={id} id={id} v={v} onCommand={s.commandValve} hot={hotValve === id} />)}
         {s.alarms.interlock && (
           <div className="mt-2 flex items-start gap-1 text-xs text-warn"><Lock size={14} className="shrink-0 mt-0.5" /><span>{s.alarms.interlock}</span><button className="ml-auto text-mute" onClick={s.clearInterlock}>x</button></div>
         )}
@@ -118,22 +161,22 @@ export default function ControlPanel() {
       {(s.phase === 'frac') && (
         <div className="card p-2 space-y-2">
           <div className="text-[10px] uppercase tracking-wide text-mute">Frac spread</div>
-          {!st.perforated && <div className="text-xs text-warn">Stage {s.stage + 1} has no open perforations. Run wireline first.</div>}
+          {!st.perforated && <div className="text-xs text-warn">Stage {s.stage + 1} has no {sleeve ? 'open sleeve ports. Drop the ball first.' : 'open perforations. Run wireline first.'}</div>}
           <div className="flex items-center gap-2">
             <button className={'btn ' + (s.pumpsOnline ? 'btn-danger' : 'btn-primary')} onClick={() => s.setPumpsOnline(!s.pumpsOnline)} disabled={s.alarms.kickout}>{s.pumpsOnline ? 'Pumps offline' : 'Pumps online'}</button>
             {s.alarms.kickout && <button className="btn" onClick={s.acknowledgeAlarms}>Acknowledge kickout</button>}
           </div>
-          <label className="block text-xs">Slurry rate <span className="mono">{s.pumpRate.toFixed(0)} bpm</span>
-            <input type="range" min={0} max={100} step={1} value={s.pumpRate} onChange={e => s.setPumpRate(Number(e.target.value))} />
+          <label className="block text-xs">Slurry rate <span className="mono">{s.pumpRate.toFixed(0)} bpm</span> <span className="text-mute">(cap {spread.maxRatePerWell} bpm per well for this spread)</span>
+            <input type="range" min={0} max={spread.maxRatePerWell} step={1} value={Math.min(s.pumpRate, spread.maxRatePerWell)} onChange={e => s.setPumpRate(Number(e.target.value))} />
           </label>
           <label className="block text-xs">Proppant concentration <span className="mono">{s.ppa.toFixed(2)} PPA</span>
             <input type="range" min={0} max={4} step={0.05} value={s.ppa} onChange={e => s.setPpa(Number(e.target.value))} />
           </label>
-          <div className="text-[11px] text-mute">Kickout {WELL.maxTreatingPsi.toLocaleString()} psi · PRV {WELL.prvSetPsi.toLocaleString()} psi. Screenout risk rises with concentration at low rate.</div>
-          {stageFracDone && s.stage < STAGE_COUNT - 1 && (
-            <button className="btn btn-primary w-full flex items-center justify-center gap-1" onClick={() => { s.nextStage(); s.setPhase('wireline'); }}><CheckCircle2 size={14} />Stage {s.stage + 1} complete: next stage wireline</button>
+          <div className="text-[11px] text-mute">Kickout {WELL.maxTreatingPsi.toLocaleString()} psi · PRV {WELL.prvSetPsi.toLocaleString()} psi. Stage design {Math.round(totals.stageProppantLb / 1000)} klb and {Math.round(totals.stageFluidBbl).toLocaleString()} bbl; this stage {Math.round(st.stageProppantLb / 1000)} klb, {Math.round(st.stageSlurryBbl).toLocaleString()} bbl. Screenout risk rises with concentration at low rate and with thin fluids.</div>
+          {stageFracDone && s.stage < count - 1 && (
+            <button className="btn btn-primary w-full flex items-center justify-center gap-1" onClick={() => { s.nextStage(); s.setPhase('wireline'); }}><CheckCircle2 size={14} />Stage {s.stage + 1} complete: next stage {sleeve ? 'ball drop' : 'wireline'}</button>
           )}
-          {allFracked && <button className="btn btn-primary w-full" onClick={() => s.setPhase('drillout')}>All stages complete: rig up coiled tubing</button>}
+          {allFracked && <button className="btn btn-primary w-full" onClick={() => s.setPhase('drillout')}>All stages complete: {s.setup.plugs === 'dissolvable' ? 'shut in and dissolve' : 'rig up coiled tubing'}</button>}
         </div>
       )}
 
@@ -171,9 +214,9 @@ export default function ControlPanel() {
         <Readout label="Friction" value={s.frictionPsi.toFixed(0)} unit="psi" />
         <Readout label="Hydrostatic" value={s.hydroPsi.toFixed(0)} unit="psi" />
         <Readout label="Slurry pumped" value={s.cumSlurryBbl.toFixed(0)} unit="bbl" />
-        <Readout label="Proppant pumped" value={(s.cumProppantLb / 1000).toFixed(1)} unit="klb" />
+        <Readout label="Proppant pumped" value={(s.cumProppantLb / 1000).toFixed(0)} unit="klb" />
       </div>
-      <div className="text-[10px] text-mute flex items-start gap-1"><Gauge size={12} className="shrink-0 mt-0.5" /><span>Schematic motion and an illustrative pressure model. This is a training aid, not a fracturing simulator; nothing here is a design value.</span></div>
+      <div className="text-[10px] text-mute flex items-start gap-1"><Gauge size={12} className="shrink-0 mt-0.5" /><span>Schematic motion and an illustrative pressure model; job volumes run 30 times faster than the clock. This is a training aid, not a fracturing simulator; nothing here is a design value.</span></div>
     </div>
   );
 }

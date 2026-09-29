@@ -6,13 +6,14 @@
   "drawn_in_3d": true,
   "sources": [
     "S9",
-    "S22"
+    "S31",
+    "S11"
   ],
   "revision": {
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: model bound; low- and high-pressure sides described"
   },
   "hazards": [
     {
@@ -28,22 +29,58 @@
   "parent": "PP",
   "group": "manifold",
   "level": "equipment",
-  "name": "Missile (manifold trailer)",
+  "name": "Missile (manifold trailer): low- and high-pressure sides",
   "aliases": [
     "missile",
     "manifold trailer",
     "HP manifold"
   ],
   "scene": "PP-MISSILE",
-  "function": "The trailer-mounted manifold with a low-pressure header that distributes slurry from the blender to every pump suction and a high-pressure header that collects every pump discharge into the treating line.",
+  "function": "The manifold trailer between the pump rows: two low-pressure suction headers along its outer edges feed the pumps from the blender, and the high-pressure discharge header down the middle collects every pump's output into one treating line to the zipper.",
   "tabs": {
-    "overview": "Pumps park nose-in on both sides of the missile. Each has a suction hose from the low-pressure header and a discharge line into the high-pressure header. The high-pressure header carries check valves per pump connection, pressure transducers, and the pressure relief valve for the spread, and its outlet feeds the treating line to the zipper manifold. Simultaneous schemes use a second missile or a split header so each well has its own metered leg.",
-    "engineering": "High-pressure header rated to 15,000 psi with flanged or clamp connections in newer designs and hammer unions in older ones; low-pressure header is a large-bore steel manifold with butterfly valves per pump.",
-    "connections": "Blender discharge to the low-pressure header; pump suctions and discharges; treating line from the high-pressure outlet; PRV vent line to a tank.",
+    "overview": "Pumps park nose-in on both sides. The low-pressure side is two large suction headers, one along each edge of the deck, fed by the blender discharge at the rear; each has an outlet per pump with a butterfly valve and a suction hose to the pump's fluid end. The high-pressure side is the discharge header down the centerline, built from junction fittings joined by flanged spools; each fitting has a radial feed port to each side carrying a check valve and a swivel arm to that pump's discharge. Pressure transducers and the pressure relief valve with its vent line sit on the header near the front, where the outlet flange feeds the single treating line that runs through the inlet isolation valve on the zipper skid.\n\nSimultaneous schemes use a second missile or a split at the outlet; the simulator lengthens the missile with the pump count it computes from the fleet and the rating.",
+    "engineering": "Suction headers 8 to 12 in. for low friction at spread rate; discharge header and fittings at the tree rating (10K or 15K) with a bore near the treating line size. Check valves keep a stopped pump from being back-driven; the relief valve is set above the kickout pressure of the pumps and below the rating of the iron.",
+    "connections": "Upstream: blender discharge to the suction headers; every pump suction and discharge. Downstream: outlet flange to the treating line and the zipper inlet isolation valve.",
     "safety": "The high-pressure header is the center of the red zone; the PRV lifts here on overpressure; check valves keep a failed pump from being backflowed.",
     "specs": "Twelve to twenty pump connections per side is common; PRV set below the iron rating.",
     "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
-    "operations": "Set first when the spread rigs up; pumps and the blender are positioned around it.",
+    "operations": "Pressure tested with the treating line and the zipper before the first stage; the outlet stays open to the zipper header, and the zipper inlet isolation valve is closed only with the pumps off.",
     "failure_modes": "Check valve failures, header erosion at the outlet, PRV weeping, hose failures on the suction side."
-  }
+  },
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-DECK",
+    "PP-MISSILE-AXLES",
+    "PP-MISSILE-LPHEADER",
+    "PP-MISSILE-LPOUTLET",
+    "PP-MISSILE-HPHEADER",
+    "PP-MISSILE-OUTLET",
+    "PP-MISSILE-CHECKVALVE",
+    "PP-MISSILE-SWIVELARM",
+    "PP-MISSILE-TRANSDUCER",
+    "PP-MISSILE-PRV",
+    "PP-MISSILE-WALKWAY"
+  ],
+  "connections": [
+    {
+      "target": "PP-BLENDER",
+      "direction": "upstream",
+      "type": "hammer union",
+      "rating": "LP",
+      "note": "suction hose"
+    },
+    {
+      "target": "PP-FRACPUMP",
+      "direction": "undirected",
+      "type": "hammer union",
+      "note": "suction hose and discharge iron"
+    },
+    {
+      "target": "WH-ZIPPER-INLETVALVE",
+      "direction": "downstream",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "flanged or hammer union"
+    }
+  ]
 }

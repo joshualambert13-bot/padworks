@@ -12,21 +12,22 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 7: top elbow of the vertical leg"
   },
   "id": "WH-ZIPPER-OUTLET",
   "parent": "WH-ZIPPER",
   "group": "zipper-manifold",
   "level": "component",
-  "name": "Branch outlets to the trees",
+  "name": "Leg top elbow and flanged outlet",
   "aliases": [
-    "outlet",
-    "branch outlet",
-    "well line"
+    "zipper outlet",
+    "leg elbow",
+    "zipper elbow",
+    "outlet flange (zipper)"
   ],
-  "function": "The outlet connection of each branch where the treating line to that well's goat head is made up.",
+  "function": "The elbow block on top of each leg that turns the flow from vertical to horizontal and carries the flanged outlet toward that well's tree.",
   "tabs": {
-    "overview": "Hammer union or flanged outlets sized to the line; the outlet lines run to each tree with swivels to take up alignment.",
+    "overview": "A studded block elbow with a flanged outlet spool; the flanged treating spools to the inlet block bolt on here. A pressure transducer port sits on top of the block.",
     "engineering": "Rated with the manifold.",
     "safety": "Outlet lines are restrained and inside the red zone.",
     "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
@@ -44,5 +45,22 @@
   "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-OUTLET"
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-ZIPPER.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.7-15K.glb"
+    }
   ]
 }

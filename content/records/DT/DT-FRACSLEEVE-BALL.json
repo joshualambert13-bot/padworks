@@ -1,0 +1,53 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S34",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-FRACSLEEVE-BALL",
+  "parent": "DT-FRACSLEEVE",
+  "group": "frac-sleeve",
+  "level": "component",
+  "name": "Frac ball (on seat)",
+  "aliases": [
+    "frac ball",
+    "ball (sleeve)",
+    "sleeve ball",
+    "ball on seat"
+  ],
+  "function": "The ball dropped from the launcher that lands on its seat, shifts the sleeve, and isolates the stages below while this stage is pumped.",
+  "tabs": {
+    "overview": "Composite, phenolic, or dissolvable alloy; sized to the seat schedule; flows back or dissolves afterwards.",
+    "engineering": "Sized to the seat with a small margin; dissolution rate for the wellbore fluid and temperature.",
+    "safety": "A ball that passes its seat pumps the stage below again; a ball that will not seat holds up the job.",
+    "evidence": "Completion codes article (S34), ball injector patent (S35), API 11D1 for packers (S21), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/DT/DT-FRACSLEEVE.glb",
+  "mesh_nodes": [
+    "DT-FRACSLEEVE-BALL"
+  ],
+  "connections": [
+    {
+      "target": "WH-FRACTREE-BALLLAUNCHER",
+      "direction": "upstream",
+      "type": "mechanical",
+      "note": "released into the flow"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S31"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ],
+  "id": "PP-MISSILE-PRV",
+  "parent": "PP-MISSILE-HPHEADER",
+  "group": "missile",
+  "level": "component",
+  "name": "Pressure relief valve and vent line",
+  "aliases": [
+    "PRV (missile)",
+    "pop-off (missile)",
+    "relief valve (missile)",
+    "vent line"
+  ],
+  "function": "The relief valve on the discharge header, set above the pump kickout and below the iron rating, that vents to a restrained line pointed away from people if the pumps overpressure the header.",
+  "tabs": {
+    "overview": "Lifts on a closed flow path or a screenout that the kickout did not catch; the vent line dumps to a tank or the ground away from the crews. Reset and inspected after every lift.",
+    "engineering": "Set pressure per the job program; capacity for full spread rate.",
+    "safety": "The vent line is restrained and its outlet is inside the red zone; a lift is treated as an event, not routine.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-PRV"
+  ]
+}

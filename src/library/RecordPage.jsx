@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Link, useParams, Navigate } from 'react-router-dom';
-import { Bug, ExternalLink } from 'lucide-react';
+import { Link, useParams, Navigate, useLocation } from 'react-router-dom';
+import { Bug, ExternalLink, ArrowLeft } from 'lucide-react';
 import { byId, childrenOf, sourceById, STATUS_LABEL, TIER_LABEL, systems } from '../lib/records.js';
 import Viewer from './Viewer.jsx';
 import { GITHUB_REPO } from '../config.js';
@@ -17,6 +17,8 @@ function Para({ text }) {
 
 export default function RecordPage() {
   const { id } = useParams();
+  const location = useLocation();
+  const fromSim = location.state && location.state.from === 'sim';
   const r = byId.get(id);
   const [tab, setTab] = useState('overview');
   const kids = useMemo(() => (r ? childrenOf(r.id) : []), [r]);
@@ -39,6 +41,9 @@ export default function RecordPage() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-6xl mx-auto p-4 space-y-4">
+        {fromSim && (
+          <Link to="/simulate" className="btn inline-flex items-center gap-1 text-xs"><ArrowLeft size={14} />Back to the pad simulation (it is where you left it)</Link>
+        )}
         <div className="text-xs text-mute flex flex-wrap gap-1">
           <Link to="/library" className="hover:text-white">Library</Link><span>/</span>
           <Link to={'/library/' + r.system} className="hover:text-white">{sys ? sys.code : r.system}</Link>

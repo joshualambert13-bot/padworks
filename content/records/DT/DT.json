@@ -13,7 +13,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: sliding sleeve path noted"
   },
   "hazards": [
     {
@@ -35,7 +35,7 @@
   ],
   "function": "The tools that live in the casing during the completion: frac plugs and the setting tools that place them, sleeves and toe initiators, liner hangers, and the bridge plugs and retainers used for isolation.",
   "tabs": {
-    "overview": "Plug-and-perf completions use one frac plug per stage: set on wireline below the new perforations, it isolates every stage already treated, takes the frac pressure on its top, and is milled out or dissolves after the last stage. Sleeve systems replace plugs and perforating with ports opened by dropped balls or shifting tools. Liner hangers suspend the production liner in the intermediate casing when the lateral is cased as a liner. Bridge plugs and cement retainers isolate zones permanently or for remedial work.",
+    "overview": "Plug-and-perf completions use one frac plug per stage: set on wireline below the new perforations, it isolates every stage already treated, takes the frac pressure on its top, and is milled out or dissolves after the last stage. Sleeve systems replace plugs and perforating with ports opened by dropped balls or shifting tools. Liner hangers suspend the production liner in the intermediate casing when the lateral is cased as a liner. Bridge plugs and cement retainers isolate zones permanently or for remedial work.\n\nDrop 7 adds the sliding sleeve path: frac sleeves opened by balls from a launcher on the tree, with cemented or openhole (packer) systems and millable or dissolvable seats, chosen in Pad Setup.\n\nDrop 7 adds the sliding sleeve path: frac sleeves opened by balls from a launcher on the tree, with cemented or openhole (packer) systems and millable or dissolvable seats, chosen in Pad Setup.\n\nDrop 7 adds the sliding sleeve path: frac sleeves opened by balls from a launcher on the tree, with cemented or openhole (packer) systems and millable or dissolvable seats, chosen in Pad Setup.",
     "engineering": "Plugs are composite (millable) or dissolvable; ratings of 10,000 psi differential and temperatures to 300 F are common. Setting is by wireline setting tool or coiled tubing. API Spec 11D1 governs the qualification of packers and bridge plugs by grade.",
     "connections": "Run on the wireline tool string (WL) or coiled tubing (CT); set in the production casing (CM); milled by the coiled tubing drillout BHA.",
     "safety": "Setting tools carry a power charge; plugs under differential pressure store energy; milling debris returns to surface with the flowback.",

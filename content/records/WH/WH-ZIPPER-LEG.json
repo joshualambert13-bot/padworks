@@ -1,0 +1,71 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9",
+    "S32"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Valves fully open or fully closed only; wall thickness checks on the most-used branch."
+    }
+  ],
+  "id": "WH-ZIPPER-LEG",
+  "parent": "WH-ZIPPER",
+  "group": "zipper-manifold",
+  "level": "component",
+  "name": "Vertical legs: tees, risers, and spools",
+  "aliases": [
+    "zipper leg",
+    "well leg",
+    "leg riser",
+    "zipper tee"
+  ],
+  "function": "The tee on the header, the riser spool, and the spool between the two valves that make up the vertical leg for each well.",
+  "tabs": {
+    "overview": "One leg per well at the tree spacing. The tee is a studded block on the header; flanged spools carry the flow up through the lower isolation valve and the upper working valve to the elbow on top. Flanged connections throughout so the leg can be rebuilt with a valve change and no hammer unions.",
+    "engineering": "Spool bore and rating match the valves; wall thickness checked on the most-used legs.",
+    "safety": "Legs inside the red zone; restraints on the treating spools to the tree.",
+    "evidence": "Frac manifold and isolation patents (S31, S32), vertical zipper product page (S33), API 6A for the valves (S1), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-LEG"
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-ZIPPER.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.7-15K.glb"
+    }
+  ]
+}

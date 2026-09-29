@@ -12,22 +12,22 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 7: upper working valve of the vertical leg"
   },
   "id": "WH-ZIPPER-VALVE",
   "parent": "WH-ZIPPER",
   "group": "zipper-manifold",
   "level": "component",
-  "name": "Zipper valves (one per well branch)",
+  "name": "Leg working valves (upper valve of each leg)",
   "aliases": [
     "zipper valve",
-    "branch valve",
-    "well isolation valve",
-    "manifold valve"
+    "working valve",
+    "upper zipper valve",
+    "frac valve (zipper)"
   ],
-  "function": "The hydraulic gate valve in each well branch that selects which well the spread treats; open on the well being fractured, closed on the wells being prepared for wireline.",
+  "function": "The upper hydraulic valve on each vertical leg, cycled once per stage to put that well on the spread or take it off.",
   "tabs": {
-    "overview": "Each branch has at least one hydraulic valve; many manifolds fit two in series for double isolation of a well with wireline in the hole. Valves are cycled once per stage per well, which makes them the highest-cycle valves on the pad.",
+    "overview": "The working valve does the cycling: open to frac that well, closed to take it off the spread. The lower isolation valve below it stays open on wells in the frac rotation and closes only when the well goes to wireline or coiled tubing, giving two closed valves between the spread and a wellbore with tools in it. Being cycled every stage on every well, the working valves are the highest-cycle valves on the pad.",
     "engineering": "Same API 6A hydraulic gate valve as the tree; position indicated at the control panel.",
     "safety": "A branch to a well with a lubricator on the tree must be closed and verified before the neighbor is pumped; the position lamp is not the only check, the pressure on the closed branch is watched too.",
     "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
@@ -52,6 +52,23 @@
       "direction": "undirected",
       "type": "mechanical",
       "note": "Instance of the hydraulic gate valve variant"
+    }
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-ZIPPER.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.7-15K.glb"
     }
   ]
 }

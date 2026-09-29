@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S37"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Fuel gas",
+      "control": "Gas detection at the conditioning skid and generators; no ignition sources in the gas zone."
+    }
+  ],
+  "id": "PP-POWERGEN-GASSKID",
+  "parent": "PP-POWERGEN",
+  "group": "power",
+  "level": "equipment",
+  "name": "Gas conditioning skid (dual fuel)",
+  "aliases": [
+    "gas conditioning",
+    "fuel gas skid",
+    "dual fuel skid",
+    "gas scrubber (frac)"
+  ],
+  "function": "The skid that scrubs, heats, and regulates field gas before it feeds dual-fuel engines or the generators of an electric fleet.",
+  "tabs": {
+    "overview": "Separator, heater, filters, and regulators bring the gas to the pressure and quality the engines accept; a gas line runs from the skid to each dual-fuel pump or to the generators.",
+    "engineering": "Sized to the fleet's gas demand; gas detection around the skid.",
+    "safety": "Fuel gas; no ignition sources in the zone; lines restrained.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "scene": "PP-POWERGEN-GASSKID"
+}

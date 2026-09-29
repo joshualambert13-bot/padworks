@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S31"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ],
+  "id": "PP-MISSILE-TRANSDUCER",
+  "parent": "PP-MISSILE-HPHEADER",
+  "group": "missile",
+  "level": "component",
+  "name": "Pressure transducers (missile)",
+  "aliases": [
+    "transducer (missile)",
+    "header pressure",
+    "pump pressure sensor"
+  ],
+  "function": "The pressure transducers on the discharge header that feed the data van and the pump kickout logic.",
+  "tabs": {
+    "overview": "Two or more for redundancy; the reading is the pump-side treating pressure that the kickout compares against its setting.",
+    "engineering": "Rated fittings; calibration checked before the job.",
+    "safety": "A failed transducer is replaced with the pumps off and the header bled.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-TRANSDUCER"
+  ]
+}

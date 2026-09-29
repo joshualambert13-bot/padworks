@@ -12,7 +12,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 7: header under vertical legs"
   },
   "id": "WH-ZIPPER-INLETHEADER",
   "parent": "WH-ZIPPER",
@@ -26,7 +26,7 @@
   ],
   "function": "The large-bore pipe on the skid that receives the treating line from the missile and distributes it to each well branch.",
   "tabs": {
-    "overview": "The header is a forged or fabricated pressure vessel rated with the stack, with a branch outlet per well and an inlet at one or both ends; a bleed valve and a pressure transducer are fitted on the header.",
+    "overview": "The low header along the skid, fed through the inlet isolation valve at the front; each vertical leg tees off it. Flanged ends, supports to the skid, and the bleed valve at the far end.",
     "engineering": "API 6A pressure-containing component rated to the stack working pressure.",
     "safety": "The header holds treating pressure whenever any branch is open to a well; it is bled through the bleed valve, never by breaking a connection.",
     "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
@@ -40,5 +40,22 @@
   "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-INLETHEADER"
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-ZIPPER.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.7-15K.glb"
+    }
   ]
 }

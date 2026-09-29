@@ -3,17 +3,17 @@
   "evidence_tier": "E2",
   "reviewers": [],
   "system": "DT",
-  "drawn_in_3d": false,
+  "drawn_in_3d": true,
   "sources": [
-    "S9",
-    "S20",
-    "S21"
+    "S34",
+    "S35",
+    "S9"
   ],
   "revision": {
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: cut-away model bound; ball-drop sequence"
   },
   "hazards": [
     {
@@ -25,7 +25,7 @@
   "parent": "DT",
   "group": "sleeves",
   "level": "equipment",
-  "name": "Ball-drop frac sleeve",
+  "name": "Ball-drop frac sleeve (cut-away)",
   "aliases": [
     "ball-activated sleeve",
     "sliding sleeve",
@@ -33,12 +33,27 @@
   ],
   "function": "A casing or liner component with ports covered by an inner sleeve that a dropped ball shifts open, letting a stage be treated without perforating.",
   "tabs": {
-    "overview": "Sleeves are run as part of the casing string, one per stage, with graduated ball seats: each ball is slightly larger than the last and passes every seat until its own. Landing on the seat, pressure shifts the sleeve open and the ball also isolates the stages below. After the job the seats are milled or the balls dissolve.",
-    "engineering": "Seat sizes step by small increments, which limits the number of stages per string; seats are milled out to restore full bore.",
+    "overview": "Sleeves are run as part of the casing string, one per stage, with graduated ball seats: each ball is slightly larger than the last and passes every seat until its own. Landing on the seat, pressure shears the screws and shifts the inner sleeve toe-ward, uncovering the port windows; the ball also isolates the stages below. The toe sleeve at the end of the string opens on casing pressure with no ball. After the job the seats are milled out with coiled tubing, or the balls and seats dissolve.\n\nThe cut-away shows the housing with its port windows, the inner sleeve shifted open, the graduated seat with its ball landed, the sheared screws, the body seals, and a swellable packer on the casing below for an openhole system. In the simulator the sleeves replace perforation clusters along the lateral, the ball launcher replaces the wireline lubricator on the tree, and the phases change to toe sleeve, ball drop, frac, and seat mill-out (or dissolve).",
+    "engineering": "Seat sizes step by a fraction of an inch, which caps the stage count per string (public systems run to a few dozen stages); the smallest seat sets the drift for later coiled tubing work. Cemented sleeves rely on the cement for stage isolation; openhole systems rely on packers between sleeves.",
     "connections": "Threaded into the casing or liner string.",
     "safety": "No explosives; sleeve pressure rating is part of the string design.",
     "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
-    "operations": "Continuous pumping between stages; no wireline runs.",
-    "failure_modes": "Ball passing its seat, sleeve failing to shift, seat erosion."
-  }
+    "operations": "Per stage: with the spread at a low rate, release the next ball from the launcher, pump it down at 10 to 20 bpm, watch for the pressure spike as it lands and the drop as the ports open, then bring the rate up and pump the stage without stopping. No wireline between stages.",
+    "failure_modes": "Ball not seating or passing its seat, sleeve not shifting (screw or debris), premature shift on a pressure cycle, seats left in the drift for the mill-out."
+  },
+  "glb": "/glb/DT/DT-FRACSLEEVE.glb",
+  "scene": "DT-FRACSLEEVE",
+  "mesh_nodes": [
+    "DT-FRACSLEEVE-HOUSING",
+    "DT-FRACSLEEVE-PORTS",
+    "DT-FRACSLEEVE-INNERSLEEVE",
+    "DT-FRACSLEEVE-BALLSEAT",
+    "DT-FRACSLEEVE-BALL",
+    "DT-FRACSLEEVE-SHEARSCREW",
+    "DT-FRACSLEEVE-SEALS",
+    "DT-FRACSLEEVE-PACKER"
+  ],
+  "ghost_nodes": [
+    "DT-FRACSLEEVE-CASING"
+  ]
 }

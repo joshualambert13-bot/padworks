@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S34",
+    "S36",
+    "S37",
+    "S38"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "PP-JOBDESIGN",
+  "parent": "PP",
+  "group": "job-design",
+  "level": "group",
+  "name": "Job design variables (Pad Setup)",
+  "aliases": [
+    "job design",
+    "completion design",
+    "frac design variables",
+    "pad setup",
+    "design intensity"
+  ],
+  "function": "The variables chosen before the first valve moves that size everything else on the pad: basin and target depth, well count and frac scheme, tree bore and rating, completion method, lateral length, stage spacing and clusters, fleet type, proppant and fluid systems and their intensities.",
+  "tabs": {
+    "overview": "Pad Setup in the simulator walks these in order. The basin sets the target depth and fracture gradient, which set the expected treating pressure and therefore the tree rating. The well count and frac scheme set how many wells are pumped at once, which with the rating sets the hydraulic horsepower and the pump count for the fleet chosen. The completion method (plug and perf, or sliding sleeves) sets the phase sequence and the equipment on the tree. Lateral length divided by stage spacing gives the stage count; clusters per stage give the perforation count. Proppant intensity (lb/ft) and fluid intensity (bbl/ft) times the lateral give the sand and water for each well and size the silos, tanks, and trucking. Public data across the resource plays shows stage spacing tightening from about 350 to about 200 ft per stage, stage counts near 40 per well, proppant rising from about 500 to more than 1,600 lb/ft, fluid from 13 to 33 bbl/ft, and rate per foot of lateral more than doubling between 2010 and 2017, with a shift to slickwater and finer sand.",
+    "engineering": "Hydraulic horsepower is treating pressure times rate divided by 40.8. Kickout is set below the working pressure of the tree and iron; the relief valve above the kickout and below the rating. Expected treating pressure is closure (gradient times depth) plus net pressure plus friction minus hydrostatic; fluids with higher viscosity carry sand better but add friction.",
+    "connections": "Feeds every other record: tree and zipper bore and rating (WH), pump count and power (PP), plug or sleeve count (DT), wireline runs (WL), drillout or mill-out time (CT).",
+    "safety": "A rating with no margin over the expected treating pressure means the job runs at the kickout; a pressure ramp from a screenout has nowhere to go but the relief valve.",
+    "evidence": "Fracturing design evolution article (S36), electric fleet article (S37), EIA regions (S38), completion codes article (S34). Basin values in the simulator are typical public ranges rounded for training, not operator data.",
+    "operations": "Chosen in the job program and confirmed at the pre-job meeting; changed on the pad only by a documented management of change.",
+    "failure_modes": "Under-rated iron for the depth; too few pumps for the scheme; sand or water logistics sized for the wrong intensity; the wrong completion method for the hole condition."
+  }
+}

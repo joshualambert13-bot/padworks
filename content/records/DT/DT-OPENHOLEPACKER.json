@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S34",
+    "S21",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-OPENHOLEPACKER",
+  "parent": "DT",
+  "group": "frac-sleeve",
+  "level": "equipment",
+  "name": "Openhole packer (sleeve systems)",
+  "aliases": [
+    "openhole packer",
+    "swell packer (lateral)",
+    "mechanical packer (openhole)",
+    "stage isolation packer"
+  ],
+  "function": "The packers between frac sleeves in an uncemented lateral that isolate each stage of bare hole so the sleeve in between treats only its interval.",
+  "tabs": {
+    "overview": "One packer between each pair of sleeves and one at the toe. Swellable elements expand in the well fluid; mechanical packers set hydraulically. The simulator draws them along the lateral when the openhole option is chosen in Pad Setup.",
+    "engineering": "Differential rating for the frac pressure; element length for the hole rugosity; swell time before the first stage.",
+    "safety": "A packer that has not set lets a stage frac the neighbor.",
+    "evidence": "Completion codes article (S34), ball injector patent (S35), API 11D1 for packers (S21), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "DT-OPENHOLEPACKER"
+}

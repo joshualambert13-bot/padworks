@@ -1,0 +1,76 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9",
+    "S32"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ],
+  "id": "WH-ZIPPER-INLETVALVE",
+  "parent": "WH-ZIPPER",
+  "group": "zipper-manifold",
+  "level": "component",
+  "name": "Inlet isolation valve (missile to zipper)",
+  "aliases": [
+    "zipper inlet valve",
+    "missile isolation valve",
+    "header isolation valve",
+    "spread isolation valve"
+  ],
+  "function": "The hydraulic gate valve at the front of the zipper header that isolates the whole manifold from the missile treating line.",
+  "tabs": {
+    "overview": "Between the missile high-pressure outlet and the zipper header. Open for the job; closed to isolate the manifold for a leak repair or a valve change while the spread stays rigged. It is never closed against flow: the spread would deadhead against it and the relief valve on the missile would lift.",
+    "engineering": "Same valve family as the legs; bore along the header; hydraulic actuator with position indication on the control unit.",
+    "safety": "Closed only with the pumps offline; the missile side bled through its own bleed before any work on the connection.",
+    "evidence": "Frac manifold and isolation patents (S31, S32), vertical zipper product page (S33), API 6A for the valves (S1), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-INLETVALVE"
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-ZIPPER.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.7-15K.glb"
+    }
+  ],
+  "connections": [
+    {
+      "target": "PP-MISSILE-OUTLET",
+      "direction": "upstream",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "flanged or hammer union"
+    }
+  ]
+}

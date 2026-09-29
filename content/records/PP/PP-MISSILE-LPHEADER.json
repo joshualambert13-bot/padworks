@@ -12,7 +12,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: model bound"
   },
   "hazards": [
     {
@@ -32,10 +32,14 @@
   ],
   "function": "The large-bore header fed by the blender discharge that supplies slurry to every pump suction through hoses and butterfly valves.",
   "tabs": {
-    "overview": "Kept full and slightly pressurized by the blender discharge pump so the frac pumps do not cavitate; each pump connection has an isolation valve and a suction hose.",
+    "overview": "Two suction headers, one along each edge of the deck, fed from the blender at the rear. Low pressure, large bore, an outlet per pump. Nothing on this side sees treating pressure.",
     "engineering": "Large bore, low pressure; hose sizes 4 to 6 in.",
     "safety": "Hose failures spray slurry at low pressure; butterfly valve handles are pinch points.",
     "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
   },
-  "scene": "PP-MISSILE-LPHEADER"
+  "scene": "PP-MISSILE-LPHEADER",
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-LPHEADER"
+  ]
 }

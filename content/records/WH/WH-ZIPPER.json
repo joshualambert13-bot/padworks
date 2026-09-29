@@ -4,23 +4,25 @@
   "group": "zipper-manifold",
   "level": "equipment",
   "parent": "WH",
-  "name": "Zipper manifold",
+  "name": "Zipper manifold (vertical legs)",
   "aliases": [
     "zipper",
     "frac manifold",
-    "zip manifold"
+    "zip manifold",
+    "vertical zipper",
+    "zipper manifold skid"
   ],
-  "function": "A skid-mounted manifold with a valve set per well that routes the frac spread output to one well at a time so that pumping on one well and wireline on another can alternate without moving iron.",
+  "function": "A skid-mounted manifold that takes the single treating line from the missile through an inlet isolation valve into a header, and routes it to one well at a time through a vertical leg per well, each leg with two valves in series, so pumping on one well and wireline or ball drop on another can alternate without moving iron.",
   "status": "draft",
   "evidence_tier": "E2",
   "reviewers": [],
   "tabs": {
-    "overview": "The missile feeds an inlet header on the skid. Each well branch has hydraulic gate valves and connects to that well's inlet block through a flanged spool. Opening one branch and closing the others switches the spread between wells in minutes. A remote hydraulic control unit operates every valve and shows position.\n\nOn a multi-well pad the manifold grows with the well count, one hydraulic valve per well; in the simulator the skid stretches to the number of wells chosen, from one to sixteen. In simul-frac, trimul-frac, and quad-frac the header feeds two, three, or four open valves at once.",
-    "engineering": "Valves are the same API 6A gate valve family as the tree. Big-bore or monoline manifolds use a single 7-1/16 in. line per well instead of several 3 in. lines to cut connections and erosion. Pressure transducers, check valves, and a pressure relief line are fitted per the operator specification.",
-    "connections": "Upstream: missile high-pressure header. Downstream: one branch per well to the goat head. Hydraulic: control unit.",
+    "overview": "The treating line from the missile enters at the front of the skid through the inlet isolation valve into a low header that runs the length of the skid. Each well has a vertical leg off the header: a tee, a riser spool, the lower isolation valve, a short spool, the upper working valve, and a top elbow block whose flanged outlet points at the tree. Flanged treating spools run from that outlet up to the inlet block on the frac tree. A pressure transducer sits on each elbow, a bleed valve on the far end of the header, and the hydraulic control unit with its accumulator bottles operates every valve remotely with position indication.\n\nVertical legs keep the footprint short and let sand settle back into the flow instead of collecting in dead horizontal branches. On a multi-well pad the skid grows with the well count; in the simulator it stretches to the wells chosen, from one to sixteen, and in simul-frac, trimul-frac, and quad-frac the header feeds two, three, or four open legs at once.",
+    "engineering": "Valves are the same API 6A gate valve family as the tree; 7-1/16 in. monoline legs cut connections and erosion compared with several 3 in. lines. The two valves per leg give double isolation of a well with wireline in the hole. Transducers, check valves where specified, and a relief line are fitted per the operator specification.",
+    "connections": "Upstream: the missile high-pressure outlet through the inlet isolation valve. Downstream: one leg per well, flanged spools to the inlet block on the tree. Hydraulic: control unit.",
     "safety": "The manifold is inside the red zone. Valve sequencing is done from the control unit with position confirmation; a branch to a well with wireline in the hole must be closed and verified before pumping on the neighbor.",
     "evidence": "OEM and service pages (S2, S11); field practice (S9).",
-    "operations": "Sequence per stage: close the branch to the well going to wireline, open the branch to the well ready to frac, confirm positions, then bring pumps online.",
+    "operations": "Sequence per stage: close both valves on the leg to the well going to wireline, open the lower isolation then the upper working valve on the well ready to frac, confirm positions, then bring pumps online. The inlet isolation valve is closed only with the pumps off.",
     "failure_modes": "Valve seat erosion on the most-used branch; hydraulic leaks; transducer failures."
   },
   "specs": [
@@ -49,28 +51,33 @@
   "drawn_in_3d": true,
   "scene": "WH-ZIPPER",
   "sources": [
-    "S2",
+    "S1",
     "S9",
-    "S11"
+    "S11",
+    "S31",
+    "S32",
+    "S33"
   ],
   "revision": {
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4: block valves, size variants, multi-well note"
+    "note": "Drop 7: vertical legs with two valves each, inlet isolation valve from the missile"
   },
   "connections": [
     {
       "target": "PP-MISSILE",
       "direction": "upstream",
-      "type": "hammer union",
-      "rating": "15K"
+      "type": "flanged",
+      "rating": "15K",
+      "note": "flanged or hammer union"
     },
     {
-      "target": "WH-GOATHEAD",
+      "target": "WH-FRACTREE-INLETBLOCK",
       "direction": "downstream",
-      "type": "hammer union",
-      "rating": "15K"
+      "type": "flanged",
+      "rating": "15K",
+      "note": "flanged spools"
     },
     {
       "target": "WH-FRACVALVECONTROL",
@@ -81,7 +88,10 @@
   "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-SKID",
+    "WH-ZIPPER-INLETVALVE",
     "WH-ZIPPER-INLETHEADER",
+    "WH-ZIPPER-LEG",
+    "WH-ZIPPER-ISOVALVE",
     "WH-ZIPPER-VALVE",
     "WH-ZIPPER-OUTLET",
     "WH-ZIPPER-TRANSDUCER",

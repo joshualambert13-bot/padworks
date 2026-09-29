@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S31"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Valves fully open or fully closed only; wall thickness checks on the most-used branch."
+    }
+  ],
+  "id": "PP-MISSILE-CHECKVALVE",
+  "parent": "PP-MISSILE-HPHEADER",
+  "group": "missile",
+  "level": "component",
+  "name": "Feed port check valves",
+  "aliases": [
+    "check valve (missile)",
+    "discharge check",
+    "feed port check"
+  ],
+  "function": "The check valve on each radial feed port of the discharge header that stops header pressure from back-driving a stopped pump.",
+  "tabs": {
+    "overview": "Flapper or dart type in the feed port; lets a pump be taken offline for a repair while the rest of the spread keeps pumping against the same header.",
+    "engineering": "Rated with the header; erosion checked at the seat.",
+    "safety": "A leaking check on an offline pump puts treating pressure on its fluid end; the pump's own discharge valve is closed before work.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-CHECKVALVE"
+  ]
+}

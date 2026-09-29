@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S34",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-FRACSLEEVE-SHEARSCREW",
+  "parent": "DT-FRACSLEEVE",
+  "group": "frac-sleeve",
+  "level": "component",
+  "name": "Shear screws",
+  "aliases": [
+    "shear screw",
+    "shear pin (sleeve)"
+  ],
+  "function": "The screws through the housing into the inner sleeve that hold it closed until the seated ball's differential shears them.",
+  "tabs": {
+    "overview": "Number and size set the shift pressure; sheared stubs stay in the housing.",
+    "engineering": "Shear value above the casing test pressure.",
+    "safety": "A low shear value risks a premature shift during the casing test.",
+    "evidence": "Completion codes article (S34), ball injector patent (S35), API 11D1 for packers (S21), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/DT/DT-FRACSLEEVE.glb",
+  "mesh_nodes": [
+    "DT-FRACSLEEVE-SHEARSCREW"
+  ]
+}

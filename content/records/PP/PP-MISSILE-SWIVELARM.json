@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S31"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ],
+  "id": "PP-MISSILE-SWIVELARM",
+  "parent": "PP-MISSILE-HPHEADER",
+  "group": "missile",
+  "level": "component",
+  "name": "Swivel arms to the pumps",
+  "aliases": [
+    "swivel arm",
+    "discharge arm",
+    "connection arm",
+    "pump discharge line"
+  ],
+  "function": "The short articulated discharge line with swivel joints from each feed port to the pump's fluid end, letting the pump be spotted without cutting iron to length.",
+  "tabs": {
+    "overview": "Two or three swivels per arm take up the position of the trailer; hammer unions or flanges at each end. The arm is the most-handled iron on the pad and is inspected with the flow iron.",
+    "engineering": "Treating-pressure iron with restraints; swivel packing renewed on schedule.",
+    "safety": "Line of fire while pumping; restraints on every arm.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-SWIVELARM"
+  ]
+}

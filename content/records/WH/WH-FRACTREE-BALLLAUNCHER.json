@@ -1,0 +1,51 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S34",
+    "S35"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of handwheels and actuators; lockout on hydraulic controls before work."
+    }
+  ],
+  "id": "WH-FRACTREE-BALLLAUNCHER",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Ball launcher (sliding sleeve jobs)",
+  "aliases": [
+    "ball launcher",
+    "ball injector",
+    "ball dropper",
+    "frac ball launcher",
+    "ball drop head"
+  ],
+  "function": "The magazine on top of the frac tree for sliding sleeve completions that releases one graduated frac ball at a time into the flow stream, replacing the wireline lubricator between stages.",
+  "tabs": {
+    "overview": "A pressure housing sits on the swab valve in place of the top adapter. A horizontal magazine holds the balls in size order behind two small isolation valves that form a pressure chamber: the outer valve opens to admit the next ball, closes, then the inner valve opens and a hydraulic push rod drives the ball into the bore while the spread is pumping. The ball travels with the fluid to its seat, shears the sleeve open, and isolates the stages below. The count of balls left is the count of stages left.",
+    "engineering": "Rated with the tree; balls sized to the seat schedule of the sleeves in the well, largest last; hydraulic controls from the frac valve control unit or a dedicated panel outside the red zone.",
+    "connections": "Below: swab valve (the launcher isolation). Hydraulic: control panel. Flow: the treating line through the inlet block carries the ball down.",
+    "safety": "The launcher is part of the pressure boundary while pumping; the swab valve isolates it for reloading, which is done with the tree bled to the launcher and never with tools in the hole.",
+    "evidence": "Ball injector patent (S35), sliding sleeve completion practice (S34), API 6A (S1). Scene geometry only; no OEM design reproduced.",
+    "operations": "Per stage: confirm the flow path is open and the spread is at 10 to 20 bpm, open the swab valve to the launcher, release the ball, watch for the pressure spike as it seats and the drop as the sleeve shifts, then bring the rate up for the stage.",
+    "failure_modes": "Ball not released (push rod or valve fault), wrong ball size loaded, ball not seating (sleeve or seat damage), launcher seal leaks."
+  },
+  "scene": "WH-FRACTREE-BALLLAUNCHER"
+}

@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S31"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of handwheels and actuators; lockout on hydraulic controls before work."
+    }
+  ],
+  "id": "PP-MISSILE-DECK",
+  "parent": "PP-MISSILE",
+  "group": "missile",
+  "level": "component",
+  "name": "Trailer deck, gooseneck, and axles",
+  "aliases": [
+    "missile trailer",
+    "manifold trailer deck",
+    "trailer gooseneck"
+  ],
+  "function": "The trailer that carries both headers: deck beams, cross members, gooseneck to the tractor, landing legs, and the axles at the rear.",
+  "tabs": {
+    "overview": "Schematic in the model; the deck sets the header heights that the pump discharge and suction lines meet.",
+    "engineering": "Highway trailer; leveled and chocked on location.",
+    "safety": "Trip hazards on the deck; walkway used for the header side.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/PP/PP-MISSILE.glb",
+  "mesh_nodes": [
+    "PP-MISSILE-DECK",
+    "PP-MISSILE-AXLES",
+    "PP-MISSILE-WALKWAY"
+  ]
+}

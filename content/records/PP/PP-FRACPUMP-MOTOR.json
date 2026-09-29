@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S37",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "High voltage",
+      "control": "Only qualified people inside the switchgear and cable exclusion zones; cables routed and marked."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection in the pump area; electric fleets cut the level but do not remove it."
+    }
+  ],
+  "id": "PP-FRACPUMP-MOTOR",
+  "parent": "PP-FRACPUMP",
+  "group": "frac-pump",
+  "level": "component",
+  "name": "Electric motor and drive (electric pumps)",
+  "aliases": [
+    "electric motor (pump)",
+    "VFD",
+    "variable frequency drive",
+    "e-frac pump"
+  ],
+  "function": "On electric fleets, the motor and variable-frequency drive that turn the pump's power end in place of the diesel engine and transmission.",
+  "tabs": {
+    "overview": "A large induction or permanent-magnet motor on the trailer, fed by a VFD cabinet that sets the pump speed; power comes over cables from the turbine or genset switchgear. Twin-pump trailers around 6,000 hp are common. No exhaust, less noise, and no transmission shifts.",
+    "engineering": "Around 3,000 hp per pump; medium-voltage cables; cooling for the motor and the drive.",
+    "safety": "High voltage on the trailer and cables; exclusion zones and lockout for electrical work.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "scene": "PP-FRACPUMP-MOTOR"
+}

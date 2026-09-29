@@ -12,7 +12,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 7: rebound to the vertical zipper model"
   },
   "id": "WH-ZIPPER-TRANSDUCER",
   "parent": "WH-ZIPPER",
@@ -40,5 +40,22 @@
   "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-TRANSDUCER"
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-ZIPPER.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-ZIPPER.7-15K.glb"
+    }
   ]
 }

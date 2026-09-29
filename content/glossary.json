@@ -275,12 +275,12 @@
     "term": "Missile",
     "aliases": [
       "manifold trailer",
-      "frac manifold",
-      "HP manifold"
+      "frac manifold trailer",
+      "discharge manifold"
     ],
     "system": "PP",
     "record": "PP-MISSILE",
-    "definition": "The trailer-mounted manifold that collects the discharge of every frac pump into the high-pressure treating line and distributes slurry to the pumps on the low-pressure side."
+    "definition": "The manifold trailer in the middle of the pump rows: low-pressure suction headers on the outside edges feed the pumps; the high-pressure discharge header down the middle collects their output into one treating line."
   },
   {
     "term": "Blender",
@@ -390,5 +390,60 @@
     "system": "UC",
     "record": "UC-SSSV",
     "definition": "The fail-closed valve in the tubing below the wellhead that shuts the well in if surface control pressure is lost."
+  },
+  {
+    "term": "Zipper leg",
+    "aliases": [
+      "well leg",
+      "zipper branch",
+      "vertical leg"
+    ],
+    "system": "WH",
+    "record": "WH-ZIPPER-LEG",
+    "definition": "The per-well riser off the zipper header: a lower isolation valve and an upper working valve in series, then an elbow and outlet toward that well's tree."
+  },
+  {
+    "term": "Ball launcher",
+    "aliases": [
+      "ball injector",
+      "ball dropper",
+      "frac ball launcher"
+    ],
+    "system": "WH",
+    "record": "WH-FRACTREE-BALLLAUNCHER",
+    "definition": "The magazine on top of the frac tree that releases graduated frac balls into the flow one at a time for sliding sleeve completions."
+  },
+  {
+    "term": "Sliding sleeve completion",
+    "aliases": [
+      "ball-drop completion",
+      "frac sleeve completion",
+      "openhole multistage",
+      "ball and seat"
+    ],
+    "system": "DT",
+    "record": "DT-FRACSLEEVE",
+    "definition": "A multistage completion where frac sleeves run in the casing are opened one at a time by dropping balls of increasing size, instead of setting plugs and perforating with wireline."
+  },
+  {
+    "term": "Proppant intensity",
+    "aliases": [
+      "lb/ft",
+      "pounds per foot",
+      "sand loading"
+    ],
+    "system": "PP",
+    "record": "PP-JOBDESIGN",
+    "definition": "Pounds of proppant pumped per foot of lateral; with fluid intensity (bbl/ft) it sizes the sand and water logistics for the pad."
+  },
+  {
+    "term": "Stage spacing",
+    "aliases": [
+      "stage length",
+      "feet per stage"
+    ],
+    "system": "PP",
+    "record": "PP-JOBDESIGN",
+    "definition": "Lateral length divided by stage count; tighter spacing means more stages, more wireline runs or balls, and more time on the pad."
   }
 ]

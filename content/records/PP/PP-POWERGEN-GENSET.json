@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S37"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 7 seed"
+  },
+  "hazards": [
+    {
+      "class": "High voltage",
+      "control": "Only qualified people inside the switchgear and cable exclusion zones; cables routed and marked."
+    },
+    {
+      "class": "Fuel gas",
+      "control": "Gas detection at the conditioning skid and generators; no ignition sources in the gas zone."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection in the pump area; electric fleets cut the level but do not remove it."
+    }
+  ],
+  "id": "PP-POWERGEN-GENSET",
+  "parent": "PP-POWERGEN",
+  "group": "power",
+  "level": "equipment",
+  "name": "Reciprocating gas gensets",
+  "aliases": [
+    "genset",
+    "gas generator",
+    "reciprocating generator",
+    "natural gas genset"
+  ],
+  "function": "Several trailer-mounted gas reciprocating generators of a few megawatts each that together power an electric fleet.",
+  "tabs": {
+    "overview": "Four or more gensets share the load, so one can drop out and pumping continues at reduced rate. Reciprocating engines want cleaner gas than a turbine, so the conditioning skid does more work.",
+    "engineering": "Around 2.5 MW each; paralleling switchgear; fuel gas treatment.",
+    "safety": "High voltage; fuel gas; noise.",
+    "evidence": "Frac manifold missile patent (S31), electric fleet article (S37), fracturing design evolution article (S36), EIA regions (S38), field practice (S9). Photographs read for proportion only."
+  },
+  "scene": "PP-POWERGEN-GENSET"
+}

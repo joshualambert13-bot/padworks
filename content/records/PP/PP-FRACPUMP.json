@@ -12,7 +12,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 4 seed"
+    "note": "Drop 7: electric variant noted"
   },
   "hazards": [
     {
@@ -44,7 +44,7 @@
   "scene": "PP-FRACPUMP-1",
   "function": "A trailer or truck carrying an engine, transmission, and a positive-displacement plunger pump that takes slurry from the missile at low pressure and discharges it at treating pressure.",
   "tabs": {
-    "overview": "The pump is a reciprocating plunger pump: a power end converts engine torque into the stroke of three or five plungers, and the fluid end holds the suction and discharge valves that the plungers work against. Rate is set by engine speed and gear; pressure is whatever the well demands, up to the fluid end rating and the kickout setting. A fleet runs many pumps in parallel into one header so that one pump can be dropped for a fluid end change without stopping the stage.",
+    "overview": "The pump is a reciprocating plunger pump: a power end converts engine torque into the stroke of three or five plungers, and the fluid end holds the suction and discharge valves that the plungers work against. Rate is set by engine speed and gear; pressure is whatever the well demands, up to the fluid end rating and the kickout setting. A fleet runs many pumps in parallel into one header so that one pump can be dropped for a fluid end change without stopping the stage.\n\nElectric fleets replace the engine and transmission with an electric motor and a variable-frequency drive cabinet on the same trailer; the power end and fluid end are the same family (see PP-FRACPUMP-MOTOR).\n\nElectric fleets replace the engine and transmission with an electric motor and a variable-frequency drive cabinet on the same trailer; the power end and fluid end are the same family (see PP-FRACPUMP-MOTOR).\n\nElectric fleets replace the engine and transmission with an electric motor and a variable-frequency drive cabinet on the same trailer; the power end and fluid end are the same family (see PP-FRACPUMP-MOTOR).",
     "engineering": "Diesel engines with automatic transmissions are the common power end drive; electric motors on turbine or grid power replace them on electric fleets. Fluid ends are forged steel blocks with replaceable valves, seats, and packing; plunger size sets the trade between rate and pressure for a given horsepower.",
     "connections": "Suction hose from the missile low-pressure header; discharge iron to the missile high-pressure header; fuel, hydraulic, and data connections.",
     "safety": "Discharge iron is inside the red zone; fluid end failures release fluid at treating pressure; exhaust and hydraulic lines are hot; noise.",

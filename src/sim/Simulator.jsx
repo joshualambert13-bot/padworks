@@ -1,10 +1,11 @@
-import { useState, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered } from 'lucide-react';
 import SurfaceScene from './SurfaceScene.jsx';
 import DownholeScene from './DownholeScene.jsx';
 import ControlPanel from './panels/ControlPanel.jsx';
 import TimelinePanel from './panels/TimelinePanel.jsx';
-import { useSim, PHASES } from './store.js';
+import { useSim, phasesFor } from './store.js';
+import HoverPopup from './HoverPopup.jsx';
 
 const VIEWS = [
   { id: 'surface', label: 'Surface', icon: Layers },
@@ -16,13 +17,13 @@ function Viewport({ view, showLabels, preset }) {
   if (view === 'split') {
     return (
       <div className="h-full grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 gap-px bg-line">
-        <div className="relative min-h-0"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><Tagline text="Surface" /></div>
-        <div className="relative min-h-0"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere={false} /></Suspense><Tagline text="Downhole section (schematic)" /></div>
+        <div className="relative min-h-0"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface" /></div>
+        <div className="relative min-h-0"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere={false} /></Suspense><HoverPopup canvasKey="downhole" /><Tagline text="Downhole section (schematic)" /></div>
       </div>
     );
   }
-  if (view === 'downhole') return <div className="relative h-full"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere /></Suspense><Tagline text="Downhole section (schematic)" /></div>;
-  return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><Tagline text="Surface (generic models)" /></div>;
+  if (view === 'downhole') return <div className="relative h-full"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere /></Suspense><HoverPopup canvasKey="downhole" /><Tagline text="Downhole section (schematic)" /></div>;
+  return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface (generic models). Hover an item for its name; click to open its record." /></div>;
 }
 
 function Tagline({ text }) {
@@ -30,12 +31,18 @@ function Tagline({ text }) {
 }
 
 export default function Simulator() {
-  const [view, setView] = useState('surface');
-  const [showLabels, setShowLabels] = useState(true);
-  const [preset, setPreset] = useState('pad');
-  const [mobileTab, setMobileTab] = useState('3d');
+  // view settings live in the store so they survive a trip to the library and back
+  const ui = useSim(s => s.ui);
+  const setUi = useSim(s => s.setUi);
+  const view = ui.view, showLabels = ui.showLabels, preset = ui.preset, mobileTab = ui.mobileTab;
+  const setView = (view) => setUi({ view });
+  const setShowLabels = (showLabels) => setUi({ showLabels });
+  const setPreset = (preset) => setUi({ preset });
+  const setMobileTab = (mobileTab) => setUi({ mobileTab });
   const phase = useSim(s => s.phase);
   const stage = useSim(s => s.stage);
+  const setup = useSim(s => s.setup);
+  const PHASES = phasesFor(setup);
   const alarms = useSim(s => s.alarms);
   const anyAlarm = alarms.overpressure || alarms.screenout || alarms.kickout;
 
@@ -52,15 +59,17 @@ export default function Simulator() {
             <option value="pad">Pad overview</option>
             <option value="tree">Frac tree</option>
             <option value="row">Well row</option>
+            <option value="zipper">Zipper manifold</option>
             <option value="pumps">Pumps and missile</option>
             <option value="sand">Sand and blender</option>
             <option value="flowback">Flowback spread</option>
+            <option value="basin">Basin view</option>
           </select>
         )}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
       </div>
       <div className={'w-full mt-1 text-xs px-2 py-1 rounded pointer-events-none ' + (anyAlarm ? 'bg-bad/80 text-white' : 'bg-black/50 text-mute')}>
-        {anyAlarm ? 'ALARM ACTIVE: see the control panel' : PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}
+        {anyAlarm ? 'ALARM ACTIVE: see the control panel' : phase === 'setup' ? 'Pad setup: the pad rebuilds as you choose. Press Start the job when ready.' : PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}
       </div>
     </div>
   );
