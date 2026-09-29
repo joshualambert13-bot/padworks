@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of flowlines and iron under flow; restraints on temporary lines."
+    },
+    {
+      "class": "Fire and flammable gas",
+      "control": "No ignition sources at the tree; grounding on the flowline."
+    }
+  ],
+  "id": "UC-FLOWLINE",
+  "parent": "UC",
+  "group": "surface",
+  "level": "equipment",
+  "name": "Flowline to the facility",
+  "aliases": [
+    "flowline",
+    "gathering line",
+    "production flowline"
+  ],
+  "function": "The buried or surface line from the tree choke to the production facility or gathering header, with its check valve, sensors, and emergency shutdown valve.",
+  "tabs": {
+    "overview": "Sized for the expected rate and the flowline pressure; a pressure transmitter and high-low pressure switches trip the wing or the ESD valve; pigging connections where waxes or solids build up.",
+    "engineering": "Pipe class per the facility; corrosion inhibition where needed.",
+    "connections": "Tree choke outlet; facility inlet header.",
+    "safety": "Line of fire under flow; ESD tested.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only.",
+    "operations": "Commissioned with the tree; pigged as needed.",
+    "failure_modes": "Corrosion, freezing, wax or scale, sensor faults."
+  }
+}

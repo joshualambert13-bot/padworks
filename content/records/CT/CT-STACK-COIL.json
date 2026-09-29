@@ -31,8 +31,7 @@
   "level": "component",
   "name": "Coiled tubing (through the stack)",
   "aliases": [
-    "CT string",
-    "tubing"
+    "CT string"
   ],
   "function": "The length of coiled tubing shown running from the reel over the gooseneck, down through the injector, stripper, and BOP into the well.",
   "tabs": {

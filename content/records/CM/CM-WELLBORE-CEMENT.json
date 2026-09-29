@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Cement and chemicals",
+      "control": "Eye and skin protection at the cementing unit; dust controls at bulk transfer."
+    }
+  ],
+  "id": "CM-WELLBORE-CEMENT",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Cement sheath",
+  "aliases": [
+    "cement",
+    "annular cement",
+    "primary cement",
+    "top of cement"
+  ],
+  "function": "The set cement in the annulus between each casing string and the hole or the previous casing, supporting the string and isolating the formations behind it.",
+  "tabs": {
+    "overview": "Slurry per API 10A class and additives; placed by displacement with plugs; top of cement set by the design and confirmed by a bond log or a temperature survey. Channels or a poor bond let frac stages communicate behind pipe.",
+    "engineering": "API 10A cements; density and thickening time per the well.",
+    "safety": "Cement chemicals at the unit.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-CEMENT"
+  ]
+}

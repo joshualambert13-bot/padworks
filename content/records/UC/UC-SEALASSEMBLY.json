@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-SEALASSEMBLY",
+  "parent": "UC-PACKER",
+  "group": "tubing-string",
+  "level": "component",
+  "name": "Seal assembly and polished bore",
+  "aliases": [
+    "seal assembly",
+    "seal stack",
+    "polished bore receptacle",
+    "PBR"
+  ],
+  "function": "The stack of seals on the tubing that lands in the packer bore and seals while allowing tubing movement.",
+  "tabs": {
+    "overview": "Seal units on a mandrel stab into the packer or a polished bore receptacle; the length of the bore allows the tubing to expand and contract without unseating.",
+    "engineering": "Seal material for the fluids and temperature; stroke length per the thermal calculation.",
+    "safety": "A leaking seal shows as annulus pressure.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only."
+  }
+}

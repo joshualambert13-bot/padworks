@@ -138,6 +138,67 @@ export function FracTree({ valves, showLabels, lubricator = false, wlStep = 'idl
   );
 }
 
+// ---------------------------------------------------------------- production tree (production phase)
+// Small manual tree on the tubing head after the frac stack comes off: adapter, two masters, flow cross,
+// production wing with an actuated choke to the flowline, kill wing with a gauge, swab valve, cap with gauge.
+export function ProductionTree({ showLabels, name = 'UC-PRODTREE', partner = false }) {
+  const bore = 0.078;                      // 3-1/16 in.
+  const ftf = bore * 6.6;
+  const nm = (k) => (partner ? undefined : k);
+  let y = 2.0;
+  const adH = bore * 2.2 + 0.2;
+  const adY = y + adH / 2; y += adH;
+  const lmvY = y + ftf / 2; y += ftf;
+  const umvY = y + ftf / 2; y += ftf;
+  const crossH = bore * 3.4;
+  const crossY = y + crossH / 2; y += crossH;
+  const swabY = y + ftf / 2; y += ftf;
+  const capY = y;
+  const wingX = bore * 1.2 + bore * 0.7 + ftf / 2;
+  const chokeX = wingX + ftf / 2 + bore * 3.0;
+  return (
+    <group name={partner ? undefined : name}>
+      <Cyl r={1.1} r2={1.1} h={0.05} position={[0, 0.025, 0]} mat={MAT.darkSteel} />
+      <Cyl r={0.42} h={0.7} position={[0, 0.35, 0]} mat={MAT.darkSteel} name={nm('WH-CASINGHEAD')} />
+      <Cyl r={0.48} h={0.08} position={[0, 0.7, 0]} mat={MAT.steel} />
+      <Cyl r={0.4} h={0.7} position={[0, 1.05, 0]} mat={MAT.darkSteel} name={nm('WH-CASINGSPOOL')} />
+      <Cyl r={0.47} h={0.08} position={[0, 1.4, 0]} mat={MAT.steel} />
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[0.62, 1.05, 0]} />
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[-0.62, 1.05, 0]} />
+      <Cyl r={0.38} h={0.6} position={[0, 1.7, 0]} mat={MAT.darkSteel} name={nm('WH-TUBINGHEAD')} />
+      <Cyl r={bore * 1.5} h={adH} position={[0, adY, 0]} mat={MAT.steel} name={nm('UC-PRODTREE-TUBINGHEADADAPTER')} />
+      <GateValveBlock open={1} kind="manual" bore={bore} position={[0, lmvY, 0]} name={nm('UC-PRODTREE-LMV')} label={showLabels ? 'Lower master' : null} />
+      <GateValveBlock open={1} kind="manual" bore={bore} position={[0, umvY, 0]} name={nm('UC-PRODTREE-UMV')} label={showLabels ? 'Upper master' : null} />
+      <group name={nm('UC-PRODTREE-FLOWCROSS')} position={[0, crossY, 0]}>
+        <Box size={[bore * 2.4, crossH, bore * 3.7]} mat={MAT.darkSteel} />
+        <Cyl r={bore * 1.5} h={bore * 0.7} rotation={[0, 0, Math.PI / 2]} position={[bore * 1.2 + bore * 0.35, 0, 0]} mat={MAT.steel} />
+        <Cyl r={bore * 1.5} h={bore * 0.7} rotation={[0, 0, Math.PI / 2]} position={[-bore * 1.2 - bore * 0.35, 0, 0]} mat={MAT.steel} />
+      </group>
+      {/* production wing (+X): wing valve, choke with actuator, flowline drop */}
+      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[wingX, crossY, 0]} name={nm('UC-PRODTREE-WINGVALVE')} label={showLabels ? 'Production wing' : null} />
+      <group name={nm('UC-PRODTREE-CHOKE')} position={[chokeX, crossY, 0]}>
+        <Box size={[bore * 3.6, bore * 2.2, bore * 2.2]} mat={MAT.darkSteel} />
+        <Cyl r={bore * 0.9} h={bore * 1.2} position={[-bore * 0.4, bore * 1.6, 0]} mat={MAT.steel} />
+        <Box size={[bore * 2.6, bore * 2.0, bore * 2.0]} position={[-bore * 0.4, bore * 3.6, 0]} mat={MAT.redIron} name={nm('UC-PRODTREE-ACTUATOR')} />
+        {showLabels && <Label position={[0, bore * 6, 0]} text={'Choke with actuator'} />}
+      </group>
+      <PipeRun points={[[chokeX + bore * 1.8, crossY, 0], [chokeX + bore * 4.5, crossY, 0], [chokeX + bore * 4.5, 0.3, 0], [chokeX + bore * 4.5, 0.3, 6.0]]} r={bore * 0.6} mat={MAT.darkSteel} />
+      {/* kill wing (-X): valve and companion flange with gauge */}
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={bore} position={[-wingX, crossY, 0]} name={nm('UC-PRODTREE-KILLWING')} label={showLabels ? 'Kill wing' : null} />
+      <Cyl r={bore * 1.5} h={bore * 0.6} rotation={[0, 0, Math.PI / 2]} position={[-wingX - ftf / 2 - bore * 0.3, crossY, 0]} mat={MAT.steel} />
+      <Cyl r={bore * 0.9} h={0.04} rotation={[0, 0, Math.PI / 2]} position={[-wingX - ftf / 2 - bore * 1.4, crossY, 0]} mat={MAT.white} name={nm('UC-PRODTREE-GAUGE')} />
+      <GateValveBlock open={0} kind="manual" bore={bore} position={[0, swabY, 0]} name={nm('UC-PRODTREE-SWAB')} label={showLabels ? 'Swab valve' : null} />
+      <group name={nm('UC-PRODTREE-TREECAP')} position={[0, capY, 0]}>
+        <Cyl r={bore * 1.5} h={bore * 0.6} position={[0, bore * 0.3, 0]} mat={MAT.steel} />
+        <Cyl r={bore * 0.9} r2={bore * 0.4} h={bore * 1.4} position={[0, bore * 1.3, 0]} mat={MAT.darkSteel} />
+        <Cyl r={0.02} h={bore * 2.0} position={[0, bore * 3.0, 0]} mat={MAT.steel} />
+        <Cyl r={bore * 0.8} h={0.04} rotation={[Math.PI / 2, 0, 0]} position={[0, bore * 4.4, 0]} mat={MAT.white} />
+        {showLabels && <Label position={[bore * 3, bore * 5, 0]} text={'Tree cap and gauge'} />}
+      </group>
+    </group>
+  );
+}
+
 // Wireline pressure control stack on the tree: adapter, wireline valve, tool trap, lubricator sections, grease head.
 export function Lubricator({ baseY, wlStep, showLabels }) {
   const r = 0.16;

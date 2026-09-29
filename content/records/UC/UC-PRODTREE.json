@@ -1,0 +1,82 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of handwheels, elevators, and tongs."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors at the tree and flowline; escape sets staged."
+    }
+  ],
+  "id": "UC-PRODTREE",
+  "parent": "UC",
+  "group": "production-tree",
+  "level": "equipment",
+  "name": "Production tree (3-1/16 in. 10K)",
+  "aliases": [
+    "production tree",
+    "Christmas tree",
+    "flowing tree",
+    "prod tree"
+  ],
+  "function": "The permanent stack of valves on the tubing head adapter that controls the producing well: masters, flow cross, wing valve and choke to the flowline, kill wing, swab valve, and cap.",
+  "tabs": {
+    "overview": "Bottom to top: tubing head adapter, lower master valve (manual, the barrier valve, left open and not cycled), upper master valve (manual on this tree, hydraulic on some), studded flow cross, production wing valve (manual) feeding an adjustable choke with an electric actuator and the flowline flange, kill wing valve (manual) with a companion flange and a gauge, swab valve (manual), and a tree cap with a needle valve and pressure gauge. Stems point to one side so the operator works from a single position.",
+    "engineering": "Smaller and simpler than the frac stack: 3-1/16 in. bore is enough for production rates and wireline work, and manual valves suit a well visited weekly. The choke actuator lets the facility control the rate remotely. The kill wing accepts a pump truck for a kill or a treatment.",
+    "connections": "Tubing head adapter below; flowline from the choke outlet; kill line on the kill wing when needed; gauge and sensor ports.",
+    "safety": "Permanent pressure boundary; H2S monitors; handwheels are pinch points; the swab valve is opened only with a lubricator on the cap.",
+    "specs": "3-1/16 in. 10K typical; valves API 6A; choke sized in 64ths.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only.",
+    "operations": "Set once; valves greased and cycled on a maintenance schedule; the choke is the working control.",
+    "failure_modes": "Seat leaks, packing leaks, choke erosion, actuator faults, gauge failures."
+  },
+  "glb": "/glb/UC/UC-PRODTREE.glb",
+  "mesh_nodes": [
+    "UC-PRODTREE-TUBINGHEADADAPTER",
+    "UC-PRODTREE-LMV",
+    "UC-PRODTREE-UMV",
+    "UC-PRODTREE-FLOWCROSS",
+    "UC-PRODTREE-WINGVALVE",
+    "UC-PRODTREE-CHOKE",
+    "UC-PRODTREE-ACTUATOR",
+    "UC-PRODTREE-FLOWLINE",
+    "UC-PRODTREE-KILLWING",
+    "UC-PRODTREE-GAUGE",
+    "UC-PRODTREE-SWAB",
+    "UC-PRODTREE-TREECAP",
+    "UC-PRODTREE-STUDS"
+  ],
+  "connections": [
+    {
+      "target": "WH-TUBINGHEAD",
+      "direction": "upstream",
+      "type": "flanged",
+      "rating": "10K"
+    },
+    {
+      "target": "UC-FLOWLINE",
+      "direction": "downstream",
+      "type": "flanged"
+    }
+  ]
+}

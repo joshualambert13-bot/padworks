@@ -1,0 +1,73 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S28",
+    "S30",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Cement and chemicals",
+      "control": "Eye and skin protection at the cementing unit; dust controls at bulk transfer."
+    }
+  ],
+  "id": "CM",
+  "level": "system",
+  "name": "Casing and cementing",
+  "aliases": [
+    "casing",
+    "cementing",
+    "well construction",
+    "casing program"
+  ],
+  "function": "The steel casing strings and the cement that build the wellbore the completion works in: they hold the hole open, isolate formations from each other and from the surface, and give the frac stack and the plugs something to seal against.",
+  "tabs": {
+    "overview": "Each hole section is drilled, then a casing string is run and cemented: conductor near surface, surface casing below the freshwater zones, intermediate casing through troublesome formations, and production casing through the lateral. Cement is pumped down the casing and up the annulus with wiper plugs ahead and behind it; float equipment at the shoe keeps it from flowing back. The production casing is what the frac treatments are pumped through and what the frac plugs set in, so its burst rating, drift, and cement quality set what the completion can do.",
+    "engineering": "Casing per API 5CT: size, weight, grade, connection; cement per API 10A with additives for the temperature and the slurry design; centralizers per API RP 10D-2 so the cement sheath is uniform. Burst, collapse, and tension are checked for the frac loads, not only the drilling loads.",
+    "connections": "Casing strings hang in the wellhead (WH); the production casing bore is the frac flow path and the plug setting surface (DT).",
+    "safety": "Casing handling and running; cement chemicals; well control during cementing.",
+    "specs": "Common shale well: 13-3/8 in. surface, 9-5/8 in. intermediate, 5-1/2 in. production casing (schematic sizes in the model).",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale.",
+    "operations": "Done by the drilling rig before the completion; the completion inherits the casing test and the cement evaluation.",
+    "failure_modes": "Poor cement bond, channeling, casing wear from drilling, connection leaks, collapse during the frac."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 5CT",
+      "edition": "verify",
+      "paraphrase": "Casing and tubing dimensions, grades, and testing.",
+      "source": "S27"
+    },
+    {
+      "standard": "API Spec 10A",
+      "edition": "verify",
+      "paraphrase": "Well cement classes and testing.",
+      "source": "S28"
+    },
+    {
+      "standard": "API RP 10D-2",
+      "edition": "verify",
+      "paraphrase": "Centralizer placement and stop collar testing.",
+      "source": "S30"
+    }
+  ]
+}

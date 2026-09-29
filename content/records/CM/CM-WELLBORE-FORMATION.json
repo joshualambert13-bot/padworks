@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE-FORMATION",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Formation (context)",
+  "aliases": [
+    "rock",
+    "overburden",
+    "formation"
+  ],
+  "function": "The rock around the wellbore, drawn translucent so the casing strings can be seen.",
+  "tabs": {
+    "overview": "Each hole section is drilled through it at the hole size shown; the cement bonds to it.",
+    "engineering": "Not applicable.",
+    "safety": "None.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-FORMATION"
+  ]
+}

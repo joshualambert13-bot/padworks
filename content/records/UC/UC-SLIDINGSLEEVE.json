@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-SLIDINGSLEEVE",
+  "parent": "UC",
+  "group": "tubing-string",
+  "level": "component",
+  "name": "Sliding sleeve (production)",
+  "aliases": [
+    "sliding side door",
+    "SSD",
+    "circulating sleeve"
+  ],
+  "function": "A tubing sub with ports covered by an inner sleeve that slickline shifts open to circulate between the tubing and the annulus, used to kill, unload, or displace the well.",
+  "tabs": {
+    "overview": "Shifted with a slickline tool; closed in normal production. Different from the frac sleeve in the casing.",
+    "engineering": "Rated with the tubing; seals inspected at workovers.",
+    "safety": "Left closed and confirmed before pressure work.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only."
+  }
+}

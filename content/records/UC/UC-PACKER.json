@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S21",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-PACKER",
+  "parent": "UC",
+  "group": "tubing-string",
+  "level": "equipment",
+  "name": "Production packer",
+  "aliases": [
+    "packer",
+    "production packer",
+    "permanent packer",
+    "retrievable packer"
+  ],
+  "function": "The downhole seal between the tubing and the casing above the perforations that isolates the annulus from produced fluids and pressure.",
+  "tabs": {
+    "overview": "Set hydraulically or mechanically; a permanent packer is milled out, a retrievable packer is released and pulled. The tubing lands in it through a seal assembly so the tubing can move with temperature.",
+    "engineering": "Per API 11D1 validation grades; rating for differential from above and below; elastomers for the fluids and temperature.",
+    "connections": "Tubing above through the seal assembly; casing wall.",
+    "safety": "Annulus pressure monitoring shows a packer leak.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only.",
+    "operations": "Set once the tubing is landed; tested from the annulus.",
+    "failure_modes": "Element leaks, slips not holding, seal assembly leaks."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 11D1",
+      "edition": "verify",
+      "paraphrase": "Packer and bridge plug validation grades.",
+      "source": "S21"
+    }
+  ]
+}

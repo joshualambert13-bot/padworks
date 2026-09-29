@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-PRODTREE-LMV",
+  "parent": "UC-PRODTREE",
+  "group": "production-tree",
+  "level": "component",
+  "name": "Lower master valve",
+  "aliases": [
+    "LMV (production)",
+    "master valve"
+  ],
+  "function": "The barrier valve at the bottom of the tree, left open in service and closed only when the tree above it needs work.",
+  "tabs": {
+    "overview": "Manual gate valve; not cycled under flow so the seats stay unworn for the day it must hold.",
+    "engineering": "API 6A; same rating as the tree.",
+    "safety": "Cycled only with the well shut in on the upper master.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/UC/UC-PRODTREE.glb",
+  "mesh_nodes": [
+    "UC-PRODTREE-LMV"
+  ]
+}

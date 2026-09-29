@@ -28,7 +28,7 @@
   ],
   "function": "The threaded studs and nuts that carry the load of a flanged or studded connection.",
   "tabs": {
-    "overview": "Studs are threaded full length with a nut on each end for through-bolted flanges, or threaded into tapped holes on studded connections. They are made up in a star pattern in steps to the final torque or stretch so the gasket seats evenly. In the tree model every stacked flange pair carries its stud and nut set as one node.",
+    "overview": "Studs are threaded full length with a nut on each end for through-bolted flanges, or threaded into tapped holes on studded connections. They are made up in a star pattern in steps to the final torque or stretch so the gasket seats evenly. In the tree model every stacked flange pair carries its stud and nut set as one node. The production tree model carries its own stud sets as UC-PRODTREE-STUDS.",
     "engineering": "Alloy steel studs and heavy hex nuts to the grades API 6A allows for the service, with a hardness limit for sour service per NACE MR0175 (S8). Thread lubricant and torque values per the OEM or operator practice.",
     "connections": "Every flanged and studded connection.",
     "safety": "Under-torqued studs leak; over-torqued or corroded studs fail on make-up. Hands and tools stay clear of the stud ends when hammering wrenches are used.",

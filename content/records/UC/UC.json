@@ -1,0 +1,70 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9",
+    "S29",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of handwheels, elevators, and tongs."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors at the tree and flowline; escape sets staged."
+    },
+    {
+      "class": "Fire and flammable gas",
+      "control": "No ignition sources at the tree; grounding on the flowline."
+    }
+  ],
+  "id": "UC",
+  "level": "system",
+  "name": "Upper completion and production tree",
+  "aliases": [
+    "upper completion",
+    "tubing completion",
+    "final completion"
+  ],
+  "function": "The permanent equipment that turns the fractured wellbore into a producing well: the tubing string with its packer, safety valve, and accessories hung in the tubing head, and the production tree on top that controls flow to the flowline.",
+  "tabs": {
+    "overview": "Once the frac stack comes off, the well is completed for production. Tubing is run with a production packer (or landed open-ended for early flowback on many shale wells), a subsurface safety valve where required, landing nipples, and a seal assembly, and is hung in the tubing head on a tubing hanger. The production tree is bolted onto the tubing head adapter: lower and upper master valves, a flow cross, a production wing with a choke to the flowline, a kill wing, a swab valve, and a cap with a gauge. Artificial lift, when needed, is installed later through the same tree.",
+    "engineering": "Tree rating and bore follow API 6A (a 3-1/16 in. 10K tree is common on shale wells); tubing per API 5CT; the safety valve per API 14A where the regulator or operator requires it; packers per API 11D1.",
+    "connections": "Tubing hanger in the tubing head (WH); flowline from the wing to the facility; control line to the safety valve; casing annulus outlets on the tubing head.",
+    "safety": "The tree is the permanent pressure boundary; valve stems and handwheels are the pinch points; H2S and flammable gas at the tree and flowline.",
+    "specs": "Tree 3-1/16 in. 10K typical; tubing 2-7/8 in. typical on shale wells; packer and SSSV ratings per the well.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only.",
+    "operations": "Installed after the drillout and initial flowback, or before flowback where the tubing is needed to lift the well.",
+    "failure_modes": "Tree valve seat leaks, choke erosion, tubing leaks, packer seal failure, safety valve failing to close or to hold."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 6A",
+      "edition": "verify",
+      "paraphrase": "Wellhead and tree equipment: ratings, materials, testing.",
+      "source": "S1"
+    },
+    {
+      "standard": "API Spec 14A",
+      "edition": "verify",
+      "paraphrase": "Subsurface safety valve equipment qualification.",
+      "source": "S29"
+    }
+  ]
+}

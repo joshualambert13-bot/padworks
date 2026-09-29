@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Cement and chemicals",
+      "control": "Eye and skin protection at the cementing unit; dust controls at bulk transfer."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-CEMENTUNIT",
+  "parent": "CM",
+  "group": "cementing",
+  "level": "equipment",
+  "name": "Cementing unit and bulk equipment",
+  "aliases": [
+    "cement unit",
+    "cement pump truck",
+    "bulk truck",
+    "batch mixer"
+  ],
+  "function": "The pump truck that mixes and pumps the slurry, with the bulk cement transports and the batch mixer or recirculating mixer that feeds it.",
+  "tabs": {
+    "overview": "Dry cement and additives are blended in bulk, mixed with water at the unit to the design density, and pumped down the casing at the planned rate; displacement follows with mud or water. Density and rate are recorded through the job.",
+    "engineering": "Pump pressure for the job; densitometer control; slurry tests per API 10A before the job.",
+    "connections": "Bulk to mixer to pump to the cement head.",
+    "safety": "Cement dust and caustic slurry; high-pressure lines.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale.",
+    "operations": "Once per string; results feed the cement evaluation.",
+    "failure_modes": "Density off target, pump failures, early set."
+  }
+}

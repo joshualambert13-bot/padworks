@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE-INTERMEDIATECASING",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Intermediate casing",
+  "aliases": [
+    "intermediate casing",
+    "intermediate string",
+    "9-5/8 casing"
+  ],
+  "function": "The string set through formations that would otherwise cause trouble while drilling the production hole: lost circulation, salt, high pressure, or unstable shale.",
+  "tabs": {
+    "overview": "One or more intermediate strings depending on the well; cemented at least across the zones of concern.",
+    "engineering": "Per API 5CT.",
+    "safety": "Wear from drilling the next section is checked before the frac.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-INTERMEDIATECASING"
+  ]
+}

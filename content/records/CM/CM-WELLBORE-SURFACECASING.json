@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE-SURFACECASING",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Surface casing",
+  "aliases": [
+    "surface casing",
+    "surface string",
+    "13-3/8 casing"
+  ],
+  "function": "The string set below the freshwater aquifers and cemented to surface; it carries the wellhead and the BOP during drilling.",
+  "tabs": {
+    "overview": "Depth set by regulation to protect fresh water; cemented to surface; the casing head is welded or threaded onto it.",
+    "engineering": "Per API 5CT; cement to surface per regulation.",
+    "safety": "The regulatory string; cement returns to surface are confirmed.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-SURFACECASING"
+  ]
+}

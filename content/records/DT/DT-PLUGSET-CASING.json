@@ -26,11 +26,7 @@
   "group": "plug-and-perf",
   "level": "component",
   "name": "Production casing section (5-1/2 in.)",
-  "aliases": [
-    "casing",
-    "production casing",
-    "5-1/2 casing"
-  ],
+  "aliases": [],
   "function": "The section of production casing the plug sets in, drawn translucent so the tools inside can be seen.",
   "tabs": {
     "overview": "Casing ID sets the plug OD and the clearance that lets the string be pumped down; 5-1/2 in. 20 lb/ft has a 4.778 in. ID. Slips bite into this wall; the element seals against it.",

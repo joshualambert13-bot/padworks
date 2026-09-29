@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-CEMENTHEAD",
+  "parent": "CM",
+  "group": "cementing",
+  "level": "equipment",
+  "name": "Cementing head and wiper plugs",
+  "aliases": [
+    "cement head",
+    "plug container",
+    "wiper plugs",
+    "bottom plug",
+    "top plug"
+  ],
+  "function": "The head on top of the casing during a cement job that holds the bottom and top wiper plugs and releases them ahead of and behind the cement.",
+  "tabs": {
+    "overview": "The bottom plug wipes mud ahead of the cement and ruptures at the float collar; the top plug separates cement from the displacement fluid and bumps on the collar to signal the end of displacement. Plug release is confirmed by indicators on the head.",
+    "engineering": "Rated for the pump pressure; plug sizes per the casing.",
+    "connections": "Casing below; cement unit line in.",
+    "safety": "High-pressure connections; plug release confirmed remotely.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale.",
+    "operations": "Once per string.",
+    "failure_modes": "Plug not released, plug not bumping, head leaks."
+  }
+}

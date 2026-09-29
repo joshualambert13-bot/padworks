@@ -1,0 +1,60 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of handwheels, elevators, and tongs."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-TUBING",
+  "parent": "UC",
+  "group": "tubing-string",
+  "level": "equipment",
+  "name": "Production tubing string",
+  "aliases": [
+    "tubing",
+    "production tubing",
+    "tubing string",
+    "2-7/8 tubing"
+  ],
+  "function": "The string of tubing hung from the tubing hanger that carries production from the reservoir to the tree, protecting the casing from produced fluids and giving a controlled flow path for artificial lift.",
+  "tabs": {
+    "overview": "Run joint by joint with a workover rig or a snubbing unit after the frac and drillout, with the packer, safety valve, and nipples made up in it. On many shale wells the tubing is landed above the top perforations without a packer for early production, and a packer is added later.",
+    "engineering": "Per API 5CT: size, weight, grade, and connection chosen for the pressure, the fluids, and the lift method; 2-7/8 in. is common on shale wells.",
+    "connections": "Tubing hanger above; packer or open end below; nipples and safety valve in the string.",
+    "safety": "Pipe handling; well control while running tubing in a live well.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only.",
+    "operations": "Run once; pulled for workovers.",
+    "failure_modes": "Corrosion, connection leaks, erosion at the bottom, parted tubing."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 5CT",
+      "edition": "verify",
+      "paraphrase": "Casing and tubing dimensions, grades, and testing.",
+      "source": "S27"
+    }
+  ]
+}

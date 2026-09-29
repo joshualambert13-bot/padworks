@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of handwheels, elevators, and tongs."
+    }
+  ],
+  "id": "CM-CASINGCONNECTION",
+  "parent": "CM",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Casing connections",
+  "aliases": [
+    "casing connection",
+    "threaded connection",
+    "premium connection",
+    "buttress",
+    "LTC"
+  ],
+  "function": "The threaded joints between casing joints that carry the tension, seal the pressure, and survive the frac pressure cycles.",
+  "tabs": {
+    "overview": "API connections (short and long round thread, buttress) and proprietary premium connections with metal seals; frac wells often use semi-premium or premium threads on the production string because of the pressure cycling.",
+    "engineering": "Per API 5CT for API threads; make-up torque and thread compound per the connection.",
+    "safety": "Make-up with power tongs; pinch points.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S29",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-SSSV",
+  "parent": "UC",
+  "group": "tubing-string",
+  "level": "equipment",
+  "name": "Subsurface safety valve",
+  "aliases": [
+    "SSSV",
+    "SCSSV",
+    "downhole safety valve",
+    "safety valve"
+  ],
+  "function": "The fail-closed flapper valve in the tubing a few hundred feet below surface, held open by hydraulic control pressure from surface and closing on loss of that pressure.",
+  "tabs": {
+    "overview": "Required offshore and on some land wells near people or infrastructure. A control line from a wellhead panel holds a piston against a spring; losing pressure (a fire, a line break, or a manual trip) lets the flapper close on flow. Tubing-retrievable valves are part of the string; wireline-retrievable valves land in a nipple.",
+    "engineering": "Per API Spec 14A; setting depth, closing time, and leak rate tested; control line rated to the setting pressure plus margin.",
+    "connections": "In the tubing string; control line to the tree panel.",
+    "safety": "Function tested on a schedule; the tree panel is part of the safety system.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only.",
+    "operations": "Tested at commissioning and periodically.",
+    "failure_modes": "Flapper leaks, control line leaks, failure to close."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 14A",
+      "edition": "verify",
+      "paraphrase": "Subsurface safety valve design validation and functional testing.",
+      "source": "S29"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of flowlines and iron under flow; restraints on temporary lines."
+    },
+    {
+      "class": "Fire and flammable gas",
+      "control": "No ignition sources at the tree; grounding on the flowline."
+    }
+  ],
+  "id": "UC-PRODTREE-FLOWLINE",
+  "parent": "UC-PRODTREE",
+  "group": "production-tree",
+  "level": "component",
+  "name": "Flowline connection",
+  "aliases": [
+    "flowline riser",
+    "production line"
+  ],
+  "function": "The flanged elbow and drop leg that takes flow from the choke down to the buried flowline toward the facility.",
+  "tabs": {
+    "overview": "Flanged to the choke; drops to grade and runs to the header or the separator; check valve and pressure sensor on the line.",
+    "engineering": "Flowline class per the facility design.",
+    "safety": "Line of fire under flow; grounding.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/UC/UC-PRODTREE.glb",
+  "mesh_nodes": [
+    "UC-PRODTREE-FLOWLINE"
+  ]
+}

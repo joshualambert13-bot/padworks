@@ -3,7 +3,7 @@
   "evidence_tier": "E2",
   "reviewers": [],
   "system": "WH",
-  "drawn_in_3d": false,
+  "drawn_in_3d": true,
   "sources": [
     "S1",
     "S8",
@@ -13,7 +13,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 6: bound to the production tree model"
   },
   "id": "WH-PRODUCTIONTREE",
   "parent": "WH",
@@ -21,13 +21,12 @@
   "level": "equipment",
   "name": "Production tree",
   "aliases": [
-    "Christmas tree",
     "xmas tree",
     "production xmas tree"
   ],
   "function": "The permanent valve assembly installed on the tubing head after the completion, replacing the frac stack, to control production and give access to the tubing for wireline and coiled tubing over the life of the well.",
   "tabs": {
-    "overview": "A land production tree is a smaller version of the frac stack: master valve or valves, a cross or tee, a wing valve with a choke, and a swab valve with a tree cap. It is rated for the shut-in tubing pressure rather than the treating pressure, so it is usually a lower rating and smaller bore than the frac stack. Solid-block trees machine the valves into one forging to reduce flanged connections.",
+    "overview": "A land production tree is a smaller version of the frac stack: master valve or valves, a cross or tee, a wing valve with a choke, and a swab valve with a tree cap. It is rated for the shut-in tubing pressure rather than the treating pressure, so it is usually a lower rating and smaller bore than the frac stack. Solid-block trees machine the valves into one forging to reduce flanged connections.\n\nThe full record with components lives in the UC system as UC-PRODTREE; this entry keeps the wellhead system's view of the tree.",
     "engineering": "API 6A; bore matched to the tubing hanger profile; pressure rating for the shut-in pressure with margin; actuator on the wing or master where the well is on a safety system; choke sized for the production rate.",
     "connections": "Below: tubing head adapter and tubing hanger with the BPV profile. Wing: flowline to the production facility through the choke. Top: tree cap with gauge and access for lubricators.",
     "safety": "Installed with the BPV or TWC set; tested against the TWC before the well is opened. Sour wells need material class and monitoring per NACE MR0175 (S8).",
@@ -43,6 +42,30 @@
     {
       "class": "H2S",
       "control": "Monitors and wind indicators per the site plan when the well can flow sour gas."
+    }
+  ],
+  "glb": "/glb/UC/UC-PRODTREE.glb",
+  "mesh_nodes": [
+    "UC-PRODTREE-TUBINGHEADADAPTER",
+    "UC-PRODTREE-LMV",
+    "UC-PRODTREE-UMV",
+    "UC-PRODTREE-FLOWCROSS",
+    "UC-PRODTREE-WINGVALVE",
+    "UC-PRODTREE-CHOKE",
+    "UC-PRODTREE-ACTUATOR",
+    "UC-PRODTREE-FLOWLINE",
+    "UC-PRODTREE-KILLWING",
+    "UC-PRODTREE-GAUGE",
+    "UC-PRODTREE-SWAB",
+    "UC-PRODTREE-TREECAP",
+    "UC-PRODTREE-STUDS"
+  ],
+  "connections": [
+    {
+      "target": "UC-PRODTREE",
+      "direction": "undirected",
+      "type": "mechanical",
+      "note": "Component records"
     }
   ]
 }

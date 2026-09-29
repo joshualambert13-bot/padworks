@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-CEMENTEVAL",
+  "parent": "CM",
+  "group": "evaluation",
+  "level": "equipment",
+  "name": "Cement evaluation (bond log)",
+  "aliases": [
+    "cement bond log",
+    "CBL",
+    "VDL",
+    "ultrasonic cement evaluation",
+    "temperature survey"
+  ],
+  "function": "The logs run inside the casing after the cement sets that estimate where the cement is and how well it bonds to the pipe and the formation.",
+  "tabs": {
+    "overview": "A sonic tool measures how much the casing rings; well-bonded pipe rings less. Ultrasonic tools map the bond around the pipe. A temperature survey finds the top of cement from the heat of hydration. The completion uses the result to decide whether stages will be isolated behind pipe.",
+    "engineering": "Run on wireline after the cement sets; interpretation depends on the cement and the casing.",
+    "connections": "Run through the wellhead with a wireline unit (WL).",
+    "safety": "Wireline hazards.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale.",
+    "operations": "Before the frac when isolation matters.",
+    "failure_modes": "Ambiguous logs, microannulus, foam cement effects."
+  }
+}

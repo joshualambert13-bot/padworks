@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-NIPPLE",
+  "parent": "UC",
+  "group": "tubing-string",
+  "level": "component",
+  "name": "Landing nipples and profiles",
+  "aliases": [
+    "landing nipple",
+    "profile nipple",
+    "no-go nipple",
+    "X nipple"
+  ],
+  "function": "Short profiled subs in the tubing string where wireline-set plugs, chokes, and safety valves can be locked and sealed.",
+  "tabs": {
+    "overview": "Placed at planned depths: below the safety valve, above the packer, at the tail. A lock mandrel run on slickline latches in the profile; a no-go profile stops tools from passing.",
+    "engineering": "Profile size stepped so tools reach the intended nipple; pressure rating with the tubing.",
+    "safety": "Plugs set in nipples are barriers for tree work.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only."
+  }
+}

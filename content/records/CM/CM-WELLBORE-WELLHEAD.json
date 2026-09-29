@@ -1,0 +1,55 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE-WELLHEAD",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Wellhead (context)",
+  "aliases": [
+    "wellhead stub"
+  ],
+  "function": "The wellhead stack at surface where the casing strings hang; see the WH system for the full model.",
+  "tabs": {
+    "overview": "Casing head on the surface casing; spools for each string.",
+    "engineering": "Per API 6A.",
+    "safety": "See WH.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-WELLHEAD"
+  ],
+  "connections": [
+    {
+      "target": "WH-CASINGHEAD",
+      "direction": "undirected",
+      "type": "mechanical",
+      "note": "Full wellhead model"
+    }
+  ]
+}

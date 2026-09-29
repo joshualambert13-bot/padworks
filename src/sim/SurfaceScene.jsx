@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, ContactShadows } from '@react-three/drei';
 import { useSim, padRoles } from './store.js';
-import { Ground, FracTree, ZipperManifold, Missile, FracPump, Blender, Hydration, ChemAdd, SandSilos, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M } from './parts/surface.jsx';
+import { Ground, FracTree, ProductionTree, ZipperManifold, Missile, FracPump, Blender, Hydration, ChemAdd, SandSilos, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M } from './parts/surface.jsx';
 import { PipeRun, MAT, Label } from './parts/primitives.jsx';
 
 const WELL_SPACING = 8;   // meters between wellheads along the row
@@ -13,10 +13,11 @@ function Ticker({ enabled }) {
   return null;
 }
 
-function presets(rowCenter, rowLen) {
+function presets(rowCenter, rowLen, production = false) {
   return {
+    ...(production ? { tree: { pos: [5.5, 4.2, 6.0], target: [0.3, 2.7, 0] } } : {}),
     pad:   { pos: [24 + rowLen * 0.25, 28 + rowLen * 0.2, 58 + rowLen * 0.35], target: [-12, 0, rowCenter] },
-    tree:  { pos: [12.5, 9.5, 13.5], target: [0, 4.8, 0] },
+    ...(production ? {} : { tree: { pos: [12.5, 9.5, 13.5], target: [0, 4.8, 0] } }),
     row:   { pos: [30 + rowLen * 0.45, 12 + rowLen * 0.18, rowCenter + 6], target: [-2, 3.5, rowCenter] },
     pumps: { pos: [-6, 12, 24], target: [-28, 2, 0] },
     sand:  { pos: [-30, 18, 40], target: [-48, 4, 8] },
@@ -24,14 +25,14 @@ function presets(rowCenter, rowLen) {
   };
 }
 
-function CameraPreset({ preset, rowCenter, rowLen }) {
+function CameraPreset({ preset, rowCenter, rowLen, production }) {
   const { camera, controls } = useThree();
   useEffect(() => {
-    const P = presets(rowCenter, rowLen);
+    const P = presets(rowCenter, rowLen, production);
     const p = P[preset] || P.pad;
     camera.position.set(...p.pos);
     if (controls) { controls.target.set(...p.target); controls.update(); }
-  }, [preset, camera, controls, rowCenter, rowLen]);
+  }, [preset, camera, controls, rowCenter, rowLen, production]);
   return null;
 }
 
@@ -68,7 +69,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <directionalLight position={[40, 60, 20]} intensity={1.6} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-90} shadow-camera-right={90} shadow-camera-top={90} shadow-camera-bottom={-90} />
       <hemisphereLight args={['#9fb4d6', '#2b241b', 0.5]} />
       <Ticker enabled={tickHere} />
-      <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} />
+      <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} />
       <Ground />
       <RedZone visible={pumping} />
 
@@ -76,10 +77,16 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       {roles.map((r, i) => (
         <group key={i} position={[0, 0, wellZ[i]]}>
           {i === 0
-            ? <FracTree valves={s.valves} showLabels={showLabels && preset === 'tree'} lubricator={s.lubricatorRigged} wlStep={s.wl.step} bore={bore} />
-            : <FracTree valves={partnerValves(r.role)} showLabels={false} lubricator={r.role === 'wireline'} wlStep={r.role === 'wireline' ? 'pumpdown' : 'idle'} bore={bore} dim partner />}
-          {/* spooled treating line from the inlet block to this well's zipper outlet */}
-          <PipeRun points={[[-bore * 2.6, d.inletY, 0], [-3.2, d.inletY, 0], [-4.4, d.inletY - 1.5, 0], [-4.4, 0.9, 0], [-6.5, 0.9, 0]]} r={bore * 0.55} mat={MAT.steel} />
+            ? (s.phase === 'production'
+              ? <ProductionTree showLabels={showLabels && preset === 'tree'} />
+              : <FracTree valves={s.valves} showLabels={showLabels && preset === 'tree'} lubricator={s.lubricatorRigged} wlStep={s.wl.step} bore={bore} />)
+            : (r.role === 'done'
+              ? <ProductionTree showLabels={false} partner />
+              : <FracTree valves={partnerValves(r.role)} showLabels={false} lubricator={r.role === 'wireline'} wlStep={r.role === 'wireline' ? 'pumpdown' : 'idle'} bore={bore} dim partner />)}
+          {/* spooled treating line from the inlet block to this well's zipper outlet (gone once the well is on production) */}
+          {!((i === 0 && s.phase === 'production') || (i > 0 && r.role === 'done')) && (
+            <PipeRun points={[[-bore * 2.6, d.inletY, 0], [-3.2, d.inletY, 0], [-4.4, d.inletY - 1.5, 0], [-4.4, 0.9, 0], [-6.5, 0.9, 0]]} r={bore * 0.55} mat={MAT.steel} />
+          )}
           {showLabels && i > 0 && <Label position={[2.5, d.topY + 0.6, 0]} text={'Well ' + (i + 1) + ': ' + (r.role === 'frac' ? 'pumping' : r.role === 'wireline' ? 'wireline' : r.role === 'done' ? 'complete' : 'waiting') + ' · stage ' + Math.min(r.stage + 1, 5)} />}
           {i === 0 && showLabels && <Label position={[2.5, d.topY + 0.6, 0]} text={'Well 1: your well'} />}
         </group>
@@ -108,7 +115,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       ))}
       {s.ctRigged && <CTUnit position={[16, 0, -10]} treeTop={treeTop} showLabels={showLabels} active={s.ct.progress > 0} />}
       <FlowbackSpread position={[14, 0, 22 + rowLen]} showLabels={showLabels} flaring={s.phase === 'flowback' && s.valves.wingB.pos > 0.99} />
-      <PipeRun points={[[d.wingOuterX + d.ftf / 2, d.crossY, 0], [d.wingOuterX + 3, d.crossY, 0], [d.wingOuterX + 4, 2.0, 0], [d.wingOuterX + 4, 0.9, 6], [12.8, 0.9, 21.4 + rowLen]]} r={0.075} />
+      {s.phase !== 'production' && <PipeRun points={[[d.wingOuterX + d.ftf / 2, d.crossY, 0], [d.wingOuterX + 3, d.crossY, 0], [d.wingOuterX + 4, 2.0, 0], [d.wingOuterX + 4, 0.9, 6], [12.8, 0.9, 21.4 + rowLen]]} r={0.075} />}
 
       <ContactShadows position={[0, 0.01, 0]} opacity={0.35} scale={200} blur={2.5} far={20} />
       <OrbitControls makeDefault maxPolarAngle={Math.PI / 2 - 0.02} minDistance={3} maxDistance={300} enableDamping dampingFactor={0.08} />

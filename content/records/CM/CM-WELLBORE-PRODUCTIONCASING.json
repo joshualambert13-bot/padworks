@@ -1,0 +1,59 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE-PRODUCTIONCASING",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Production casing",
+  "aliases": [
+    "production casing",
+    "production string",
+    "5-1/2 casing",
+    "long string"
+  ],
+  "function": "The string run to total depth through the lateral, cemented across the pay, and used as the frac conduit: treatments are pumped through it and the frac plugs seal in it.",
+  "tabs": {
+    "overview": "Burst rating checked for the frac treating pressure plus margin; drift diameter sets the plug and tool sizes; premium or semi-premium connections for the pressure cycles; cement quality across the lateral sets stage isolation.",
+    "engineering": "Per API 5CT; 5-1/2 in. 20 lb/ft P110 class is common on shale wells.",
+    "safety": "Casing test before the frac; wear and connection leaks are the failure modes that stop a job.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-PRODUCTIONCASING"
+  ],
+  "specs": [
+    {
+      "name": "Typical production casing",
+      "value": "5-1/2 in. 20 lb/ft",
+      "unit": "",
+      "tier": "E3",
+      "source": "S9"
+    }
+  ]
+}

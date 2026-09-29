@@ -232,5 +232,41 @@
     "access": "Paid standard",
     "tier": "E1",
     "url": ""
+  },
+  {
+    "id": "S27",
+    "title": "API Spec 5CT, Casing and Tubing",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S28",
+    "title": "API Spec 10A, Cements and Materials for Well Cementing",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S29",
+    "title": "API Spec 14A, Subsurface Safety Valve Equipment",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S30",
+    "title": "API RP 10D-2, Centralizer Placement and Stop Collar Testing",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
   }
 ]

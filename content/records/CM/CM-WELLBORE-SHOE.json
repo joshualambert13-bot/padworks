@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; casing and tubing handling by trained crews."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE-SHOE",
+  "parent": "CM-WELLBORE",
+  "group": "wellbore",
+  "level": "component",
+  "name": "Guide shoe and float shoe",
+  "aliases": [
+    "guide shoe",
+    "float shoe",
+    "shoe"
+  ],
+  "function": "The rounded fitting at the bottom of each string that guides it past ledges and, as a float shoe, carries a check valve that keeps cement from flowing back up the casing.",
+  "tabs": {
+    "overview": "Drillable body; the check valve holds the cement column until it sets; the shoe track between the float collar and the shoe is left full of cement.",
+    "engineering": "Drillable materials; ratings per the string.",
+    "safety": "Float failure shows as cement flowing back when the pumps stop.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "mesh_nodes": [
+    "CM-WELLBORE-SHOE"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CM",
+  "drawn_in_3d": true,
+  "sources": [
+    "S27",
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "CM-WELLBORE",
+  "parent": "CM",
+  "group": "wellbore",
+  "level": "equipment",
+  "name": "Cased wellbore (schematic cut-away)",
+  "aliases": [
+    "wellbore schematic",
+    "casing schematic",
+    "well schematic"
+  ],
+  "function": "The teaching model of the cased vertical wellbore: four nested casing strings with their cement sheaths, float collars, shoes, and centralizers inside a translucent formation, with the depth compressed so every string is visible.",
+  "tabs": {
+    "overview": "Use the section tool to open the wellbore. From the outside in: conductor, surface casing, intermediate casing, production casing. Each string ends in a guide shoe with a float collar one joint above it; centralizers sit above the shoe and where the string passes the previous shoe. Cement fills the annulus from the shoe up to the top of cement, which reaches surface on the outer strings and stops partway up on the inner ones. The wellhead sits at the top where the strings hang.",
+    "engineering": "Diameters are the public nominal sizes 20, 13-3/8, 9-5/8, and 5-1/2 in.; depths are schematic. Nothing here is a well design.",
+    "connections": "Wellhead (WH) at the top; the production casing continues into the lateral shown in the simulator downhole view.",
+    "safety": "None; a teaching model.",
+    "evidence": "API Spec 5CT (S27), API Spec 10A (S28), API RP 10D-2 (S30), field practice (S9). Sizes are public nominal values; the schematic depth is not to scale.",
+    "operations": "Reference for the completion crew: what the tree, plugs, and perforations sit in.",
+    "failure_modes": "See the component records."
+  },
+  "glb": "/glb/CM/CM-WELLBORE.glb",
+  "ghost_nodes": [
+    "CM-WELLBORE-FORMATION"
+  ],
+  "mesh_nodes": [
+    "CM-WELLBORE-FORMATION",
+    "CM-WELLBORE-CONDUCTOR",
+    "CM-WELLBORE-SURFACECASING",
+    "CM-WELLBORE-INTERMEDIATECASING",
+    "CM-WELLBORE-PRODUCTIONCASING",
+    "CM-WELLBORE-CEMENT",
+    "CM-WELLBORE-SHOE",
+    "CM-WELLBORE-FLOATCOLLAR",
+    "CM-WELLBORE-CENTRALIZER",
+    "CM-WELLBORE-WELLHEAD"
+  ]
+}

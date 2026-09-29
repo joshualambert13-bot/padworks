@@ -346,5 +346,49 @@
     "system": "FB",
     "record": "FB-SANDSEPARATOR",
     "definition": "The pressure vessel that drops proppant and plug debris out of the flowback stream before the chokes and separator erode."
+  },
+  {
+    "term": "Production tree",
+    "aliases": [
+      "Christmas tree",
+      "prod tree",
+      "flowing tree"
+    ],
+    "system": "UC",
+    "record": "UC-PRODTREE",
+    "definition": "The permanent valve assembly set on the tubing head after the completion: masters, flow cross, wing valves, choke, and swab valve that control the producing well."
+  },
+  {
+    "term": "Float shoe and float collar",
+    "aliases": [
+      "guide shoe",
+      "float equipment",
+      "shoe track"
+    ],
+    "system": "CM",
+    "record": "CM-WELLBORE-SHOE",
+    "definition": "The check-valve fittings at the bottom of a casing string that guide it into the hole and keep cement from flowing back up the casing after the job."
+  },
+  {
+    "term": "Cement sheath",
+    "aliases": [
+      "annular cement",
+      "top of cement",
+      "TOC"
+    ],
+    "system": "CM",
+    "record": "CM-WELLBORE-CEMENT",
+    "definition": "The cement placed in the annulus between the casing and the hole (or the previous casing) that supports the string and isolates the formations behind it."
+  },
+  {
+    "term": "Subsurface safety valve",
+    "aliases": [
+      "SSSV",
+      "SCSSV",
+      "downhole safety valve"
+    ],
+    "system": "UC",
+    "record": "UC-SSSV",
+    "definition": "The fail-closed valve in the tubing below the wellhead that shuts the well in if surface control pressure is lost."
   }
 ]

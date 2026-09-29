@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "UC",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 6 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "UC-PRODTREE-WINGVALVE",
+  "parent": "UC-PRODTREE",
+  "group": "production-tree",
+  "level": "component",
+  "name": "Production wing valve",
+  "aliases": [
+    "wing valve (production)",
+    "flow wing",
+    "flowline valve"
+  ],
+  "function": "The valve on the production side of the cross, upstream of the choke, that isolates the flowline from the well.",
+  "tabs": {
+    "overview": "Manual gate valve; a hydraulic wing is used where a surface safety system shuts the flowline.",
+    "engineering": "API 6A.",
+    "safety": "Closed to work on the choke or flowline.",
+    "evidence": "API 6A scope for trees (S1), API Spec 14A for safety valves (S29), API 11D1 for packers (S21), field practice (S9). Photographs read for proportion only."
+  },
+  "glb": "/glb/UC/UC-PRODTREE.glb",
+  "mesh_nodes": [
+    "UC-PRODTREE-WINGVALVE"
+  ]
+}
