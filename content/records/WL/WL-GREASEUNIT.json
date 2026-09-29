@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-GREASEUNIT",
+  "parent": "WL",
+  "group": "pressure-control",
+  "level": "equipment",
+  "name": "Grease injection and hydraulic unit",
+  "aliases": [
+    "grease unit",
+    "grease skid",
+    "grease pump",
+    "PCE control unit",
+    "hydraulic control skid"
+  ],
+  "function": "The skid with the high-pressure grease pump, grease reservoir, hydraulic pump, accumulator, and control panel that supplies the grease head and operates the wireline valve, tool trap, tool catcher, packoff, and line wiper.",
+  "tabs": {
+    "overview": "The PCE operator stands at this unit with a view of the stack. Grease pressure is set above wellhead pressure and adjusted as the well pressure changes during the run; the hydraulic circuits close the rams and operate the trap and catcher. Return grease from the head comes back to the reservoir.",
+    "engineering": "Grease pump pressure rating above the stack working pressure; hydraulic supply per the ram and packoff design; accumulator sized to close the rams with the pump stopped.",
+    "connections": "Grease supply and return to the head; hydraulic lines to the wireline valve, tool trap, tool catcher, packoff, and line wiper.",
+    "safety": "High-pressure grease lines and hydraulic lines run to the stack inside the exclusion area; leaks are repaired with the well shut in.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9).",
+    "operations": "Set up once per pad; grease consumption and pressure logged per run.",
+    "failure_modes": "Grease pump failure, contaminated grease, hydraulic leaks, accumulator precharge loss."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    }
+  ]
+}

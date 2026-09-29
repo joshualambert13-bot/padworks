@@ -1,8 +1,10 @@
-# Completions Explorer
+# Padworks: O&G Completions Simulator
 
-Interactive 3D reference library and stage-cycle simulator for oil and gas well completions. Training and reference only. Not for operational decisions.
+Interactive 3D equipment library and stage-cycle simulator for oil and gas well completions. Built for training. Not for operational decisions. Written, modeled, and coded independently from public sources.
 
-Drop 2: 64 WH records, seven Draco-compressed GLB assemblies (gate valve manual and hydraulic, frac tree, wellhead, zipper manifold, flow iron kit, tree saver) bound to records, simulator with procedural surface and downhole scenes, record library with search, integrity report, validation and CI, Vercel rewrite config.
+Live at https://padworks.vercel.app (GitHub repository joshlambert13-bot/padworks). The local folder may still be named completions-explorer; the folder name has no effect on the build.
+
+Drop 3: new name (Padworks) and logo, wireline pressure control stack (WL) with records and a model, differentiated vocabulary (tab names, status names, build check page, viewer keys), 86 records, eight Draco-compressed model files, simulator with procedural surface and downhole scenes, record library with search, build check page, validation and CI, Vercel rewrite config.
 
 ## Run it
 
@@ -24,7 +26,7 @@ On a phone on the same Wi-Fi: run `npm run preview -- --host` and open the netwo
 | --- | --- |
 | `npm run dev` | Development server with hot reload |
 | `npm run validate` | Schema, ID, parent, citation, alias, and glossary checks on every record |
-| `npm run integrity` | Binds record `mesh_nodes` to node names inside each GLB, checks budgets, writes `public/integrity.json` |
+| `npm run integrity` | Checks record `mesh_nodes` against part names inside each GLB, checks budgets, writes `public/build-check.json` (the Build check page) |
 | `npm run build` | Runs validate and integrity, then builds `dist/` and writes `dist/404.html` for path routing |
 | `npm run preview` | Serves `dist/` |
 | `npm run shots` | Headless Chromium screenshot walkthrough into `shots/` (after a build) |
@@ -40,18 +42,18 @@ cad/scripts/{SYSTEM}/{ID}.py         CadQuery scripts (Python) for GLB assemblie
 cad/dims/{SYSTEM}/{ID}.json          dimension sheet per scripted assembly
 public/glb/{SYSTEM}/{ID}.glb         compressed GLB served to the record viewer
 src/sim/                             simulator: store.js (state and response model), scenes, procedural parts, panels
-src/library/                         library, system, record pages, viewer, integrity, about
+src/library/                         library, system, record pages, viewer, build check, about
 scripts/                             validate, integrity, postbuild, shots, seed
 docs/                                writing standard, modeling standard, session template
 ```
 
 ## Review workflow
 
-Every AI-drafted record is `status: "draft"` and is not shown as reviewed. To review a record: open the JSON, read every tab, check each citation against the source register, correct the text, then set `status` to `proposed` (read once) or `reviewed` (every tab and citation checked) and add yourself to `reviewers`:
+Every AI-drafted record is `status: "draft"` and is labeled "Unreviewed draft" on the site. To review a record: open the JSON, read every tab, check each citation against the source register, correct the text, then set `status` to `screened` (read once) or `reviewed` (every tab and source checked) and add yourself to `reviewers`:
 
 ```json
 "status": "reviewed",
-"reviewers": [{ "name": "J. Lambert", "affiliation": "Completions Explorer", "date": "2026-10-01", "scope": "all tabs" }]
+"reviewers": [{ "name": "J. Lambert", "affiliation": "Independent", "date": "2026-10-01", "scope": "all tabs" }]
 ```
 
 `verified` requires two independent sources per numeric value. `npm run validate` refuses a non-draft record with no reviewer.
@@ -67,7 +69,7 @@ Two paths, both free:
 
 Vercel (recommended, free Hobby plan): sign in with GitHub, import the repository, accept the detected Vite settings, deploy. `vercel.json` rewrites every path to `index.html` so record links work. Every push to `main` redeploys. Cloudflare Pages and GitHub Pages also work (build `npm run build`, output `dist`; the `404.html` copy handles path routing on GitHub Pages). The step-by-step guide is in the Setup Guide document delivered with Drop 2.
 
-Set `GITHUB_REPO` in `src/config.js` so the "Report an error" link on each record opens an issue in your repository.
+`GITHUB_REPO` in `src/config.js` points the "Report an error" link on each record at the repository's issues page. The logo lives in `public/brand/` (`mark.svg` plus PNG renders).
 
 ## Licenses
 

@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-PUMPINSUB",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Pump-in sub",
+  "aliases": [
+    "pump-in tee",
+    "side port sub",
+    "bleed sub",
+    "injection sub"
+  ],
+  "function": "A stack section with a side port for pumping fluid into the stack or bleeding pressure off it, used for pump-down, equalizing, and bleeding down before rig-down.",
+  "tabs": {
+    "overview": "A short tube with a hammer union or flanged side outlet; a valve on the port is closed during the run unless pump-down fluid is delivered through it.",
+    "engineering": "Rated with the stack; port size 2 in. typical.",
+    "safety": "The port line is a live high-pressure line while pumping; it is restrained and bled before disconnection.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-PUMPINSUB"
+  ]
+}

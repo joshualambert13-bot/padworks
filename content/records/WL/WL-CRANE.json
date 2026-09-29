@@ -1,0 +1,55 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S13"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-CRANE",
+  "parent": "WL",
+  "group": "rig-up",
+  "level": "equipment",
+  "name": "Crane, sheaves, and cable path",
+  "aliases": [
+    "crane",
+    "top sheave",
+    "lower sheave",
+    "hay pulley",
+    "lubricator lift",
+    "mast unit"
+  ],
+  "function": "The crane that lifts the lubricator on and off the tree and holds the top sheave above the grease head, and the sheaves that turn the cable from the drum up into the stack.",
+  "tabs": {
+    "overview": "The lower sheave is anchored near the ground in line with the drum; the top sheave hangs from the crane above the stack so the cable enters the grease head vertically. A load pin in the top sheave measures cable tension. Between runs the crane lifts the whole lubricator off the tree so the frac crew can pump, then sets it back on for the next run. Some crews use a purpose-built mast unit instead of a crane.",
+    "engineering": "Sheave diameter respects the cable bend radius; the top sheave is tied back so it cannot swing; the crane is rated for the assembled stack weight with the tool string inside.",
+    "connections": "Cable path: drum, lower sheave, top sheave, grease head. Lifting: crane hook to the lubricator lift sub.",
+    "safety": "Suspended lubricator between runs; cable line of fire from drum to top sheave; sheave pinch points.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9).",
+    "operations": "Rigged once per pad; the lift cycle repeats every stage.",
+    "failure_modes": "Sheave bearing wear, tie-back failure, load pin drift."
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no one under the lubricator while it is suspended."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of sheaves, the drum, and quick unions during make-up."
+    }
+  ],
+  "scene": "WL-CRANE"
+}

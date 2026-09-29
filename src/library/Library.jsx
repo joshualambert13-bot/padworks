@@ -9,7 +9,7 @@ export default function Library() {
       <div className="max-w-6xl mx-auto p-4 space-y-4">
         <div>
           <h1 className="text-2xl font-semibold">Library</h1>
-          <p className="text-sm text-mute">{records.length} records across {systems.length} systems. Records are drafted, then reviewed and verified one by one; every record shows its status and evidence tier.</p>
+          <p className="text-sm text-mute">{records.length} records across {systems.length} systems. Every record shows who has reviewed it and where its numbers come from.</p>
         </div>
         <SearchBox autoFocus />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -25,7 +25,7 @@ export default function Library() {
                 <p className="text-xs text-mute mt-2 line-clamp-3">{s.blurb}</p>
                 <div className="mt-3 flex items-center gap-3 text-[11px] text-mute">
                   <span className="flex items-center gap-1"><Boxes size={12} />{n} records</span>
-                  <span>{drawn} drawn in 3D</span>
+                  <span>{drawn} with 3D</span>
                   <span className="ml-auto">Phase {s.phase}</span>
                 </div>
               </Link>

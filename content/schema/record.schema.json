@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Completions Explorer record",
+  "title": "Padworks record",
   "type": "object",
   "required": ["id", "system", "level", "name", "function", "status", "evidence_tier", "tabs", "hazards", "drawn_in_3d", "sources", "revision"],
   "additionalProperties": false,
@@ -13,7 +13,7 @@
     "name": { "type": "string", "minLength": 3 },
     "aliases": { "type": "array", "items": { "type": "string" } },
     "function": { "type": "string", "minLength": 20 },
-    "status": { "enum": ["draft", "proposed", "reviewed", "verified", "published", "deprecated"] },
+    "status": { "enum": ["draft", "screened", "reviewed", "verified", "published", "deprecated"] },
     "evidence_tier": { "enum": ["E1", "E2", "E3", "E4"] },
     "reviewers": { "type": "array", "items": { "type": "object", "required": ["name", "date"], "properties": { "name": { "type": "string" }, "affiliation": { "type": "string" }, "date": { "type": "string" }, "scope": { "type": "string" } } } },
     "tabs": {

@@ -1,0 +1,108 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE",
+  "parent": "WL",
+  "group": "pressure-control",
+  "level": "equipment",
+  "name": "Pressure control stack (lubricator assembly)",
+  "aliases": [
+    "PCE",
+    "PCE stack",
+    "lubricator assembly",
+    "wireline stack",
+    "riser stack"
+  ],
+  "function": "The assembly on top of the frac tree that contains wellhead pressure while the tool string is run and pulled on the cable: wellhead adapter, wireline valve, tool trap, pump-in sub, ball check valve, lubricator sections, tool catcher, grease injection head, and line wiper.",
+  "tabs": {
+    "overview": "Bottom to top: the wellhead adapter converts the tree flange to the stack union; the wireline valve is the ram barrier around the cable; the tool trap catches the string if it parts from the cable; the pump-in sub is the fluid port; the ball check seals the bore if the cable blows out of the head; the lubricator sections hold the full tool string above the swab valve; the tool catcher latches the string at the top; the grease injection head seals around the moving cable with grease between the cable and close-fitting flow tubes; the line wiper cleans the cable as it leaves. The stack is assembled on the ground or in the crane, lifted onto the tree, and pressure tested before the swab valve is opened.",
+    "engineering": "Bore matches the tree (5-1/8 in. or 7-1/16 in.). Working pressure matches the tree. Total lubricator length exceeds the longest tool string plus a margin so the string is fully above the swab valve when caught. Quick unions between components are made up by hand or hydraulically. Hydraulic supply to the wireline valve, tool trap, tool catcher, and packoff comes from the grease injection unit.",
+    "connections": "Below: frac tree swab valve through the wellhead adapter. Side: pump-in sub to the pump-down line. Hydraulic and grease lines to the grease injection unit. Cable in through the line wiper and grease head.",
+    "safety": "Two barriers around the cable while the well is open: the grease head in motion and the wireline valve when stopped. Test the stack to the job pressure before opening the swab valve. Bleed to zero before breaking any union. The whole stack is a suspended load between runs.",
+    "specs": "Bore 5-1/8 in. or 7-1/16 in.; working pressure 10,000 or 15,000 psi; lubricator section lengths on the order of 8 to 10 ft, three or more sections for plug-and-perf strings.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9).",
+    "operations": "Assembled once per pad; lifted on and off the tree every stage; tested every time a union is broken and remade, which the quick test sub makes possible without pressuring the well.",
+    "failure_modes": "Grease head leaks, union O-ring cuts, ram element wear, tool trap flapper damage, a string left in the lubricator over a closed trap."
+  },
+  "specs": [
+    {
+      "name": "Bore",
+      "value": "5-1/8 or 7-1/16",
+      "unit": "in.",
+      "source": "S6",
+      "tier": "E2"
+    },
+    {
+      "name": "Working pressure",
+      "value": "10,000 or 15,000",
+      "unit": "psi",
+      "source": "S6",
+      "tier": "E2"
+    }
+  ],
+  "connections": [
+    {
+      "target": "WH-FRACTREE-SWAB",
+      "direction": "upstream",
+      "type": "flanged",
+      "rating": "15K"
+    },
+    {
+      "target": "WL-GREASEUNIT",
+      "direction": "upstream",
+      "type": "hydraulic",
+      "note": "Grease and hydraulic supply"
+    },
+    {
+      "target": "WL-CRANE",
+      "direction": "undirected",
+      "type": "mechanical",
+      "note": "Lifted and suspended by the crane"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no one under the lubricator while it is suspended."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors and wind indicators when the well can flow sour gas at the grease head."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-WELLHEADADAPTER",
+    "WL-PCE-QUICKUNION",
+    "WL-PCE-WIRELINEVALVE",
+    "WL-PCE-TOOLTRAP",
+    "WL-PCE-PUMPINSUB",
+    "WL-PCE-BALLCHECK",
+    "WL-PCE-LUBRICATOR",
+    "WL-PCE-TOOLCATCHER",
+    "WL-PCE-GREASEHEAD",
+    "WL-PCE-LINEWIPER"
+  ]
+}

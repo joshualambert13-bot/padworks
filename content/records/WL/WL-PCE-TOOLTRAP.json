@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-TOOLTRAP",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Tool trap",
+  "aliases": [
+    "flapper trap",
+    "tool stop",
+    "trap"
+  ],
+  "function": "A hydraulically operated flapper in the stack below the lubricator that swings shut under the tool string once it has been pulled above the trap, so the string cannot fall back into the well if it parts from the cable.",
+  "tabs": {
+    "overview": "The flapper is held open while the string passes and closed once the string is above it; a groove lets the cable pass with the flapper closed. It is opened again before the string is run in.",
+    "engineering": "Rated with the stack; flapper and pivot sized for the tool string weight falling from the top of the lubricator.",
+    "safety": "Running in with the trap closed damages the flapper and the guns; the trap position is confirmed before every run.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-TOOLTRAP"
+  ],
+  "connections": [
+    {
+      "target": "WL-GREASEUNIT",
+      "direction": "upstream",
+      "type": "hydraulic"
+    }
+  ]
+}

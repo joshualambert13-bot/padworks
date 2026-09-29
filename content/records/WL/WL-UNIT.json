@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S13"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-UNIT",
+  "parent": "WL",
+  "group": "wireline-unit",
+  "level": "equipment",
+  "name": "Wireline unit (truck or skid)",
+  "aliases": [
+    "wireline truck",
+    "e-line truck",
+    "logging unit",
+    "wireline skid"
+  ],
+  "function": "The vehicle or skid that carries the cable drum, the winch drive, the measurement head, the control cab, and the power pack that run the tool string in and out of the well.",
+  "tabs": {
+    "overview": "A truck-mounted unit is common on land; skid units are used where the pad layout or an offshore deck needs it. The operator sits in the control cab facing the well with the winch controls, the depth and tension displays, and the perforating power supply (shooting panel). The drum holds the cable; the levelwind lays it evenly; the measurement head counts depth and reads tension on the cable as it leaves the drum. A diesel power pack drives the hydraulics.",
+    "engineering": "Drum capacity matches the cable length for the deepest well planned, commonly 20,000 ft and more for long laterals. Winch pull and brake ratings are matched to the cable breaking strength with margin. The unit is grounded and bonded to the wellhead before any shooting work.",
+    "connections": "Cable from the drum to the lower sheave, up to the top sheave on the crane, and down into the grease head. Electrical bond to the wellhead. Data link to the frac data van on some pads.",
+    "safety": "The cable between the drum and the top sheave is a line-of-fire hazard when tensioned; the area is kept clear. The unit is positioned so the operator can see the stack and the sheaves.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9).",
+    "operations": "Spotted and leveled before the first run; cable path rigged with the crane; bonded and tested; then cycles with the frac crew stage by stage.",
+    "failure_modes": "Levelwind miswrap, hydraulic leaks, depth encoder slip, cable damage at the drum."
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of sheaves, the drum, and quick unions during make-up."
+    }
+  ],
+  "scene": "WL-UNIT"
+}

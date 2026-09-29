@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-WEIGHTINDICATOR",
+  "parent": "WL-CRANE",
+  "group": "rig-up",
+  "level": "component",
+  "name": "Tension and depth measurement",
+  "aliases": [
+    "weight indicator",
+    "load pin",
+    "depth wheel",
+    "measurement head",
+    "tension meter"
+  ],
+  "function": "The load pin in the top sheave that measures cable tension and the measurement head on the unit that counts depth, both displayed in the control cab.",
+  "tabs": {
+    "overview": "Tension at the sheave is the cable load at surface; the operator watches it during pump-down to keep the string moving without overspeeding, and during pull-out to stay under the weak point rating. Depth from the measurement head is corrected to the casing collar log so the guns fire at the planned depth.",
+    "engineering": "Load pin calibrated before the job; depth wheel checked against a known cable length; collar correlation before every set.",
+    "safety": "Exceeding the weak point parts the cable head and leaves the string in the well; exceeding the cable rating parts the cable.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    }
+  ]
+}

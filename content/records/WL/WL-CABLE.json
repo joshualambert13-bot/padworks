@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-CABLE",
+  "parent": "WL-UNIT",
+  "group": "wireline-unit",
+  "level": "component",
+  "name": "Wireline cable (monoconductor)",
+  "aliases": [
+    "e-line cable",
+    "armored cable",
+    "monocable",
+    "5/16 line",
+    "greaseless cable"
+  ],
+  "function": "The armored electrical cable that carries the tool string, supplies power and signals to the setting tool and gun switches, and returns the collar locator signal.",
+  "tabs": {
+    "overview": "A copper conductor inside insulation, wrapped in two layers of contra-wound steel armor. Sizes such as 5/16 in. and 7/32 in. are common; polymer-encapsulated (greaseless) cables have a smooth jacket over the armor so a packoff can seal on them without grease injection. Breaking strength, working tension, and the weak point at the cable head are matched so the cable head parts before the cable does.",
+    "engineering": "Rated tension with margin; inspected for broken armor wires and cut back at the head periodically; conductor insulation tested before shooting.",
+    "safety": "A parted cable under tension recoils through the sheaves and the stack; tension limits and a clear cable path are the controls.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    }
+  ]
+}

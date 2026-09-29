@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-LUBRICATOR",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Lubricator sections (riser)",
+  "aliases": [
+    "lubricator",
+    "riser",
+    "riser sections",
+    "lubricator joints"
+  ],
+  "function": "The straight pressure-rated tubes that give the tool string a place to sit above the swab valve while the well is under pressure, assembled in sections to exceed the tool string length.",
+  "tabs": {
+    "overview": "Sections are joined with quick unions. Total length is set by the longest string on the job: the plug, setting tool, gun assembly, collar locator, weight bars, and cable head, plus a margin. Sections carry lift subs for the crane and are stored on a rack or a trailer between pads.",
+    "engineering": "Bore and working pressure match the tree; wall thickness set by the pressure rating; inspected for wall loss and thread damage.",
+    "safety": "The assembled stack is heavy and long; it is lifted with the crane through a lift sub, never by a union collar.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no one under the lubricator while it is suspended."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-LUBRICATOR"
+  ]
+}

@@ -6,8 +6,8 @@ import Viewer from './Viewer.jsx';
 import { GITHUB_REPO } from '../config.js';
 
 const TABS = [
-  ['overview', 'Overview'], ['engineering', 'Engineering'], ['connections', 'Connections'], ['safety', 'Safety'],
-  ['specs', 'Specs'], ['evidence', 'Evidence'], ['operations', 'Operations'], ['failure_modes', 'Failure modes'],
+  ['overview', 'Purpose'], ['engineering', 'Design'], ['connections', 'Interfaces'], ['safety', 'Hazards'],
+  ['specs', 'Numbers'], ['evidence', 'Sources'], ['operations', 'Job sequence'], ['failure_modes', 'Failure modes'],
 ];
 
 function Para({ text }) {
@@ -45,7 +45,7 @@ export default function RecordPage() {
           <div className="flex flex-row flex-wrap sm:flex-col sm:items-end gap-1">
             <span className={'badge ' + status.cls}>{status.text}</span>
             <span className="badge text-mute">{r.evidence_tier}: {TIER_LABEL[r.evidence_tier]}</span>
-            {r.drawn_in_3d ? <span className="badge text-cool border-cool/60">{r.glb ? 'Drawn in 3D (GLB)' : 'Drawn in 3D (simulator scene)'}</span> : <span className="badge text-mute">Not drawn</span>}
+            {r.drawn_in_3d ? <span className="badge text-cool border-cool/60">{r.glb ? '3D model' : '3D in the simulator'}</span> : <span className="badge text-mute">No 3D model yet</span>}
           </div>
         </div>
         <p className="text-sm text-mute max-w-3xl">{r.function}</p>
@@ -56,7 +56,7 @@ export default function RecordPage() {
           </div>
         )}
         {!glb && r.scene && (
-          <div className="card p-3 text-xs text-mute">This item is drawn procedurally in the <Link to="/simulate" className="text-ok">simulator</Link> scene as node <span className="mono">{r.scene}</span>. A record-level GLB follows in a later drop.</div>
+          <div className="card p-3 text-xs text-mute">This item appears in the <Link to="/simulate" className="text-accent">simulator</Link> scene as <span className="mono">{r.scene}</span>. A stand-alone model follows in a later drop.</div>
         )}
 
         <div className="card">
@@ -91,13 +91,13 @@ export default function RecordPage() {
                 <Para text={r.tabs.evidence} />
                 {r.standards && r.standards.length > 0 && (
                   <div>
-                    <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Standards (paraphrased; check the edition you hold)</div>
+                    <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Standards referenced (paraphrased; check the edition you hold)</div>
                     <ul className="space-y-1 text-xs">{r.standards.map((s, i) => <li key={i}><span className="font-medium">{s.standard}</span>{s.clause ? ', ' + s.clause : ''}{s.edition ? ' (' + s.edition + ')' : ''}: {s.paraphrase} <span className="mono text-mute">{s.source}</span></li>)}</ul>
                   </div>
                 )}
                 {r.oem_examples && r.oem_examples.length > 0 && (
                   <div>
-                    <div className="text-[10px] uppercase tracking-wide text-mute mb-1">OEM examples (illustrative, not baseline values)</div>
+                    <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Manufacturer examples (illustrative, not baseline values)</div>
                     <ul className="space-y-1 text-xs">{r.oem_examples.map((o, i) => <li key={i}>{o.oem} {o.model}{o.figure ? ', ' + o.figure : ''} <span className="mono text-mute">{o.source}</span></li>)}</ul>
                   </div>
                 )}
@@ -125,7 +125,7 @@ export default function RecordPage() {
                     {r.connections.map((c, i) => (
                       <li key={i} className="flex flex-wrap gap-2 items-center">
                         <span className="badge text-mute">{c.direction}</span>
-                        {byId.has(c.target) ? <Link to={(byId.get(c.target).level === 'system' ? '/library/' : '/library/equipment/') + c.target} className="text-ok mono">{c.target}</Link> : <span className="mono">{c.target}</span>}
+                        {byId.has(c.target) ? <Link to={(byId.get(c.target).level === 'system' ? '/library/' : '/library/equipment/') + c.target} className="text-accent mono">{c.target}</Link> : <span className="mono">{c.target}</span>}
                         <span className="text-mute">{c.type}{c.rating ? ', ' + c.rating : ''}{c.note ? ': ' + c.note : ''}</span>
                       </li>
                     ))}
@@ -165,7 +165,7 @@ export default function RecordPage() {
 
         <div className="flex items-center gap-2 text-xs text-mute">
           <a href={issueUrl} target="_blank" rel="noreferrer" className="btn inline-flex items-center gap-1"><Bug size={14} />Report an error in this record</a>
-          <span>Training and reference only. Not for operational decisions.</span>
+          <span>Built for training. Not for operational decisions.</span>
         </div>
       </div>
     </div>

@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-QUICKUNION",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Quick unions",
+  "aliases": [
+    "QU",
+    "quick union",
+    "hydraulic quick union",
+    "union collar"
+  ],
+  "function": "The threaded collar joints between stack components and lubricator sections, sealed with an O-ring, made up by hand with a bar or by a hydraulic collar.",
+  "tabs": {
+    "overview": "A pin with the seal and a box with a coarse thread; the collar turns a few turns to make up. Hydraulic quick unions make up and release under remote control so no one stands at the stack. Every union is a test point: the stack is retested after any union is remade.",
+    "engineering": "Rated with the stack; O-rings replaced on a schedule and whenever cut.",
+    "safety": "Never break a union with pressure on the stack; the quick test sub lets the stack be tested without well pressure after a remake.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of sheaves, the drum, and quick unions during make-up."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-QUICKUNION"
+  ]
+}

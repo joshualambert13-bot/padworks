@@ -1,14 +1,137 @@
 [
-  { "id": "S1", "title": "API Specification 6A, Wellhead and Tree Equipment", "publisher": "American Petroleum Institute", "edition": "21st edition (2018) with addenda; verify edition held", "access": "Paid standard. Cited by clause only when a personally held copy is checked.", "tier": "E1", "url": "" },
-  { "id": "S2", "title": "Cameron frac trees and zipper manifolds (product page)", "publisher": "SLB", "edition": "web, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://www.slb.com/products-and-services/innovating-in-oil-and-gas/completions/stimulation/frac-and-flowback-equipment/frac-trees-and-zipper-manifolds" },
-  { "id": "S3", "title": "What Is a Frac Tree and Frac Stack? Guide", "publisher": "Merobix", "edition": "web, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://www.merobix.com/blog/what-is-a-frac-tree-and-frac-stack" },
-  { "id": "S4", "title": "Frac Equipment Guide", "publisher": "FracturingHub", "edition": "web, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://www.fracturinghub.com/frac-equipment" },
-  { "id": "S5", "title": "Completion Equipment (product page)", "publisher": "Cactus Wellhead", "edition": "web, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://cactuswhd.com/product/completion-equipment/" },
-  { "id": "S6", "title": "Wireline Pressure Control Equipment", "publisher": "Liberty Energy", "edition": "PDF, 2023", "access": "Public", "tier": "E2", "url": "https://libertyenergy.com/wp-content/uploads/2023/12/Wireline-Pressure-Control-Equipment.pdf" },
-  { "id": "S7", "title": "Pressure Control Equipment catalogue", "publisher": "Hunting", "edition": "PDF, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://media.huntingplc.com/products-and-services/well-intervention-equipment/hunting-pressure-control-equipment-catalogue.pdf" },
-  { "id": "S8", "title": "NACE MR0175 / ISO 15156, Materials for use in H2S-containing environments in oil and gas production", "publisher": "NACE / ISO", "edition": "verify edition held", "access": "Paid standard", "tier": "E1", "url": "" },
-  { "id": "S9", "title": "Field and manufacturing experience of the content owner (API 6A valve manufacturing, oilfield operations)", "publisher": "J. Lambert", "edition": "2026", "access": "Named reviewer", "tier": "E3", "url": "" },
-  { "id": "S10", "title": "Engineering approximation by the content team, pending confirmation", "publisher": "Completions Explorer", "edition": "2026", "access": "Disclosed", "tier": "E4", "url": "" },
-  { "id": "S11", "title": "Frac Stacks and Zipper Manifold (service page)", "publisher": "Spartan Energy Services", "edition": "web, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://spartansenergy.com/frac-stacks-zipper-manifold/" },
-  { "id": "S12", "title": "Frac and Flowback (service page)", "publisher": "Vault Pressure Control", "edition": "web, accessed 2026-09-28", "access": "Public", "tier": "E2", "url": "https://www.vaultpc.com/frac-and-flowback" }
+  {
+    "id": "S1",
+    "title": "API Specification 6A, Wellhead and Tree Equipment",
+    "publisher": "American Petroleum Institute",
+    "edition": "21st edition (2018) with addenda; verify edition held",
+    "access": "Paid standard. Cited by clause only when a personally held copy is checked.",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S2",
+    "title": "Cameron frac trees and zipper manifolds (product page)",
+    "publisher": "SLB",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.slb.com/products-and-services/innovating-in-oil-and-gas/completions/stimulation/frac-and-flowback-equipment/frac-trees-and-zipper-manifolds"
+  },
+  {
+    "id": "S3",
+    "title": "What Is a Frac Tree and Frac Stack? Guide",
+    "publisher": "Merobix",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.merobix.com/blog/what-is-a-frac-tree-and-frac-stack"
+  },
+  {
+    "id": "S4",
+    "title": "Frac Equipment Guide",
+    "publisher": "FracturingHub",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.fracturinghub.com/frac-equipment"
+  },
+  {
+    "id": "S5",
+    "title": "Completion Equipment (product page)",
+    "publisher": "Cactus Wellhead",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://cactuswhd.com/product/completion-equipment/"
+  },
+  {
+    "id": "S6",
+    "title": "Wireline Pressure Control Equipment",
+    "publisher": "Liberty Energy",
+    "edition": "PDF, 2023",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://libertyenergy.com/wp-content/uploads/2023/12/Wireline-Pressure-Control-Equipment.pdf"
+  },
+  {
+    "id": "S7",
+    "title": "Pressure Control Equipment catalogue",
+    "publisher": "Hunting",
+    "edition": "PDF, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://media.huntingplc.com/products-and-services/well-intervention-equipment/hunting-pressure-control-equipment-catalogue.pdf"
+  },
+  {
+    "id": "S8",
+    "title": "NACE MR0175 / ISO 15156, Materials for use in H2S-containing environments in oil and gas production",
+    "publisher": "NACE / ISO",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S9",
+    "title": "Field and manufacturing experience of the content owner (API 6A valve manufacturing, oilfield operations)",
+    "publisher": "J. Lambert",
+    "edition": "2026",
+    "access": "Named reviewer",
+    "tier": "E3",
+    "url": ""
+  },
+  {
+    "id": "S10",
+    "title": "Engineering approximation by the content team, pending confirmation",
+    "publisher": "Padworks (reviewer notes)",
+    "edition": "2026",
+    "access": "Disclosed",
+    "tier": "E4",
+    "url": ""
+  },
+  {
+    "id": "S11",
+    "title": "Frac Stacks and Zipper Manifold (service page)",
+    "publisher": "Spartan Energy Services",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://spartansenergy.com/frac-stacks-zipper-manifold/"
+  },
+  {
+    "id": "S12",
+    "title": "Frac and Flowback (service page)",
+    "publisher": "Vault Pressure Control",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.vaultpc.com/frac-and-flowback"
+  },
+  {
+    "id": "S13",
+    "title": "Wireline Hardware and Accessories (product pages)",
+    "publisher": "Hunting",
+    "edition": "web, accessed 2026-09-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://huntingplc.com/products-services/perforating-logging-systems/wireline-hardware-and-accessories/"
+  },
+  {
+    "id": "S14",
+    "title": "API RP 67, Oilfield Explosives Safety",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S15",
+    "title": "API RP 19B, Evaluation of Well Perforators",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  }
 ]

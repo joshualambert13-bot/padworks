@@ -20,16 +20,16 @@ export function groupsOf(code) {
 }
 
 export const STATUS_LABEL = {
-  draft: { text: 'Draft: AI-drafted, not yet reviewed', cls: 'text-bad border-bad/60' },
-  proposed: { text: 'Proposed: read once, not reviewed in detail', cls: 'text-warn border-warn/60' },
-  reviewed: { text: 'Reviewed', cls: 'text-cool border-cool/60' },
-  verified: { text: 'Verified: two sources per value', cls: 'text-ok border-ok/60' },
+  draft: { text: 'Unreviewed draft', cls: 'text-bad border-bad/60' },
+  screened: { text: 'Screened: read once by the reviewer', cls: 'text-warn border-warn/60' },
+  reviewed: { text: 'Reviewed: every tab and source checked', cls: 'text-cool border-cool/60' },
+  verified: { text: 'Verified: two sources behind every number', cls: 'text-ok border-ok/60' },
   published: { text: 'Published', cls: 'text-ok border-ok/60' },
-  deprecated: { text: 'Deprecated', cls: 'text-mute border-line' },
+  deprecated: { text: 'Retired', cls: 'text-mute border-line' },
 };
 export const TIER_LABEL = {
-  E1: 'Standard-based',
-  E2: 'OEM-published (example, not baseline)',
-  E3: 'Field practice (named reviewer)',
-  E4: 'Disclosed approximation pending confirmation',
+  E1: 'From a standard',
+  E2: 'From a manufacturer\'s public document (example, not a baseline)',
+  E3: 'From the reviewer\'s field experience',
+  E4: 'Estimate, not yet confirmed',
 };

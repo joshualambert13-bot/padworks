@@ -1,5 +1,7 @@
 # Writing standard for records
 
+Independence rule: never copy, paraphrase, or adapt text, images, models, or interface wording from any other training site or manufacturer site. Every record is written fresh from the source register and the reviewer's own experience.
+
 Read this before drafting or reviewing any record. The AI drafts to it; the reviewer checks against it.
 
 ## Voice and language
@@ -11,19 +13,19 @@ Read this before drafting or reviewing any record. The AI drafts to it; the revi
 
 ## Tabs
 
-- overview: what it is, what it looks like, how it works. Two to four paragraphs at equipment level; one paragraph at component level.
-- engineering: materials, ratings, standards that govern it, how it is sized or selected.
-- connections: what it connects to, upstream and downstream, connection type and rating.
-- safety: the hazards specific to this item and the controls, written as practice, not procedure. Never write step-by-step procedures for explosives or pressure operations beyond what public standards state.
-- specs: a sentence on typical values, plus the structured `specs` array.
-- evidence: which sources support which claims.
-- operations: where it appears in the job sequence (see Section 4.2 of the framework), rig-up and rig-down notes.
+- overview (shown as Purpose): what it is, what it looks like, how it works. Two to four paragraphs at equipment level; one paragraph at component level.
+- engineering (shown as Design): materials, ratings, standards that govern it, how it is sized or selected.
+- connections (shown as Interfaces): what it connects to, upstream and downstream, connection type and rating.
+- safety (shown as Hazards): the hazards specific to this item and the controls, written as practice, not procedure. Never write step-by-step procedures for explosives or pressure operations beyond what public standards state.
+- specs (shown as Numbers): a sentence on typical values, plus the structured `specs` array.
+- evidence (shown as Sources): which sources support which claims.
+- operations (shown as Job sequence): where it appears in the job sequence (see Section 4.2 of the framework), rig-up and rig-down notes.
 - failure_modes: typical failure mechanisms and their field indicators.
 
 ## Evidence
 
 - Every record lists `sources` (S-numbers from `content/sources.json`).
-- Every numeric spec carries a `tier` and a `source`. E1 only when a personally held copy of the standard has been checked by the reviewer. E4 for anything without a source, and say so in the text with "pending confirmation".
+- Every numeric spec carries a `tier` and a `source`. E1 only when a personally held copy of the standard has been checked by the reviewer. E4 for anything without a source, and say so in the text with "estimate, not yet confirmed".
 - Standards are paraphrased by number, edition, and clause. No reproduced tables or figures. No quotation longer than a short phrase.
 
 ## Employer property rule
@@ -32,8 +34,8 @@ Nothing from an employer's CAD, drawings, procedures, quality records, quote dat
 
 ## Status
 
-- draft: AI-drafted, not read by the reviewer.
-- proposed: read once, obvious errors fixed.
+- draft: AI-drafted, not read by the reviewer (shown as Unreviewed draft).
+- screened: read once by the reviewer, obvious errors fixed.
 - reviewed: every tab and every citation checked; reviewer entry added.
 - verified: every numeric value confirmed against two independent public sources.
-- deprecated: superseded; keep the file with a note.
+- deprecated: superseded; keep the file with a note (shown as Retired).

@@ -1,5 +1,5 @@
 // Procedural surface equipment. Every group is named with a record ID so the
-// inspector and the integrity check can bind scene nodes to library records.
+// inspector and the build check can bind scene nodes to library records.
 // Geometry is generic and representative; proportions are not OEM dimensions.
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';

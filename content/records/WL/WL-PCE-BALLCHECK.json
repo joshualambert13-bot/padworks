@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-BALLCHECK",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Ball check valve",
+  "aliases": [
+    "ball check",
+    "check sub",
+    "blowout check"
+  ],
+  "function": "A section below the grease head in which a ball is lifted onto a seat by well flow if the cable parts and is blown out of the head, sealing the bore and stopping flow to atmosphere.",
+  "tabs": {
+    "overview": "The ball sits below the seat while the cable is in the bore; a sudden upward flow after a cable blowout carries it onto the seat. It is reset after the event with the well shut in.",
+    "engineering": "Rated with the stack; ball and seat sized to the bore.",
+    "safety": "A blown cable is the event the ball check is for; personnel are already clear of the stack top when the string is moving.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-BALLCHECK"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-TOOLCATCHER",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Tool catcher",
+  "aliases": [
+    "catcher",
+    "rope socket catcher",
+    "latch"
+  ],
+  "function": "A latch at the top of the lubricator that grips the cable head when the tool string is pulled fully up, so the string cannot drop if the cable is slacked or parts while the stack is being handled.",
+  "tabs": {
+    "overview": "Hydraulically released; the string is pulled into the catcher, the catcher engages, and the cable can be slacked for rig-down. Released before the next run.",
+    "engineering": "Rated with the stack; latch sized to the cable head profile.",
+    "safety": "A string caught in the catcher is above a closed tool trap; both are confirmed before the lubricator is lifted.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-TOOLCATCHER"
+  ],
+  "connections": [
+    {
+      "target": "WL-GREASEUNIT",
+      "direction": "upstream",
+      "type": "hydraulic"
+    }
+  ]
+}

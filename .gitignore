@@ -6,4 +6,4 @@ cad/**/out
 cad/**/out_open
 *.log
 .DS_Store
-public/integrity.json
+public/build-check.json

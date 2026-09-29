@@ -1,0 +1,111 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9",
+    "S13",
+    "S14",
+    "S15"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL",
+  "level": "system",
+  "name": "Wireline, perforating, and plug setting",
+  "aliases": [
+    "wireline",
+    "e-line",
+    "electric line",
+    "plug-and-perf crew"
+  ],
+  "function": "The service that runs the plug and perforating guns to depth on an electric cable, sets the plug, fires the guns, and pulls out, once per stage, through a pressure control stack on top of the frac tree while the well stays under pressure.",
+  "tabs": {
+    "overview": "On a plug-and-perf pad the wireline crew alternates with the frac crew. With the frac wing closed and the swab valve open, the lubricator stack sits on the tree. The tool string (cable head, weight bars, casing collar locator, setting tool, frac plug, perforating guns) is loaded in the lubricator, the stack is pressure tested, the swab valve is opened, and the string is lowered on the cable. In the vertical section it falls under its own weight; in the horizontal lateral it is pumped down with fluid from dedicated pump-down pumps or the frac spread. At depth the plug is set, the guns are fired cluster by cluster from the toe end of the interval toward the heel, and the string is pulled back into the lubricator. The swab valve is closed, the lubricator is bled and lifted off, and the tree is handed back to the frac crew.",
+    "engineering": "The pressure boundary during the run is the stack: wellhead adapter, wireline valve, tool trap, pump-in sub, ball check, lubricator sections, tool catcher, grease head, and line wiper, rated to the tree working pressure. The cable is a monoconductor armored cable, commonly 5/16 in. or 7/32 in., or a polymer-encapsulated greaseless cable that reduces grease consumption. Depth is measured at the measurement head and corrected with the casing collar locator. Tension is measured with a load pin on the top sheave.",
+    "connections": "Lands on the swab valve of the frac tree through the wellhead adapter. Pump-down fluid enters through the frac tree wing or the pump-in sub. Electrical power and signals travel through the cable to the addressable switches and setting tool.",
+    "safety": "Explosives on location: radio silence, RF-safe detonators, licensed loaders, exclusion zones around loaded guns. The stack holds wellhead pressure while the string moves; the grease head and wireline valve are the two barriers around the cable. Cable tension limits prevent parting the cable in the lateral. The lubricator is a suspended load between runs.",
+    "specs": "Stack bore 5-1/8 in. or 7-1/16 in.; working pressure 10,000 or 15,000 psi; lubricator length exceeds the tool string length; cable 5/16 in. or 7/32 in. monoconductor typical.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9).",
+    "operations": "Per stage: rig the lubricator on the tree, test, open the swab, run in, pump down through the lateral, set the plug, perforate bottom-up, pull out, close the swab, bleed and rig down, hand over to frac.",
+    "failure_modes": "Misruns (no fire, plug pre-set), parted cable, tool string stuck in the lateral, grease head leaks, gun misfires, wrong depth from collar miscount."
+  },
+  "specs": [
+    {
+      "name": "Cable, typical",
+      "value": "5/16 or 7/32",
+      "unit": "in. monoconductor",
+      "source": "S13",
+      "tier": "E2"
+    },
+    {
+      "name": "Stack working pressure",
+      "value": "10,000 or 15,000",
+      "unit": "psi",
+      "source": "S6",
+      "tier": "E2"
+    }
+  ],
+  "standards": [
+    {
+      "standard": "API RP 67",
+      "edition": "verify",
+      "paraphrase": "Recommended practice for oilfield explosives safety: handling, transport, storage, radio silence, and personnel.",
+      "source": "S14"
+    },
+    {
+      "standard": "API RP 19B",
+      "edition": "verify",
+      "paraphrase": "Standard procedures for evaluating perforator performance so that gun and charge data are comparable between suppliers.",
+      "source": "S15"
+    }
+  ],
+  "connections": [
+    {
+      "target": "WH-FRACTREE-SWAB",
+      "direction": "upstream",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "Stack lands on the swab valve"
+    },
+    {
+      "target": "PP",
+      "direction": "upstream",
+      "type": "hammer union",
+      "note": "Pump-down fluid"
+    },
+    {
+      "target": "DT",
+      "direction": "downstream",
+      "type": "mechanical",
+      "note": "Frac plug delivered and set by the tool string"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "Explosives",
+      "control": "Radio silence and RF-safe systems per the site plan; licensed personnel; no one in front of loaded guns."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no one under the lubricator while it is suspended."
+    }
+  ],
+  "scene": "WL-PCE-STACK"
+}

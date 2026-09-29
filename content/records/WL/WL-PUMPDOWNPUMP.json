@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PUMPDOWNPUMP",
+  "parent": "WL",
+  "group": "rig-up",
+  "level": "equipment",
+  "name": "Pump-down pumps and fluid",
+  "aliases": [
+    "pump-down pump",
+    "PDP",
+    "pumpdown unit",
+    "pump-down truck"
+  ],
+  "function": "The pumps that push fluid down the well to carry the tool string through the horizontal lateral, either dedicated pump-down units or the frac spread through the zipper manifold.",
+  "tabs": {
+    "overview": "In the lateral the tool string cannot fall, so fluid pumped behind it drags it along; the string is a loose fit in the casing and the fluid velocity moves it. The operator balances pump rate against cable speed and tension so the string does not outrun the cable. Dedicated pump-down units let the frac spread stay on the neighboring well; on smaller pads the frac pumps do the job through the manifold.",
+    "engineering": "Rate and volume are tracked per run; a typical run uses a fluid volume equal to the casing volume from surface to the plug depth plus margin. Fluid is the same water used for the frac.",
+    "connections": "Pump-down fluid enters through the frac wing or the pump-in sub; returns are none during the run.",
+    "safety": "Pumping with the swab valve open and the cable in the hole is done only with the stack tested and the grease head sealing; an overspeed string can knock the cable off the sheaves.",
+    "evidence": "Field practice (S9).",
+    "operations": "Rate is brought up after the string clears the kickoff point and reduced before the string reaches the setting depth.",
+    "failure_modes": "Fluid loss to the previous stage if the plug below leaks; overspeed; string hang-up at casing collars."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
+    }
+  ]
+}

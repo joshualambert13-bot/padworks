@@ -34,7 +34,7 @@ for (const r of records.values()) {
   for (const s of r.sources || []) if (!sourceIds.has(s)) errors.push(`${r.id}: source ${s} not in register`);
   for (const sp of r.specs || []) if (sp.source && !sourceIds.has(sp.source)) errors.push(`${r.id}: spec source ${sp.source} not in register`);
   for (const c of r.connections || []) if (!records.has(c.target) && !/^[A-Z]{2}$/.test(c.target) && !c.target.startsWith('PP-') && !c.target.startsWith('WL-')) errors.push(`${r.id}: connection target ${c.target} not found`);
-  if (r.status !== 'draft' && (!r.reviewers || r.reviewers.length === 0) && r.status !== 'proposed') errors.push(`${r.id}: status ${r.status} requires a reviewer entry`);
+  if (r.status !== 'draft' && (!r.reviewers || r.reviewers.length === 0) && r.status !== 'screened') errors.push(`${r.id}: status ${r.status} requires a reviewer entry`);
   if (r.drawn_in_3d && !(r.glb || r.scene)) errors.push(`${r.id}: drawn_in_3d without glb or scene`);
 }
 for (const g of glossary) if (g.record && !records.has(g.record)) errors.push(`glossary ${g.term}: record ${g.record} not found`);

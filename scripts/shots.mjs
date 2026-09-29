@@ -116,20 +116,26 @@ await p.goto(base + '/library/WH'); await wait(1500);
 await shot(p, '15-system-WH');
 await p.goto(base + '/library/equipment/WH-GATEVALVE'); await wait(6000);
 await shot(p, '16-record-gatevalve');
-await p.keyboard.press('x'); await wait(1500);
+await p.keyboard.press('s'); await wait(1500);
 await shot(p, '17-record-gatevalve-cutaway');
-await p.keyboard.press('x'); await p.keyboard.press('e'); await wait(1500);
+await p.keyboard.press('s'); await p.keyboard.press('e'); await wait(1500);
 await shot(p, '18-record-gatevalve-explode');
 await p.goto(base + '/library/equipment/WH-GATEVALVE-GATE'); await wait(5000);
-await p.keyboard.press('d'); await wait(1500);
 await shot(p, '19-record-gate-fade');
-for (const [id, n] of [['WH-FRACTREE', '24'], ['WH-CASINGHEAD', '25'], ['WH-ZIPPER', '26'], ['WH-FLOWIRON', '27'], ['WH-TREESAVER', '28'], ['WH-GATEVALVE-HYD', '29'], ['WH-FRACTREE-SWAB', '30']]) {
+await p.keyboard.press('t'); await wait(1500);
+await shot(p, '19b-record-gate-solid');
+for (const [id, n] of [['WH-FRACTREE', '24'], ['WH-CASINGHEAD', '25'], ['WH-ZIPPER', '26'], ['WH-FLOWIRON', '27'], ['WH-TREESAVER', '28'], ['WH-GATEVALVE-HYD', '29'], ['WH-FRACTREE-SWAB', '30'], ['WL-PCE', '31'], ['WL-PCE-GREASEHEAD', '32'], ['WL-PCE-WIRELINEVALVE', '33'], ['WL-UNIT', '34']]) {
   await p.goto(base + '/library/equipment/' + id); await wait(6000);
   await shot(p, n + '-record-' + id);
-  if (id === 'WH-FRACTREE') { await p.keyboard.press('x'); await wait(1500); await shot(p, '24b-record-fractree-cutaway'); }
+  if (id === 'WH-FRACTREE') { await p.keyboard.press('s'); await wait(1500); await shot(p, '24b-record-fractree-cutaway'); }
+  if (id === 'WL-PCE') { await p.keyboard.press('s'); await wait(1500); await shot(p, '31b-record-WL-PCE-cutaway'); await p.keyboard.press('s'); await p.keyboard.press('e'); await wait(1500); await shot(p, '31c-record-WL-PCE-explode'); await p.keyboard.press('e'); }
 }
-await p.goto(base + '/integrity'); await wait(1500);
+await p.goto(base + '/library/WL'); await wait(1500);
+await shot(p, '35-system-WL');
+await p.goto(base + '/checks'); await wait(1500);
 await shot(p, '20-integrity');
+await p.goto(base + '/about'); await wait(1000);
+await shot(p, '36-about');
 await p.close();
 
 // ---------------- Phone
@@ -140,6 +146,12 @@ await p.getByRole('button', { name: 'Controls' }).click(); await wait(800);
 await shot(p, '22-phone-sim-controls');
 await p.goto(base + '/library/equipment/WH-FRACTREE'); await wait(3000);
 await shot(p, '23-phone-record');
+await p.goto(base + '/library/equipment/WL-PCE'); await wait(5000);
+await shot(p, '37-phone-record-WL-PCE');
+await p.goto(base + '/library'); await wait(1500);
+await shot(p, '38-phone-library');
+await p.goto(base + '/checks'); await wait(1500);
+await shot(p, '39-phone-checks');
 await p.close();
 
 await browser.close();

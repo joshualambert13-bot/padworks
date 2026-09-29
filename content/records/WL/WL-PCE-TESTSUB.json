@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-TESTSUB",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Quick test sub",
+  "aliases": [
+    "test sub",
+    "QTS",
+    "stack test sub"
+  ],
+  "function": "A short section above the wireline valve with a test port that lets the stack above it be pressure tested from a test pump after a union is remade, without pressuring the well or the tree.",
+  "tabs": {
+    "overview": "The sub holds a test plug or seal so that test pressure is applied to the lubricator and head only; the rams below stay closed on the well. It removes the need to open the swab valve to test.",
+    "engineering": "Rated with the stack.",
+    "safety": "Test pressure is bled through the test port, never by breaking a union.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    }
+  ]
+}

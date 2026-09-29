@@ -33,7 +33,7 @@ async function nodesOf(glb) {
 const errors = [];
 const warnings = [];
 const perSystem = {};
-for (const sys of systems) perSystem[sys.code] = { code: sys.code, name: sys.name, records: 0, bound: 0, unbound: 0, byStatus: {}, byTier: {} };
+for (const sys of systems) perSystem[sys.code] = { code: sys.code, name: sys.name, records: 0, withModel: 0, withoutModel: 0, byStatus: {}, byTier: {} };
 const claimed = new Map(); // glb -> Set(node)
 for (const r of records) {
   const ps = perSystem[r.system]; if (!ps) continue;
@@ -51,7 +51,7 @@ for (const r of records) {
       bound = true;
     }
   } else if (r.scene) bound = true; // procedural scene node
-  if (bound) ps.bound++; else ps.unbound++;
+  if (bound) ps.withModel++; else ps.withoutModel++;
 }
 const assets = [];
 for (const [glb, info] of glbCache) {
@@ -64,7 +64,7 @@ for (const [glb, info] of glbCache) {
 
 const report = {
   generated: new Date().toISOString(),
-  totals: { records: records.length, bound: Object.values(perSystem).reduce((a, s) => a + s.bound, 0), unbound: Object.values(perSystem).reduce((a, s) => a + s.unbound, 0) },
+  totals: { records: records.length, withModel: Object.values(perSystem).reduce((a, s) => a + s.withModel, 0), withoutModel: Object.values(perSystem).reduce((a, s) => a + s.withoutModel, 0) },
   systems: Object.values(perSystem),
   assets,
   issues: errors,
@@ -72,7 +72,7 @@ const report = {
   pass: errors.length === 0,
 };
 fs.mkdirSync('public', { recursive: true });
-fs.writeFileSync('public/integrity.json', JSON.stringify(report, null, 2));
-console.log(`Integrity: ${report.totals.records} records, ${report.totals.bound} bound, ${report.totals.unbound} unbound, ${assets.length} assets. ${report.pass ? 'No integrity issues.' : errors.length + ' issues.'} ${warnings.length ? warnings.length + ' warnings.' : ''}`);
+fs.writeFileSync('public/build-check.json', JSON.stringify(report, null, 2));
+console.log(`Build check: ${report.totals.records} records, ${report.totals.withModel} with 3D model, ${report.totals.withoutModel} without, ${assets.length} model files. ${report.pass ? 'All checks passed.' : errors.length + ' failed.'} ${warnings.length ? warnings.length + ' warnings.' : ''}`);
 for (const w of warnings) console.warn(' ~', w);
 if (!report.pass) { for (const e of errors) console.error(' -', e); process.exit(1); }

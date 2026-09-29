@@ -147,7 +147,7 @@ export default function ControlPanel() {
         <Readout label="Slurry pumped" value={s.cumSlurryBbl.toFixed(0)} unit="bbl" />
         <Readout label="Proppant pumped" value={(s.cumProppantLb / 1000).toFixed(1)} unit="klb" />
       </div>
-      <div className="text-[10px] text-mute flex items-start gap-1"><Gauge size={12} className="shrink-0 mt-0.5" /><span>Illustrative response model and simplified motion. Not a fracturing simulator; values are not design values.</span></div>
+      <div className="text-[10px] text-mute flex items-start gap-1"><Gauge size={12} className="shrink-0 mt-0.5" /><span>Schematic motion and an illustrative pressure model. This is a training aid, not a fracturing simulator; nothing here is a design value.</span></div>
     </div>
   );
 }

@@ -1,0 +1,201 @@
+{
+  "generated": "2026-09-29T14:50:18.615Z",
+  "totals": {
+    "records": 64,
+    "bound": 50,
+    "unbound": 14
+  },
+  "systems": [
+    {
+      "code": "CM",
+      "name": "Casing and cementing hardware",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "WH",
+      "name": "Wellhead, frac stack, and high-pressure iron",
+      "records": 64,
+      "bound": 50,
+      "unbound": 14,
+      "byStatus": {
+        "draft": 64
+      },
+      "byTier": {
+        "E2": 64
+      }
+    },
+    {
+      "code": "PP",
+      "name": "Pressure pumping spread",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "WL",
+      "name": "Wireline, perforating, and plug setting",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "DT",
+      "name": "Downhole completion tools and multistage systems",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "CT",
+      "name": "Coiled tubing intervention",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "FB",
+      "name": "Flowback and well testing",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "UC",
+      "name": "Upper completion and production tree",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "AL",
+      "name": "Artificial lift",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "SC",
+      "name": "Sand control",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "LG",
+      "name": "Logistics, power, and pad infrastructure",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "RG",
+      "name": "Completion and workover rigs and well control",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "DA",
+      "name": "Data acquisition and monitoring",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    },
+    {
+      "code": "MT",
+      "name": "Materials and consumables",
+      "records": 0,
+      "bound": 0,
+      "unbound": 0,
+      "byStatus": {},
+      "byTier": {}
+    }
+  ],
+  "assets": [
+    {
+      "glb": "/glb/WH/WH-WELLHEAD.glb",
+      "meshes": 10,
+      "triangles": 87212,
+      "materials": 10,
+      "bytes": 147204,
+      "budgetOk": true
+    },
+    {
+      "glb": "/glb/WH/WH-FLOWIRON.glb",
+      "meshes": 8,
+      "triangles": 14704,
+      "materials": 8,
+      "bytes": 35932,
+      "budgetOk": true
+    },
+    {
+      "glb": "/glb/WH/WH-FRACTREE.glb",
+      "meshes": 9,
+      "triangles": 127992,
+      "materials": 9,
+      "bytes": 205388,
+      "budgetOk": true
+    },
+    {
+      "glb": "/glb/WH/WH-ZIPPER.glb",
+      "meshes": 8,
+      "triangles": 95318,
+      "materials": 8,
+      "bytes": 129392,
+      "budgetOk": true
+    },
+    {
+      "glb": "/glb/WH/WH-GATEVALVE-HYD.glb",
+      "meshes": 11,
+      "triangles": 22990,
+      "materials": 11,
+      "bytes": 55536,
+      "budgetOk": true
+    },
+    {
+      "glb": "/glb/WH/WH-GATEVALVE.glb",
+      "meshes": 11,
+      "triangles": 23244,
+      "materials": 11,
+      "bytes": 56164,
+      "budgetOk": true
+    },
+    {
+      "glb": "/glb/WH/WH-TREESAVER.glb",
+      "meshes": 3,
+      "triangles": 4620,
+      "materials": 3,
+      "bytes": 11156,
+      "budgetOk": true
+    }
+  ],
+  "issues": [],
+  "warnings": [],
+  "pass": true
+}

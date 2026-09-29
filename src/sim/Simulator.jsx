@@ -17,12 +17,12 @@ function Viewport({ view, showLabels, preset }) {
     return (
       <div className="h-full grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 gap-px bg-line">
         <div className="relative min-h-0"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><Tagline text="Surface" /></div>
-        <div className="relative min-h-0"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere={false} /></Suspense><Tagline text="Downhole cut-away (simplified)" /></div>
+        <div className="relative min-h-0"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere={false} /></Suspense><Tagline text="Downhole section (schematic)" /></div>
       </div>
     );
   }
-  if (view === 'downhole') return <div className="relative h-full"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere /></Suspense><Tagline text="Downhole cut-away (simplified)" /></div>;
-  return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><Tagline text="Surface (generic geometry)" /></div>;
+  if (view === 'downhole') return <div className="relative h-full"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere /></Suspense><Tagline text="Downhole section (schematic)" /></div>;
+  return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><Tagline text="Surface (generic models)" /></div>;
 }
 
 function Tagline({ text }) {

@@ -1,0 +1,59 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S6",
+    "S7",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 3 seed"
+  },
+  "id": "WL-PCE-GREASEHEAD",
+  "parent": "WL-PCE",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Grease injection head and flow tubes",
+  "aliases": [
+    "grease head",
+    "flow tubes",
+    "grease injector",
+    "packoff head",
+    "greaseless head"
+  ],
+  "function": "The head at the top of the stack that seals around the moving cable: grease injected at a pressure above well pressure fills the small annulus between the cable and a series of close-fitting flow tubes so the well cannot flow past the cable while it runs.",
+  "tabs": {
+    "overview": "Two or three flow tubes are stacked in series; grease is injected between them and returns to the unit through a return line. Flow tube bore is matched to the cable diameter with a small clearance. A hydraulic packoff above the tubes seals statically when the cable is stopped. Greaseless heads use a polymer packoff on an encapsulated cable and need little or no grease.",
+    "engineering": "Rated with the stack; flow tube size per cable; grease pressure held above wellhead pressure by the grease unit.",
+    "safety": "Grease pressure lost means the well can flow up the cable; the wireline valve is closed and the string stopped until the head seals again. H2S can reach the surface here first.",
+    "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors and wind indicators when the well can flow sour gas at the grease head."
+    }
+  ],
+  "glb": "/glb/WL/WL-PCE.glb",
+  "mesh_nodes": [
+    "WL-PCE-GREASEHEAD"
+  ],
+  "connections": [
+    {
+      "target": "WL-GREASEUNIT",
+      "direction": "upstream",
+      "type": "hydraulic",
+      "note": "Grease supply and return"
+    }
+  ]
+}
