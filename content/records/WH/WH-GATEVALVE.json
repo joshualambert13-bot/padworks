@@ -16,10 +16,10 @@
   "reviewers": [],
   "tabs": {
     "overview": "The gate is a rectangular slab with a circular port. In the closed position the solid part of the slab spans the bore; the stem moves the gate by one bore diameter to align the port with the bore. Floating seats on either side of the gate are pressure-energized against the gate face. The bonnet closes the top of the body cavity and carries the stem, packing, and bearing assembly. Manual valves are operated by a handwheel through a threaded stem and bearing; actuated valves replace the handwheel with a hydraulic cylinder, most often spring-return so the valve fails closed on loss of hydraulic pressure.",
-    "engineering": "Body and bonnet are forged low-alloy steel (4130 or 4140 class) or higher alloy for sour or corrosive service per the API 6A material class. Gate and seats are hardened or hardfaced for proppant service. Stem sealing uses a packing set and, on many designs, a back seat that lets the packing be changed under pressure. Grease or sealant injection ports feed the seat pockets and the body cavity. The valve is rated by working pressure class, temperature class, material class, PSL, and PR level; the frac stack version is normally PSL 3, PR 2 (verify on the specific product).",
+    "engineering": "Body and bonnet are forged low-alloy steel (4130 or 4140 class) or higher alloy for sour or corrosive service per the API 6A material class. Gate and seats are hardened or hardfaced for proppant service. Stem sealing uses a packing set and, on many designs, a back seat that lets the packing be changed under pressure. Grease or sealant injection ports feed the seat pockets and the body cavity. The valve is rated by working pressure class, temperature class, material class, PSL, and PR level; the frac stack version is normally PSL 3, PR 2 (verify on the specific product). Frac valves are block-body designs: a forged rectangular block with integral end hubs and round flanges, a round studded bonnet on the stem side, and a plain boss or balance stem housing on the far side. The stem protector tube above the bearing cap carries indicator slots so the gate position can be read from the ground.",
     "connections": "Flanged ends: 6B up to 5,000 psi; 6BX for 10,000 psi and above (and for larger bores at lower ratings), with R or RX ring gaskets for 6B and BX gaskets for 6BX. Studded and flanged variants exist for stacking on the cross. Hydraulic actuators connect to the frac valve control unit through hydraulic hoses.",
     "safety": "Never throttle: a partly open gate in proppant flow cuts the gate and seats and can lead to a loss of containment. Do not cycle the lower master under pressure or flow. Bleed the body cavity before removing the bonnet. Hydraulic actuators store energy in the spring and the cylinder; isolate hydraulics before maintenance.",
-    "specs": "Bore 5-1/8 in. or 7-1/16 in.; working pressure 10,000 or 15,000 psi; face-to-face per the API 6A table for the flange type and rating; actuator sizing per OEM.",
+    "specs": "The model is offered in the three bores and two ratings used on frac stacks. Flange envelopes come from a public 6BX table (E2); end-to-end lengths are estimates until checked against the API 6A tables (E4). Choose the size above the viewer.",
     "evidence": "API 6A (S1) for design and rating; OEM product pages (S2, S5) for configurations; field and manufacturing practice (S9).",
     "operations": "Open and close fully; count turns on manual valves and confirm position indication on actuated valves. Function test each actuator from the control unit before pumping. Grease per the OEM schedule during long jobs.",
     "failure_modes": "Seat and gate erosion; stem packing leaks; grease fitting failures; actuator seal leaks; gate cracking after washing; ring gasket damage."
@@ -56,6 +56,55 @@
       "unit": "",
       "source": "S2",
       "tier": "E2"
+    },
+    {
+      "name": "6BX flange OD, 4-1/16 in. 10K / 15K",
+      "value": "12.40 / 14.17",
+      "unit": "in.",
+      "source": "S16",
+      "tier": "E2"
+    },
+    {
+      "name": "6BX flange OD, 5-1/8 in. 10K / 15K",
+      "value": "14.17 / 16.54",
+      "unit": "in.",
+      "source": "S16",
+      "tier": "E2"
+    },
+    {
+      "name": "6BX flange OD, 7-1/16 in. 10K / 15K",
+      "value": "18.90 / 19.88",
+      "unit": "in.",
+      "source": "S16",
+      "tier": "E2"
+    },
+    {
+      "name": "Studs, 7-1/16 in. 15K",
+      "value": "16 x 1-1/2",
+      "unit": "in.",
+      "source": "S16",
+      "tier": "E2"
+    },
+    {
+      "name": "Studs, 5-1/8 in. 15K",
+      "value": "12 x 1-1/2",
+      "unit": "in.",
+      "source": "S16",
+      "tier": "E2"
+    },
+    {
+      "name": "Studs, 4-1/16 in. 15K",
+      "value": "8 x 1-3/8",
+      "unit": "in.",
+      "source": "S16",
+      "tier": "E2"
+    },
+    {
+      "name": "Valve end to end, 7-1/16 in. 15K",
+      "value": "44.5",
+      "unit": "in.",
+      "source": "S10",
+      "tier": "E4"
     }
   ],
   "standards": [
@@ -120,7 +169,7 @@
     }
   ],
   "drawn_in_3d": true,
-  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "glb": "/glb/WH/WH-GATEVALVE.7-15K.glb",
   "mesh_nodes": [
     "WH-GATEVALVE-BODY",
     "WH-GATEVALVE-FLANGE-IN",
@@ -132,7 +181,8 @@
     "WH-GATEVALVE-PACKING",
     "WH-GATEVALVE-BEARING",
     "WH-GATEVALVE-STEM",
-    "WH-GATEVALVE-HANDWHEEL"
+    "WH-GATEVALVE-HANDWHEEL",
+    "WH-GATEVALVE-GREASEFITTING"
   ],
   "simulation": {
     "clips": [
@@ -149,7 +199,39 @@
   "revision": {
     "rev": "A",
     "author": "AI draft",
-    "date": "2026-09-28",
-    "note": "Drop 1 seed; geometry from cad/scripts/WH/gate_valve.py"
-  }
+    "date": "2026-09-29",
+    "note": "Drop 4: block body, size variants, grease fittings"
+  },
+  "variants": [
+    {
+      "key": "4-10K",
+      "label": "4-1/16 in. 10K",
+      "glb": "/glb/WH/WH-GATEVALVE.4-10K.glb"
+    },
+    {
+      "key": "4-15K",
+      "label": "4-1/16 in. 15K",
+      "glb": "/glb/WH/WH-GATEVALVE.4-15K.glb"
+    },
+    {
+      "key": "5-10K",
+      "label": "5-1/8 in. 10K",
+      "glb": "/glb/WH/WH-GATEVALVE.5-10K.glb"
+    },
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-GATEVALVE.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-GATEVALVE.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-GATEVALVE.7-15K.glb"
+    }
+  ]
 }

@@ -38,7 +38,7 @@
       "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
     }
   ],
-  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
   "mesh_nodes": [
     "WH-FRACTREE-UMV"
   ],

@@ -41,7 +41,7 @@
       "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
     }
   ],
-  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-OUTLET"
   ]

@@ -1,0 +1,54 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-BRIDGEPLUG",
+  "parent": "DT",
+  "group": "isolation",
+  "level": "equipment",
+  "name": "Bridge plug and cement retainer",
+  "aliases": [
+    "bridge plug",
+    "permanent bridge plug",
+    "retrievable bridge plug",
+    "cement retainer",
+    "CIBP"
+  ],
+  "function": "Isolation plugs for the wellbore itself: a bridge plug seals the casing permanently or retrievably, and a cement retainer holds cement squeezed through it.",
+  "tabs": {
+    "overview": "Used to abandon a zone, isolate a lower interval for a test, or hold cement during a squeeze. Set on wireline or tubing. API Spec 11D1 defines validation grades for packers and bridge plugs; frac plugs borrow the same grades.",
+    "engineering": "Cast iron or composite; retrievable designs release by pulling or rotating.",
+    "connections": "Set in casing; retainer has a valve for the cement stinger.",
+    "safety": "Pressure above and below equalized before retrieval.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "Remedial and abandonment work rather than the stage cycle.",
+    "failure_modes": "Seal leaks, slips damaging casing, retainer valve failing."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 11D1",
+      "edition": "verify",
+      "paraphrase": "Design validation grades and functional testing for packers and bridge plugs.",
+      "source": "S21"
+    }
+  ]
+}

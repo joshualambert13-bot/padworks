@@ -1,0 +1,62 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    },
+    {
+      "class": "Silica dust",
+      "control": "Enclosed sand handling, dust collection, and respiratory protection where exposure is possible."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    }
+  ],
+  "id": "PP-BLENDER",
+  "parent": "PP",
+  "group": "fluid",
+  "level": "equipment",
+  "name": "Blender",
+  "aliases": [
+    "frac blender",
+    "slurry blender",
+    "blender truck"
+  ],
+  "scene": "PP-BLENDER",
+  "function": "The unit that draws water, adds proppant and chemicals at the design concentration, and discharges slurry to the missile at the rate the pumps take it.",
+  "tabs": {
+    "overview": "Water enters through the suction pump into the tub; augers (screws) meter sand from the sand system into the tub; liquid additive pumps and dry feeders add chemicals; the tub agitates the mix; the discharge pump pushes the slurry to the missile at a pressure high enough to feed the frac pump suctions. Concentration in pounds of proppant added per gallon (PPA) is controlled by the auger speed against the water rate.",
+    "engineering": "Suction and discharge pumps are large centrifugal pumps; tub volume is small so concentration changes take effect in seconds; densitometers on the discharge check the mix. Proppant delivery of several thousand pounds per minute at full rate.",
+    "connections": "Suction from frac tanks or the hydration unit; sand from the conveyor; chemicals from the additive unit; discharge to the missile low-pressure header.",
+    "safety": "Rotating augers and belts; sand dust at the hopper; slurry spray at hose failures.",
+    "specs": "Typical 100 to 130 bpm slurry capacity; two or three augers; discharge pressure to about 100 psi.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "The blender operator follows the pump schedule from the data van: rate up, sand in stages, flush at the end.",
+    "failure_modes": "Tub level upsets, auger plugging, densitometer drift, discharge pump seal failure."
+  },
+  "specs": [
+    {
+      "name": "Slurry capacity, typical",
+      "value": "100 to 130",
+      "unit": "bpm",
+      "tier": "E3",
+      "source": "S9"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S17",
+    "S18",
+    "S19",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay out of the red zone while pumping; iron and hoses are restrained."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified rigging; no one under a suspended load."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    }
+  ],
+  "id": "PP-MULTIWELL",
+  "parent": "PP",
+  "group": "pad-schemes",
+  "level": "equipment",
+  "name": "Multi-well pumping schemes: zipper, simul-frac, trimul-frac, quad-frac",
+  "aliases": [
+    "zipper frac",
+    "simulfrac",
+    "simul-frac",
+    "trimul-frac",
+    "quadfrac",
+    "quad-frac",
+    "simultaneous fracturing"
+  ],
+  "function": "The ways a pad of two to sixteen wells is worked by one spread so that pumping and wireline overlap: alternating wells (zipper) or pumping two, three, or four wells at the same time (simul, trimul, quad).",
+  "tabs": {
+    "overview": "Zipper frac: the spread pumps well A while wireline sets the plug and guns on well B, then the zipper valves swap and the roles reverse; the pumps rarely wait. Simul-frac: the treating line is split so two wells take slurry at the same time, each at a lower rate than a single-well stage, while wireline works a third well. Trimul-frac and quad-frac extend the same idea to three and four wells, with a larger spread, more sand and water logistics, and usually two wireline units to keep plugs and guns ahead of the pumps.\n\nThe gain is stages per day and less idle horsepower; the cost is more equipment on location, a treating manifold that must balance flow between wells at different pressures, and a scheduling problem that the data van and the wireline supervisor solve stage by stage. The simulator lets you set the well count and the scheme and watch which wells pump and which are on wireline.",
+    "engineering": "Flow to each well is metered so the wells can be treated at different pressures from one high-pressure system; pump banks are assigned per well. Rate per well drops as wells are added unless pumps are added. Sand and water supply must keep up with the combined rate.",
+    "connections": "Zipper manifold with one valve per well; split treating manifold or dual missiles for simultaneous schemes; two or more wireline units and cranes.",
+    "safety": "More equipment in a fixed pad footprint: red zones overlap, crane lifts happen next to pumping wells, and lubricator work on one well is adjacent to a live treating line on the next.",
+    "specs": "Published examples: two-well simulfracs pumped at 60 to 70 bpm per well against 90 bpm for zipper stages (S17); a trimul-frac program reported a 25 percent cut in completion time against zipper and simul (S18).",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "The scheme is fixed when the pad is planned: number of wells, spread size, sand storage, water supply, and the count of wireline units follow from it.",
+    "failure_modes": "Rate imbalance between wells, a screenout on one well forcing a shutdown on both, wireline falling behind the pumps, and equipment congestion on the pad."
+  }
+}

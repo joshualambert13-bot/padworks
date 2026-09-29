@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    },
+    {
+      "class": "Silica dust",
+      "control": "Enclosed sand handling, dust collection, and respiratory protection where exposure is possible."
+    }
+  ],
+  "id": "PP-BLENDER-AUGER",
+  "parent": "PP-BLENDER",
+  "group": "fluid",
+  "level": "component",
+  "name": "Sand augers",
+  "aliases": [
+    "augers",
+    "sand screws",
+    "proppant screws"
+  ],
+  "function": "The inclined screws that meter proppant from the hopper into the tub at a rate set by their speed.",
+  "tabs": {
+    "overview": "Two or three screws of different sizes cover the concentration range; calibrated pounds per revolution let the controller set PPA from screw speed and water rate.",
+    "engineering": "Delivery to several thousand pounds per minute combined.",
+    "safety": "Rotating screws; dust at the hopper.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-BLENDER-AUGER"
+}

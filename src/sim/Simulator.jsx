@@ -51,6 +51,7 @@ export default function Simulator() {
           <select className="btn" value={preset} onChange={e => setPreset(e.target.value)} title="Camera preset">
             <option value="pad">Pad overview</option>
             <option value="tree">Frac tree</option>
+            <option value="row">Well row</option>
             <option value="pumps">Pumps and missile</option>
             <option value="sand">Sand and blender</option>
             <option value="flowback">Flowback spread</option>

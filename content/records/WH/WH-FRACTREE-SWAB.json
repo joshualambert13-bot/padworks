@@ -18,7 +18,7 @@
   "parent": "WH-FRACTREE",
   "group": "frac-tree",
   "level": "component",
-  "name": "Swab valve",
+  "name": "Swab valve (hydraulic, wireline access)",
   "aliases": [
     "crown valve",
     "top valve",
@@ -26,7 +26,7 @@
   ],
   "function": "The top valve on the tree that gives vertical access to the well for the wireline lubricator and the coiled tubing stack.",
   "tabs": {
-    "overview": "Closed during pumping. Opened only after the lubricator or coiled tubing stack is made up above it and pressure tested, so that the tool string can pass into the well. Closed again with the tool string back inside the lubricator before the lubricator is bled and removed.",
+    "overview": "The top valve of the stack, above the inlet block. Closed while pumping so the lubricator connection above it sees no treating pressure; opened only after the lubricator or coiled tubing stack is made up and tested. Hydraulic on this configuration so it can be cycled from the control unit between every run.",
     "engineering": "Manual gate valve on most stacks so that it cannot be opened by a control system fault while the top of the tree is open to atmosphere.",
     "safety": "Never open the swab valve with the goat head removed and nothing tested above it. The interlock in the simulator reflects the field rule: swab closed before the frac wing opens, frac wing closed before the swab opens.",
     "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
@@ -37,7 +37,7 @@
       "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
     }
   ],
-  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
   "mesh_nodes": [
     "WH-FRACTREE-SWAB"
   ],

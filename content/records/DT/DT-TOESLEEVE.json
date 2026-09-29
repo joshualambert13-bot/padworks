@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-TOESLEEVE",
+  "parent": "DT",
+  "group": "sleeves",
+  "level": "equipment",
+  "name": "Toe sleeve (toe initiator)",
+  "aliases": [
+    "toe sleeve",
+    "toe initiator",
+    "pressure-actuated sleeve",
+    "toe valve"
+  ],
+  "function": "The pressure-actuated sleeve at the toe of the lateral that opens the first path to the formation without a wireline run, so the first stage can be pumped and the tool string pumped down for stage two.",
+  "tabs": {
+    "overview": "Cemented in with the casing at the toe; a pressure cycle above the casing test pressure opens its ports. Without it the first stage would need tractor-conveyed or coiled tubing perforating because there is no flow path to pump the string down.",
+    "engineering": "Opening pressure set above the casing test pressure with a margin; often a time delay or a rupture disc.",
+    "connections": "Threaded into the casing string near the toe.",
+    "safety": "The casing test and the sleeve opening pressure must be sequenced correctly.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "Opened before the first stage; used once.",
+    "failure_modes": "Opening during the casing test, failing to open, cement in the ports."
+  }
+}

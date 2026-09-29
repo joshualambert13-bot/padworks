@@ -200,5 +200,96 @@
     "system": "WL",
     "record": "WL-PCE-QUICKUNION",
     "definition": "The threaded collar joint between lubricator sections and stack components, sealed with an O-ring and made up by hand or hydraulically."
+  },
+  {
+    "term": "Zipper frac",
+    "aliases": [
+      "zipper",
+      "zipper fracturing"
+    ],
+    "system": "PP",
+    "record": "PP-MULTIWELL",
+    "definition": "Two or more wells completed in alternation: one well is pumped while wireline sets the next plug and guns on its neighbor, so the spread never waits."
+  },
+  {
+    "term": "Simul-frac",
+    "aliases": [
+      "simulfrac",
+      "simultaneous frac",
+      "trimul-frac",
+      "quad-frac",
+      "quadfrac"
+    ],
+    "system": "PP",
+    "record": "PP-MULTIWELL",
+    "definition": "Two (simul), three (trimul), or four (quad) wells pumped at the same time from one spread through a split manifold, with wireline working ahead on the remaining wells."
+  },
+  {
+    "term": "Crown valve",
+    "aliases": [
+      "crown",
+      "upper swab",
+      "top master"
+    ],
+    "system": "WH",
+    "record": "WH-FRACTREE-CROWN",
+    "definition": "The hydraulic valve above the cross and below the inlet block on the standard stack; isolates the well from the inlet block and the swab valve above it."
+  },
+  {
+    "term": "Inlet block",
+    "aliases": [
+      "frac inlet",
+      "flanged inlet",
+      "spool inlet",
+      "treating inlet block"
+    ],
+    "system": "WH",
+    "record": "WH-FRACTREE-INLETBLOCK",
+    "definition": "The flanged block above the crown valve where the spooled treating line from the zipper manifold enters the stack; replaces the goat head and its hammer-union iron."
+  },
+  {
+    "term": "Frac plug",
+    "aliases": [
+      "composite plug",
+      "plug",
+      "dissolvable plug",
+      "bridge plug (different)"
+    ],
+    "system": "DT",
+    "record": "DT-FRACPLUG",
+    "definition": "The set-and-mill (or dissolve) isolation plug that seals the casing below a new stage so the fracture treatment goes only into the new perforations."
+  },
+  {
+    "term": "Setting tool",
+    "aliases": [
+      "pressure setting assembly",
+      "wireline setting tool",
+      "adapter kit",
+      "power charge"
+    ],
+    "system": "DT",
+    "record": "DT-SETTINGTOOL",
+    "definition": "The wireline tool that converts a slow gas charge into the stroke that sets the frac plug, then shears free."
+  },
+  {
+    "term": "Missile",
+    "aliases": [
+      "manifold trailer",
+      "frac manifold",
+      "HP manifold"
+    ],
+    "system": "PP",
+    "record": "PP-MISSILE",
+    "definition": "The trailer-mounted manifold that collects the discharge of every frac pump into the high-pressure treating line and distributes slurry to the pumps on the low-pressure side."
+  },
+  {
+    "term": "Blender",
+    "aliases": [
+      "frac blender",
+      "slurry blender"
+    ],
+    "system": "PP",
+    "record": "PP-BLENDER",
+    "definition": "The unit that mixes water, proppant, and chemicals into slurry at the rate the pumps take it, using a tub with augers and suction and discharge pumps."
   }
 ]

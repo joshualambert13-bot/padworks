@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "PP-FRACPUMP-VALVE",
+  "parent": "PP-FRACPUMP-FLUIDEND",
+  "group": "pumping",
+  "level": "part",
+  "name": "Fluid end valve and seat",
+  "aliases": [
+    "pump valve",
+    "valve and seat",
+    "poppet valve"
+  ],
+  "function": "The spring-loaded poppet valves and seats in the fluid end that let slurry into the bore on the suction stroke and out on the discharge stroke.",
+  "tabs": {
+    "overview": "A valve body with an elastomer insert seals on a hardened seat; the spring closes it between strokes. Proppant cuts the insert and washes the seat, so the sets are changed on a schedule measured in pumping hours.",
+    "engineering": "Standard sizes across the fleet; hardened seats; inserts chosen for the fluid.",
+    "safety": "Changed with the pump isolated and the fluid end bled.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  }
+}

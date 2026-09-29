@@ -1,0 +1,82 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S17",
+    "S18",
+    "S19",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay out of the red zone while pumping; iron and hoses are restrained."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    },
+    {
+      "class": "Silica dust",
+      "control": "Enclosed sand handling, dust collection, and respiratory protection where exposure is possible."
+    },
+    {
+      "class": "Hot surfaces and exhaust",
+      "control": "Guards on exhaust and hydraulic lines; keep clear of engine compartments while running."
+    }
+  ],
+  "id": "PP",
+  "level": "system",
+  "name": "Pressure pumping spread",
+  "aliases": [
+    "frac spread",
+    "frac fleet",
+    "pressure pumping",
+    "the spread"
+  ],
+  "scene": "PP-MISSILE",
+  "function": "The fleet of pumps, blender, hydration and chemical units, sand handling, manifold trailer, and data van that makes slurry and pumps it into the well at treating pressure.",
+  "tabs": {
+    "overview": "Water from the frac tanks or pit is drawn through the hydration unit (when a gel is used) into the blender, where proppant from the sand system and chemicals from the additive unit are mixed at the design concentration. The blender discharge feeds the low-pressure side of the missile; each frac pump takes suction from the missile, raises the slurry to treating pressure, and discharges into the high-pressure header on the same trailer. The header feeds the treating line to the zipper manifold and the well. The data van records every rate, pressure, and concentration and is where the treatment is directed.\n\nSpread size follows the job: a conventional 90 bpm slickwater stage needs about 20 pumps online with spares; simul-frac, trimul-frac, and quad-frac schemes pump two, three, or four wells at once and need proportionally more pumping, sand, and water capacity, or accept a lower rate per well.",
+    "engineering": "Pumps are rated in hydraulic horsepower (rate times pressure); a fleet is described by its total HHP and by the number of pumps online at the treating pressure. Diesel, dual-fuel, and electric (turbine or grid) power ends coexist; electric fleets cut fuel and noise. Fluid ends are the consumable: valves, seats, plungers, and packing wear with proppant.",
+    "connections": "Suction: frac tanks or pit to hydration to blender to missile low-pressure header. Discharge: pumps to missile high-pressure header to treating line to zipper manifold. Data: every unit reports to the data van.",
+    "safety": "Red zone around the high-pressure iron while pumping; hearing protection; silica dust controls at the sand system; hot surfaces at engines; pinch points at hose and iron handling.",
+    "specs": "Typical per-pump rating 2,500 to 3,000 HHP; fleet 40,000 to 60,000 HHP; slickwater stage rate 80 to 100 bpm per well; treating pressure 8,000 to 12,000 psi.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Rigged up once per pad; pumps rotated in and out of service for fluid end changes; the spread moves between wells by valve position at the zipper, not by moving iron.",
+    "failure_modes": "Fluid end washouts and valve failures, blender tub level upsets, sand delivery interruptions, screenouts from concentration errors, iron leaks."
+  },
+  "specs": [
+    {
+      "name": "Pump rating, typical",
+      "value": "2500 to 3000",
+      "unit": "HHP",
+      "tier": "E3",
+      "source": "S9"
+    },
+    {
+      "name": "Stage rate, slickwater",
+      "value": "80 to 100",
+      "unit": "bpm per well",
+      "tier": "E3",
+      "source": "S9"
+    },
+    {
+      "name": "Simul-frac rate seen in the field",
+      "value": "60 to 70",
+      "unit": "bpm per well",
+      "tier": "E2",
+      "source": "S17"
+    }
+  ]
+}

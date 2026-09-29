@@ -1,5 +1,5 @@
 import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Droplets, Zap, ArrowRightCircle, CheckCircle2, Lock } from 'lucide-react';
-import { useSim, PHASES, STAGE_COUNT, WELL } from '../store.js';
+import { useSim, PHASES, STAGE_COUNT, WELL, FRAC_MODES, BORES, MAX_WELLS, padRoles } from '../store.js';
 
 function ValveRow({ id, v, onCommand }) {
   const open = v.pos > 0.99, closed = v.pos < 0.01;
@@ -36,6 +36,11 @@ export default function ControlPanel() {
   const canFrac = s.phase === 'frac' && st.perforated;
   const allFracked = s.stages.every(x => x.fracComplete);
   const stageFracDone = st.fracComplete;
+  const mode = FRAC_MODES.find(m => m.id === s.pad.mode) || FRAC_MODES[0];
+  const roles = padRoles(s);
+  const fracWells = roles.filter(r => r.role === 'frac').length + (s.phase === 'frac' ? 1 : 0);
+  const wlWells = roles.filter(r => r.role === 'wireline').length + (s.phase === 'wireline' ? 1 : 0);
+  const liveRate = s.pumpsOnline && !s.alarms.kickout ? s.pumpRate : 0;
 
   return (
     <div className="h-full overflow-y-auto p-3 space-y-3 text-sm">
@@ -46,6 +51,26 @@ export default function ControlPanel() {
           {[0.5, 1, 2, 4].map(x => <option key={x} value={x}>{x}x</option>)}
         </select>
         <button className="btn flex items-center gap-1 ml-auto" onClick={s.reset}><RotateCcw size={14} />Reset</button>
+      </div>
+
+      {/* pad configuration */}
+      <div className="card p-2 space-y-2">
+        <div className="text-[10px] uppercase tracking-wide text-mute">Pad configuration</div>
+        <label className="block text-xs">Wells on the pad <span className="mono">{s.pad.wells}</span>
+          <input type="range" min={1} max={MAX_WELLS} step={1} value={s.pad.wells} onChange={e => s.setPad({ wells: Number(e.target.value) })} />
+        </label>
+        <div className="grid grid-cols-5 gap-1">
+          {FRAC_MODES.map(m => (
+            <button key={m.id} className={'btn text-[11px] px-1 ' + (s.pad.mode === m.id ? 'btn-primary' : '')} disabled={s.pad.wells < m.fracSlots + m.wlSlots} title={m.blurb} onClick={() => s.setPad({ mode: m.id })}>{m.short}</button>
+          ))}
+        </div>
+        <div className="text-[11px] text-mute">{mode.blurb}</div>
+        <label className="block text-xs">Tree bore and rating
+          <select className="btn w-full mt-1" value={s.pad.bore} onChange={e => s.setPad({ bore: e.target.value })}>
+            {BORES.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+          </select>
+        </label>
+        <div className="text-[11px] text-mute">Well 1 is yours to operate. The other wells follow the crews: <span className="mono text-white">{fracWells}</span> pumping, <span className="mono text-white">{wlWells}</span> on wireline right now.</div>
       </div>
 
       {/* phase selection */}
@@ -137,7 +162,8 @@ export default function ControlPanel() {
       {/* telemetry */}
       <div className="grid grid-cols-2 gap-2">
         <Readout label="Surface treating" value={s.surfacePsi.toFixed(0)} unit="psi" warn={s.surfacePsi > WELL.maxTreatingPsi * 0.9} />
-        <Readout label="Slurry rate" value={(s.pumpsOnline && !s.alarms.kickout ? s.pumpRate : 0).toFixed(0)} unit="bpm" />
+        <Readout label="Rate, this well" value={liveRate.toFixed(0)} unit="bpm" />
+        <Readout label="Spread rate" value={(liveRate * Math.max(1, fracWells)).toFixed(0)} unit={'bpm · ' + Math.max(1, fracWells) + ' well' + (fracWells > 1 ? 's' : '')} />
         <Readout label="Proppant" value={s.ppa.toFixed(2)} unit="PPA" />
         <Readout label="Slurry density" value={s.slurryPpg.toFixed(2)} unit="ppg" />
         <Readout label="Bottomhole" value={s.bhtpPsi.toFixed(0)} unit="psi" />

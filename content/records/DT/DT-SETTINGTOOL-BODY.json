@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Explosives",
+      "control": "Radio silence and RF-safe systems per the site plan; licensed personnel."
+    }
+  ],
+  "id": "DT-SETTINGTOOL-BODY",
+  "parent": "DT-SETTINGTOOL",
+  "group": "plug-and-perf",
+  "level": "component",
+  "name": "Pressure setting assembly body",
+  "aliases": [
+    "setting tool body",
+    "PSA",
+    "power charge chamber"
+  ],
+  "function": "The cylinder above the adapter kit where the power charge burns and the piston converts gas pressure into the setting stroke.",
+  "tabs": {
+    "overview": "Charge size and piston area set the force; bleed ports vent after the set.",
+    "engineering": "Steel body rated for the charge pressure.",
+    "safety": "Explosive item; misfire procedures per the explosives rules.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design."
+  },
+  "glb": "/glb/DT/DT-PLUGSET.glb",
+  "mesh_nodes": [
+    "DT-SETTINGTOOL-BODY"
+  ]
+}

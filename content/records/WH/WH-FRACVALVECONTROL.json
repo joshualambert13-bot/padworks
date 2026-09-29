@@ -15,7 +15,7 @@
   "evidence_tier": "E2",
   "reviewers": [],
   "tabs": {
-    "overview": "A diesel or electric hydraulic pump charges an accumulator; a panel with one control per valve opens and closes the actuators and shows position. Emergency shut-in closes the upper master and wing valves together.",
+    "overview": "A diesel or electric hydraulic pump charges an accumulator; a panel with one control per valve opens and closes the actuators and shows position. Emergency shut-in closes the upper master and wing valves together.\n\nA common form is a multi-station panel: one regulator, gauge, and selector per valve on a stand, fed from the hydraulic power unit and an accumulator bank, so the operator opens and closes every hydraulic valve on the stack and the zipper from outside the red zone.",
     "engineering": "Hydraulic supply pressure per the actuator design; accumulator volume sized for a full close of all valves on loss of the pump.",
     "connections": "Hydraulic hoses to each actuator; electrical control to the panel.",
     "safety": "Hydraulic lines are under pressure; leaks at the actuator are within the red zone and are repaired only after shut-in.",
@@ -47,7 +47,7 @@
     "date": "2026-09-29",
     "note": "Drop 2: bound to the control unit on the zipper skid"
   },
-  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-HPU",
     "WH-ZIPPER-ACCUMULATOR"

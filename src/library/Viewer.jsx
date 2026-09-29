@@ -6,7 +6,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Focus, EyeOff, Blend, Scissors, Expand, RotateCcw } from 'lucide-react';
 
-function Model({ url, selected, mode, explode, onPick, onNodes, onLoaded }) {
+function Model({ url, selected, mode, explode, ghost, onPick, onNodes, onLoaded }) {
   const { scene } = useGLTF(url, '/draco/');
   const cloned = useMemo(() => scene.clone(true), [scene]);
   const centers = useRef(new Map());
@@ -34,13 +34,15 @@ function Model({ url, selected, mode, explode, onPick, onNodes, onLoaded }) {
   const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 0, -1), 0.0), []);
   useEffect(() => {
     const sel = new Set(selected);
+    const ghostSet = new Set(ghost || []);
     cloned.traverse(o => {
       if (!o.isMesh) return;
       const key = o.userData.key;
       const isSel = sel.size === 0 || sel.has(key);
+      const isGhost = ghostSet.has(key) && !(sel.size > 0 && sel.has(key));
       o.visible = mode === 'isolate' ? isSel : true;
-      o.material.opacity = mode === 'fade' && !isSel ? 0.18 : 1;
-      o.material.depthWrite = !(mode === 'fade' && !isSel);
+      o.material.opacity = (mode === 'fade' && !isSel) ? 0.18 : isGhost ? 0.22 : 1;
+      o.material.depthWrite = !((mode === 'fade' && !isSel) || isGhost);
       o.material.clippingPlanes = mode === 'cut' ? [plane] : [];
       o.material.emissive = new THREE.Color(isSel && sel.size > 0 ? '#1d4d3a' : '#000000');
       o.material.needsUpdate = true;
@@ -50,13 +52,13 @@ function Model({ url, selected, mode, explode, onPick, onNodes, onLoaded }) {
         o.position.copy(o.userData.basePos).add(dir.multiplyScalar(explode * 0.6));
       }
     });
-  }, [cloned, selected, mode, explode, plane]);
+  }, [cloned, selected, mode, explode, plane, ghost]);
 
   // CadQuery exports are Z-up; glTF viewers are Y-up. Rotate so the stem points up.
   return <primitive object={cloned} rotation={[-Math.PI / 2, 0, 0]} onClick={e => { e.stopPropagation(); onPick(e.object.userData.key); }} onPointerMissed={() => onPick(null)} />;
 }
 
-function Framer({ trigger, selected, scope }) {
+function Framer({ trigger, selected, scope, ghost }) {
   const camera = useThree(st => st.camera);
   const controls = useThree(st => st.controls);
   const scene = useThree(st => st.scene);
@@ -66,8 +68,10 @@ function Framer({ trigger, selected, scope }) {
     scene.updateMatrixWorld(true);
     const sel = new Set(selected);
     const useSel = scope === 'selection' && sel.size > 0;
+    const ghostSet = new Set(ghost || []);
     const box = new THREE.Box3();
-    scene.traverse(o => { if (o.isMesh && o.visible && (!useSel || sel.has(o.userData.key))) box.expandByObject(o); });
+    scene.traverse(o => { if (o.isMesh && o.visible && (!useSel || sel.has(o.userData.key)) && !(ghostSet.has(o.userData.key) && !useSel)) box.expandByObject(o); });
+    if (box.isEmpty()) scene.traverse(o => { if (o.isMesh && o.visible) box.expandByObject(o); });
     if (box.isEmpty()) { const t = setTimeout(() => setRetry(x => x + 1), 200); return () => clearTimeout(t); }
     const dims = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -86,7 +90,7 @@ function Framer({ trigger, selected, scope }) {
   return null;
 }
 
-export default function Viewer({ url, highlight = [], nodeLabels = {} }) {
+export default function Viewer({ url, highlight = [], nodeLabels = {}, ghost = [] }) {
   const [selected, setSelected] = useState(highlight);
   // component pages open with the other parts translucent so an internal part is visible through the body
   const baseMode = highlight.length ? 'fade' : 'normal';
@@ -134,9 +138,9 @@ export default function Viewer({ url, highlight = [], nodeLabels = {} }) {
           <directionalLight position={[-3, 2, -2]} intensity={0.5} />
           <hemisphereLight args={['#c9d6e8', '#2a2419', 0.6]} />
           <Suspense fallback={null}>
-            <Model url={url} selected={selected} mode={mode} explode={explode} onPick={(k) => setSelected(k ? [k] : [])} onNodes={setNodes} onLoaded={() => { setLoaded(true); frameSel(); }} />
+            <Model url={url} selected={selected} mode={mode} explode={explode} ghost={ghost} onPick={(k) => setSelected(k ? [k] : [])} onNodes={setNodes} onLoaded={() => { setLoaded(true); frameSel(); }} />
           </Suspense>
-          <Framer trigger={frame} selected={selected} scope={scope} />
+          <Framer trigger={frame} selected={selected} scope={scope} ghost={ghost} />
           <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
         </Canvas>
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">

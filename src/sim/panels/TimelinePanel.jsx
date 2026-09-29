@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Circle, Disc } from 'lucide-react';
-import { useSim, PHASES, WELL } from '../store.js';
+import { useSim, PHASES, WELL, padRoles, STAGE_COUNT } from '../store.js';
 
 function PressureChart({ history }) {
   const W = 320, H = 150, padL = 38, padR = 30, padT = 8, padB = 18;
@@ -40,8 +40,22 @@ function PressureChart({ history }) {
 export default function TimelinePanel() {
   const s = useSim();
   const phaseIdx = PHASES.findIndex(p => p.id === s.phase);
+  const roles = padRoles(s);
+  const ROLE = { focus: ['yours', 'text-accent border-accent/60'], frac: ['pumping', 'text-ok border-ok/60'], wireline: ['wireline', 'text-cool border-cool/60'], idle: ['waiting', 'text-mute border-line'], done: ['complete', 'text-mute border-line'] };
   return (
     <div className="h-full overflow-y-auto p-3 space-y-3 text-sm">
+      <div className="card p-2">
+        <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Pad: {roles.length} well{roles.length > 1 ? 's' : ''}</div>
+        <div className="grid grid-cols-4 gap-1">
+          {roles.map(r => (
+            <div key={r.i} className={'rounded border px-1 py-1 text-center ' + ROLE[r.role][1]}>
+              <div className="mono text-[11px]">W{r.i + 1}</div>
+              <div className="text-[10px]">{ROLE[r.role][0]}</div>
+              <div className="text-[10px] text-mute">stg {Math.min(r.stage + 1, STAGE_COUNT)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="card p-2">
         <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Completion timeline</div>
         <ol className="space-y-1">

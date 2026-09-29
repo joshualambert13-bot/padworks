@@ -133,5 +133,68 @@
     "access": "Paid standard",
     "tier": "E1",
     "url": ""
+  },
+  {
+    "id": "S16",
+    "title": "API 6A Type 6BX flange dimensions, 10000 psi and 15000 psi (vendor tables, metric)",
+    "publisher": "piping-world.com",
+    "edition": "web, accessed 2026-09-29",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.piping-world.com/api-6a-type-6bx-15000-psi"
+  },
+  {
+    "id": "S17",
+    "title": "Simultaneous fracturing increases completion efficiency",
+    "publisher": "Oil and Gas Journal (A. Procyk)",
+    "edition": "2022-01-03",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.ogj.com/drilling-production/article/14223163/simultaneous-fracturing-increases-completion-efficiency"
+  },
+  {
+    "id": "S18",
+    "title": "Triple-well completions are now the norm in US shale patch",
+    "publisher": "JPT, SPE (T. Jacobs)",
+    "edition": "2025-05-08",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://jpt.spe.org/triple-well-completions-are-now-the-norm-in-us-shale-patch"
+  },
+  {
+    "id": "S19",
+    "title": "How simul frac and trimul frac projects work",
+    "publisher": "Repeat Precision",
+    "edition": "web, accessed 2026-09-29",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.repeatprecision.com/news/simul-frac-and-trimul-frac"
+  },
+  {
+    "id": "S20",
+    "title": "Plug and perf: how traditional frac plugs work",
+    "publisher": "Matthew A. Crump, PE",
+    "edition": "web, accessed 2026-09-29",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.matthewacrump.com/content/howplugswork"
+  },
+  {
+    "id": "S21",
+    "title": "API Spec 11D1, Packers and Bridge Plugs",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S22",
+    "title": "A beginner's guide to frac equipment: types and applications",
+    "publisher": "Ironclad Environmental",
+    "edition": "2023-07-10",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://ironcladenvironmental.com/2023/07/10/a-beginners-guide-to-frac-equipment-types-and-applications/"
   }
 ]

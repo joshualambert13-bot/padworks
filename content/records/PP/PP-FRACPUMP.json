@@ -1,0 +1,65 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay out of the red zone while pumping; iron and hoses are restrained."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    },
+    {
+      "class": "Hot surfaces and exhaust",
+      "control": "Guards on exhaust and hydraulic lines; keep clear of engine compartments while running."
+    }
+  ],
+  "id": "PP-FRACPUMP",
+  "parent": "PP",
+  "group": "pumping",
+  "level": "equipment",
+  "name": "Frac pump (pumper trailer)",
+  "aliases": [
+    "frac pumper",
+    "pump truck",
+    "pumping unit",
+    "triplex",
+    "quintuplex",
+    "HHP unit"
+  ],
+  "scene": "PP-FRACPUMP-1",
+  "function": "A trailer or truck carrying an engine, transmission, and a positive-displacement plunger pump that takes slurry from the missile at low pressure and discharges it at treating pressure.",
+  "tabs": {
+    "overview": "The pump is a reciprocating plunger pump: a power end converts engine torque into the stroke of three or five plungers, and the fluid end holds the suction and discharge valves that the plungers work against. Rate is set by engine speed and gear; pressure is whatever the well demands, up to the fluid end rating and the kickout setting. A fleet runs many pumps in parallel into one header so that one pump can be dropped for a fluid end change without stopping the stage.",
+    "engineering": "Diesel engines with automatic transmissions are the common power end drive; electric motors on turbine or grid power replace them on electric fleets. Fluid ends are forged steel blocks with replaceable valves, seats, and packing; plunger size sets the trade between rate and pressure for a given horsepower.",
+    "connections": "Suction hose from the missile low-pressure header; discharge iron to the missile high-pressure header; fuel, hydraulic, and data connections.",
+    "safety": "Discharge iron is inside the red zone; fluid end failures release fluid at treating pressure; exhaust and hydraulic lines are hot; noise.",
+    "specs": "Typical 2,500 to 3,000 HHP per unit; 10 to 12 bpm per pump at 10,000 psi with a small plunger; fluid ends rated 15,000 psi.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Pumps are brought online in sequence as the rate is raised and taken offline as it is cut; fluid ends are swapped between stages on a wear schedule.",
+    "failure_modes": "Fluid end washout, valve and seat wear, packing leaks, power end bearing failure, transmission overheating."
+  },
+  "specs": [
+    {
+      "name": "Rating, typical",
+      "value": "2500 to 3000",
+      "unit": "HHP",
+      "tier": "E3",
+      "source": "S9"
+    }
+  ]
+}

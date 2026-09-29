@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Explosives",
+      "control": "Radio silence and RF-safe systems per the site plan; licensed personnel."
+    }
+  ],
+  "id": "DT",
+  "level": "system",
+  "name": "Downhole completion tools and multistage systems",
+  "aliases": [
+    "downhole tools",
+    "plugs and sleeves",
+    "multistage"
+  ],
+  "function": "The tools that live in the casing during the completion: frac plugs and the setting tools that place them, sleeves and toe initiators, liner hangers, and the bridge plugs and retainers used for isolation.",
+  "tabs": {
+    "overview": "Plug-and-perf completions use one frac plug per stage: set on wireline below the new perforations, it isolates every stage already treated, takes the frac pressure on its top, and is milled out or dissolves after the last stage. Sleeve systems replace plugs and perforating with ports opened by dropped balls or shifting tools. Liner hangers suspend the production liner in the intermediate casing when the lateral is cased as a liner. Bridge plugs and cement retainers isolate zones permanently or for remedial work.",
+    "engineering": "Plugs are composite (millable) or dissolvable; ratings of 10,000 psi differential and temperatures to 300 F are common. Setting is by wireline setting tool or coiled tubing. API Spec 11D1 governs the qualification of packers and bridge plugs by grade.",
+    "connections": "Run on the wireline tool string (WL) or coiled tubing (CT); set in the production casing (CM); milled by the coiled tubing drillout BHA.",
+    "safety": "Setting tools carry a power charge; plugs under differential pressure store energy; milling debris returns to surface with the flowback.",
+    "specs": "Frac plug run-in OD about 4.3 to 4.4 in. for 5-1/2 in. casing; set in seconds; mill-out times of minutes per plug with a good mill and adequate returns.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "One plug per stage, toe to heel; drillout heel to toe after the last stage; dissolvable plugs skip the drillout.",
+    "failure_modes": "Pre-set in the vertical, slips not holding, element leaking, plug spinning during mill-out, ball not seating, debris packing off the coiled tubing."
+  }
+}

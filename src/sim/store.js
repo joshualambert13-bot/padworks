@@ -13,6 +13,45 @@ export const PHASES = [
 ];
 
 export const STAGE_COUNT = 5;          // demo lateral: five stages, three clusters each
+
+// Pad configuration: how many wells share the pad and how the frac and wireline crews cycle across them.
+// fracSlots: wells pumped at the same time. wlSlots: wells on wireline at the same time.
+export const FRAC_MODES = [
+  { id: 'single', label: 'Single well', short: 'Single', fracSlots: 1, wlSlots: 0, blurb: 'One well: wireline and frac alternate on the same well. Pumps sit idle while wireline runs.' },
+  { id: 'zipper', label: 'Zipper frac', short: 'Zipper', fracSlots: 1, wlSlots: 1, blurb: 'Two or more wells alternate: while one well is pumped, wireline sets the next plug and guns on the neighbor.' },
+  { id: 'simul', label: 'Simul-frac', short: 'Simul', fracSlots: 2, wlSlots: 1, blurb: 'Two wells are pumped at the same time from one spread through a split manifold; wireline works ahead on a third.' },
+  { id: 'trimul', label: 'Trimul-frac', short: 'Trimul', fracSlots: 3, wlSlots: 2, blurb: 'Three wells pumped at once. Needs a larger spread, more sand and water logistics, and two wireline units.' },
+  { id: 'quad', label: 'Quad-frac', short: 'Quad', fracSlots: 4, wlSlots: 2, blurb: 'Four wells pumped at once, the largest simultaneous scheme in use; rate per well drops unless the spread grows.' },
+];
+export const BORES = [
+  { id: '4-10K', label: '4-1/16 in. 10K', bore: 4.0625, rating: 10 },
+  { id: '4-15K', label: '4-1/16 in. 15K', bore: 4.0625, rating: 15 },
+  { id: '5-10K', label: '5-1/8 in. 10K', bore: 5.125, rating: 10 },
+  { id: '5-15K', label: '5-1/8 in. 15K', bore: 5.125, rating: 15 },
+  { id: '7-10K', label: '7-1/16 in. 10K', bore: 7.0625, rating: 10 },
+  { id: '7-15K', label: '7-1/16 in. 15K', bore: 7.0625, rating: 15 },
+];
+export const MAX_WELLS = 16;
+
+// Roles of every well on the pad, derived from the focus well (index 0, the one under manual control),
+// the frac mode, and the focus well's phase. Partner wells follow the crews automatically.
+export function padRoles(s) {
+  const n = s.pad.wells;
+  const mode = FRAC_MODES.find(m => m.id === s.pad.mode) || FRAC_MODES[0];
+  const roles = Array.from({ length: n }, (_, i) => ({ i, role: i === 0 ? 'focus' : 'idle', stage: Math.min(STAGE_COUNT, s.stage + (i % 2)) }));
+  const others = roles.slice(1);
+  let k = 0;
+  const take = (role, count) => { for (let j = 0; j < count && k < others.length; j++, k++) others[k].role = role; };
+  if (s.phase === 'frac') {
+    take('frac', mode.fracSlots - 1);
+    take('wireline', mode.wlSlots);
+  } else if (s.phase === 'wireline') {
+    if (mode.wlSlots > 0) { take('frac', mode.fracSlots); take('wireline', mode.wlSlots - 1); }
+  } else if (s.phase === 'drillout' || s.phase === 'flowback' || s.phase === 'production') {
+    take('done', others.length);
+  }
+  return roles;
+}
 export const CLUSTERS_PER_STAGE = 3;
 
 // Well and pressure parameters (illustrative, fixed for the demo well)
@@ -31,12 +70,13 @@ const VALVE_TRAVEL_S = 3.0;    // hydraulic actuator or handwheel travel time (s
 function initialValves() {
   // pos: 0 closed, 1 open. target: commanded position. Gate valves are two-position.
   return {
-    lmv:   { pos: 1, target: 1, label: 'Lower master valve', kind: 'manual' },
-    umv:   { pos: 1, target: 1, label: 'Upper master valve', kind: 'hydraulic' },
-    wingA: { pos: 0, target: 0, label: 'Frac wing valve (to zipper)', kind: 'hydraulic' },
-    wingB: { pos: 0, target: 0, label: 'Flowback wing valve', kind: 'hydraulic' },
-    swab:  { pos: 0, target: 0, label: 'Swab valve (lubricator access)', kind: 'manual' },
-    zip:   { pos: 0, target: 0, label: 'Zipper manifold valve (this well)', kind: 'hydraulic' },
+    lmv:   { pos: 1, target: 1, label: 'Lower master valve (manual)', kind: 'manual' },
+    umv:   { pos: 1, target: 1, label: 'Upper master valve (hyd.)', kind: 'hydraulic' },
+    wingA: { pos: 0, target: 0, label: 'Wing A, pump-down side (hyd.)', kind: 'hydraulic' },
+    wingB: { pos: 0, target: 0, label: 'Wing B, flowback side (hyd.)', kind: 'hydraulic' },
+    crown: { pos: 1, target: 1, label: 'Crown valve below the inlet block (hyd.)', kind: 'hydraulic' },
+    swab:  { pos: 0, target: 0, label: 'Swab valve, lubricator access (hyd.)', kind: 'hydraulic' },
+    zip:   { pos: 0, target: 0, label: 'Zipper valve to the inlet block (this well)', kind: 'hydraulic' },
   };
 }
 
@@ -67,6 +107,7 @@ export const useSim = create((set, get) => ({
   ctRigged: false,
   valves: initialValves(),
   stages: initialStages(),
+  pad: { wells: 4, mode: 'zipper', bore: '7-15K' },
 
   // ----- operator inputs -----
   pumpRate: 0,     // bpm
@@ -93,6 +134,19 @@ export const useSim = create((set, get) => ({
   setPpa: (ppa) => set({ ppa }),
   setPumpsOnline: (pumpsOnline) => set({ pumpsOnline, alarms: { ...get().alarms, kickout: pumpsOnline ? false : get().alarms.kickout } }),
   setChoke: (choke) => set(s => ({ fb: { ...s.fb, choke } })),
+  setPad: (patch) => {
+    const s = get();
+    const pad = { ...s.pad, ...patch };
+    pad.wells = Math.max(1, Math.min(MAX_WELLS, Math.round(pad.wells)));
+    const mode = FRAC_MODES.find(m => m.id === pad.mode) || FRAC_MODES[0];
+    if (pad.wells < mode.fracSlots + mode.wlSlots) {
+      // not enough wells for that scheme: drop to the largest scheme that fits
+      const fit = [...FRAC_MODES].reverse().find(m => m.fracSlots + m.wlSlots <= pad.wells) || FRAC_MODES[0];
+      pad.mode = fit.id;
+    }
+    set({ pad });
+    get().addLog('Pad: ' + pad.wells + ' well' + (pad.wells > 1 ? 's' : '') + ', ' + (FRAC_MODES.find(m => m.id === pad.mode).label) + ', ' + (BORES.find(b => b.id === pad.bore) || BORES[5]).label);
+  },
   commandValve: (id, target) => {
     const s = get();
     const v = s.valves[id];
@@ -101,11 +155,14 @@ export const useSim = create((set, get) => ({
     if (id === 'lmv' && (s.surfacePsi > 500 || s.pumpRate > 0)) {
       return set({ alarms: { ...s.alarms, interlock: 'Lower master valve is not cycled under pressure or flow. Bleed down first.' } });
     }
-    if (id === 'swab' && target === 1 && s.valves.wingA.pos > 0.01) {
-      return set({ alarms: { ...s.alarms, interlock: 'Close the frac wing valve before opening the swab valve.' } });
+    if (id === 'swab' && target === 1 && s.valves.zip.pos > 0.01) {
+      return set({ alarms: { ...s.alarms, interlock: 'Close the zipper valve before opening the swab valve: the inlet block sits below the swab.' } });
     }
-    if (id === 'wingA' && target === 1 && s.valves.swab.pos > 0.01) {
-      return set({ alarms: { ...s.alarms, interlock: 'Close the swab valve (lubricator access) before opening the frac wing.' } });
+    if (id === 'zip' && target === 1 && s.valves.swab.pos > 0.01) {
+      return set({ alarms: { ...s.alarms, interlock: 'Close the swab valve (lubricator access) before opening the zipper valve to the inlet block.' } });
+    }
+    if (id === 'crown' && (s.surfacePsi > 500 || s.pumpRate > 0) && target === 0) {
+      return set({ alarms: { ...s.alarms, interlock: 'Crown valve is not closed against flow. Stop pumping and bleed the inlet block first.' } });
     }
     set({ valves: { ...s.valves, [id]: { ...v, target } }, alarms: { ...s.alarms, interlock: '' } });
   },
@@ -118,17 +175,17 @@ export const useSim = create((set, get) => ({
     const patch = { phase, wl: { step: 'idle', progress: 0 }, pumpRate: 0, ppa: 0, pumpsOnline: false };
     if (phase === 'wireline') {
       patch.lubricatorRigged = true; patch.ctRigged = false;
-      patch.valves = { ...s.valves, wingA: { ...s.valves.wingA, target: 0 }, zip: { ...s.valves.zip, target: 0 }, swab: { ...s.valves.swab, target: 1 } };
+      patch.valves = { ...s.valves, wingA: { ...s.valves.wingA, target: 1 }, zip: { ...s.valves.zip, target: 0 }, crown: { ...s.valves.crown, target: 1 }, swab: { ...s.valves.swab, target: 1 } };
     } else if (phase === 'frac') {
       patch.lubricatorRigged = false; patch.ctRigged = false;
-      patch.valves = { ...s.valves, swab: { ...s.valves.swab, target: 0 } };
+      patch.valves = { ...s.valves, swab: { ...s.valves.swab, target: 0 }, wingA: { ...s.valves.wingA, target: 0 }, crown: { ...s.valves.crown, target: 1 } };
     } else if (phase === 'drillout') {
       patch.lubricatorRigged = false; patch.ctRigged = true;
       patch.valves = { ...s.valves, wingA: { ...s.valves.wingA, target: 0 }, zip: { ...s.valves.zip, target: 0 }, swab: { ...s.valves.swab, target: 1 }, wingB: { ...s.valves.wingB, target: 1 } };
       patch.ct = { progress: 0, milling: 0, atPlug: -1 };
     } else if (phase === 'flowback') {
       patch.lubricatorRigged = false; patch.ctRigged = false;
-      patch.valves = { ...s.valves, swab: { ...s.valves.swab, target: 0 }, wingA: { ...s.valves.wingA, target: 0 }, wingB: { ...s.valves.wingB, target: 1 } };
+      patch.valves = { ...s.valves, swab: { ...s.valves.swab, target: 0 }, wingA: { ...s.valves.wingA, target: 0 }, zip: { ...s.valves.zip, target: 0 }, wingB: { ...s.valves.wingB, target: 1 } };
     } else if (phase === 'rigup' || phase === 'production') {
       patch.lubricatorRigged = false; patch.ctRigged = false;
     }
@@ -140,8 +197,8 @@ export const useSim = create((set, get) => ({
   startWirelineRun: () => {
     const s = get();
     if (s.phase !== 'wireline') return;
-    if (s.valves.swab.pos < 0.99 || s.valves.umv.pos < 0.99 || s.valves.lmv.pos < 0.99) {
-      return set({ alarms: { ...s.alarms, interlock: 'Swab and master valves must be open with the lubricator rigged before running in.' } });
+    if (s.valves.swab.pos < 0.99 || s.valves.crown.pos < 0.99 || s.valves.umv.pos < 0.99 || s.valves.lmv.pos < 0.99) {
+      return set({ alarms: { ...s.alarms, interlock: 'Swab, crown, and master valves must be open with the lubricator rigged before running in.' } });
     }
     if (s.stage >= STAGE_COUNT) return;
     set({ wl: { step: 'pumpdown', progress: 0 } });
@@ -161,6 +218,7 @@ export const useSim = create((set, get) => ({
     }
   },
   reset: () => set({
+    pad: get().pad,
     t: 0, phase: 'rigup', stage: 0, wl: { step: 'idle', progress: 0 }, ct: { progress: 0, milling: 0, atPlug: -1 },
     fb: { choke: 0.35, cumBbl: 0 }, lubricatorRigged: false, ctRigged: false, valves: initialValves(), stages: initialStages(),
     pumpRate: 0, ppa: 0, pumpsOnline: false, surfacePsi: 0, bhtpPsi: 0, hydroPsi: 0, frictionPsi: 0, netPsi: 0,
@@ -191,7 +249,7 @@ export const useSim = create((set, get) => ({
     if (moved) { valves = nv; patch.valves = nv; }
 
     // Flow path open from pumps to the perforations?
-    const pathOpen = valves.zip.pos > 0.99 && valves.wingA.pos > 0.99 && valves.umv.pos > 0.99 && valves.lmv.pos > 0.99;
+    const pathOpen = valves.zip.pos > 0.99 && valves.crown.pos > 0.99 && valves.umv.pos > 0.99 && valves.lmv.pos > 0.99;
     const st = s.stages[s.stage];
     const q = s.pumpsOnline && !s.alarms.kickout ? s.pumpRate : 0;   // bpm
     const ppa = s.ppa;

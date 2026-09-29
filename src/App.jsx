@@ -7,6 +7,7 @@ import SystemPage from './library/SystemPage.jsx';
 const RecordPage = lazy(() => import('./library/RecordPage.jsx'));
 import BuildCheck from './library/BuildCheck.jsx';
 import About from './library/About.jsx';
+import Preview from './library/Preview.jsx';
 import { SITE_TAGLINE } from './config.js';
 
 const navClass = ({ isActive }) =>
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/checks" element={<BuildCheck />} />
           <Route path="/integrity" element={<Navigate to="/checks" replace />} />
           <Route path="/about" element={<About />} />
+          <Route path="/preview" element={<Preview />} />
           <Route path="*" element={<Navigate to="/simulate" replace />} />
         </Routes>
         </Suspense>

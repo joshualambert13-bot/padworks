@@ -23,8 +23,16 @@ export default function RecordPage() {
   if (!r) return <Navigate to="/library" replace />;
   const sys = systems.find(s => s.code === r.system);
   const parent = r.parent ? byId.get(r.parent) : null;
-  const glb = r.glb || (parent && parent.glb) || null;
-  const highlight = (r.level === 'component' || r.level === 'part') && r.mesh_nodes && r.mesh_nodes.length ? r.mesh_nodes : [];
+  const glbOwner = r.glb ? r : (parent && parent.glb ? parent : null);
+  const variants = glbOwner && glbOwner.variants && glbOwner.variants.length ? glbOwner.variants : null;
+  const [variantKey, setVariantKey] = useState(() => { try { return localStorage.getItem('padworks.variant') || ''; } catch { return ''; } });
+  const variant = variants ? (variants.find(v => v.key === variantKey) || variants.find(v => v.glb === glbOwner.glb) || variants[0]) : null;
+  const glb = variant ? variant.glb : (glbOwner ? glbOwner.glb : null);
+  const ghost = (glbOwner && glbOwner.ghost_nodes) || [];
+  const pickVariant = (k) => { setVariantKey(k); try { localStorage.setItem('padworks.variant', k); } catch { /* per-viewer convenience only */ } };
+  // highlight the record's own parts when it is a component, a part, or an equipment record drawn inside its parent's file
+  const sameFileAsParent = !!(r.glb && parent && parent.glb === r.glb);
+  const highlight = ((r.level === 'component' || r.level === 'part') || sameFileAsParent) && r.mesh_nodes && r.mesh_nodes.length ? r.mesh_nodes : [];
   const status = STATUS_LABEL[r.status];
   const issueUrl = 'https://github.com/' + GITHUB_REPO + '/issues/new?title=' + encodeURIComponent('[' + r.id + '] correction') + '&body=' + encodeURIComponent('Record: ' + r.id + '\nTab: \nWhat is wrong: \nSource: ');
 
@@ -51,8 +59,16 @@ export default function RecordPage() {
         <p className="text-sm text-mute max-w-3xl">{r.function}</p>
 
         {glb && (
-          <div className="card overflow-hidden" style={{ height: 460 }}>
-            <Viewer url={glb} highlight={highlight} />
+          <div className="card overflow-hidden relative" style={{ height: 460 }}>
+            <Viewer url={glb} highlight={highlight} ghost={ghost} />
+            {variants && (
+              <div className="absolute bottom-2 right-2 md:right-[228px] flex items-center gap-1 text-xs">
+                <span className="text-mute">Size</span>
+                <select className="btn" value={variant.key} onChange={e => pickVariant(e.target.value)} title="Bore and pressure rating">
+                  {variants.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
+                </select>
+              </div>
+            )}
           </div>
         )}
         {!glb && r.scene && (

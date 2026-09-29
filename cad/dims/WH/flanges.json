@@ -1,0 +1,73 @@
+{
+  "note": "6BX flange envelope in inches converted from a public vendor metric table (S16). Tier E2. Verify against the API 6A tables before any use beyond proportion. End-to-end valve lengths are estimates (E4).",
+  "flanges": {
+    "4-10K": {
+      "bore": 4.0625,
+      "rating_ksi": 10,
+      "od": 12.4,
+      "bolt_circle": 10.19,
+      "bolts": 8,
+      "stud_d": 1.125,
+      "thk": 2.77,
+      "ring": "BX-155"
+    },
+    "5-10K": {
+      "bore": 5.125,
+      "rating_ksi": 10,
+      "od": 14.17,
+      "bolt_circle": 11.81,
+      "bolts": 12,
+      "stud_d": 1.125,
+      "thk": 3.13,
+      "ring": "BX-169"
+    },
+    "7-10K": {
+      "bore": 7.0625,
+      "rating_ksi": 10,
+      "od": 18.9,
+      "bolt_circle": 15.87,
+      "bolts": 12,
+      "stud_d": 1.5,
+      "thk": 4.06,
+      "ring": "BX-156"
+    },
+    "4-15K": {
+      "bore": 4.0625,
+      "rating_ksi": 15,
+      "od": 14.17,
+      "bolt_circle": 11.44,
+      "bolts": 8,
+      "stud_d": 1.375,
+      "thk": 3.09,
+      "ring": "BX-155"
+    },
+    "5-15K": {
+      "bore": 5.125,
+      "rating_ksi": 15,
+      "od": 16.54,
+      "bolt_circle": 13.5,
+      "bolts": 12,
+      "stud_d": 1.5,
+      "thk": 3.88,
+      "ring": "BX-169"
+    },
+    "7-15K": {
+      "bore": 7.0625,
+      "rating_ksi": 15,
+      "od": 19.88,
+      "bolt_circle": 16.87,
+      "bolts": 16,
+      "stud_d": 1.5,
+      "thk": 4.69,
+      "ring": "BX-156"
+    }
+  },
+  "valve_end_to_end_estimate": {
+    "4-10K": 29.5,
+    "5-10K": 35.5,
+    "7-10K": 40.5,
+    "4-15K": 30.0,
+    "5-15K": 36.0,
+    "7-15K": 44.5
+  }
+}

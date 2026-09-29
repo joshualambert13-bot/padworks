@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-BLENDER-LIQUIDADD",
+  "parent": "PP-BLENDER",
+  "group": "fluid",
+  "level": "component",
+  "name": "Liquid additive pumps",
+  "aliases": [
+    "LA pumps",
+    "chemical pumps",
+    "additive pumps"
+  ],
+  "function": "The metering pumps on the blender that inject friction reducer, biocide, scale inhibitor, and other liquid chemicals into the tub in proportion to the water rate.",
+  "tabs": {
+    "overview": "Positive-displacement metering pumps with flow meters; setpoints in gallons per thousand gallons of water come from the treatment design and are logged in the data van.",
+    "engineering": "Small metering pumps; rates in gallons per minute.",
+    "safety": "Chemical handling per the safety data sheets; splash protection.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  }
+}

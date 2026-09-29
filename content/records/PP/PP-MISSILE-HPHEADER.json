@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay out of the red zone while pumping; iron and hoses are restrained."
+    }
+  ],
+  "id": "PP-MISSILE-HPHEADER",
+  "parent": "PP-MISSILE",
+  "group": "manifold",
+  "level": "component",
+  "name": "High-pressure header",
+  "aliases": [
+    "HP header",
+    "discharge header",
+    "treating header"
+  ],
+  "function": "The header that collects every pump discharge into the treating line, with check valves, transducers, and the pressure relief valve.",
+  "tabs": {
+    "overview": "Pump discharge lines enter through check valves so a stopped pump cannot be backflowed; the outlet goes to the treating line. Pressure is read here for the data van and the kickout setting.",
+    "engineering": "Rated to the treating pressure; erosion-checked at the outlet turn.",
+    "safety": "Center of the red zone; PRV discharge routed to a safe point.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-MISSILE-HPHEADER"
+}

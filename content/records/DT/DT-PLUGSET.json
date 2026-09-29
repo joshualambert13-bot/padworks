@@ -1,0 +1,67 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Explosives",
+      "control": "Radio silence and RF-safe systems per the site plan; licensed personnel."
+    }
+  ],
+  "id": "DT-PLUGSET",
+  "parent": "DT",
+  "group": "plug-and-perf",
+  "level": "equipment",
+  "name": "Frac plug on setting tool in casing (cut-away)",
+  "aliases": [
+    "plug set",
+    "plug on setting tool",
+    "setting the plug"
+  ],
+  "function": "The teaching assembly: a composite frac plug at the moment of setting inside 5-1/2 in. casing, with the setting sleeve and sheared tension rod of the adapter kit and the pressure setting assembly above it.",
+  "tabs": {
+    "overview": "Use the section and translucent tools to look through the casing. From the bottom: the plug mandrel with its guide, the lower slips already expanded on their cone into the casing wall, the compressed element, the upper cone and slips, and the ball seat at the top of the mandrel with the ball landed. Above the plug sit the setting sleeve that pushed the slips and element down, the tension rod that held the mandrel up until the shear ring parted, and the body of the pressure setting assembly that produced the stroke.\n\nIn the well this happens at the bottom of the tool string, below the perforating guns, at the depth chosen so the new perforations are above the plug.",
+    "engineering": "The casing is a public 5-1/2 in. 20 lb/ft dimension (ID 4.778 in.); the plug is a public example 4.375 in. OD. Every other proportion is generic.",
+    "connections": "The setting tool threads to the wireline tool string; the plug is left in the casing.",
+    "safety": "The setting tool carries a power charge handled under the explosives rules; a plug set under pressure stores energy.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "Once per stage.",
+    "failure_modes": "See the plug and setting tool components."
+  },
+  "glb": "/glb/DT/DT-PLUGSET.glb",
+  "ghost_nodes": [
+    "DT-PLUGSET-CASING"
+  ],
+  "mesh_nodes": [
+    "DT-PLUGSET-CASING",
+    "DT-FRACPLUG-MANDREL",
+    "DT-FRACPLUG-SLIPSDOWN",
+    "DT-FRACPLUG-CONEDOWN",
+    "DT-FRACPLUG-ELEMENT",
+    "DT-FRACPLUG-CONEUP",
+    "DT-FRACPLUG-SLIPSUP",
+    "DT-FRACPLUG-BALLSEAT",
+    "DT-FRACPLUG-BALL",
+    "DT-SETTINGTOOL-SLEEVE",
+    "DT-SETTINGTOOL-ROD",
+    "DT-SETTINGTOOL-SHEAR",
+    "DT-SETTINGTOOL-BODY"
+  ]
+}

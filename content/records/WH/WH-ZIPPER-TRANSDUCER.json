@@ -37,7 +37,7 @@
       "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
     }
   ],
-  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "glb": "/glb/WH/WH-ZIPPER.7-15K.glb",
   "mesh_nodes": [
     "WH-ZIPPER-TRANSDUCER"
   ]

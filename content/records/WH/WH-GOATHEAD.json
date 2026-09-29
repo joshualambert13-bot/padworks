@@ -15,7 +15,7 @@
   "evidence_tier": "E2",
   "reviewers": [],
   "tabs": {
-    "overview": "Named for the horn-like inlets. Each inlet takes a hammer union or a flanged connection from the zipper manifold or missile lines. A top connection may carry a pressure transducer, a bleed, or a cap.",
+    "overview": "Named for the horn-like inlets. Each inlet takes a hammer union or a flanged connection from the zipper manifold or missile lines. A top connection may carry a pressure transducer, a bleed, or a cap.\n\nThe standard stack on this site uses a flanged inlet block and a spooled treating line instead of a goat head, so the goat head is documented as the hammer-union alternative and is not drawn in the standard tree model.",
     "engineering": "A forged or fabricated pressure-containing block rated with the tree; inlet sizes commonly 3 in. or 4 in.; some designs are flanged big-bore heads that replace multiple inlets with one large line.",
     "connections": "Inlets from the zipper manifold or missile; bottom flange to the swab valve or a spacer spool.",
     "safety": "High-velocity proppant flow at the inlets erodes the head; inspect between wells. Pressurized unions must be restrained.",
@@ -53,8 +53,7 @@
       "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
     }
   ],
-  "drawn_in_3d": true,
-  "scene": "WH-GOATHEAD",
+  "drawn_in_3d": false,
   "sources": [
     "S3",
     "S9",
@@ -64,10 +63,6 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2: bound to the frac tree GLB as a component of the tree"
-  },
-  "glb": "/glb/WH/WH-FRACTREE.glb",
-  "mesh_nodes": [
-    "WH-FRACTREE-GOATHEAD"
-  ]
+    "note": "Drop 4: alternative to the inlet block; not in the standard model"
+  }
 }

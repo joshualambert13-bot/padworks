@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-BLENDER-DISCHARGEPUMP",
+  "parent": "PP-BLENDER",
+  "group": "fluid",
+  "level": "component",
+  "name": "Discharge (dirty side) pump",
+  "aliases": [
+    "discharge pump",
+    "dirty side pump",
+    "slurry pump"
+  ],
+  "function": "The centrifugal pump that pushes slurry from the tub to the missile at enough pressure to charge the frac pump suctions.",
+  "tabs": {
+    "overview": "Abrasion-resistant impeller and liners because it moves proppant-laden fluid; discharge pressure is what keeps the frac pumps from cavitating.",
+    "engineering": "Slurry-rated centrifugal pump, discharge to about 100 psi.",
+    "safety": "Seal failures spray slurry; hoses restrained.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-BLENDER-DISCHARGEPUMP"
+}

@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-SUCTIONHOSE",
+  "parent": "PP",
+  "group": "manifold",
+  "level": "equipment",
+  "name": "Suction hoses and low-pressure iron",
+  "aliases": [
+    "suction hose",
+    "LP hose",
+    "lay-flat",
+    "suction line"
+  ],
+  "function": "The large-bore hoses and low-pressure piping that move water from the tanks to the blender and slurry from the blender to the missile and pump suctions.",
+  "tabs": {
+    "overview": "Low pressure but high volume: hoses of 4 to 10 in. carry the full slurry rate. Kinks and collapsed suctions starve the frac pumps and cause cavitation, which damages fluid ends, so hose runs are laid straight and short.",
+    "engineering": "Rated for suction and slurry; cam-lock or hammer-union ends.",
+    "connections": "Tanks to blender; blender to missile; missile to each pump suction.",
+    "safety": "Hose whip on failure; trip hazards; pinch points at connections.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Laid out at rig-up; inspected each stage.",
+    "failure_modes": "Collapse, leaks at ends, wear from proppant."
+  }
+}

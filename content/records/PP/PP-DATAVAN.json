@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    }
+  ],
+  "id": "PP-DATAVAN",
+  "parent": "PP",
+  "group": "control",
+  "level": "equipment",
+  "name": "Data van",
+  "aliases": [
+    "data van",
+    "frac van",
+    "control van",
+    "treatment van"
+  ],
+  "scene": "PP-DATAVAN",
+  "function": "The control cabin where the treating supervisor directs the stage: every pump, the blender, and the chemical unit are controlled and every pressure, rate, and concentration is recorded here.",
+  "tabs": {
+    "overview": "Screens show surface treating pressure, slurry and clean rates, proppant concentration, chemical rates, and per-pump status. The supervisor sets rate, calls sand, watches for screenout trends, and stops the job on an overpressure. The van holds the pressure kickout settings for the pumps and communicates with the wireline unit and the zipper valve operator.",
+    "engineering": "Data acquisition from transducers on the missile and tree, densitometers, and flow meters; pump control networks; recording at one-second or faster intervals.",
+    "connections": "Data links to every unit, the zipper control panel, and the wireline unit; treating pressure transducers on the missile and the tree.",
+    "safety": "Located outside the red zone; the kickout setting is the pressure safeguard.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Staffed continuously while pumping; post-job data goes to the operator.",
+    "failure_modes": "Transducer faults, lost pump communication, recording gaps."
+  }
+}

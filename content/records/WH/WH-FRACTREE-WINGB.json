@@ -12,21 +12,21 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 4: manual plus hydraulic pair"
   },
   "id": "WH-FRACTREE-WINGB",
   "parent": "WH-FRACTREE",
   "group": "frac-tree",
   "level": "component",
-  "name": "Flowback wing valve",
+  "name": "Wing B: manual and hydraulic wing valves (flowback side)",
   "aliases": [
+    "wing B",
     "flowback wing",
-    "production wing",
-    "wing valve B"
+    "production wing"
   ],
-  "function": "The wing valve on the opposite side of the cross that connects the well to the flowback iron and choke manifold.",
+  "function": "The pair of wing valves on the cross outlet facing the flowback line: manual inboard as the barrier, hydraulic outboard as the working valve opened for flowback and drillout returns.",
   "tabs": {
-    "overview": "Closed during frac and wireline; opened for drillout returns and flowback. On some rig-ups it also carries a pressure transducer and a bleed line.",
+    "overview": "Mirror of wing A. The outboard hydraulic valve is opened when the well flows to the flowback spread during drillout and well test, and closed while pumping. The inboard manual valve is the barrier that lets the outer valve or the line be repaired with the well shut in.",
     "engineering": "Hydraulic or manual gate valve rated with the stack.",
     "safety": "Opening the flowback wing exposes the flowback iron to wellhead pressure; the choke manifold must be lined up and the iron tested first.",
     "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
@@ -37,9 +37,10 @@
       "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
     }
   ],
-  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
   "mesh_nodes": [
-    "WH-FRACTREE-WINGB"
+    "WH-FRACTREE-WINGB-MAN",
+    "WH-FRACTREE-WINGB-HYD"
   ],
   "connections": [
     {

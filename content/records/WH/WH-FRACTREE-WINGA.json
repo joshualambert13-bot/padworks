@@ -12,21 +12,23 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2 seed"
+    "note": "Drop 4: manual plus hydraulic pair"
   },
   "id": "WH-FRACTREE-WINGA",
   "parent": "WH-FRACTREE",
   "group": "frac-tree",
   "level": "component",
-  "name": "Frac wing valve",
+  "name": "Wing A: manual and hydraulic wing valves (pump-down side)",
   "aliases": [
-    "frac wing",
-    "treating wing",
-    "wing valve A"
+    "wing valve",
+    "wing A",
+    "kill wing",
+    "pump-down wing",
+    "inner and outer wing"
   ],
-  "function": "The hydraulic wing valve that connects the well to the frac line from the zipper manifold; open only while this well is being treated or pumped down.",
+  "function": "The pair of wing valves on the cross outlet facing the zipper side: a manual valve inboard as the isolation barrier and a hydraulic valve outboard as the working valve, serving the pump-down or kill line.",
   "tabs": {
-    "overview": "Opened from the control unit after the zipper valve for this well is opened and the swab valve is confirmed closed. Closed at the end of the stage before the tree is opened for wireline. It sees the full proppant stream every stage.",
+    "overview": "Two valves in series on the same outlet. The inboard manual valve stays open during the job and is closed only for repairs on the outboard valve or the line. The outboard hydraulic valve is the one cycled from the control unit: opened for pump-down fluid during wireline runs or for a kill line, closed while pumping the treatment.",
     "engineering": "Hydraulic gate valve; commonly the most cycled valve on the stack and the first to show seat wear.",
     "safety": "Fully open or fully closed only. Pumping against a closed frac wing raises pressure to the relief valve set point and trips the pumps.",
     "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
@@ -41,9 +43,10 @@
       "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
     }
   ],
-  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
   "mesh_nodes": [
-    "WH-FRACTREE-WINGA"
+    "WH-FRACTREE-WINGA-MAN",
+    "WH-FRACTREE-WINGA-HYD"
   ],
   "connections": [
     {

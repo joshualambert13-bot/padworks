@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Hot surfaces and exhaust",
+      "control": "Guards on exhaust and hydraulic lines; keep clear of engine compartments while running."
+    }
+  ],
+  "id": "PP-FRACPUMP-POWEREND",
+  "parent": "PP-FRACPUMP",
+  "group": "pumping",
+  "level": "component",
+  "name": "Power end",
+  "aliases": [
+    "crankcase",
+    "power frame"
+  ],
+  "function": "The crankshaft, connecting rods, and crossheads that convert rotation into the reciprocating plunger stroke.",
+  "tabs": {
+    "overview": "A heavy steel frame holding the crankshaft in bearings; each connecting rod drives a crosshead, and the crosshead drives a plunger through a pony rod. Lubrication is pressurized and monitored.",
+    "engineering": "Rated in continuous horsepower and rod load; the rod load limit sets the maximum pressure for a given plunger size.",
+    "safety": "Rotating parts enclosed; lube oil hot.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-FRACPUMP-1-POWEREND"
+}

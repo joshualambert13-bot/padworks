@@ -1,0 +1,57 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Explosives",
+      "control": "Radio silence and RF-safe systems per the site plan; licensed personnel."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-SETTINGTOOL",
+  "parent": "DT-PLUGSET",
+  "group": "plug-and-perf",
+  "level": "equipment",
+  "name": "Wireline setting tool and adapter kit",
+  "aliases": [
+    "setting tool",
+    "pressure setting assembly",
+    "adapter kit",
+    "power charge setting tool"
+  ],
+  "function": "The tool at the bottom of the wireline string that burns a slow power charge to build gas pressure, converts it into a controlled stroke through a piston, and pushes the plug into its set through the adapter kit, then shears free.",
+  "tabs": {
+    "overview": "The pressure setting assembly is a sealed cylinder with a piston; the power charge ignited by the firing head burns slowly and drives the piston. The adapter kit converts the stroke to the plug: a setting sleeve that pushes down on the top slips and a tension rod inside that holds the mandrel up. When the plug is fully set the load reaches the shear value, the shear ring parts, and the tool pulls free of the plug.",
+    "engineering": "Stroke and force are set by the charge and the piston area; the shear ring value is matched to the plug. Larger tools set larger plugs.",
+    "connections": "Threads to the tool string below the guns; adapter kit to the plug.",
+    "safety": "A power charge is an explosive item handled under the site explosives rules; a misfire leaves an armed tool that is handled by the licensed crew.",
+    "specs": "Set in seconds once ignited; shear values in thousands of pounds.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "Redressed and reloaded between runs.",
+    "failure_modes": "Misfire, incomplete stroke leaving the plug partly set, premature shear."
+  },
+  "glb": "/glb/DT/DT-PLUGSET.glb",
+  "mesh_nodes": [
+    "DT-SETTINGTOOL-SLEEVE",
+    "DT-SETTINGTOOL-ROD",
+    "DT-SETTINGTOOL-SHEAR",
+    "DT-SETTINGTOOL-BODY"
+  ]
+}

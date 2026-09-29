@@ -34,6 +34,7 @@ const errors = [];
 const warnings = [];
 const perSystem = {};
 for (const sys of systems) perSystem[sys.code] = { code: sys.code, name: sys.name, records: 0, withModel: 0, withoutModel: 0, byStatus: {}, byTier: {} };
+const byId = new Map(records.map(r => [r.id, r]));
 const claimed = new Map(); // glb -> Set(node)
 for (const r of records) {
   const ps = perSystem[r.system]; if (!ps) continue;
@@ -42,12 +43,16 @@ for (const r of records) {
   ps.byTier[r.evidence_tier] = (ps.byTier[r.evidence_tier] || 0) + 1;
   let bound = false;
   if (r.glb && r.mesh_nodes && r.mesh_nodes.length) {
-    const info = await nodesOf(r.glb);
-    if (!info) errors.push(`${r.id}: glb ${r.glb} not found`);
-    else {
-      for (const n of r.mesh_nodes) { if (!info.names.has(n)) errors.push(`${r.id}: node ${n} not in ${r.glb}`); }
-      if (!claimed.has(r.glb)) claimed.set(r.glb, new Set());
-      for (const n of r.mesh_nodes) claimed.get(r.glb).add(n);
+    // every variant of the assembly must carry the same node names as the default file
+    const owner = r.variants && r.variants.length ? r : (r.parent && byId.get(r.parent) && byId.get(r.parent).variants ? byId.get(r.parent) : null);
+    const files = [...new Set([r.glb, ...((owner && owner.variants) || []).map(v => v.glb)])];
+    for (const glb of files) {
+      const info = await nodesOf(glb);
+      if (!info) { errors.push(`${r.id}: glb ${glb} not found`); continue; }
+      for (const n of r.mesh_nodes) { if (!info.names.has(n)) errors.push(`${r.id}: node ${n} not in ${glb}`); }
+      for (const n of (r.ghost_nodes || [])) { if (!info.names.has(n)) errors.push(`${r.id}: ghost node ${n} not in ${glb}`); }
+      if (!claimed.has(glb)) claimed.set(glb, new Set());
+      for (const n of r.mesh_nodes) claimed.get(glb).add(n);
       bound = true;
     }
   } else if (r.scene) bound = true; // procedural scene node
@@ -56,7 +61,7 @@ for (const r of records) {
 const assets = [];
 for (const [glb, info] of glbCache) {
   if (!info) continue;
-  const unclaimed = [...info.names].filter(n => !claimed.get(glb)?.has(n) && n !== path.basename(glb, '.glb'));
+  const unclaimed = [...info.names].filter(n => !claimed.get(glb)?.has(n) && n !== path.basename(glb, '.glb').split('.')[0]);
   if (unclaimed.length) warnings.push(`${glb}: unclaimed nodes ${unclaimed.join(', ')}`);
   assets.push({ glb, meshes: info.meshes, triangles: info.tris, materials: info.materials, bytes: info.bytes, budgetOk: info.bytes < 2 * 1024 * 1024 });
   if (info.bytes >= 2 * 1024 * 1024) errors.push(`${glb}: exceeds the 2 MB per-asset budget (${(info.bytes / 1048576).toFixed(2)} MB)`);

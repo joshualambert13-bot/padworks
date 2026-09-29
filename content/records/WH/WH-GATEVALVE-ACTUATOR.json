@@ -3,7 +3,7 @@
   "system": "WH",
   "group": "gate-valve",
   "level": "component",
-  "parent": "WH-GATEVALVE",
+  "parent": "WH-GATEVALVE-HYD",
   "name": "Hydraulic actuator",
   "aliases": [
     "hydraulic cylinder",
@@ -28,7 +28,8 @@
   ],
   "drawn_in_3d": true,
   "mesh_nodes": [
-    "WH-GATEVALVE-ACTUATOR"
+    "WH-GATEVALVE-ACTUATOR",
+    "WH-GATEVALVE-BALANCESTEM"
   ],
   "sources": [
     "S1",
@@ -41,5 +42,5 @@
     "date": "2026-09-29",
     "note": "Drop 2: bound to WH-GATEVALVE-HYD.glb"
   },
-  "glb": "/glb/WH/WH-GATEVALVE-HYD.glb"
+  "glb": "/glb/WH/WH-GATEVALVE-HYD.7-15K.glb"
 }

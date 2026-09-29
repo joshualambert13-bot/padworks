@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-FRACPLUG-SLIPSUP",
+  "parent": "DT-FRACPLUG",
+  "group": "plug-and-perf",
+  "level": "component",
+  "name": "Upper slips",
+  "aliases": [
+    "upper slips",
+    "top slips"
+  ],
+  "function": "The segmented ring above the element that holds the plug against pressure from below and keeps the element compressed.",
+  "tabs": {
+    "overview": "Set after the lower slips as the sleeve continues to stroke; holds the stack together once the setting tool releases.",
+    "engineering": "As the lower slips.",
+    "safety": "As the lower slips.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design."
+  },
+  "glb": "/glb/DT/DT-PLUGSET.glb",
+  "mesh_nodes": [
+    "DT-FRACPLUG-SLIPSUP"
+  ]
+}

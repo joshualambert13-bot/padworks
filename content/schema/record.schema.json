@@ -2,47 +2,371 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Padworks record",
   "type": "object",
-  "required": ["id", "system", "level", "name", "function", "status", "evidence_tier", "tabs", "hazards", "drawn_in_3d", "sources", "revision"],
+  "required": [
+    "id",
+    "system",
+    "level",
+    "name",
+    "function",
+    "status",
+    "evidence_tier",
+    "tabs",
+    "hazards",
+    "drawn_in_3d",
+    "sources",
+    "revision"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": { "type": "string", "pattern": "^[A-Z]{2}(-[A-Z0-9]+)*$" },
-    "system": { "type": "string", "pattern": "^[A-Z]{2}$" },
-    "group": { "type": "string" },
-    "level": { "enum": ["system", "group", "equipment", "component", "part"] },
-    "parent": { "type": "string" },
-    "name": { "type": "string", "minLength": 3 },
-    "aliases": { "type": "array", "items": { "type": "string" } },
-    "function": { "type": "string", "minLength": 20 },
-    "status": { "enum": ["draft", "screened", "reviewed", "verified", "published", "deprecated"] },
-    "evidence_tier": { "enum": ["E1", "E2", "E3", "E4"] },
-    "reviewers": { "type": "array", "items": { "type": "object", "required": ["name", "date"], "properties": { "name": { "type": "string" }, "affiliation": { "type": "string" }, "date": { "type": "string" }, "scope": { "type": "string" } } } },
-    "tabs": {
-      "type": "object",
-      "required": ["overview", "safety"],
-      "properties": {
-        "overview": { "type": "string" },
-        "engineering": { "type": "string" },
-        "connections": { "type": "string" },
-        "safety": { "type": "string" },
-        "specs": { "type": "string" },
-        "evidence": { "type": "string" },
-        "operations": { "type": "string" },
-        "failure_modes": { "type": "string" }
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}(-[A-Z0-9]+)*$"
+    },
+    "system": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "group": {
+      "type": "string"
+    },
+    "level": {
+      "enum": [
+        "system",
+        "group",
+        "equipment",
+        "component",
+        "part"
+      ]
+    },
+    "parent": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     },
-    "specs": { "type": "array", "items": { "type": "object", "required": ["name", "value", "tier"], "properties": { "name": { "type": "string" }, "value": { "type": ["string", "number"] }, "unit": { "type": "string" }, "si_value": { "type": ["string", "number"] }, "si_unit": { "type": "string" }, "source": { "type": "string" }, "tier": { "enum": ["E1", "E2", "E3", "E4"] } } } },
-    "standards": { "type": "array", "items": { "type": "object", "required": ["standard", "paraphrase"], "properties": { "standard": { "type": "string" }, "edition": { "type": "string" }, "clause": { "type": "string" }, "paraphrase": { "type": "string" }, "source": { "type": "string" } } } },
-    "oem_examples": { "type": "array", "items": { "type": "object", "properties": { "oem": { "type": "string" }, "model": { "type": "string" }, "figure": { "type": "string" }, "source": { "type": "string" } } } },
-    "connections": { "type": "array", "items": { "type": "object", "required": ["target", "direction", "type"], "properties": { "target": { "type": "string" }, "direction": { "enum": ["upstream", "downstream", "undirected"] }, "type": { "enum": ["flanged", "hammer union", "threaded", "hydraulic", "electrical", "data", "mechanical", "clamp"] }, "rating": { "type": "string" }, "note": { "type": "string" } } } },
-    "hazards": { "type": "array", "items": { "type": "object", "required": ["class", "control"], "properties": { "class": { "type": "string" }, "control": { "type": "string" }, "source": { "type": "string" } } } },
-    "drawn_in_3d": { "type": "boolean" },
-    "mesh_nodes": { "type": "array", "items": { "type": "string" } },
-    "glb": { "type": "string" },
-    "scene": { "type": "string", "description": "procedural scene node name when the geometry is generated in code" },
-    "placement": { "type": "object" },
-    "simulation": { "type": "object" },
-    "media": { "type": "object" },
-    "sources": { "type": "array", "items": { "type": "string", "pattern": "^S[0-9]+$" } },
-    "revision": { "type": "object", "required": ["rev", "author", "date"], "properties": { "rev": { "type": "string" }, "author": { "type": "string" }, "date": { "type": "string" }, "note": { "type": "string" } } }
+    "function": {
+      "type": "string",
+      "minLength": 20
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "screened",
+        "reviewed",
+        "verified",
+        "published",
+        "deprecated"
+      ]
+    },
+    "evidence_tier": {
+      "enum": [
+        "E1",
+        "E2",
+        "E3",
+        "E4"
+      ]
+    },
+    "reviewers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "date"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tabs": {
+      "type": "object",
+      "required": [
+        "overview",
+        "safety"
+      ],
+      "properties": {
+        "overview": {
+          "type": "string"
+        },
+        "engineering": {
+          "type": "string"
+        },
+        "connections": {
+          "type": "string"
+        },
+        "safety": {
+          "type": "string"
+        },
+        "specs": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "operations": {
+          "type": "string"
+        },
+        "failure_modes": {
+          "type": "string"
+        }
+      }
+    },
+    "specs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "tier"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "si_value": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "si_unit": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "tier": {
+            "enum": [
+              "E1",
+              "E2",
+              "E3",
+              "E4"
+            ]
+          }
+        }
+      }
+    },
+    "standards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "standard",
+          "paraphrase"
+        ],
+        "properties": {
+          "standard": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "clause": {
+            "type": "string"
+          },
+          "paraphrase": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "oem_examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "oem": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "figure": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "direction",
+          "type"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "upstream",
+              "downstream",
+              "undirected"
+            ]
+          },
+          "type": {
+            "enum": [
+              "flanged",
+              "hammer union",
+              "threaded",
+              "hydraulic",
+              "electrical",
+              "data",
+              "mechanical",
+              "clamp"
+            ]
+          },
+          "rating": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hazards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "class",
+          "control"
+        ],
+        "properties": {
+          "class": {
+            "type": "string"
+          },
+          "control": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "drawn_in_3d": {
+      "type": "boolean"
+    },
+    "mesh_nodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "glb": {
+      "type": "string"
+    },
+    "scene": {
+      "type": "string",
+      "description": "procedural scene node name when the geometry is generated in code"
+    },
+    "placement": {
+      "type": "object"
+    },
+    "simulation": {
+      "type": "object"
+    },
+    "media": {
+      "type": "object"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^S[0-9]+$"
+      }
+    },
+    "revision": {
+      "type": "object",
+      "required": [
+        "rev",
+        "author",
+        "date"
+      ],
+      "properties": {
+        "rev": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "description": "alternative model files of the same assembly (bore and rating); glb is the default",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "glb"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "glb": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ghost_nodes": {
+      "type": "array",
+      "description": "context nodes drawn translucent by default (a casing around a downhole tool)",
+      "items": {
+        "type": "string"
+      }
+    }
   }
 }

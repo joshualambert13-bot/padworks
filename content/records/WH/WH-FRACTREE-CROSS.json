@@ -42,7 +42,7 @@
       "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
     }
   ],
-  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
   "mesh_nodes": [
     "WH-FRACTREE-CROSS"
   ]

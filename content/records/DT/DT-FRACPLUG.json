@@ -1,0 +1,74 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-FRACPLUG",
+  "parent": "DT-PLUGSET",
+  "group": "plug-and-perf",
+  "level": "equipment",
+  "name": "Composite frac plug",
+  "aliases": [
+    "frac plug",
+    "composite plug",
+    "ball-drop plug",
+    "plug"
+  ],
+  "function": "The set-and-mill isolation plug: a composite mandrel with cones, slips, and an element that anchors and seals in the casing, and a ball seat that a dropped ball lands on to isolate the stages below.",
+  "tabs": {
+    "overview": "Run on the bottom of the wireline tool string, the plug is set by the setting tool: the element is compressed first, then the slips ride up their cones and bite the casing, then the tension rod shears and the string pulls free. A ball pumped down after the guns are pulled lands on the seat and the plug holds the frac pressure from above. After the last stage a coiled tubing mill grinds the composite away; the small hardened parts wash to the next plug and out with flowback.",
+    "engineering": "Composite (filament-wound or molded) mandrel and cones for fast milling; cast iron or ceramic slip segments with carbide buttons; an elastomer element; ratings to 10,000 psi differential and 300 F are common. Length and OD are chosen for the casing and the pump-down clearance.",
+    "connections": "Below the setting tool adapter kit on the tool string; sets in the production casing.",
+    "safety": "A plug holding pressure is stored energy; pressure is equalized before milling through.",
+    "specs": "Public example: 4.375 in. OD in 5-1/2 in. casing, about 0.2 in. of radial clearance (S20).",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "One per stage; all milled after the last stage.",
+    "failure_modes": "Pre-set in the vertical from pump-down drag, slips slipping under pressure, element extrusion, plug spinning during milling, ball not seating."
+  },
+  "glb": "/glb/DT/DT-PLUGSET.glb",
+  "mesh_nodes": [
+    "DT-FRACPLUG-MANDREL",
+    "DT-FRACPLUG-SLIPSDOWN",
+    "DT-FRACPLUG-CONEDOWN",
+    "DT-FRACPLUG-ELEMENT",
+    "DT-FRACPLUG-CONEUP",
+    "DT-FRACPLUG-SLIPSUP",
+    "DT-FRACPLUG-BALLSEAT",
+    "DT-FRACPLUG-BALL"
+  ],
+  "specs": [
+    {
+      "name": "Run-in OD, example",
+      "value": 4.375,
+      "unit": "in.",
+      "tier": "E2",
+      "source": "S20"
+    }
+  ],
+  "standards": [
+    {
+      "standard": "API Spec 11D1",
+      "edition": "verify",
+      "paraphrase": "Qualification grades and testing for packers and bridge plugs; frac plugs are commonly qualified to its validation grades.",
+      "source": "S21"
+    }
+  ]
+}

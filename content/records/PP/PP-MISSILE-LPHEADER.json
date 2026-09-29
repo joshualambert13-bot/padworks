@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-MISSILE-LPHEADER",
+  "parent": "PP-MISSILE",
+  "group": "manifold",
+  "level": "component",
+  "name": "Low-pressure header",
+  "aliases": [
+    "LP header",
+    "suction header",
+    "suction manifold"
+  ],
+  "function": "The large-bore header fed by the blender discharge that supplies slurry to every pump suction through hoses and butterfly valves.",
+  "tabs": {
+    "overview": "Kept full and slightly pressurized by the blender discharge pump so the frac pumps do not cavitate; each pump connection has an isolation valve and a suction hose.",
+    "engineering": "Large bore, low pressure; hose sizes 4 to 6 in.",
+    "safety": "Hose failures spray slurry at low pressure; butterfly valve handles are pinch points.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-MISSILE-LPHEADER"
+}

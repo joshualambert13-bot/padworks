@@ -13,10 +13,10 @@ import sys
 import cadquery as cq
 
 sys.path.insert(0, os.path.dirname(__file__))
-from _lib import valve_params, gate_valve_solid, wing_nut, export_parts  # noqa: E402
+from _lib import valve_params, gate_valve_solid, wing_nut, export_parts, size_key  # noqa: E402
 
 
-def build(wells=3):
+def build(wells=3, bore=7.0625, rating=15.0):
     parts = {}
     skid_x, skid_y, skid_z = 130.0, 300.0, 10.0
     skid = cq.Workplane("XY").box(skid_x, skid_y, skid_z).translate((0, 0, skid_z / 2))
@@ -30,7 +30,7 @@ def build(wells=3):
     for y in (-110, 0, 110):
         header = header.union(cq.Workplane("XY").box(8, 8, zc - 3.75).translate((header_x, y, (zc - 3.75) / 2 + skid_z)))
     parts["WH-ZIPPER-INLETHEADER"] = header
-    pv = valve_params(5.125, 15.0, actuated=True)
+    pv = valve_params(bore, rating, actuated=True)
     ftf = pv["face_to_face"]
     ys = [(-1 + i) * 95.0 for i in range(wells)] if wells == 3 else [(i - (wells - 1) / 2) * 95.0 for i in range(wells)]
     valves = None; outlets = None; trans = None
@@ -68,5 +68,10 @@ def build(wells=3):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
+    ap.add_argument("--bore", type=float, default=7.0625)
+    ap.add_argument("--rating", type=float, default=15.0)
+    ap.add_argument("--all", action="store_true")
     a = ap.parse_args()
-    export_parts(build(), a.out, "WH-ZIPPER", extra_stl=False)
+    combos = [(5.125, 15.0), (7.0625, 15.0), (7.0625, 10.0)] if a.all else [(a.bore, a.rating)]
+    for bore, rating in combos:
+        export_parts(build(3, bore, rating), a.out, "WH-ZIPPER." + size_key(bore, rating), extra_stl=False, tolerance=0.05)

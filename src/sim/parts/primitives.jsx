@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 export const MAT = {
   steel:   { color: '#7d8590', metalness: 0.85, roughness: 0.35 },
-  darkSteel: { color: '#3a4149', metalness: 0.8, roughness: 0.45 },
+  darkSteel: { color: '#4a535d', metalness: 0.6, roughness: 0.5 },
   redIron: { color: '#a3261d', metalness: 0.6, roughness: 0.5 },
   yellow:  { color: '#d9a400', metalness: 0.3, roughness: 0.6 },
   white:   { color: '#d7dde5', metalness: 0.2, roughness: 0.6 },
@@ -15,6 +15,7 @@ export const MAT = {
   tire:    { color: '#141618', metalness: 0.0, roughness: 1.0 },
   ground:  { color: '#4b4235', metalness: 0.0, roughness: 1.0 },
   sand:    { color: '#c9b47a', metalness: 0.0, roughness: 1.0 },
+  dimSteel: { color: '#2c3137', metalness: 0.7, roughness: 0.6 },
 };
 
 export function Box({ size = [1, 1, 1], position = [0, 0, 0], rotation = [0, 0, 0], mat = MAT.steel, name, castShadow = true, children, ...rest }) {

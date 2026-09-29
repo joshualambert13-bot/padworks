@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-CHEMADD",
+  "parent": "PP",
+  "group": "fluid",
+  "level": "equipment",
+  "name": "Chemical additive unit",
+  "aliases": [
+    "chem add",
+    "additive trailer",
+    "chemical unit"
+  ],
+  "scene": "PP-CHEMADD",
+  "function": "The trailer carrying the chemical totes or tanks and the metering pumps that supply friction reducer, biocide, scale inhibitor, surfactant, and breaker to the blender.",
+  "tabs": {
+    "overview": "Chemicals arrive in totes or bulk tanks on the unit; metering pumps deliver each one at a rate proportional to the water rate, and the data van logs the totals per stage. Heated tanks keep viscous products flowing in winter.",
+    "engineering": "Metering pumps with flow meters per chemical; containment under the tanks; remote control from the data van.",
+    "connections": "Chemical lines to the blender tub and to the hydration unit.",
+    "safety": "Chemical handling and containment; splash protection; SDS on location.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Chemical volumes are reconciled per stage against the design.",
+    "failure_modes": "Pump loss of prime, frozen lines, wrong concentration."
+  }
+}

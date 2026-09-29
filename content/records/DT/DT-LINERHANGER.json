@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-LINERHANGER",
+  "parent": "DT",
+  "group": "liner",
+  "level": "equipment",
+  "name": "Liner hanger and top packer",
+  "aliases": [
+    "liner hanger",
+    "liner top packer",
+    "hanger packer",
+    "liner system"
+  ],
+  "function": "The tool that suspends the production liner inside the intermediate casing and seals the liner top, when the lateral is completed as a liner rather than a full casing string.",
+  "tabs": {
+    "overview": "Run on the liner with a running tool; slips set hydraulically or mechanically to hang the liner weight, cement is pumped, and the top packer is set to seal the liner top. A tieback receptacle above allows a tieback string later. Frac loads through a liner top are a design check.",
+    "engineering": "Hanger capacity in liner weight; packer differential rating; expandable and conventional slip designs.",
+    "connections": "Liner below; intermediate casing around; tieback above.",
+    "safety": "Pressure testing the liner top before the frac.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "Set once during the well construction.",
+    "failure_modes": "Liner top leaks, slips not holding, cement channel at the top."
+  }
+}

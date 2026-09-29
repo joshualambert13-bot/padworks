@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "DT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S20",
+    "S21"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "DT-DISSOLVABLEPLUG",
+  "parent": "DT",
+  "group": "plug-and-perf",
+  "level": "equipment",
+  "name": "Dissolvable frac plug",
+  "aliases": [
+    "dissolvable plug",
+    "degradable plug",
+    "disappearing plug"
+  ],
+  "function": "A frac plug whose mandrel, cones, slips, and ball are made of alloys and polymers that dissolve in the well fluid after the treatment, removing the need for a drillout.",
+  "tabs": {
+    "overview": "Set and used like a composite plug; after the last stage the well is left shut in or flowed while the parts degrade over days. Dissolution rate depends on temperature and brine salinity, so the well design sets the choice.",
+    "engineering": "Magnesium or aluminum alloys and degradable elastomers; ratings similar to composites; some designs mix a dissolvable body with millable slips.",
+    "connections": "As the composite plug.",
+    "safety": "As the composite plug; no milling debris.",
+    "evidence": "Public plug-and-perf explainer (S20), API Spec 11D1 scope (S21), field practice (S9). Dimensions are public example values, not a manufacturer's design.",
+    "operations": "Skips or shortens the coiled tubing drillout.",
+    "failure_modes": "Slow dissolution in cool or fresh water, premature loss of pressure rating."
+  }
+}

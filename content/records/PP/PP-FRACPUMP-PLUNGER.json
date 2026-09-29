@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "id": "PP-FRACPUMP-PLUNGER",
+  "parent": "PP-FRACPUMP-FLUIDEND",
+  "group": "pumping",
+  "level": "part",
+  "name": "Plunger and packing",
+  "aliases": [
+    "plunger",
+    "packing",
+    "stuffing box"
+  ],
+  "function": "The hardened cylindrical plunger that displaces slurry in each bore and the packing that seals it.",
+  "tabs": {
+    "overview": "Plunger diameter sets the displacement per stroke and, for a fixed rod load, the maximum discharge pressure: a smaller plunger pumps less but at higher pressure. Packing is a stack of rings in a stuffing box with a lubrication feed.",
+    "engineering": "Plunger sizes 3-3/4 to 5-1/2 in. typical; ceramic or coated plungers common.",
+    "safety": "Packing leaks spray at pressure; guards in place.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  }
+}

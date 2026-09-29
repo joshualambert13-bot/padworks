@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay out of the red zone while pumping; iron and hoses are restrained."
+    }
+  ],
+  "id": "PP-MISSILE",
+  "parent": "PP",
+  "group": "manifold",
+  "level": "equipment",
+  "name": "Missile (manifold trailer)",
+  "aliases": [
+    "missile",
+    "manifold trailer",
+    "HP manifold"
+  ],
+  "scene": "PP-MISSILE",
+  "function": "The trailer-mounted manifold with a low-pressure header that distributes slurry from the blender to every pump suction and a high-pressure header that collects every pump discharge into the treating line.",
+  "tabs": {
+    "overview": "Pumps park nose-in on both sides of the missile. Each has a suction hose from the low-pressure header and a discharge line into the high-pressure header. The high-pressure header carries check valves per pump connection, pressure transducers, and the pressure relief valve for the spread, and its outlet feeds the treating line to the zipper manifold. Simultaneous schemes use a second missile or a split header so each well has its own metered leg.",
+    "engineering": "High-pressure header rated to 15,000 psi with flanged or clamp connections in newer designs and hammer unions in older ones; low-pressure header is a large-bore steel manifold with butterfly valves per pump.",
+    "connections": "Blender discharge to the low-pressure header; pump suctions and discharges; treating line from the high-pressure outlet; PRV vent line to a tank.",
+    "safety": "The high-pressure header is the center of the red zone; the PRV lifts here on overpressure; check valves keep a failed pump from being backflowed.",
+    "specs": "Twelve to twenty pump connections per side is common; PRV set below the iron rating.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Set first when the spread rigs up; pumps and the blender are positioned around it.",
+    "failure_modes": "Check valve failures, header erosion at the outlet, PRV weeping, hose failures on the suction side."
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "WH-FRACTREE-INLETBLOCK",
+  "system": "WH",
+  "group": "frac-tree",
+  "level": "component",
+  "parent": "WH-FRACTREE",
+  "name": "Inlet block (flanged, spooled treating line)",
+  "aliases": [
+    "inlet block",
+    "frac inlet",
+    "flanged inlet",
+    "treating inlet"
+  ],
+  "function": "The flanged block above the crown valve with a side hub where the spooled treating line from the zipper manifold enters the stack.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "A studded block with the vertical bore and one flanged outlet. A single large-bore flanged spool or monoline swivel assembly connects it to the zipper module, replacing the goat head and the bundle of 3 in. hammer-union iron. Fewer connections means fewer leak paths and a faster rig-up, at the cost of heavier pieces that need a crane.",
+    "engineering": "Block and hub sized to the stack bore and rating; the outlet flange matches the treating spool.",
+    "safety": "The inlet block sees full treating pressure and proppant erosion at the turn; wall thickness is checked between jobs.",
+    "evidence": "Field photographs read for proportion only; public flange tables (S16); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-INLETBLOCK"
+  ],
+  "sources": [
+    "S1",
+    "S9",
+    "S16"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "connections": [
+    {
+      "target": "WH-ZIPPER",
+      "direction": "upstream",
+      "type": "flanged",
+      "note": "Treating spool"
+    },
+    {
+      "target": "WH-MONOLINE",
+      "direction": "upstream",
+      "type": "flanged"
+    }
+  ]
+}

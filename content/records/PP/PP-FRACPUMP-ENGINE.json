@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Hot surfaces and exhaust",
+      "control": "Guards on exhaust and hydraulic lines; keep clear of engine compartments while running."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    }
+  ],
+  "id": "PP-FRACPUMP-ENGINE",
+  "parent": "PP-FRACPUMP",
+  "group": "pumping",
+  "level": "component",
+  "name": "Engine and radiator",
+  "aliases": [
+    "deck engine",
+    "prime mover",
+    "diesel"
+  ],
+  "function": "The prime mover on the trailer deck that turns the transmission and the power end.",
+  "tabs": {
+    "overview": "A large diesel engine with its radiator and exhaust, controlled from the data van through the pump controller; dual-fuel engines burn natural gas with diesel pilot, and electric fleets replace the engine with a motor and a variable-frequency drive.",
+    "engineering": "Rated to drive the pump at its horsepower; cooling sized for continuous duty in summer.",
+    "safety": "Hot exhaust and surfaces; fuel handling.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-FRACPUMP-1-ENGINE"
+}

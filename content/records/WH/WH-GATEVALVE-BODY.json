@@ -30,7 +30,7 @@
     "WH-GATEVALVE-FLANGE-IN",
     "WH-GATEVALVE-FLANGE-OUT"
   ],
-  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "glb": "/glb/WH/WH-GATEVALVE.7-15K.glb",
   "sources": [
     "S1",
     "S2",

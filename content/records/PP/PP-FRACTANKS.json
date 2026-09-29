@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-FRACTANKS",
+  "parent": "PP",
+  "group": "water",
+  "level": "equipment",
+  "name": "Frac tanks and working tanks",
+  "aliases": [
+    "frac tanks",
+    "500 bbl tanks",
+    "working tanks",
+    "water storage"
+  ],
+  "scene": "PP-FRACTANKS",
+  "function": "The 500 bbl tanks (or a lined pit and transfer system) that hold water at the pad and feed the blender suction at the rate the stage needs.",
+  "tabs": {
+    "overview": "Tanks are manifolded together so the blender draws from many at once; transfer pumps refill them from the pit or the water line while pumping. Working tank count is set by the stage volume and the refill rate.",
+    "engineering": "Steel tanks with suction manifolds; large-bore lay-flat hose from the source.",
+    "connections": "Suction manifold to the blender and hydration unit; fill line from the water transfer pumps.",
+    "safety": "Confined spaces inside tanks; slips on wet ground; hose handling.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Water is staged ahead of the pumps; levels tracked per stage.",
+    "failure_modes": "Running the working tanks dry, frozen suctions, valve leaks."
+  }
+}

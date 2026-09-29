@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-BLENDER-TUB",
+  "parent": "PP-BLENDER",
+  "group": "fluid",
+  "level": "component",
+  "name": "Mixing tub",
+  "aliases": [
+    "tub",
+    "blender tub"
+  ],
+  "function": "The open agitated tank where water, proppant, and chemicals meet before the discharge pump.",
+  "tabs": {
+    "overview": "A small tub with paddle agitators and level control; small volume gives fast response to concentration changes and means the level must be held closely against the pumps.",
+    "engineering": "Volume a few barrels; level sensors and an overflow.",
+    "safety": "Rotating agitator; open tub.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-BLENDER-TUB"
+}

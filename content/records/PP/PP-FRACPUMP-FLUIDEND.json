@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay out of the red zone while pumping; iron and hoses are restrained."
+    }
+  ],
+  "id": "PP-FRACPUMP-FLUIDEND",
+  "parent": "PP-FRACPUMP",
+  "group": "pumping",
+  "level": "component",
+  "name": "Fluid end",
+  "aliases": [
+    "fluid cylinder",
+    "fluid block"
+  ],
+  "function": "The forged block on the front of the pump holding the plungers, suction and discharge valves, and packing, where slurry is raised to treating pressure.",
+  "tabs": {
+    "overview": "Each plunger works in its own bore with a suction valve below and a discharge valve above; the valves are spring-loaded poppets with elastomer inserts that seal against proppant-laden fluid. Packing seals the plunger. The whole block is the wear item of the spread.",
+    "engineering": "Rated to 15,000 psi in frac service; alloy steel or stainless; valve and seat sizes standard across a fleet.",
+    "safety": "A washed-out fluid end releases fluid at full pressure; pumps are inspected between stages.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis."
+  },
+  "scene": "PP-FRACPUMP-1-FLUIDEND"
+}

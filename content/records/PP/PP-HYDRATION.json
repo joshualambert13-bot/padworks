@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-HYDRATION",
+  "parent": "PP",
+  "group": "fluid",
+  "level": "equipment",
+  "name": "Hydration unit",
+  "aliases": [
+    "hydration",
+    "gel unit",
+    "hydration trailer"
+  ],
+  "scene": "PP-HYDRATION",
+  "function": "The trailer with a series of tanks that gives gelling polymer time to hydrate in water before the blender, used when the treatment calls for a gel or hybrid fluid rather than plain slickwater.",
+  "tabs": {
+    "overview": "Water and polymer are mixed at the inlet and flow through several agitated compartments in series so the polymer has residence time to build viscosity before the blender adds proppant. On slickwater jobs the unit is bypassed or used as a surge tank.",
+    "engineering": "Compartment volume sets residence time at rate; agitators and a discharge pump; polymer feed by dry feeder or liquid concentrate.",
+    "connections": "Suction from frac tanks; discharge to the blender suction.",
+    "safety": "Open agitated tanks; slippery polymer spills.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Filled and hydrated ahead of the stage when gel is used.",
+    "failure_modes": "Fish eyes from poor mixing, viscosity below target, agitator failures."
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "WH-FRACTREE-TOPADAPTER",
+  "system": "WH",
+  "group": "frac-tree",
+  "level": "component",
+  "parent": "WH-FRACTREE",
+  "name": "Top adapter (hands-free connector)",
+  "aliases": [
+    "quick connector",
+    "hands-free connector",
+    "lubricator adapter",
+    "tree cap"
+  ],
+  "function": "The connection at the top of the swab valve that receives the wireline lubricator or the coiled tubing stack, shown as a generic hands-free style latch so no one has to work on top of the stack.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "A flange on the swab valve, a body with the latch profile, and a funnel that guides the lubricator stinger in. Remote-latching connectors let the crane set the lubricator and the latch engage without a person on the tree; a bolted flange or a threaded union is the simpler alternative.",
+    "engineering": "Rated with the stack; latch and seal profile per the connector family in use.",
+    "safety": "A suspended lubricator over the adapter is a dropped-object zone; latch confirmed and tested before the swab is opened.",
+    "evidence": "Field photographs read for proportion only; public flange tables (S16); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-TOPADAPTER"
+  ],
+  "sources": [
+    "S1",
+    "S9",
+    "S16"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "connections": [
+    {
+      "target": "WL-PCE",
+      "direction": "downstream",
+      "type": "flanged"
+    },
+    {
+      "target": "CT",
+      "direction": "downstream",
+      "type": "flanged"
+    }
+  ]
+}

@@ -4,24 +4,26 @@
   "group": "frac-tree",
   "level": "equipment",
   "parent": "WH",
-  "name": "Frac tree (frac stack)",
+  "name": "Frac stack, standard configuration",
   "aliases": [
     "frac stack",
     "stack",
-    "tree"
+    "tree",
+    "standard tree",
+    "flanged inlet stack"
   ],
-  "function": "The temporary stack of gate valves, cross, and goat head installed on the wellhead that contains treating pressure and gives access for wireline and coiled tubing during the completion.",
+  "function": "The temporary stack of gate valves, cross, crown valve, flanged inlet block, and swab valve installed on the wellhead for the completion: it contains treating pressure, admits the spooled treating line, and gives wireline and coiled tubing access through the top.",
   "status": "draft",
   "evidence_tier": "E2",
   "reviewers": [],
   "tabs": {
-    "overview": "From the wellhead up: tree adapter or crossover, lower master valve (manual), upper master valve (hydraulic), studded cross with two wing valves, swab valve, and goat head. The frac wing goes to the zipper manifold; the flowback wing goes to the flowback iron. The swab valve is the vertical access for the lubricator and the coiled tubing injector.",
+    "overview": "Bottom to top in the standard configuration used on this site: tree adapter on the tubing head; lower master valve (manual, the last barrier, never cycled under flow); upper master valve (hydraulic, the working master); studded cross with a manual then a hydraulic wing valve on each side, wing A for pump-down and kill lines and wing B for flowback; crown valve (hydraulic) that isolates the well from everything above it; flanged inlet block where the spooled treating line from the zipper manifold enters; swab valve (hydraulic) that isolates the top; and a hands-free style top adapter for the wireline lubricator or the coiled tubing stack.\n\nDuring fracturing the swab is closed, the crown, masters, and the zipper valve are open, and treating fluid enters at the inlet block and flows down. During wireline the zipper valve is closed, the swab is open, and the tool string passes down through the inlet block, crown, cross, and masters. The flanged inlet block replaces the goat head and its hammer-union iron; a single large-bore spool or monoline connects it to the zipper module.\n\nEvery valve is the same block-body gate valve family; the model can be shown in 4-1/16, 5-1/8, or 7-1/16 in. bore at 10K or 15K. Choose the size above the viewer.",
     "engineering": "All components are API 6A pressure-containing parts rated for the job working pressure. Bore is uniform through the stack so tools can pass. The lower master is the last barrier before the wellhead and is not cycled under pressure; the upper master is the working master and is actuated for emergency shut-in.",
-    "connections": "Bottom: tubing head adapter (flanged). Frac wing: iron to the zipper manifold. Flowback wing: iron to the choke manifold. Top: goat head during frac; wellhead adapter and lubricator during wireline; coiled tubing BOP stack during drillout.",
+    "connections": "Below: tubing head through the tree adapter. Side: wing A to the pump-down or kill line, wing B to the flowback line, both flanged. Inlet block: flanged hub to the treating spool from the zipper manifold. Top: hands-free adapter to the wireline pressure control stack or the coiled tubing injector stack.",
     "safety": "Operate valves in sequence: close the swab before pumping; open the wing to the frac line fully; never cycle the lower master under differential. Red zone around the tree during pumping. The stack is heavy; lifts use certified gear and no one stands under it.",
     "specs": "Working pressure 10K or 15K; bore 5-1/8 in. or 7-1/16 in.; height on the order of 12 to 20 ft depending on configuration (E4).",
     "evidence": "OEM configurations (S2, S3, S5, S11, S12); API 6A (S1); field practice (S9).",
-    "operations": "Rig-up, test, and function test before the first stage. Between stages: close the frac wing and zipper valve, open the swab, rig the lubricator, run wireline, rig down, close the swab, open the wing, pump. After the last stage: coiled tubing BOP stack on the swab valve for drillout, then flowback through the flowback wing.",
+    "operations": "Installed after the casing is landed and before the first wireline run; stays on the well through every stage, the drillout, and flowback; removed when the production tree is set. Pressure tested to the job pressure before the first run and after any connection is broken.",
     "failure_modes": "Erosion at the goat head inlets and the frac wing; valve seat wash; actuator failures; ring gasket leaks after repeated make-up."
   },
   "specs": [
@@ -71,44 +73,80 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 2: bound to WH-FRACTREE.glb"
+    "note": "Drop 4: standard configuration, block valves, size variants"
   },
   "connections": [
     {
-      "target": "WH-GATEVALVE",
-      "direction": "undirected",
-      "type": "flanged",
-      "rating": "15K"
-    },
-    {
-      "target": "WH-GOATHEAD",
-      "direction": "undirected",
+      "target": "WH-TUBINGHEAD",
+      "direction": "upstream",
       "type": "flanged",
       "rating": "15K"
     },
     {
       "target": "WH-ZIPPER",
       "direction": "upstream",
-      "type": "hammer union",
-      "rating": "15K"
+      "type": "flanged",
+      "note": "Treating spool into the inlet block"
     },
     {
-      "target": "WH-TUBINGHEAD",
-      "direction": "upstream",
+      "target": "WL-PCE",
+      "direction": "downstream",
       "type": "flanged",
-      "rating": "15K"
+      "note": "Lubricator on the top adapter"
+    },
+    {
+      "target": "FB",
+      "direction": "downstream",
+      "type": "flanged",
+      "note": "Flowback line on wing B"
     }
   ],
-  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "glb": "/glb/WH/WH-FRACTREE.7-15K.glb",
   "mesh_nodes": [
     "WH-FRACTREE-TREEADAPTER",
     "WH-FRACTREE-LMV",
     "WH-FRACTREE-UMV",
     "WH-FRACTREE-CROSS",
-    "WH-FRACTREE-WINGA",
-    "WH-FRACTREE-WINGB",
+    "WH-FRACTREE-WINGA-MAN",
+    "WH-FRACTREE-WINGA-HYD",
+    "WH-FRACTREE-WINGB-MAN",
+    "WH-FRACTREE-WINGB-HYD",
+    "WH-FRACTREE-CROWN",
+    "WH-FRACTREE-INLETBLOCK",
     "WH-FRACTREE-SWAB",
-    "WH-FRACTREE-GOATHEAD",
-    "WH-FRACTREE-TREECAP"
+    "WH-FRACTREE-TOPADAPTER",
+    "WH-FRACTREE-STUDS"
+  ],
+  "variants": [
+    {
+      "key": "4-10K",
+      "label": "4-1/16 in. 10K",
+      "glb": "/glb/WH/WH-FRACTREE.4-10K.glb"
+    },
+    {
+      "key": "4-15K",
+      "label": "4-1/16 in. 15K",
+      "glb": "/glb/WH/WH-FRACTREE.4-15K.glb"
+    },
+    {
+      "key": "5-10K",
+      "label": "5-1/8 in. 10K",
+      "glb": "/glb/WH/WH-FRACTREE.5-10K.glb"
+    },
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WH/WH-FRACTREE.5-15K.glb"
+    },
+    {
+      "key": "7-10K",
+      "label": "7-1/16 in. 10K",
+      "glb": "/glb/WH/WH-FRACTREE.7-10K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WH/WH-FRACTREE.7-15K.glb"
+    }
   ]
 }

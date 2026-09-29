@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S18"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Hot surfaces and exhaust",
+      "control": "Guards on exhaust and hydraulic lines; keep clear of engine compartments while running."
+    },
+    {
+      "class": "Noise",
+      "control": "Hearing protection near running pumps and blenders."
+    }
+  ],
+  "id": "PP-POWERGEN",
+  "parent": "PP",
+  "group": "power",
+  "level": "equipment",
+  "name": "Power generation for electric fleets",
+  "aliases": [
+    "turbine",
+    "gensets",
+    "e-frac power",
+    "grid connection"
+  ],
+  "function": "The gas turbines, reciprocating gensets, or grid tie that supply an electric frac fleet, replacing the diesel engines on the pump trailers.",
+  "tabs": {
+    "overview": "An electric fleet runs its pumps, blender, and support units on electric motors fed from a power plant on location: turbine generators burning field gas, gas reciprocating gensets, or a utility line where available. Fuel cost, noise, and emissions drop; the power plant and switchgear become critical equipment.",
+    "engineering": "Tens of megawatts per fleet; medium-voltage switchgear and cables; variable-frequency drives at the pumps.",
+    "connections": "Gas supply or grid; power cables to every unit.",
+    "safety": "High-voltage cables and switchgear; gas handling at the turbines.",
+    "evidence": "Public industry reporting on electric fleets (S18); field practice (S9).",
+    "operations": "Set up once per pad; load follows the pumping schedule.",
+    "failure_modes": "Turbine trips, cable damage, gas supply interruptions."
+  }
+}

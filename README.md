@@ -4,7 +4,9 @@ Interactive 3D equipment library and stage-cycle simulator for oil and gas well 
 
 Live at https://padworks.vercel.app (GitHub repository joshlambert13-bot/padworks). The local folder may still be named completions-explorer; the folder name has no effect on the build.
 
-Drop 3: new name (Padworks) and logo, wireline pressure control stack (WL) with records and a model, differentiated vocabulary (tab names, status names, build check page, viewer keys), 86 records, eight Draco-compressed model files, simulator with procedural surface and downhole scenes, record library with search, build check page, validation and CI, Vercel rewrite config.
+Drop 4: block-body valves and the standard frac stack from photo proportions and public flange tables, in three bores and two ratings (size selector on the record page); pad configuration in the simulator (1 to 16 wells; single, zipper, simul-frac, trimul-frac, quad-frac; tree bore choice); PP pressure pumping records (26) and DT downhole tool records (21) with a frac plug on setting tool cut-away; 135 records, 26 model files.
+
+Drop 3: new name (Padworks) and logo, wireline pressure control stack (WL) with records and a model, differentiated vocabulary (tab names, status names, build check page, viewer keys), 86 records, eight Draco-compressed model files (superseded by Drop 4), simulator with procedural surface and downhole scenes, record library with search, build check page, validation and CI, Vercel rewrite config.
 
 ## Run it
 

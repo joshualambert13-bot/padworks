@@ -56,7 +56,7 @@ await p.getByRole('button', { name: 'Wireline' }).first().click(); await wait(10
 await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(1500);
 await shot(p, '02-sim-wireline-tree');
 await clickWhenEnabled(p, 'Run in hole');
-await setRange(p, 0, 20);
+await setRange(p, 1, 20);
 await p.getByRole('button', { name: 'Downhole' }).click(); await wait(2500);
 await shot(p, '03-sim-downhole-pumpdown');
 await clickWhenEnabled(p, 'Fire guns', 90000);
@@ -64,15 +64,15 @@ await wait(1200);
 await shot(p, '04-sim-downhole-perforate');
 await clickWhenEnabled(p, /Swap to frac/, 90000);
 await wait(1500);
-// open the flow path: zipper valve and frac wing (swab closes on phase change)
-for (const label of ['Zipper manifold valve', 'Frac wing valve']) {
+// open the flow path: the zipper valve into the inlet block (crown and masters are open; swab closes on phase change)
+for (const label of ['Zipper valve to the inlet block']) {
   const row = p.locator('div', { hasText: label }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
   await row.getByRole('button', { name: 'Open' }).click().catch(e => errors.push('open ' + label + ': ' + e.message));
   await wait(300);
 }
-await waitText(p, 'Zipper manifold valve'); await wait(2500);
+await waitText(p, 'Zipper valve to the inlet block'); await wait(4500);
 await clickWhenEnabled(p, 'Pumps online');
-await setRange(p, 0, 80); await setRange(p, 1, 1.5);
+await setRange(p, 1, 80); await setRange(p, 2, 1.5);
 await wait(12000);
 await shot(p, '05-sim-frac-downhole');
 await p.getByRole('button', { name: 'Split' }).click(); await wait(3500);
@@ -81,15 +81,15 @@ await p.getByRole('button', { name: 'Surface' }).click(); await wait(1500);
 await p.selectOption('select[title="Camera preset"]', 'pumps'); await wait(2000);
 await shot(p, '07-sim-frac-pumps');
 // screenout: high concentration at low rate
-await setRange(p, 0, 30); await setRange(p, 1, 3.5);
+await setRange(p, 1, 30); await setRange(p, 2, 3.5);
 await waitText(p, 'Screenout', 60000); await wait(1500);
 await shot(p, '08-sim-screenout');
-// overpressure: close the frac wing while pumping
+// overpressure: close the zipper valve while pumping
 await p.getByRole('button', { name: 'Acknowledge' }).first().click().catch(() => {});
-await setRange(p, 1, 0); await setRange(p, 0, 60);
+await setRange(p, 2, 0); await setRange(p, 1, 60);
 {
-  const row = p.locator('div', { hasText: 'Frac wing valve' }).filter({ has: p.getByRole('button', { name: 'Close' }) }).last();
-  await row.getByRole('button', { name: 'Close' }).click().catch(e => errors.push('close wing: ' + e.message));
+  const row = p.locator('div', { hasText: 'Zipper valve to the inlet block' }).filter({ has: p.getByRole('button', { name: 'Close' }) }).last();
+  await row.getByRole('button', { name: 'Close' }).click().catch(e => errors.push('close zipper: ' + e.message));
 }
 await waitText(p, 'overpressure', 60000); await wait(1000);
 await shot(p, '09-sim-overpressure');
@@ -132,8 +132,31 @@ for (const [id, n] of [['WH-FRACTREE', '24'], ['WH-CASINGHEAD', '25'], ['WH-ZIPP
 }
 await p.goto(base + '/library/WL'); await wait(1500);
 await shot(p, '35-system-WL');
+// Drop 4: size variants, standard tree components, DT cut-away, PP records
+await p.goto(base + '/library/equipment/WH-GATEVALVE'); await wait(6000);
+await p.selectOption('select[title="Bore and pressure rating"]', '4-10K'); await wait(5000);
+await shot(p, '40-record-gatevalve-4-10K');
+await p.selectOption('select[title="Bore and pressure rating"]', '7-15K'); await wait(3000);
+for (const [id, n] of [['WH-FRACTREE-CROWN', '41'], ['WH-FRACTREE-INLETBLOCK', '42'], ['WH-FRACTREE-WINGA', '43'], ['WH-GATEVALVE-ACTUATOR', '44'], ['DT-PLUGSET', '45'], ['DT-FRACPLUG-SLIPSDOWN', '46'], ['DT-SETTINGTOOL', '47'], ['PP-FRACPUMP', '48'], ['PP-MULTIWELL', '49']]) {
+  await p.goto(base + '/library/equipment/' + id); await wait(6000);
+  await shot(p, n + '-record-' + id);
+  if (id === 'DT-PLUGSET') { await p.keyboard.press('s'); await wait(1500); await shot(p, '45b-record-DT-PLUGSET-cutaway'); }
+}
+await p.goto(base + '/library/PP'); await wait(1500);
+await shot(p, '50-system-PP');
+await p.goto(base + '/library/DT'); await wait(1500);
+await shot(p, '51-system-DT');
 await p.goto(base + '/checks'); await wait(1500);
 await shot(p, '20-integrity');
+// Drop 4: pad configuration in the simulator
+await p.goto(base + '/simulate'); await wait(4000);
+await setRange(p, 0, 6); await wait(400);
+await p.getByRole('button', { name: 'Trimul' }).click(); await wait(300);
+await p.getByRole('button', { name: 'Frac' }).first().click(); await wait(300);
+await p.selectOption('select[title="Camera preset"]', 'row'); await wait(3000);
+await shot(p, '52-sim-row-trimul-6wells');
+await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(2500);
+await shot(p, '53-sim-tree-standard');
 await p.goto(base + '/about'); await wait(1000);
 await shot(p, '36-about');
 await p.close();

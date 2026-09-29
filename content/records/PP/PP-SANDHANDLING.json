@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "PP",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S22"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 4 seed"
+  },
+  "hazards": [
+    {
+      "class": "Silica dust",
+      "control": "Enclosed sand handling, dust collection, and respiratory protection where exposure is possible."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of actuators, handwheels, and lifting gear."
+    }
+  ],
+  "id": "PP-SANDHANDLING",
+  "parent": "PP",
+  "group": "proppant",
+  "level": "equipment",
+  "name": "Sand handling: silos, boxes, and conveyor",
+  "aliases": [
+    "sand silos",
+    "sand boxes",
+    "proppant system",
+    "sand king",
+    "sand conveyor"
+  ],
+  "scene": "LG-SANDSILOS",
+  "function": "The storage and delivery system that receives proppant from trucks, holds it in silos or boxes, and meters it onto the belt that feeds the blender hopper.",
+  "tabs": {
+    "overview": "Vertical silos with pneumatic or belt fill, or stackable boxes set by a forklift, hold enough sand for several stages. Gates at the bottom drop sand onto a conveyor that feeds the blender hopper; dust collection and enclosed transfer points control silica exposure. Delivery trucks are the pacing item on high-rate jobs.",
+    "engineering": "Capacity in pounds per silo or box; conveyor rate above the blender demand; dust controls per the silica rules.",
+    "connections": "Truck unloading; conveyor to the blender augers.",
+    "safety": "Respirable silica; conveyor pinch points; vehicle traffic.",
+    "evidence": "Public equipment overviews (S22), public simultaneous-frac articles (S17, S18, S19), field practice (S9). Rates and horsepower are typical values, not a design basis.",
+    "operations": "Filled continuously during the job; inventory reconciled per stage.",
+    "failure_modes": "Bridging in silos, belt failures, wet sand, running out between trucks."
+  }
+}
