@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S5",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-MULTIBOWL",
+  "parent": "WH",
+  "group": "wellhead",
+  "level": "equipment",
+  "name": "Unitized (multibowl) and frac-ready wellheads",
+  "aliases": [
+    "multibowl",
+    "unitized wellhead",
+    "speed head",
+    "frac-ready wellhead",
+    "time-saver head"
+  ],
+  "function": "A wellhead housing that accepts more than one casing hanger in a single body so that spools are not nippled up and down between casing strings, cutting rig time and the number of flange connections; frac-ready versions land the frac stack directly on a mandrel hanger with no exposed pack-off.",
+  "tabs": {
+    "overview": "A conventional wellhead grows one spool at a time as each casing string is run and cemented, and each spool adds a flanged connection to make up, test, and later maintain. A unitized head has two or three hanger bowls machined into one housing, run with the surface casing, so the intermediate and production hangers land in the same body. Mandrel hangers with metal-to-metal seals are typical. A frac-ready or speed head adds a top profile that takes the frac stack adapter directly and isolates the hanger seals from treating pressure so that a tree saver is not needed on every well.",
+    "engineering": "API 6A housing with multiple bowls and lockdown profiles; hanger seals rated to the frac stack working pressure when the head is used without a tree saver (verify per product). The housing bore must pass the bits and casing of each later section.",
+    "connections": "Below: surface casing (welded or threaded). Above: tubing head adapter or frac stack directly. Side outlets per bowl for annulus access.",
+    "safety": "The same annulus monitoring rules apply; fewer flanges means fewer leak paths but each hanger seal must be tested on installation.",
+    "evidence": "OEM product pages (S5); API 6A (S1); field practice (S9).",
+    "operations": "Installed with the surface casing on the drilling rig; hangers landed as each string is run; the frac stack lands on the top profile after the production casing is cemented and tested.",
+    "failure_modes": "Hanger seal leaks found on test; bowl damage from drilling tools; lockdown screw damage."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

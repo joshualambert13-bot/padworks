@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-ZIPPER-TRANSDUCER",
+  "parent": "WH-ZIPPER",
+  "group": "zipper-manifold",
+  "level": "component",
+  "name": "Pressure transducers",
+  "aliases": [
+    "transducer",
+    "pressure sensor",
+    "wellhead pressure transducer"
+  ],
+  "function": "Electronic pressure sensors on the header and on each branch that report treating pressure to the data van and confirm that a closed branch is isolated.",
+  "tabs": {
+    "overview": "Transducers are mounted on a needle-valved port so they can be isolated and changed; readings are compared with the treating pressure at the pumps to check for line friction and leaks.",
+    "engineering": "Rated to the line pressure; calibration checked before the job.",
+    "safety": "A transducer port is a small-bore high-pressure connection; it is bled before the sensor is changed.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-TRANSDUCER"
+  ]
+}

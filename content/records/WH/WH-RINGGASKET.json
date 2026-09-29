@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-RINGGASKET",
+  "parent": "WH",
+  "group": "connections",
+  "level": "part",
+  "name": "Ring gaskets, types R, RX, and BX",
+  "aliases": [
+    "ring gasket",
+    "BX gasket",
+    "RX gasket",
+    "R gasket",
+    "ring joint gasket",
+    "metal gasket"
+  ],
+  "function": "The metal sealing rings that seat in the grooves of API 6A flanges and studded connections; type R and RX for 6B flanges, type BX for 6BX flanges.",
+  "tabs": {
+    "overview": "Type R gaskets are oval or octagonal section rings that seal by being compressed in the groove. Type RX and BX are pressure-energized: the ring is slightly larger than the groove pitch so that internal pressure pushes it harder against the groove wall. BX gaskets have a small pressure-passage hole so pressure reaches the inside of the ring. Gaskets are used once; a ring that has been made up is replaced.",
+    "engineering": "Material is soft iron or low-carbon steel for standard service and stainless or nickel alloy for corrosive service, always softer than the flange. Gasket numbers (for example BX-169 for 7-1/16 in. 10K and above; verify) map to flange size and rating in the API 6A tables.",
+    "connections": "Every ring-joint connection in this system.",
+    "safety": "A reused, nicked, or wrong-number gasket is the most common cause of a failed stack test. Grooves are cleaned and inspected before every make-up.",
+    "evidence": "API 6A (S1); field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

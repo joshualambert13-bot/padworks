@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-PUPJOINT",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Pup joint (integral union pipe)",
+  "aliases": [
+    "pup joint",
+    "iron joint",
+    "straight joint"
+  ],
+  "function": "A straight length of high-pressure pipe with a male union sub on one end and a female sub with a wing nut on the other, the basic building block of a temporary treating line.",
+  "tabs": {
+    "overview": "Sizes 2 in., 3 in., and 4 in. nominal in lengths from a few inches to 10 ft or more. The union halves are integral to the pipe, not welded on in the field. Each joint carries a serial number and a wall-thickness inspection history.",
+    "engineering": "Working pressure 10,000 or 15,000 psi cold; union halves and pipe are matched by pressure class; wall loss limits from the iron inspection program retire a joint.",
+    "safety": "A joint with an unreadable serial or no current inspection does not go on a high-pressure line. Restraints on every joint.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-PUPJOINT"
+  ]
+}

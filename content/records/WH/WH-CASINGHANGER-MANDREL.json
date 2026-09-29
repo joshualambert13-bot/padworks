@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-CASINGHANGER-MANDREL",
+  "parent": "WH-CASINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "Casing hanger, mandrel type",
+  "aliases": [
+    "mandrel hanger",
+    "threaded hanger",
+    "boll weevil hanger (slang, verify usage)"
+  ],
+  "function": "A hanger threaded onto the top joint of casing that lands on a shoulder in the head and carries its own seals, used where a metal-to-metal seal or a frac-ready configuration is wanted.",
+  "tabs": {
+    "overview": "The mandrel is made up to the casing before landing, so the casing string is spaced out to land the hanger on the wellhead shoulder. Seals on the mandrel OD seal against the head bore; lockdown screws or a lock ring hold it against pressure from below. Mandrel hangers are common in unitized and frac-ready wellheads.",
+    "engineering": "Metal-to-metal or elastomer seals per the OEM; rated with the head. Requires accurate space-out during the casing run.",
+    "safety": "A hanger landed short or long cannot be sealed; the space-out is verified before cementing.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

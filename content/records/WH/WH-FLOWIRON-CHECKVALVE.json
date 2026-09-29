@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-CHECKVALVE",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Check valve (dart type)",
+  "aliases": [
+    "check valve",
+    "dart valve",
+    "flapper check",
+    "in-line check"
+  ],
+  "function": "A one-way valve in the treating line that stops fluid flowing back from the well toward the pumps when a pump is shut down or a line fails.",
+  "tabs": {
+    "overview": "The dart is a spring-loaded plug that lifts on flow toward the well and seats on reverse flow. Flapper checks are the alternative. One is fitted on each pump discharge and often on the main line near the manifold.",
+    "engineering": "Rated with the iron; the dart and seat are hardened for proppant service and are inspected for cut-out.",
+    "safety": "A stuck-open check leaves the pumps exposed to wellhead pressure on shutdown; checks are function tested before the job.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-CHECKVALVE"
+  ]
+}

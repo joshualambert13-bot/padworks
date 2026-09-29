@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-ZIPPER-SKID",
+  "parent": "WH-ZIPPER",
+  "group": "zipper-manifold",
+  "level": "component",
+  "name": "Manifold skid",
+  "aliases": [
+    "skid",
+    "zipper skid",
+    "manifold frame"
+  ],
+  "function": "The steel frame that carries the manifold, valves, and control unit as one lift and sets the layout of the branches to each well.",
+  "tabs": {
+    "overview": "Skid dimensions are set by the number of wells served and the spacing of the trees on the pad; the skid is set on mats and leveled so the outlet lines reach each tree without forcing the iron.",
+    "engineering": "Structural steel; lifting points certified; grounded.",
+    "safety": "The skid is set with a crane; the manifold is a heavy lift over the pad.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no personnel under suspended tree or lubricator sections."
+    }
+  ],
+  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-SKID"
+  ]
+}

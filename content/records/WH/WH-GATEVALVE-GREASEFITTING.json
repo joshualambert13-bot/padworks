@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-GATEVALVE-GREASEFITTING",
+  "parent": "WH-GATEVALVE",
+  "group": "gate-valve",
+  "level": "component",
+  "name": "Grease and sealant fittings",
+  "aliases": [
+    "grease fitting",
+    "sealant port",
+    "grease port",
+    "body bleed"
+  ],
+  "function": "The check-valved fittings on the body and bonnet through which sealant is injected into the seat pockets and body cavity, and the bleed port through which trapped cavity pressure is released.",
+  "tabs": {
+    "overview": "Sealant injected behind the seats supports the metal seal after wear and displaces proppant from the cavity. Fittings carry a check valve; the body bleed is a small valve or plug used to verify zero cavity pressure before the bonnet is opened.",
+    "engineering": "Fittings rated to the valve working pressure; sealant per the OEM.",
+    "safety": "Grease fittings are high-pressure connections; a fitting with a failed check will discharge when the cap is removed. Bleed the cavity through the bleed port, never by loosening a fitting.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

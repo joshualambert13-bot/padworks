@@ -1,0 +1,42 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACVALVECONTROL-PANEL",
+  "parent": "WH-FRACVALVECONTROL",
+  "group": "valve-control",
+  "level": "component",
+  "name": "Remote control panel and emergency shut-in",
+  "aliases": [
+    "control panel",
+    "remote panel",
+    "ESD",
+    "emergency shutdown",
+    "shut-in button"
+  ],
+  "function": "The panel outside the red zone with one control and position indicator per actuated valve, and the emergency shut-in control that closes the designated valves together.",
+  "tabs": {
+    "overview": "Each valve has an open and close control and a lamp or indicator fed from the actuator position switch. The emergency shut-in closes the upper master and wing valves on all trees, or a chosen set, in one action; which valves are on the shut-in list is agreed before the job.",
+    "engineering": "Electrical or hydraulic pilot controls; panel rated for outdoor use.",
+    "safety": "The shut-in drill is run before the first stage so everyone knows what closes and what stays open. Position lamps are a control indication, not proof of isolation.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

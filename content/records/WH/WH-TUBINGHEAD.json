@@ -1,0 +1,53 @@
+{
+  "id": "WH-TUBINGHEAD",
+  "system": "WH",
+  "group": "wellhead",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Tubing head and frac-ready adapter",
+  "aliases": [
+    "tubing spool"
+  ],
+  "function": "The top wellhead component that hangs the production tubing after the completion and, during the frac, carries the adapter to the frac tree.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "During the completion the tubing head has no tubing in it; the frac stack lands on a tubing head adapter or crossover, and a tree saver may be set in the bowl. Frac-ready or multibowl wellheads combine spools so the stack can be installed faster.",
+    "engineering": "API 6A; bowl profile and lockdown screws for the tubing hanger; flanged top connection to the adapter.",
+    "connections": "Below: casing spool. Above: tree adapter and frac tree, later the production tree.",
+    "safety": "The bowl is exposed to treating fluid unless isolated; inspect after the frac.",
+    "evidence": "API 6A (S1); OEM pages (S5); field practice (S9).",
+    "operations": "Receives the frac stack at rig-up; receives the tubing hanger and production tree after drillout and flowback.",
+    "failure_modes": "Bowl erosion, lockdown screw damage."
+  },
+  "specs": [],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-TUBINGHEAD",
+  "sources": [
+    "S1",
+    "S5",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-WELLHEAD.glb"
+  },
+  "glb": "/glb/WH/WH-WELLHEAD.glb",
+  "mesh_nodes": [
+    "WH-WELLHEAD-TUBINGHEAD",
+    "WH-WELLHEAD-TREEADAPTER"
+  ]
+}

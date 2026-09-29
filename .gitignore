@@ -1,0 +1,9 @@
+node_modules
+dist
+shots
+cad/out
+cad/**/out
+cad/**/out_open
+*.log
+.DS_Store
+public/integrity.json

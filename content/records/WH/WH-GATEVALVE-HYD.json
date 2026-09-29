@@ -1,0 +1,97 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S2",
+    "S5",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-GATEVALVE-HYD",
+  "parent": "WH",
+  "group": "gate-valve",
+  "level": "equipment",
+  "name": "Gate valve, hydraulic-actuated variant",
+  "aliases": [
+    "hydraulic gate valve",
+    "actuated gate valve",
+    "hyd. valve",
+    "HGV"
+  ],
+  "function": "The gate valve sub-assembly with a hydraulic actuator in place of the handwheel and bearing cap; the working valve of the frac stack and zipper manifold because it can be operated from outside the red zone and closed by emergency shut-in.",
+  "tabs": {
+    "overview": "Identical body, gate, seats, stem, packing, and bonnet to the manual valve. The actuator is a hydraulic cylinder that pushes the stem to open the gate; spring-return designs close the valve when hydraulic pressure is released, so a loss of supply fails the valve closed. Position is shown by an indicator rod and by a switch that feeds the control panel lamp.",
+    "engineering": "Actuator sized for the stem load at the valve working pressure with margin; supply pressure and closing time per the OEM; some models include a manual override for use with the hydraulics isolated.",
+    "connections": "Hydraulic supply and return to the frac valve control unit; flanged ends as the manual valve.",
+    "safety": "Stored energy in the spring and cylinder; isolate and bleed hydraulics before maintenance. Fully open or fully closed only; the actuator does not throttle.",
+    "specs": "Bore 5-1/8 in. or 7-1/16 in.; working pressure 10,000 or 15,000 psi; spring-return fail-closed typical for frac service.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9).",
+    "operations": "Function tested from the panel at rig-up; cycled per stage as the frac wing and zipper valves; greased per schedule.",
+    "failure_modes": "Actuator seal leaks; broken position switches; slow closing from low accumulator precharge; seat wash after closing on flow."
+  },
+  "specs": [
+    {
+      "name": "Actuator type",
+      "value": "hydraulic, spring-return (fail closed) typical",
+      "unit": "",
+      "source": "S2",
+      "tier": "E2"
+    }
+  ],
+  "connections": [
+    {
+      "target": "WH-GATEVALVE",
+      "direction": "undirected",
+      "type": "mechanical",
+      "note": "Shares body, gate, seats, stem, packing, and bonnet"
+    },
+    {
+      "target": "WH-FRACVALVECONTROL",
+      "direction": "upstream",
+      "type": "hydraulic"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ],
+  "glb": "/glb/WH/WH-GATEVALVE-HYD.glb",
+  "mesh_nodes": [
+    "WH-GATEVALVE-BODY",
+    "WH-GATEVALVE-FLANGE-IN",
+    "WH-GATEVALVE-FLANGE-OUT",
+    "WH-GATEVALVE-SEAT-UP",
+    "WH-GATEVALVE-SEAT-DOWN",
+    "WH-GATEVALVE-GATE",
+    "WH-GATEVALVE-BONNET",
+    "WH-GATEVALVE-PACKING",
+    "WH-GATEVALVE-BEARING",
+    "WH-GATEVALVE-STEM",
+    "WH-GATEVALVE-ACTUATOR"
+  ],
+  "simulation": {
+    "clips": [
+      "open_close"
+    ],
+    "disclosure": "Simplified motion."
+  }
+}

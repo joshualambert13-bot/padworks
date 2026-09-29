@@ -1,0 +1,53 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-PLUGVALVE",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Plug valve",
+  "aliases": [
+    "plug valve",
+    "lo-torque plug valve",
+    "quarter-turn valve",
+    "iron valve"
+  ],
+  "function": "A quarter-turn valve with a tapered or cylindrical plug used in treating lines to isolate a pump discharge, a manifold branch, or a bleed line.",
+  "tabs": {
+    "overview": "Lubricated plug valves seal with a sealant film between the plug and body; the lever or gear handle shows position. They are used where a quick, hand-operated isolation is needed and where a gate valve would be too heavy for the iron run.",
+    "engineering": "Rated with the iron in 2 in. and 3 in. sizes at 10,000 or 15,000 psi; sealant injection per the OEM.",
+    "safety": "A plug valve is fully open or fully closed; a partly open plug in proppant flow cuts out quickly. Never operate a plug valve on a line at pressure unless it is designed for it.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-PLUGVALVE"
+  ]
+}

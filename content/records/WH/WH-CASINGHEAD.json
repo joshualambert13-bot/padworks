@@ -1,0 +1,50 @@
+{
+  "id": "WH-CASINGHEAD",
+  "system": "WH",
+  "group": "wellhead",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Casing head and casing spool",
+  "aliases": [
+    "starting head",
+    "casing spool",
+    "wellhead base"
+  ],
+  "function": "The permanent base of the wellhead that supports the casing strings on hangers and seals the annuli between them.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The casing head is welded or threaded onto the surface casing. Each subsequent casing string hangs in a spool on a slip or mandrel hanger with a pack-off or seal assembly above it. Side outlets with valves give access to each annulus for monitoring and pressure testing.",
+    "engineering": "API 6A flanged or studded connections; bowl profiles match the hanger type; secondary seals isolate the annulus from the flange connection.",
+    "connections": "Below: surface casing. Above: next spool or tubing head. Side outlets: annulus valves.",
+    "safety": "Annulus pressure is monitored during fracturing; a sudden change indicates a casing or hanger seal problem and stops pumping.",
+    "evidence": "API 6A (S1); field and manufacturing practice (S9).",
+    "operations": "Installed during drilling; tested before the frac stack is nippled up.",
+    "failure_modes": "Pack-off leaks, hanger seal damage from proppant when no tree saver is used."
+  },
+  "specs": [],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-CASINGHEAD",
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-WELLHEAD.glb"
+  },
+  "glb": "/glb/WH/WH-WELLHEAD.glb",
+  "mesh_nodes": [
+    "WH-WELLHEAD-CASINGHEAD",
+    "WH-WELLHEAD-CASINGSPOOL"
+  ]
+}

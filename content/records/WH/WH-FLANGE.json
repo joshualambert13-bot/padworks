@@ -1,0 +1,55 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLANGE",
+  "parent": "WH",
+  "group": "connections",
+  "level": "part",
+  "name": "API 6A flanges, types 6B and 6BX",
+  "aliases": [
+    "6B flange",
+    "6BX flange",
+    "API flange",
+    "ring joint flange"
+  ],
+  "function": "The bolted, ring-gasket end connections that join wellhead and tree components; type 6B for 2,000 to 5,000 psi and type 6BX for 10,000 psi and above and for larger sizes at the lower ratings.",
+  "tabs": {
+    "overview": "A 6B flange seals with an R or RX ring gasket in a groove and has a small gap between the flange faces when made up. A 6BX flange seals with a BX ring gasket and is made up until the flange faces touch, so the bolt load is carried by the faces rather than the gasket. Frac stacks at 10,000 and 15,000 psi are 6BX throughout. Studded connections use the same gaskets with studs threaded into one component instead of through-bolts.",
+    "engineering": "Flange dimensions, bolt patterns, and gasket grooves are tabulated in API 6A by nominal size and pressure rating. The nominal size names the bore (5-1/8 in., 7-1/16 in.); the same nominal size has different flange dimensions at each rating, so a 5-1/8 in. 10K flange does not mate with a 5-1/8 in. 15K flange.",
+    "connections": "Every flanged joint in this system.",
+    "safety": "Bolts are made up in a cross pattern to the specified torque; a 6BX joint that does not reach face-to-face contact is not made up. Mixed ratings or damaged ring grooves leak under test.",
+    "evidence": "API 6A (S1); field and manufacturing practice (S9)."
+  },
+  "standards": [
+    {
+      "standard": "API 6A",
+      "edition": "verify",
+      "clause": "flanged end and outlet connections",
+      "paraphrase": "6B flanges for 2,000, 3,000, and 5,000 psi; 6BX flanges for 10,000, 15,000, and 20,000 psi and for the larger nominal sizes at 2,000 to 5,000 psi; gasket types R and RX for 6B and BX for 6BX.",
+      "source": "S1"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ]
+}

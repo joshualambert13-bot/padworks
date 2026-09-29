@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-CROSS",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Studded cross",
+  "aliases": [
+    "cross",
+    "flow cross",
+    "frac cross",
+    "tee (two-outlet configurations)"
+  ],
+  "function": "The block above the masters with two horizontal outlets for the wing valves; it splits the vertical bore to the frac side and the flowback side.",
+  "tabs": {
+    "overview": "A forged block with the vertical bore and two side bores at 90 degrees, studded outlets on each side for the wing valves, and flanged top and bottom. A tee is used when only one wing is needed. Some stacks add a third outlet for instrumentation.",
+    "engineering": "API 6A pressure-containing block rated with the stack; studded outlets take the wing valve flanges with BX gaskets.",
+    "safety": "The cross sees the highest erosion on the stack at the frac wing side; inspect the bore and outlet after each well.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-CROSS"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-VRPLUG",
+  "parent": "WH-CASINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "Valve removal plug and test port",
+  "aliases": [
+    "VR plug",
+    "valve removal plug",
+    "VR thread",
+    "test port"
+  ],
+  "function": "A threaded plug set in the side outlet bore that lets an outlet valve be removed or replaced with the annulus under pressure, plus the test port that lets seals be pressure tested at installation.",
+  "tabs": {
+    "overview": "The outlet bore carries a VR thread. A lubricator tool is made up to the valve, the plug is run through the open valve and threaded into the VR profile, the valve is closed and removed, and the sequence is reversed with the new valve. Test ports are small threaded ports between seals or between flanges that accept a test pump connection.",
+    "engineering": "VR thread and plug sizes follow the outlet; plug and lubricator tool rated to the head pressure.",
+    "safety": "Setting a VR plug is live-pressure work done only by qualified personnel with the correct tool; a plug that is not fully threaded will blow out when the valve is removed.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ]
+}

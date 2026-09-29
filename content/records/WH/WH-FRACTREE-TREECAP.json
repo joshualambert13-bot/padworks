@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-TREECAP",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Tree cap and top connection",
+  "aliases": [
+    "tree cap",
+    "top cap",
+    "crown cap"
+  ],
+  "function": "The blind cap or instrumented cap on the top of the goat head that closes the vertical bore when no equipment is above the tree.",
+  "tabs": {
+    "overview": "Carries a pressure gauge or transducer port and a needle valve on many rig-ups so treating pressure can be read at the tree. Removed to install the wellhead adapter for wireline.",
+    "engineering": "API 6A flanged or threaded cap rated with the stack.",
+    "safety": "The cap is removed only with the swab valve closed and verified, and the bore above the swab bled to zero.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-TREECAP"
+  ]
+}

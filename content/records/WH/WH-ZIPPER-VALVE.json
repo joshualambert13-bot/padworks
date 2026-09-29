@@ -1,0 +1,57 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-ZIPPER-VALVE",
+  "parent": "WH-ZIPPER",
+  "group": "zipper-manifold",
+  "level": "component",
+  "name": "Zipper valves (one per well branch)",
+  "aliases": [
+    "zipper valve",
+    "branch valve",
+    "well isolation valve",
+    "manifold valve"
+  ],
+  "function": "The hydraulic gate valve in each well branch that selects which well the spread treats; open on the well being fractured, closed on the wells being prepared for wireline.",
+  "tabs": {
+    "overview": "Each branch has at least one hydraulic valve; many manifolds fit two in series for double isolation of a well with wireline in the hole. Valves are cycled once per stage per well, which makes them the highest-cycle valves on the pad.",
+    "engineering": "Same API 6A hydraulic gate valve as the tree; position indicated at the control panel.",
+    "safety": "A branch to a well with a lubricator on the tree must be closed and verified before the neighbor is pumped; the position lamp is not the only check, the pressure on the closed branch is watched too.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-VALVE"
+  ],
+  "connections": [
+    {
+      "target": "WH-GATEVALVE-HYD",
+      "direction": "undirected",
+      "type": "mechanical",
+      "note": "Instance of the hydraulic gate valve variant"
+    }
+  ]
+}

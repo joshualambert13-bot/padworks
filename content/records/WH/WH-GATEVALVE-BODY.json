@@ -1,0 +1,45 @@
+{
+  "id": "WH-GATEVALVE-BODY",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "component",
+  "parent": "WH-GATEVALVE",
+  "name": "Valve body",
+  "aliases": [
+    "body block"
+  ],
+  "function": "The forged pressure-containing block with the through bore, the gate cavity, the seat pockets, and the bonnet connection.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The body is a rectangular forging bored along the flow axis with a vertical cavity for the gate. Seat pockets are machined on each side of the cavity. The top of the body carries the bonnet flange or a threaded bonnet connection. Grease and body-bleed ports are drilled into the cavity.",
+    "engineering": "Material per API 6A material class: low-alloy steel for standard service, higher alloys or overlays for sour and corrosive service. Wall thickness and bolting follow the pressure rating. The body is hydrostatically tested as part of the assembled valve.",
+    "safety": "Bleed the body cavity before removing the bonnet. Cavity pressure can remain trapped after the line is bled.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "mesh_nodes": [
+    "WH-GATEVALVE-BODY",
+    "WH-GATEVALVE-FLANGE-IN",
+    "WH-GATEVALVE-FLANGE-OUT"
+  ],
+  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "sources": [
+    "S1",
+    "S2",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed"
+  }
+}

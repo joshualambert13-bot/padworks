@@ -1,0 +1,49 @@
+{
+  "id": "WH-GATEVALVE-GATE",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "component",
+  "parent": "WH-GATEVALVE",
+  "name": "Slab gate",
+  "aliases": [
+    "gate",
+    "slab"
+  ],
+  "function": "The sliding rectangular plate with a through port that opens or closes the bore.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The gate travels one bore diameter between the open and closed positions. Its faces are lapped and hardened or hardfaced because they seal against the seats under full differential pressure while proppant-laden fluid passes the open port.",
+    "engineering": "Hardfaced or through-hardened alloy steel; some designs use tungsten carbide coatings on the faces. Gate-to-stem connection is a T-slot or threaded connection depending on rising or non-rising stem design.",
+    "safety": "A partly open gate is cut out quickly in proppant service; operate to full open or full closed only.",
+    "evidence": "API 6A (S1) for materials and testing; OEM pages (S2, S5); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "mesh_nodes": [
+    "WH-GATEVALVE-GATE"
+  ],
+  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "sources": [
+    "S1",
+    "S2",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed"
+  },
+  "simulation": {
+    "clips": [
+      "open_close"
+    ]
+  }
+}

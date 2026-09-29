@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-BPVLUBRICATOR",
+  "parent": "WH-TUBINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "BPV lubricator and running tool",
+  "aliases": [
+    "BPV lubricator",
+    "running tool",
+    "BPV rod"
+  ],
+  "function": "The short lubricator and rod tool made up to the top of the tree to run or pull a back pressure valve or two-way check valve with the tree under pressure.",
+  "tabs": {
+    "overview": "The lubricator is flanged or threaded to the tree cap connection with the swab valve closed, pressure tested, then the swab is opened and the rod runs the plug down to the hanger and threads it in or out.",
+    "engineering": "Rated to the tree working pressure; rod length matched to the tree height.",
+    "safety": "A lubricator is live-pressure equipment; the rod is a line-of-fire item if the plug is released under pressure.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ]
+}

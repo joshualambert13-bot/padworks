@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S8",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-STUDBOLTS",
+  "parent": "WH",
+  "group": "connections",
+  "level": "part",
+  "name": "Studs, nuts, and bolting",
+  "aliases": [
+    "stud bolts",
+    "B7 studs",
+    "flange bolting",
+    "nuts"
+  ],
+  "function": "The threaded studs and nuts that carry the load of a flanged or studded connection.",
+  "tabs": {
+    "overview": "Studs are threaded full length with a nut on each end for through-bolted flanges, or threaded into tapped holes on studded connections. They are made up in a star pattern in steps to the final torque or stretch so the gasket seats evenly.",
+    "engineering": "Alloy steel studs and heavy hex nuts to the grades API 6A allows for the service, with a hardness limit for sour service per NACE MR0175 (S8). Thread lubricant and torque values per the OEM or operator practice.",
+    "connections": "Every flanged and studded connection.",
+    "safety": "Under-torqued studs leak; over-torqued or corroded studs fail on make-up. Hands and tools stay clear of the stud ends when hammering wrenches are used.",
+    "evidence": "API 6A (S1); NACE MR0175 (S8); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ]
+}

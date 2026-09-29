@@ -1,0 +1,58 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-PRV",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Pressure relief valve (pop-off)",
+  "aliases": [
+    "pop-off",
+    "PRV",
+    "relief valve",
+    "pressure relief"
+  ],
+  "function": "A spring or pilot-operated relief valve on the high-pressure side of the missile or the manifold, set above the maximum treating pressure, that opens to a relief line and tank to protect the iron and tree from overpressure.",
+  "tabs": {
+    "overview": "The set pressure is verified before the job and recorded. The relief line is a rated, restrained iron run to a tank or pit sized for the pump rate. Some spreads use a rupture disc or a hydraulically actuated relief valve instead of or in addition to the spring valve.",
+    "engineering": "Set point below the iron and tree working pressure and above the planned maximum treating pressure, with the pump kickout set below the relief set point so the pumps trip first.",
+    "safety": "A relief valve that lifts discharges proppant slurry at full rate into the relief line; the relief line is inside the red zone and is treated as a live line.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-PRV"
+  ],
+  "specs": [
+    {
+      "name": "Relationship of set points",
+      "value": "kickout below relief set point below iron working pressure",
+      "unit": "",
+      "source": "S9",
+      "tier": "E3"
+    }
+  ]
+}

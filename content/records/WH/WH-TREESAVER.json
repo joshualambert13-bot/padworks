@@ -1,0 +1,57 @@
+{
+  "id": "WH-TREESAVER",
+  "system": "WH",
+  "group": "wellhead-isolation",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Wellhead isolation tool (tree saver)",
+  "aliases": [
+    "tree saver",
+    "frac sleeve",
+    "wear sleeve",
+    "casing protector",
+    "isolation tool"
+  ],
+  "function": "A tool run through the tree and wellhead that carries proppant-laden fluid past the hanger seals and spool bores so that the permanent wellhead is not eroded or exposed to treating pressure.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "Set from the top of the stack, the mandrel seals below the wellhead and above the frac tree so that treating fluid passes through its bore. Some designs also isolate the wellhead from treating pressure so that a lower-rated wellhead can be used with a higher-rated stack (verify with the specific product).",
+    "engineering": "Mandrel with seal elements or cups, a landing shoulder, and a retrieval profile; installed with a running tool through the tree or as a sleeve set in the tubing head.",
+    "connections": "Landed in the wellhead below the tree; retrieved before the production tree is installed.",
+    "safety": "Running and pulling is a lift over the well; verify the well is shut in and pressure is bled from the stack before pulling.",
+    "evidence": "Public description (S3); field practice (S9).",
+    "operations": "Installed at rig-up, inspected between wells, pulled after flowback.",
+    "failure_modes": "Seal damage on installation; erosion of the mandrel bore at the top."
+  },
+  "specs": [],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no personnel under suspended tree or lubricator sections."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-TREEADAPTER",
+  "sources": [
+    "S3",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-TREESAVER.glb"
+  },
+  "glb": "/glb/WH/WH-TREESAVER.glb",
+  "mesh_nodes": [
+    "WH-TREESAVER-MANDREL",
+    "WH-TREESAVER-SEAL",
+    "WH-TREESAVER-SHOULDER"
+  ]
+}

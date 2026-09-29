@@ -1,0 +1,57 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-TUBINGHANGER",
+  "parent": "WH-TUBINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "Tubing hanger",
+  "aliases": [
+    "hanger",
+    "tubing hanger mandrel",
+    "extended-neck hanger"
+  ],
+  "function": "The mandrel that suspends the production tubing string in the tubing head after the completion and seals the tubing-casing annulus; it also carries the back pressure valve profile and any control line penetrations.",
+  "tabs": {
+    "overview": "During the frac there is no tubing in the well and the hanger is not installed; the frac stack lands on the tubing head adapter. After drillout and flowback the tubing is run, the hanger is made up to the top joint, landed in the tubing head bowl, and held by lockdown screws. The hanger bore has a threaded profile for the back pressure valve and the two-way check valve. Extended-neck hangers seal in the adapter above the head so the flange connection is isolated from well pressure.",
+    "engineering": "API 6A; seals per temperature and material class; control line ports for a subsurface safety valve or chemical injection are drilled through the hanger body.",
+    "safety": "The hanger is landed with the well dead or under control; the BPV is set before the tree is nippled up and pulled only after the tree is tested.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-WELLHEAD.glb",
+  "mesh_nodes": [
+    "WH-WELLHEAD-TUBINGHANGER"
+  ],
+  "connections": [
+    {
+      "target": "UC",
+      "direction": "downstream",
+      "type": "threaded",
+      "note": "Production tubing string"
+    },
+    {
+      "target": "WH-BPV",
+      "direction": "undirected",
+      "type": "threaded"
+    }
+  ]
+}

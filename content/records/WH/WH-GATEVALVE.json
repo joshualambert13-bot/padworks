@@ -1,0 +1,155 @@
+{
+  "id": "WH-GATEVALVE",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Gate valve, through-conduit slab gate (API 6A)",
+  "aliases": [
+    "frac valve",
+    "manual gate valve",
+    "slab gate valve"
+  ],
+  "function": "A two-position, full-bore valve that isolates or opens the flow path by sliding a slab gate with a through port across the bore between two floating seats. It is the repeating sub-assembly of the frac tree, zipper manifold, wellhead outlets, production tree, and choke manifold.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The gate is a rectangular slab with a circular port. In the closed position the solid part of the slab spans the bore; the stem moves the gate by one bore diameter to align the port with the bore. Floating seats on either side of the gate are pressure-energized against the gate face. The bonnet closes the top of the body cavity and carries the stem, packing, and bearing assembly. Manual valves are operated by a handwheel through a threaded stem and bearing; actuated valves replace the handwheel with a hydraulic cylinder, most often spring-return so the valve fails closed on loss of hydraulic pressure.",
+    "engineering": "Body and bonnet are forged low-alloy steel (4130 or 4140 class) or higher alloy for sour or corrosive service per the API 6A material class. Gate and seats are hardened or hardfaced for proppant service. Stem sealing uses a packing set and, on many designs, a back seat that lets the packing be changed under pressure. Grease or sealant injection ports feed the seat pockets and the body cavity. The valve is rated by working pressure class, temperature class, material class, PSL, and PR level; the frac stack version is normally PSL 3, PR 2 (verify on the specific product).",
+    "connections": "Flanged ends: 6B up to 5,000 psi; 6BX for 10,000 psi and above (and for larger bores at lower ratings), with R or RX ring gaskets for 6B and BX gaskets for 6BX. Studded and flanged variants exist for stacking on the cross. Hydraulic actuators connect to the frac valve control unit through hydraulic hoses.",
+    "safety": "Never throttle: a partly open gate in proppant flow cuts the gate and seats and can lead to a loss of containment. Do not cycle the lower master under pressure or flow. Bleed the body cavity before removing the bonnet. Hydraulic actuators store energy in the spring and the cylinder; isolate hydraulics before maintenance.",
+    "specs": "Bore 5-1/8 in. or 7-1/16 in.; working pressure 10,000 or 15,000 psi; face-to-face per the API 6A table for the flange type and rating; actuator sizing per OEM.",
+    "evidence": "API 6A (S1) for design and rating; OEM product pages (S2, S5) for configurations; field and manufacturing practice (S9).",
+    "operations": "Open and close fully; count turns on manual valves and confirm position indication on actuated valves. Function test each actuator from the control unit before pumping. Grease per the OEM schedule during long jobs.",
+    "failure_modes": "Seat and gate erosion; stem packing leaks; grease fitting failures; actuator seal leaks; gate cracking after washing; ring gasket damage."
+  },
+  "specs": [
+    {
+      "name": "Nominal bore (starter model)",
+      "value": 5.125,
+      "unit": "in.",
+      "si_value": 130.2,
+      "si_unit": "mm",
+      "source": "S2",
+      "tier": "E2"
+    },
+    {
+      "name": "Working pressure (starter model)",
+      "value": 15000,
+      "unit": "psi",
+      "si_value": 103.4,
+      "si_unit": "MPa",
+      "source": "S2",
+      "tier": "E2"
+    },
+    {
+      "name": "Gate travel",
+      "value": "one bore diameter",
+      "unit": "",
+      "source": "S9",
+      "tier": "E3"
+    },
+    {
+      "name": "Actuator type, frac service",
+      "value": "hydraulic, spring-return (fail closed)",
+      "unit": "",
+      "source": "S2",
+      "tier": "E2"
+    }
+  ],
+  "standards": [
+    {
+      "standard": "API 6A",
+      "edition": "verify",
+      "clause": "flanged end and outlet connections",
+      "paraphrase": "6B flanges for 2,000 to 5,000 psi; 6BX flanges for 10,000 psi and above and for larger sizes at 2,000 to 5,000 psi; ring gasket types R, RX, and BX.",
+      "source": "S1"
+    },
+    {
+      "standard": "API 6A",
+      "edition": "verify",
+      "clause": "PSL and PR",
+      "paraphrase": "Product specification levels 1 to 4 set the quality and testing requirements; performance requirement levels PR1 and PR2 set the performance verification testing.",
+      "source": "S1"
+    }
+  ],
+  "oem_examples": [
+    {
+      "oem": "Cameron (SLB)",
+      "model": "frac tree gate valves",
+      "figure": "product family",
+      "source": "S2"
+    }
+  ],
+  "connections": [
+    {
+      "target": "WH-FRACTREE",
+      "direction": "undirected",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "Repeats as master, wing, and swab valves"
+    },
+    {
+      "target": "WH-ZIPPER",
+      "direction": "undirected",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "Per-well isolation valves"
+    },
+    {
+      "target": "WH-FRACVALVECONTROL",
+      "direction": "upstream",
+      "type": "hydraulic",
+      "rating": "",
+      "note": "Actuator supply and return"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ],
+  "drawn_in_3d": true,
+  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "mesh_nodes": [
+    "WH-GATEVALVE-BODY",
+    "WH-GATEVALVE-FLANGE-IN",
+    "WH-GATEVALVE-FLANGE-OUT",
+    "WH-GATEVALVE-SEAT-UP",
+    "WH-GATEVALVE-SEAT-DOWN",
+    "WH-GATEVALVE-GATE",
+    "WH-GATEVALVE-BONNET",
+    "WH-GATEVALVE-PACKING",
+    "WH-GATEVALVE-BEARING",
+    "WH-GATEVALVE-STEM",
+    "WH-GATEVALVE-HANDWHEEL"
+  ],
+  "simulation": {
+    "clips": [
+      "open_close"
+    ],
+    "disclosure": "Simplified motion: rising stem shown; real frac valves are commonly non-rising stem designs."
+  },
+  "sources": [
+    "S1",
+    "S2",
+    "S5",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed; geometry from cad/scripts/WH/gate_valve.py"
+  }
+}

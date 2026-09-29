@@ -1,0 +1,56 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-WINGA",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Frac wing valve",
+  "aliases": [
+    "frac wing",
+    "treating wing",
+    "wing valve A"
+  ],
+  "function": "The hydraulic wing valve that connects the well to the frac line from the zipper manifold; open only while this well is being treated or pumped down.",
+  "tabs": {
+    "overview": "Opened from the control unit after the zipper valve for this well is opened and the swab valve is confirmed closed. Closed at the end of the stage before the tree is opened for wireline. It sees the full proppant stream every stage.",
+    "engineering": "Hydraulic gate valve; commonly the most cycled valve on the stack and the first to show seat wear.",
+    "safety": "Fully open or fully closed only. Pumping against a closed frac wing raises pressure to the relief valve set point and trips the pumps.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-WINGA"
+  ],
+  "connections": [
+    {
+      "target": "WH-ZIPPER",
+      "direction": "upstream",
+      "type": "hammer union",
+      "rating": "15K"
+    }
+  ]
+}

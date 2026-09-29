@@ -1,0 +1,60 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-SWAB",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Swab valve",
+  "aliases": [
+    "crown valve",
+    "top valve",
+    "swab"
+  ],
+  "function": "The top valve on the tree that gives vertical access to the well for the wireline lubricator and the coiled tubing stack.",
+  "tabs": {
+    "overview": "Closed during pumping. Opened only after the lubricator or coiled tubing stack is made up above it and pressure tested, so that the tool string can pass into the well. Closed again with the tool string back inside the lubricator before the lubricator is bled and removed.",
+    "engineering": "Manual gate valve on most stacks so that it cannot be opened by a control system fault while the top of the tree is open to atmosphere.",
+    "safety": "Never open the swab valve with the goat head removed and nothing tested above it. The interlock in the simulator reflects the field rule: swab closed before the frac wing opens, frac wing closed before the swab opens.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-SWAB"
+  ],
+  "connections": [
+    {
+      "target": "WL",
+      "direction": "downstream",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "Wellhead adapter and lubricator land here"
+    },
+    {
+      "target": "CT",
+      "direction": "downstream",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "Coiled tubing BOP stack lands here"
+    }
+  ]
+}

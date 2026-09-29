@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-TREESAVER-SHOULDER",
+  "parent": "WH-TREESAVER",
+  "group": "wellhead-isolation",
+  "level": "component",
+  "name": "Landing shoulder and running adapter",
+  "aliases": [
+    "landing shoulder",
+    "hanger shoulder",
+    "top adapter"
+  ],
+  "function": "The shoulder that lands the tool at its set depth in the tree or adapter, and the top adapter that connects the running tool and the flow path above.",
+  "tabs": {
+    "overview": "The shoulder carries the tool weight and, on retained designs, is locked down against upward load from pressure below. The top adapter has a lifting profile and the connection to the goat head or running tool.",
+    "engineering": "Load-bearing alloy steel; lockdown per the design.",
+    "safety": "A tool that is not landed and locked can be pumped up the tree; confirm the set before pumping.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no personnel under suspended tree or lubricator sections."
+    }
+  ],
+  "glb": "/glb/WH/WH-TREESAVER.glb",
+  "mesh_nodes": [
+    "WH-TREESAVER-SHOULDER"
+  ]
+}

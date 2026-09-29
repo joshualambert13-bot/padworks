@@ -1,0 +1,98 @@
+{
+  "id": "WH",
+  "system": "WH",
+  "level": "system",
+  "name": "Wellhead, frac stack, and high-pressure iron",
+  "aliases": [
+    "surface pressure boundary",
+    "wellhead and tree"
+  ],
+  "function": "The surface pressure boundary for the well from casing hanger to goat head, plus the temporary manifolds and iron that connect the pump spread to the well during fracturing, wireline, drillout, and flowback.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The wellhead is permanent: casing head, casing spools, hangers, and the tubing head stay with the well for life. The frac stack is temporary: gate valves, a studded cross with wing valves, a swab valve, and a goat head that are rented for the completion and removed when the production tree goes on. The zipper manifold and flow iron connect the frac spread to one or more trees on the pad. Every item in this system is rated to the maximum treating pressure of the job, most commonly 10,000 or 15,000 psi working pressure for land plug-and-perf completions.",
+    "engineering": "Pressure-containing and pressure-controlling parts are governed by API 6A: pressure rating, material class, temperature class, product specification level (PSL), and performance requirement (PR) level. Flanged ends above 5,000 psi use the 6BX flange with a BX ring gasket. The bore of the frac stack matches the casing or tubing head bore so that wireline tools, plugs, and coiled tubing can pass; 5-1/8 in. and 7-1/16 in. are the common frac stack bores.",
+    "connections": "Downstream of the missile high-pressure header through flow iron to the zipper manifold, then to the goat head on each tree. The flowback wing valve feeds the flowback iron to the choke manifold. The swab valve provides vertical access for the wireline lubricator and the coiled tubing injector.",
+    "safety": "The system holds the highest stored energy on the pad. Red zone around the tree, manifold, and iron while pumping. Valves are cycled only in their design sequence: masters are not cycled under pressure or flow; the swab valve is closed before pumping; wing valves are fully open or fully closed.",
+    "specs": "Working pressure 10,000 or 15,000 psi typical for land completions; 20,000 psi on high-pressure plays. Bore 5-1/8 in. or 7-1/16 in. Temperature class and material class per the well fluids.",
+    "evidence": "API 6A (S1) for pressure-containing parts; public OEM pages (S2, S3, S5, S11, S12) for configurations; field practice (S9) for operating sequence.",
+    "operations": "Rig-up after the wellhead is frac-ready: install the tree saver if the wellhead needs protection, nipple up the frac stack, install the goat head, run iron to the zipper manifold and missile, pressure test to the job pressure, and function test every actuator from the control unit.",
+    "failure_modes": "Erosion of gates and seats from proppant; wing nut and union leaks; actuator hydraulic leaks; ring gasket damage on repeated make-up; body erosion at the goat head inlets."
+  },
+  "specs": [
+    {
+      "name": "Working pressure, typical",
+      "value": "10,000 to 15,000",
+      "unit": "psi",
+      "si_value": "69 to 103",
+      "si_unit": "MPa",
+      "source": "S2",
+      "tier": "E2"
+    },
+    {
+      "name": "Nominal bore, typical",
+      "value": "5-1/8 or 7-1/16",
+      "unit": "in.",
+      "si_value": "130 or 179",
+      "si_unit": "mm",
+      "source": "S2",
+      "tier": "E2"
+    }
+  ],
+  "standards": [
+    {
+      "standard": "API 6A",
+      "edition": "verify edition held",
+      "clause": "",
+      "paraphrase": "Wellhead and tree equipment: design, materials, PSL, PR, testing, and marking of pressure-containing and pressure-controlling parts.",
+      "source": "S1"
+    }
+  ],
+  "connections": [
+    {
+      "target": "PP",
+      "direction": "upstream",
+      "type": "hammer union",
+      "rating": "15K",
+      "note": "Missile high-pressure header to zipper inlet"
+    },
+    {
+      "target": "WL",
+      "direction": "undirected",
+      "type": "flanged",
+      "rating": "15K",
+      "note": "Lubricator on the swab valve"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-FRACTREE",
+  "sources": [
+    "S1",
+    "S2",
+    "S3",
+    "S5",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed"
+  }
+}

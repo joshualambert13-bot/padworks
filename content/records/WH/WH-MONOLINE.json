@@ -1,0 +1,55 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S2",
+    "S9",
+    "S11",
+    "S12"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-MONOLINE",
+  "parent": "WH",
+  "group": "flow-iron",
+  "level": "equipment",
+  "name": "Big-bore and monoline treating systems",
+  "aliases": [
+    "monoline",
+    "big-bore iron",
+    "single-line frac",
+    "flanged treating line",
+    "clamp-connected line"
+  ],
+  "function": "A single large-bore treating line, flanged or clamp-connected, that replaces several hammer-union lines between the missile, manifold, and tree, reducing the number of connections and the erosion at unions.",
+  "tabs": {
+    "overview": "A conventional treating line to a 5-1/8 in. tree is three or four 3 in. lines with dozens of hammer unions. A monoline uses one 5-1/8 in. or 7-1/16 in. line with flanged or clamp connections, articulated with flanged swivels, and lands on a flanged goat head or directly on the manifold. Fewer connections means fewer leak paths and less time to rig up, at the cost of heavier components that need lifting equipment.",
+    "engineering": "Flanged components are API 6A; clamp connectors are proprietary and rated by the vendor. The line is designed for the treating rate so that velocity and erosion stay within limits.",
+    "connections": "Missile high-pressure header to the zipper manifold inlet; manifold outlets to the goat head.",
+    "safety": "Heavier lifts at rig-up; the same red zone and restraint rules apply.",
+    "evidence": "OEM and service company pages (S2, S11, S12); field practice (S9).",
+    "operations": "Rigged with a crane or a purpose-built iron trailer; connections tested with the rest of the line before the first stage.",
+    "failure_modes": "Flange gasket leaks after repeated make-up; clamp seal wear; erosion at swivels."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no personnel under suspended tree or lubricator sections."
+    }
+  ]
+}

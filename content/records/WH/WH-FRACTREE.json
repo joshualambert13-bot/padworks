@@ -1,0 +1,114 @@
+{
+  "id": "WH-FRACTREE",
+  "system": "WH",
+  "group": "frac-tree",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Frac tree (frac stack)",
+  "aliases": [
+    "frac stack",
+    "stack",
+    "tree"
+  ],
+  "function": "The temporary stack of gate valves, cross, and goat head installed on the wellhead that contains treating pressure and gives access for wireline and coiled tubing during the completion.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "From the wellhead up: tree adapter or crossover, lower master valve (manual), upper master valve (hydraulic), studded cross with two wing valves, swab valve, and goat head. The frac wing goes to the zipper manifold; the flowback wing goes to the flowback iron. The swab valve is the vertical access for the lubricator and the coiled tubing injector.",
+    "engineering": "All components are API 6A pressure-containing parts rated for the job working pressure. Bore is uniform through the stack so tools can pass. The lower master is the last barrier before the wellhead and is not cycled under pressure; the upper master is the working master and is actuated for emergency shut-in.",
+    "connections": "Bottom: tubing head adapter (flanged). Frac wing: iron to the zipper manifold. Flowback wing: iron to the choke manifold. Top: goat head during frac; wellhead adapter and lubricator during wireline; coiled tubing BOP stack during drillout.",
+    "safety": "Operate valves in sequence: close the swab before pumping; open the wing to the frac line fully; never cycle the lower master under differential. Red zone around the tree during pumping. The stack is heavy; lifts use certified gear and no one stands under it.",
+    "specs": "Working pressure 10K or 15K; bore 5-1/8 in. or 7-1/16 in.; height on the order of 12 to 20 ft depending on configuration (E4).",
+    "evidence": "OEM configurations (S2, S3, S5, S11, S12); API 6A (S1); field practice (S9).",
+    "operations": "Rig-up, test, and function test before the first stage. Between stages: close the frac wing and zipper valve, open the swab, rig the lubricator, run wireline, rig down, close the swab, open the wing, pump. After the last stage: coiled tubing BOP stack on the swab valve for drillout, then flowback through the flowback wing.",
+    "failure_modes": "Erosion at the goat head inlets and the frac wing; valve seat wash; actuator failures; ring gasket leaks after repeated make-up."
+  },
+  "specs": [
+    {
+      "name": "Working pressure",
+      "value": "10,000 or 15,000",
+      "unit": "psi",
+      "source": "S2",
+      "tier": "E2"
+    },
+    {
+      "name": "Bore",
+      "value": "5-1/8 or 7-1/16",
+      "unit": "in.",
+      "source": "S2",
+      "tier": "E2"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no personnel under suspended tree or lubricator sections."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-FRACTREE",
+  "sources": [
+    "S1",
+    "S2",
+    "S3",
+    "S5",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-FRACTREE.glb"
+  },
+  "connections": [
+    {
+      "target": "WH-GATEVALVE",
+      "direction": "undirected",
+      "type": "flanged",
+      "rating": "15K"
+    },
+    {
+      "target": "WH-GOATHEAD",
+      "direction": "undirected",
+      "type": "flanged",
+      "rating": "15K"
+    },
+    {
+      "target": "WH-ZIPPER",
+      "direction": "upstream",
+      "type": "hammer union",
+      "rating": "15K"
+    },
+    {
+      "target": "WH-TUBINGHEAD",
+      "direction": "upstream",
+      "type": "flanged",
+      "rating": "15K"
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-TREEADAPTER",
+    "WH-FRACTREE-LMV",
+    "WH-FRACTREE-UMV",
+    "WH-FRACTREE-CROSS",
+    "WH-FRACTREE-WINGA",
+    "WH-FRACTREE-WINGB",
+    "WH-FRACTREE-SWAB",
+    "WH-FRACTREE-GOATHEAD",
+    "WH-FRACTREE-TREECAP"
+  ]
+}

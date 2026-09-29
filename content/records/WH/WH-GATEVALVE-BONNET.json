@@ -1,0 +1,44 @@
+{
+  "id": "WH-GATEVALVE-BONNET",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "component",
+  "parent": "WH-GATEVALVE",
+  "name": "Bonnet",
+  "aliases": [
+    "bonnet flange",
+    "bonnet assembly"
+  ],
+  "function": "The pressure-containing cover on the body cavity that carries the stem and packing.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "Bolted or threaded to the body with a ring gasket or seal. The bonnet bore holds the packing and the back seat; grease fittings and the body bleed may be located on the bonnet.",
+    "engineering": "Forged alloy steel matching the body material class; bolting per API 6A.",
+    "safety": "Bonnet bolting is only loosened after the body cavity has been bled to zero.",
+    "evidence": "API 6A (S1) for materials and testing; OEM pages (S2, S5); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "mesh_nodes": [
+    "WH-GATEVALVE-BONNET"
+  ],
+  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "sources": [
+    "S1",
+    "S2",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed"
+  }
+}

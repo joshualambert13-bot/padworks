@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-PACKOFF",
+  "parent": "WH-CASINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "Pack-off and secondary seal",
+  "aliases": [
+    "packoff",
+    "pack-off assembly",
+    "secondary seal",
+    "emergency seal"
+  ],
+  "function": "The seal assembly above a slip hanger, and the secondary seal in the bottom of the spool above it, that close the annulus between the casing and the head so the annulus can hold pressure.",
+  "tabs": {
+    "overview": "The pack-off has elastomer or plastic packing energized by screws or by the hanger load. The secondary seal in the next spool seals on the casing OD as a second barrier in case the primary hanger seal leaks; some are energized by injecting plastic packing through a port. A test port between the seals lets each seal be pressure tested during installation.",
+    "engineering": "Seal materials follow the temperature and material class; elastomers are checked for compatibility with the fluids that reach the annulus.",
+    "safety": "Annulus pressure during fracturing is monitored continuously; a rise indicates a leak at the hanger, the pack-off, or the casing, and stops the job.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-WELLHEAD.glb",
+  "mesh_nodes": [
+    "WH-WELLHEAD-PACKOFF"
+  ]
+}

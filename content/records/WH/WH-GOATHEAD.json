@@ -1,0 +1,73 @@
+{
+  "id": "WH-GOATHEAD",
+  "system": "WH",
+  "group": "frac-tree",
+  "level": "component",
+  "parent": "WH-FRACTREE",
+  "name": "Goat head (frac head)",
+  "aliases": [
+    "frac head",
+    "goathead",
+    "frac manifold head"
+  ],
+  "function": "The flow head on top of the frac tree with two to four inlets where high-pressure lines converge into the well.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "Named for the horn-like inlets. Each inlet takes a hammer union or a flanged connection from the zipper manifold or missile lines. A top connection may carry a pressure transducer, a bleed, or a cap.",
+    "engineering": "A forged or fabricated pressure-containing block rated with the tree; inlet sizes commonly 3 in. or 4 in.; some designs are flanged big-bore heads that replace multiple inlets with one large line.",
+    "connections": "Inlets from the zipper manifold or missile; bottom flange to the swab valve or a spacer spool.",
+    "safety": "High-velocity proppant flow at the inlets erodes the head; inspect between wells. Pressurized unions must be restrained.",
+    "evidence": "Public descriptions (S3, S12); field practice (S9).",
+    "operations": "Removed for wireline runs on most rig-ups (the lubricator lands on the swab valve or a wellhead adapter) unless a dedicated frac and wireline configuration is used.",
+    "failure_modes": "Inlet erosion, union leaks."
+  },
+  "specs": [
+    {
+      "name": "Inlets",
+      "value": "2 to 4",
+      "unit": "",
+      "source": "S3",
+      "tier": "E2"
+    },
+    {
+      "name": "Inlet size",
+      "value": "3 or 4",
+      "unit": "in.",
+      "source": "S12",
+      "tier": "E2"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-GOATHEAD",
+  "sources": [
+    "S3",
+    "S9",
+    "S12"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to the frac tree GLB as a component of the tree"
+  },
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-GOATHEAD"
+  ]
+}

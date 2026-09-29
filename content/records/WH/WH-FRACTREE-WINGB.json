@@ -1,0 +1,53 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-WINGB",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Flowback wing valve",
+  "aliases": [
+    "flowback wing",
+    "production wing",
+    "wing valve B"
+  ],
+  "function": "The wing valve on the opposite side of the cross that connects the well to the flowback iron and choke manifold.",
+  "tabs": {
+    "overview": "Closed during frac and wireline; opened for drillout returns and flowback. On some rig-ups it also carries a pressure transducer and a bleed line.",
+    "engineering": "Hydraulic or manual gate valve rated with the stack.",
+    "safety": "Opening the flowback wing exposes the flowback iron to wellhead pressure; the choke manifold must be lined up and the iron tested first.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-WINGB"
+  ],
+  "connections": [
+    {
+      "target": "FB",
+      "direction": "downstream",
+      "type": "hammer union",
+      "rating": "15K",
+      "note": "Flowback iron to the choke manifold"
+    }
+  ]
+}

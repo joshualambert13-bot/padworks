@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-TREESAVER-SEAL",
+  "parent": "WH-TREESAVER",
+  "group": "wellhead-isolation",
+  "level": "component",
+  "name": "Isolation seals (cups or packoff)",
+  "aliases": [
+    "seal cups",
+    "cups",
+    "packoff element",
+    "isolation seal"
+  ],
+  "function": "The elastomer cups or packoff elements near the bottom of the mandrel that seal in the wellhead bore so that treating pressure is carried by the mandrel and not by the wellhead below the seal.",
+  "tabs": {
+    "overview": "Cups seal by pressure from above; packoff elements are set mechanically or hydraulically. Seal OD matches the bore it seals in; the seal is inspected between wells for cuts and swelling.",
+    "engineering": "Elastomer per the temperature class and fluids; backup rings on high-pressure designs.",
+    "safety": "A leaking seal exposes the wellhead to treating pressure; the annulus above the seal is monitored for pressure during the job.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-TREESAVER.glb",
+  "mesh_nodes": [
+    "WH-TREESAVER-SEAL"
+  ]
+}

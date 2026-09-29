@@ -1,0 +1,11 @@
+[
+  { "class": "Stored pressure", "description": "Treating pressure held in iron, manifolds, and the tree; energy release on a failed union, cut-out, or improper bleed-down.", "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection; stay outside the red zone while pumping." },
+  { "class": "Line of fire", "description": "The path an iron run, hose, or wing nut takes if it fails under pressure.", "control": "Restraints and whip checks on iron; exclusion zone around lines during pumping; no crossing of pressurized iron." },
+  { "class": "Pinch point", "description": "Hammer union wing nuts, valve handwheels, actuator linkages, and crane loads.", "control": "Hands clear during make-up; sledge use per procedure; tag lines on suspended loads." },
+  { "class": "Explosives", "description": "Perforating guns, setting tool power charges, and detonators.", "control": "Radio silence and RF-safe systems; licensed personnel; magazines and day boxes; no personnel in front of loaded guns." },
+  { "class": "Respirable silica", "description": "Proppant dust at silos, boxes, conveyors, and the blender.", "control": "Enclosed transfer systems, dust suppression, monitoring, respiratory protection where required." },
+  { "class": "H2S", "description": "Sour gas at flowback and on some wells during wireline and drillout.", "control": "Monitors, wind indicators, breathing apparatus per site plan." },
+  { "class": "Dropped object", "description": "Lubricator sections, injector heads, and tree components lifted over the well.", "control": "Certified lifting gear, exclusion below suspended loads, tag lines." },
+  { "class": "Electrical", "description": "Electric fleets, VFD houses, and switchgear at high voltage.", "control": "Arc-flash boundaries, lockout, qualified personnel only." },
+  { "class": "Erosion cut-out", "description": "Proppant-laden flow erodes gates, seats, iron elbows, and swivels, leading to a loss of containment.", "control": "Tree saver in the wellhead, iron inspection and wall-thickness tracking, valves fully open or fully closed only." }
+]

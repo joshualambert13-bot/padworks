@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-CASINGHANGER-SLIP",
+  "parent": "WH-CASINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "Casing hanger, slip type",
+  "aliases": [
+    "slip hanger",
+    "slip and seal hanger",
+    "casing slips"
+  ],
+  "function": "A hanger that grips the casing with slips set in the head bowl, transferring the casing weight to the wellhead, with a seal assembly above the slips to close the annulus.",
+  "tabs": {
+    "overview": "The slip segments sit on a tapered bowl; casing weight drives the slips inward against the pipe. The seal above the slips is energized by casing weight or by screws. Slip hangers are set after cementing without rotating the casing, which suits most land wells.",
+    "engineering": "Slips, cone, and seal are sized for the casing OD and weight range; the seal material follows the temperature class. API 6A covers the hanger as pressure-controlling equipment.",
+    "safety": "A slip hanger set with insufficient weight can slip; verify the set per the OEM procedure before the pack-off is installed and before any pressure is applied to the annulus.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-WELLHEAD.glb",
+  "mesh_nodes": [
+    "WH-WELLHEAD-CASINGHANGER"
+  ]
+}

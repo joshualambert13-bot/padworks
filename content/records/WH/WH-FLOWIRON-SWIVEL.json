@@ -1,0 +1,53 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-SWIVEL",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Swivel joint",
+  "aliases": [
+    "swivel",
+    "chiksan (vendor name)",
+    "long-sweep swivel",
+    "style 10 or style 50 swivel (vendor designations)"
+  ],
+  "function": "A joint with two or three rotating elbows on ball-race bearings that lets a treating line absorb misalignment and movement between the missile, manifold, and tree.",
+  "tabs": {
+    "overview": "Two-piece swivels give one axis of rotation; three-piece give three. Long-sweep elbows reduce erosion compared with short-radius ones. Bearings are grease-packed and the seal is a replaceable packing.",
+    "engineering": "Rated with the iron; swivels are the most erosion-prone item in a treating line because the flow turns inside them.",
+    "safety": "Swivels are inspected for wall loss at the elbows and for play in the bearings; a swivel that leaks at the packing is removed from service, not tightened under pressure.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-SWIVEL"
+  ]
+}

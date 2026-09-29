@@ -1,0 +1,92 @@
+{
+  "id": "WH-ZIPPER",
+  "system": "WH",
+  "group": "zipper-manifold",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Zipper manifold",
+  "aliases": [
+    "zipper",
+    "frac manifold",
+    "zip manifold"
+  ],
+  "function": "A skid-mounted manifold with a valve set per well that routes the frac spread output to one well at a time so that pumping on one well and wireline on another can alternate without moving iron.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The missile feeds an inlet header on the skid. Each well branch has hydraulic gate valves and connects to that well's goat head. Opening one branch and closing the others switches the spread between wells in minutes. A remote hydraulic control unit operates every valve and shows position.",
+    "engineering": "Valves are the same API 6A gate valve family as the tree. Big-bore or monoline manifolds use a single 7-1/16 in. line per well instead of several 3 in. lines to cut connections and erosion. Pressure transducers, check valves, and a pressure relief line are fitted per the operator specification.",
+    "connections": "Upstream: missile high-pressure header. Downstream: one branch per well to the goat head. Hydraulic: control unit.",
+    "safety": "The manifold is inside the red zone. Valve sequencing is done from the control unit with position confirmation; a branch to a well with wireline in the hole must be closed and verified before pumping on the neighbor.",
+    "evidence": "OEM and service pages (S2, S11); field practice (S9).",
+    "operations": "Sequence per stage: close the branch to the well going to wireline, open the branch to the well ready to frac, confirm positions, then bring pumps online.",
+    "failure_modes": "Valve seat erosion on the most-used branch; hydraulic leaks; transducer failures."
+  },
+  "specs": [
+    {
+      "name": "Wells served",
+      "value": "2 to 6",
+      "unit": "",
+      "source": "S11",
+      "tier": "E2"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-ZIPPER",
+  "sources": [
+    "S2",
+    "S9",
+    "S11"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-ZIPPER.glb"
+  },
+  "connections": [
+    {
+      "target": "PP-MISSILE",
+      "direction": "upstream",
+      "type": "hammer union",
+      "rating": "15K"
+    },
+    {
+      "target": "WH-GOATHEAD",
+      "direction": "downstream",
+      "type": "hammer union",
+      "rating": "15K"
+    },
+    {
+      "target": "WH-FRACVALVECONTROL",
+      "direction": "upstream",
+      "type": "hydraulic"
+    }
+  ],
+  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-SKID",
+    "WH-ZIPPER-INLETHEADER",
+    "WH-ZIPPER-VALVE",
+    "WH-ZIPPER-OUTLET",
+    "WH-ZIPPER-TRANSDUCER",
+    "WH-ZIPPER-BLEEDVALVE",
+    "WH-ZIPPER-HPU",
+    "WH-ZIPPER-ACCUMULATOR"
+  ]
+}

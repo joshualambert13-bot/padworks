@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-TWCV",
+  "parent": "WH-TUBINGHEAD",
+  "group": "wellhead",
+  "level": "component",
+  "name": "Two-way check valve",
+  "aliases": [
+    "TWC",
+    "TWCV",
+    "two-way check",
+    "test plug"
+  ],
+  "function": "A plug set in the tubing hanger profile that holds pressure from both directions so that the tree and connection above it can be pressure tested against a closed well.",
+  "tabs": {
+    "overview": "Same profile and running tool as the back pressure valve. Installed for the tree test, then replaced by a BPV or removed once the tree is tested and the well is ready to be opened.",
+    "engineering": "API 6A; rated to the tree test pressure.",
+    "safety": "The TWC must be pulled before the well is opened to flow; a forgotten TWC is a known cause of a dead well after tree installation.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

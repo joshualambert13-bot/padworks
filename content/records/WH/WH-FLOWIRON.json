@@ -1,0 +1,86 @@
+{
+  "id": "WH-FLOWIRON",
+  "system": "WH",
+  "group": "flow-iron",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "High-pressure flow iron",
+  "aliases": [
+    "frac iron",
+    "treating iron",
+    "hammer union pipe",
+    "1502 iron",
+    "high-pressure iron"
+  ],
+  "function": "Temporary high-pressure pipe, swivel joints, tees, crosses, check valves, plug valves, and relief valves with hammer unions that connect the missile, zipper manifold, and tree.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "Pup joints in 2 in., 3 in., and 4 in. nominal sizes with wing-nut hammer unions; swivel joints give the run flexibility; tees and crosses split flow; a pressure relief valve on the missile side protects the pumps and iron; check valves stop backflow to the pumps. Iron is tracked by serial number and inspected for wall loss.",
+    "engineering": "Rated 10,000 or 15,000 psi cold working pressure; union figure numbers are vendor nomenclature and must not be mixed across pressure classes. Wall-thickness inspection and pressure testing are part of every job.",
+    "connections": "Hammer unions throughout; flanged big-bore alternatives replace multiple lines.",
+    "safety": "Line of fire during pumping; whip checks and restraints on every joint; never strike a pressurized union; erosion at elbows and swivels is the common failure.",
+    "evidence": "Public descriptions (S4, S12); field practice (S9).",
+    "operations": "Laid out, made up with hammers, restrained, pressure tested to the job pressure before the first stage.",
+    "failure_modes": "Wall loss from erosion, union seal leaks, mismatched union halves."
+  },
+  "specs": [
+    {
+      "name": "Nominal sizes",
+      "value": "2, 3, and 4",
+      "unit": "in.",
+      "source": "S4",
+      "tier": "E2"
+    },
+    {
+      "name": "Working pressure",
+      "value": "10,000 or 15,000",
+      "unit": "psi",
+      "source": "S4",
+      "tier": "E2"
+    }
+  ],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-FRACLINE",
+  "sources": [
+    "S4",
+    "S9",
+    "S12"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-FLOWIRON.glb"
+  },
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-PUPJOINT",
+    "WH-FLOWIRON-HAMMERUNION",
+    "WH-FLOWIRON-SWIVEL",
+    "WH-FLOWIRON-TEE",
+    "WH-FLOWIRON-CHECKVALVE",
+    "WH-FLOWIRON-PRV",
+    "WH-FLOWIRON-PLUGVALVE",
+    "WH-FLOWIRON-RESTRAINT"
+  ]
+}

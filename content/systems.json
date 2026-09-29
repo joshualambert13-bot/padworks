@@ -1,0 +1,16 @@
+[
+  { "code": "CM", "name": "Casing and cementing hardware", "phase": 3, "blurb": "Production casing, float equipment, centralizers, cement head and plugs, stage tools, toe initiation." },
+  { "code": "WH", "name": "Wellhead, frac stack, and high-pressure iron", "phase": 1, "blurb": "Casing head, tubing head, gate valves, frac tree, goat head, tree saver, zipper manifold, flow iron, valve control." },
+  { "code": "PP", "name": "Pressure pumping spread", "phase": 2, "blurb": "Frac pumpers, missile, blender, hydration, chemical, sand handling, data van, power generation." },
+  { "code": "WL", "name": "Wireline, perforating, and plug setting", "phase": 1, "blurb": "Wireline unit, pressure control equipment, perforating guns, setting tools, frac plugs, tool string accessories." },
+  { "code": "DT", "name": "Downhole completion tools and multistage systems", "phase": 3, "blurb": "Liner hangers, sleeves, packers, plugs and retainers, refrac systems." },
+  { "code": "CT", "name": "Coiled tubing intervention", "phase": 3, "blurb": "Reel, injector head, pressure control, drillout BHA, coiled tubing string." },
+  { "code": "FB", "name": "Flowback and well testing", "phase": 4, "blurb": "Chokes, plug catchers, sand separators, test separators, flare, tanks." },
+  { "code": "UC", "name": "Upper completion and production tree", "phase": 4, "blurb": "Tubing, production packer, flow-control accessories, safety valves, tubing hanger, production tree." },
+  { "code": "AL", "name": "Artificial lift", "phase": 4, "blurb": "Rod lift, ESP, gas lift, plunger, PCP, hydraulic lift (interface system)." },
+  { "code": "SC", "name": "Sand control", "phase": 4, "blurb": "Screens, gravel-pack packers and service tools, inflow control." },
+  { "code": "LG", "name": "Logistics, power, and pad infrastructure", "phase": 2, "blurb": "Proppant supply chain, water and chemical logistics, fuel and power, pad layout and controls." },
+  { "code": "RG", "name": "Completion and workover rigs and well control", "phase": 4, "blurb": "Workover rig, rig BOP stack, snubbing unit, kill and completion fluids equipment." },
+  { "code": "DA", "name": "Data acquisition and monitoring", "phase": 2, "blurb": "Frac and wireline telemetry, downhole and offset monitoring, flowback data, integration." },
+  { "code": "MT", "name": "Materials and consumables", "phase": 2, "blurb": "Proppant, fluids and chemicals, brines, cement, elastomers, metallurgy, explosives." }
+]

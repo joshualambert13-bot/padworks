@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-TEE",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Tee and cross blocks",
+  "aliases": [
+    "tee",
+    "lateral",
+    "block tee"
+  ],
+  "function": "Forged blocks with three or four union connections that split or combine treating lines, used at the goat head, the manifold, and where relief or bleed lines branch off.",
+  "tabs": {
+    "overview": "Blocks are machined from a single forging with integral union ends. Flow that turns inside a tee erodes the wall opposite the inlet; target tees with a blanked run are used where the turn is sharp.",
+    "engineering": "Rated with the iron; wall-thickness inspection points are marked on the erosion side.",
+    "safety": "A tee is a line-of-fire item on two or three axes; restrain every branch.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-TEE"
+  ]
+}

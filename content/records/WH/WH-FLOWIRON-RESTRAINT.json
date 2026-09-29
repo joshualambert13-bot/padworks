@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FLOWIRON-RESTRAINT",
+  "parent": "WH-FLOWIRON",
+  "group": "flow-iron",
+  "level": "component",
+  "name": "Iron restraints and whip checks",
+  "aliases": [
+    "whip check",
+    "safety cable",
+    "restraint sling",
+    "iron restraint",
+    "hose whip"
+  ],
+  "function": "The slings, cables, and anchors that hold a treating line down and limit how far a joint can travel if a union or pipe fails under pressure.",
+  "tabs": {
+    "overview": "Restraints are fitted across every union and at intervals along the run, anchored to a fixed point or to the line itself so a failed joint cannot whip. Whip checks are the short cable loops across a single union; restraint systems are the rated slings and nets that many operators now require on all temporary high-pressure lines.",
+    "engineering": "Rated for the pipe size and pressure class per the restraint vendor; inspected before the job.",
+    "safety": "Restraints do not make a line safe to approach; the red zone stays in force during pumping.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Restraints and whip checks on iron; exclusion zone around pressurized lines."
+    }
+  ],
+  "glb": "/glb/WH/WH-FLOWIRON.glb",
+  "mesh_nodes": [
+    "WH-FLOWIRON-RESTRAINT"
+  ]
+}

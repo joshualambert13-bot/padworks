@@ -1,0 +1,45 @@
+{
+  "id": "WH-GATEVALVE-ACTUATOR",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "component",
+  "parent": "WH-GATEVALVE",
+  "name": "Hydraulic actuator",
+  "aliases": [
+    "hydraulic cylinder",
+    "actuator",
+    "hyd. actuator"
+  ],
+  "function": "A hydraulic cylinder that opens the valve on supply pressure and, on spring-return designs, closes it when pressure is released.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The actuator replaces the handwheel and bearing assembly. Frac service actuators are single-acting spring-return (fail closed) or double-acting, with a position indicator and a manual override on some models. Supply comes from the frac valve control unit through hydraulic hoses.",
+    "engineering": "Sized for the stem load at the valve working pressure with margin; bore, stroke, and spring force per OEM.",
+    "safety": "The spring and the charged cylinder store energy; isolate and bleed the hydraulic supply before maintenance. Keep hands clear of the indicator and linkage during operation.",
+    "evidence": "API 6A (S1) for materials and testing; OEM pages (S2, S5); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "mesh_nodes": [
+    "WH-GATEVALVE-ACTUATOR"
+  ],
+  "sources": [
+    "S1",
+    "S2",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to WH-GATEVALVE-HYD.glb"
+  },
+  "glb": "/glb/WH/WH-GATEVALVE-HYD.glb"
+}

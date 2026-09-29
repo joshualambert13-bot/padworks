@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": false,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-ADAPTERFLANGE",
+  "parent": "WH",
+  "group": "connections",
+  "level": "part",
+  "name": "Adapter flange and crossover",
+  "aliases": [
+    "crossover flange",
+    "adapter",
+    "double-studded adapter",
+    "DSA"
+  ],
+  "function": "A short component with a different flange size or rating on each face, used to connect two components that do not match, such as a 10K tubing head to a 15K frac stack.",
+  "tabs": {
+    "overview": "Double-studded adapters have studs on both faces and no bolt holes; flanged adapters have one flange and one studded face. The bore matches the smaller of the two connections or steps between them.",
+    "engineering": "API 6A; the adapter is rated to the lower of its two ratings for the connection it makes, and the assembly above it is rated to its own working pressure.",
+    "safety": "A crossover between ratings is where an under-rated wellhead is exposed to treating pressure if a tree saver is not used; the isolation strategy is decided at rig-up.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ]
+}

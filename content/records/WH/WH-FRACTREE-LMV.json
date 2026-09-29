@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-LMV",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Lower master valve",
+  "aliases": [
+    "LMV",
+    "lower master",
+    "bottom master"
+  ],
+  "function": "The lowest valve on the tree and the last barrier above the wellhead; kept fully open during operations and not cycled under pressure or flow.",
+  "tabs": {
+    "overview": "Usually a manual gate valve so it cannot be closed by a control system fault. It is opened at rig-up after the stack is tested and stays open until the stack is removed; the upper master does the working isolation. It is closed only to isolate the well when everything above it must be removed or repaired, and only with the well shut in and the stack bled.",
+    "engineering": "Same API 6A gate valve as the rest of the stack; manual handwheel with a turn count that confirms position.",
+    "safety": "Never cycle under differential pressure or flow; a washed lower master leaves the well with no barrier above the wellhead. Count turns and verify open before pumping.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-LMV"
+  ],
+  "connections": [
+    {
+      "target": "WH-GATEVALVE",
+      "direction": "undirected",
+      "type": "mechanical",
+      "note": "Instance of the gate valve sub-assembly, manual"
+    }
+  ]
+}

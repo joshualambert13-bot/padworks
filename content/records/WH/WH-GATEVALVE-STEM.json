@@ -1,0 +1,48 @@
+{
+  "id": "WH-GATEVALVE-STEM",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "component",
+  "parent": "WH-GATEVALVE",
+  "name": "Stem, packing, and bearing assembly",
+  "aliases": [
+    "stem",
+    "stem packing",
+    "bearing cap"
+  ],
+  "function": "The stem transmits handwheel or actuator force to the gate; the packing seals the stem where it passes through the bonnet; the bearing assembly carries the thrust load of operation.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "Manual valves use a threaded stem and a bearing housing under the handwheel. A back seat on the stem can isolate the packing so it can be replaced with the valve open and under pressure on designs that provide it. The packing set is a stack of elastomer and thermoplastic rings energized by a gland.",
+    "engineering": "Stem material is selected for the material class; packing material for the temperature class and fluids.",
+    "safety": "Do not attempt packing replacement under pressure unless the valve design has a back seat and the OEM procedure is followed.",
+    "evidence": "API 6A (S1) for materials and testing; OEM pages (S2, S5); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "mesh_nodes": [
+    "WH-GATEVALVE-STEM",
+    "WH-GATEVALVE-PACKING",
+    "WH-GATEVALVE-BEARING",
+    "WH-GATEVALVE-HANDWHEEL"
+  ],
+  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "sources": [
+    "S1",
+    "S2",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed"
+  }
+}

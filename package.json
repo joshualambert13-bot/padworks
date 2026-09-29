@@ -1,0 +1,44 @@
+{
+  "name": "completions-explorer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "validate": "node scripts/validate.mjs",
+    "integrity": "node scripts/integrity.mjs",
+    "prebuild": "npm run validate && npm run integrity",
+    "build": "vite build && node scripts/postbuild.mjs",
+    "preview": "vite preview",
+    "lint": "oxlint",
+    "shots": "node scripts/shots.mjs",
+    "glb": "node scripts/compress.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "ajv": "^8.20.0",
+    "lucide-react": "^1.48.0",
+    "minisearch": "^7.2.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4",
+    "three": "^0.186.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "draco3dgltf": "^1.5.7",
+    "oxlint": "^1.81.0",
+    "playwright": "^1.63.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.0"
+  }
+}

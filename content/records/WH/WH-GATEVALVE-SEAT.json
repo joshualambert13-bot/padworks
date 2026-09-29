@@ -1,0 +1,45 @@
+{
+  "id": "WH-GATEVALVE-SEAT",
+  "system": "WH",
+  "group": "gate-valve",
+  "level": "component",
+  "parent": "WH-GATEVALVE",
+  "name": "Floating seats",
+  "aliases": [
+    "seat rings",
+    "seats"
+  ],
+  "function": "Two ring seats, one each side of the gate, that seal against the gate faces and are energized by line pressure and springs.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "The seats float in their pockets so that line pressure pushes the downstream seat against the gate. Sealant injected into the seat pocket supports the metal-to-metal seal after wear.",
+    "engineering": "Hardened alloy steel with hardfaced sealing faces; back seals of elastomer or thermoplastic between seat and pocket.",
+    "safety": "Seat pocket sealant injection is done under pressure with the proper grease gun and fitting; follow the OEM procedure.",
+    "evidence": "API 6A (S1) for materials and testing; OEM pages (S2, S5); field practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "drawn_in_3d": true,
+  "mesh_nodes": [
+    "WH-GATEVALVE-SEAT-UP",
+    "WH-GATEVALVE-SEAT-DOWN"
+  ],
+  "glb": "/glb/WH/WH-GATEVALVE.glb",
+  "sources": [
+    "S1",
+    "S2",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-28",
+    "note": "Drop 1 seed"
+  }
+}

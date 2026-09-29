@@ -1,0 +1,55 @@
+{
+  "id": "WH-FRACVALVECONTROL",
+  "system": "WH",
+  "group": "valve-control",
+  "level": "equipment",
+  "parent": "WH",
+  "name": "Frac valve control unit",
+  "aliases": [
+    "hydraulic control unit",
+    "remote valve control",
+    "accumulator unit"
+  ],
+  "function": "The hydraulic power unit, accumulator, and remote panel that operate the actuated valves on the tree and zipper manifold from outside the red zone.",
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "tabs": {
+    "overview": "A diesel or electric hydraulic pump charges an accumulator; a panel with one control per valve opens and closes the actuators and shows position. Emergency shut-in closes the upper master and wing valves together.",
+    "engineering": "Hydraulic supply pressure per the actuator design; accumulator volume sized for a full close of all valves on loss of the pump.",
+    "connections": "Hydraulic hoses to each actuator; electrical control to the panel.",
+    "safety": "Hydraulic lines are under pressure; leaks at the actuator are within the red zone and are repaired only after shut-in.",
+    "evidence": "OEM descriptions (S2, S11); field practice (S9).",
+    "operations": "Function test every valve before pumping; sequence the zipper and wing valves per stage; emergency shut-in drill before the first stage.",
+    "failure_modes": "Hose leaks, accumulator precharge loss, position indicator faults."
+  },
+  "specs": [],
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of wing nuts, handwheels, and actuator linkages during operation."
+    }
+  ],
+  "drawn_in_3d": true,
+  "scene": "WH-FRACVALVECONTROL",
+  "sources": [
+    "S2",
+    "S9",
+    "S11"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2: bound to the control unit on the zipper skid"
+  },
+  "glb": "/glb/WH/WH-ZIPPER.glb",
+  "mesh_nodes": [
+    "WH-ZIPPER-HPU",
+    "WH-ZIPPER-ACCUMULATOR"
+  ]
+}

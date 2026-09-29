@@ -1,0 +1,51 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-TREESAVER-MANDREL",
+  "parent": "WH-TREESAVER",
+  "group": "wellhead-isolation",
+  "level": "component",
+  "name": "Isolation tool mandrel",
+  "aliases": [
+    "mandrel",
+    "isolation sleeve"
+  ],
+  "function": "The tube that carries the treating fluid through the tree and wellhead so that proppant does not contact the hanger seals or spool bores.",
+  "tabs": {
+    "overview": "Bore sized to pass the treating rate without excessive velocity; length reaches from the landing point to below the seals it protects. The top connects to the running tool and, on some designs, becomes the flow path for the goat head.",
+    "engineering": "High-strength alloy steel; hardfaced or coated bore on some designs.",
+    "safety": "Running and pulling is a lift over an open tree; the well is shut in below.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no personnel under suspended tree or lubricator sections."
+    },
+    {
+      "class": "Erosion cut-out",
+      "control": "Tree saver in the wellhead; valves fully open or fully closed only; iron inspection."
+    }
+  ],
+  "glb": "/glb/WH/WH-TREESAVER.glb",
+  "mesh_nodes": [
+    "WH-TREESAVER-MANDREL"
+  ]
+}

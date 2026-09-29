@@ -1,0 +1,58 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "WH",
+  "drawn_in_3d": true,
+  "sources": [
+    "S1",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 2 seed"
+  },
+  "id": "WH-FRACTREE-TREEADAPTER",
+  "parent": "WH-FRACTREE",
+  "group": "frac-tree",
+  "level": "component",
+  "name": "Tree adapter (tubing head adapter)",
+  "aliases": [
+    "tubing head adapter",
+    "crossover spool",
+    "adapter spool"
+  ],
+  "function": "The flanged spool that connects the tubing head to the bottom of the frac stack and steps the connection size and rating when the two differ.",
+  "tabs": {
+    "overview": "The adapter lands on the tubing head flange and carries the lower master valve. Its bore matches the stack bore. When the tubing head is a lower rating or a different flange size than the stack, the adapter is the crossover; when a tree saver is used, its landing shoulder sits in or on the adapter.",
+    "engineering": "API 6A flanged both ends: 6BX with BX gaskets at 10,000 psi and above. The adapter is rated to the stack working pressure. Some designs include a test port between the two ring gaskets.",
+    "safety": "The adapter connection is broken twice per well (frac stack on, frac stack off, production tree on); each make-up gets a new ring gasket and a pressure test.",
+    "evidence": "API 6A (S1) for pressure-containing parts and connections; public OEM pages (S2, S3, S5, S11, S12) for configurations; field and manufacturing practice (S9)."
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before pumping; bleed down and verify zero before breaking any connection."
+    }
+  ],
+  "glb": "/glb/WH/WH-FRACTREE.glb",
+  "mesh_nodes": [
+    "WH-FRACTREE-TREEADAPTER"
+  ],
+  "connections": [
+    {
+      "target": "WH-TUBINGHEAD",
+      "direction": "upstream",
+      "type": "flanged",
+      "rating": "15K"
+    },
+    {
+      "target": "WH-FRACTREE-LMV",
+      "direction": "downstream",
+      "type": "flanged",
+      "rating": "15K"
+    }
+  ]
+}
