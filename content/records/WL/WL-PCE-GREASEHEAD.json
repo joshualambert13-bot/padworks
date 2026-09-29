@@ -44,7 +44,7 @@
       "control": "Monitors and wind indicators when the well can flow sour gas at the grease head."
     }
   ],
-  "glb": "/glb/WL/WL-PCE.glb",
+  "glb": "/glb/WL/WL-PCE.7-15K.glb",
   "mesh_nodes": [
     "WL-PCE-GREASEHEAD"
   ],

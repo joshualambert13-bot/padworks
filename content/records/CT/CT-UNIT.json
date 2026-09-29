@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S23",
+    "S24"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the coil path, the gooseneck, and flowback iron under flow."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of the injector chains, the reel, and the stripper door."
+    }
+  ],
+  "id": "CT-UNIT",
+  "parent": "CT",
+  "group": "unit",
+  "level": "equipment",
+  "name": "Coiled tubing unit (truck or trailer)",
+  "aliases": [
+    "CT unit",
+    "CTU",
+    "coil truck",
+    "reel trailer"
+  ],
+  "scene": "CT-UNIT",
+  "function": "The vehicle carrying the reel with the coil, the power pack, and the control cabin; the injector rides on a crane or on the unit's own mast.",
+  "tabs": {
+    "overview": "Land units are trucks or trailers; the reel is the heaviest item and its capacity fixes the longest well the unit can reach. The operator in the cabin sees weight, depth, pressures, and rates and runs the injector, reel, and BOP functions.",
+    "engineering": "Reel capacity in feet of a given coil size; power pack horsepower drives the injector and reel; a mast unit removes the need for a crane on some pads.",
+    "connections": "Coil from the reel to the gooseneck; hydraulic lines to the injector and stack; fluid from the CT pump through the reel swivel.",
+    "safety": "Reel rotation and the coil path are line-of-fire and pinch hazards; the unit is positioned so the operator sees the injector.",
+    "evidence": "Public coiled tubing pressure control guide (S24), API RP 16ST and API RP 5C7 scope (S23, S26), field practice (S9).",
+    "operations": "Spotted, rigged, and tested before the drillout; cycles with the flowback crew after.",
+    "failure_modes": "Reel drive faults, swivel leaks, hydraulic leaks, cabin instrument faults."
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S23",
+    "S24"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the coil path, the gooseneck, and flowback iron under flow."
+    }
+  ],
+  "id": "CT-STACK-RISER",
+  "parent": "CT-STACK",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Riser spool",
+  "aliases": [
+    "lubricator (CT)",
+    "BHA riser"
+  ],
+  "function": "The flanged spool between the BOP and the stripper that gives the bottomhole assembly a place to sit above the rams when the coil is pulled up.",
+  "tabs": {
+    "overview": "Length set by the longest BHA plus a margin so the rams can close on bare coil with the tools above them.",
+    "engineering": "Rated with the stack; flanged both ends.",
+    "safety": "A BHA parked in the riser is above the rams; the stripper is the only seal until the rams are closed on the coil above the BHA.",
+    "evidence": "Public coiled tubing pressure control guide (S24), API RP 16ST and API RP 5C7 scope (S23, S26), field practice (S9)."
+  },
+  "glb": "/glb/CT/CT-STACK.glb",
+  "mesh_nodes": [
+    "CT-STACK-RISER"
+  ]
+}

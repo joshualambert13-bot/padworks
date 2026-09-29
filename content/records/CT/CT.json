@@ -1,0 +1,72 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S23",
+    "S24",
+    "S26"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the coil path, the gooseneck, and flowback iron under flow."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; no one under the injector while it is suspended."
+    },
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of the injector chains, the reel, and the stripper door."
+    }
+  ],
+  "id": "CT",
+  "level": "system",
+  "name": "Coiled tubing intervention",
+  "aliases": [
+    "coiled tubing",
+    "CT",
+    "coil",
+    "drillout"
+  ],
+  "scene": "CT-UNIT",
+  "function": "The continuous-pipe unit that runs a mill on the end of coiled tubing through the frac plugs after the last stage, circulates the debris out, and hands the well to flowback; also used for cleanouts, fishing, and nitrogen lifts.",
+  "tabs": {
+    "overview": "Coiled tubing is a continuous steel pipe spooled on a reel. The injector head on top of the pressure control stack grips it between two chains and pushes it into the well against wellhead pressure or pulls it out, while the stripper seals around the moving pipe and the quad BOP below provides the well control barriers. For a drillout the bottomhole assembly is a motor and mill: fluid pumped down the coil drives the motor, the mill grinds each composite plug from the heel toward the toe, and returns carry the cuttings up the annulus through the flowback line.\n\nThe unit is a truck or trailer with the reel, a power pack, and a control cabin; a crane or the unit's own mast holds the injector over the tree. The stack lands on the same top adapter the wireline lubricator used.",
+    "engineering": "Coil sizes 2 to 2-7/8 in. are common for horizontal drillouts; the working limit is set by the coil's fatigue life, the injector pull, and the ability to reach the toe without lockup. Pressure control equipment is rated to the wellhead pressure; strippers see lower dynamic ratings than the BOP.",
+    "connections": "Stack on the tree top adapter; returns through wing B to the flowback spread; fluid pumped from the CT pump through the reel swivel into the coil.",
+    "safety": "Two barriers around the coil while the well is live: stripper in motion and pipe rams when stopped. The injector is a suspended load; the gooseneck and coil are a line-of-fire hazard; returns carry solids at pressure.",
+    "specs": "Injector pull 60,000 to 100,000 lb classes; quad BOP 10,000 psi working pressure common; stripper dynamic rating lower than the BOP (S24).",
+    "evidence": "Public coiled tubing pressure control guide (S24), API RP 16ST and API RP 5C7 scope (S23, S26), field practice (S9).",
+    "operations": "After the last frac stage: rig up, test, run in, mill plugs heel to toe, circulate clean, pull out, rig down, hand over to flowback.",
+    "failure_modes": "Coil lockup in the lateral, motor stalls, mill wear, stripper leaks, coil fatigue cracks, lost circulation of returns."
+  },
+  "standards": [
+    {
+      "standard": "API RP 16ST",
+      "edition": "verify",
+      "paraphrase": "Recommended practice for coiled tubing well control equipment systems: stack-up, ratings, testing.",
+      "source": "S23"
+    },
+    {
+      "standard": "API RP 5C7",
+      "edition": "verify",
+      "paraphrase": "Recommended practice for coiled tubing operations: string management, fatigue, and running practices.",
+      "source": "S26"
+    }
+  ]
+}

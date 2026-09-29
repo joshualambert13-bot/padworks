@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-CHOKEMANIFOLD-SKID",
+  "parent": "FB-CHOKEMANIFOLD",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Skid and supports",
+  "aliases": [
+    "choke skid frame"
+  ],
+  "function": "The steel frame the manifold is built on, with pipe supports and a drip pan.",
+  "tabs": {
+    "overview": "Lifted as one piece; anchored against reaction loads.",
+    "engineering": "Sized for the iron and the lift.",
+    "safety": "Trip hazards; lifting.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9)."
+  },
+  "glb": "/glb/FB/FB-CHOKEMANIFOLD.glb",
+  "mesh_nodes": [
+    "FB-CHOKEMANIFOLD-SKID"
+  ]
+}

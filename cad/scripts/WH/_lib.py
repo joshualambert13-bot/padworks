@@ -220,8 +220,13 @@ def v_packing(p):
 
 def v_bearing(p):
     z0 = p["z_bonnet_top"] + p["packing_h"]
-    s = cq.Workplane("XY").circle(p["bearing_od"] / 2).circle(p["stem_d"] / 2 + 0.02).extrude(p["bearing_h"]).edges(">Z").chamfer(0.3).translate((0, 0, z0))
-    return s
+    s = cq.Workplane("XY").circle(p["bearing_od"] / 2).circle(p["stem_d"] / 2 + 0.02).extrude(p["bearing_h"])
+    ch = min(0.3, 0.25 * (p["bearing_od"] / 2 - p["stem_d"] / 2 - 0.02))
+    try:
+        s = s.edges(">Z").chamfer(ch)
+    except Exception:
+        pass
+    return s.translate((0, 0, z0))
 
 
 def v_housing(p):

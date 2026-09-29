@@ -52,6 +52,26 @@ export function padRoles(s) {
   }
   return roles;
 }
+
+// Illustrative per-well telemetry for the pad table. Well 0 reports the live model; partner wells that are
+// pumping report the same rate with a small per-well offset in surface pressure so the table reads as a pad,
+// not as a copy of well 1. Nothing here is a hydraulic model of a split manifold.
+export function padTelemetry(s) {
+  const roles = padRoles(s);
+  const live = s.pumpsOnline && !s.alarms.kickout ? s.pumpRate : 0;
+  const closurePsi = WELL.fracGradientPsiFt * WELL.tvdFt;
+  const nominal = Math.max(0, closurePsi + 900 + 1150 * Math.pow(70 / 90, 1.8) - 0.052 * WELL.waterPpg * WELL.tvdFt);
+  return roles.map(r => {
+    if (r.i === 0) return { ...r, q: live, p: s.surfacePsi };
+    if (r.role === 'frac') {
+      const q = s.phase === 'frac' ? live : 70;
+      const p = s.phase === 'frac' && live > 0 ? s.surfacePsi * (0.93 + 0.05 * ((r.i * 7) % 3)) : (q > 0 ? nominal * (0.93 + 0.05 * ((r.i * 7) % 3)) : 0);
+      return { ...r, q, p };
+    }
+    if (r.role === 'wireline') return { ...r, q: 12 + 3 * (r.i % 2), p: 0.35 * closurePsi };
+    return { ...r, q: 0, p: r.role === 'done' ? 0.2 * closurePsi : 0 };
+  });
+}
 export const CLUSTERS_PER_STAGE = 3;
 
 // Well and pressure parameters (illustrative, fixed for the demo well)

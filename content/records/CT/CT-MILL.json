@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S23",
+    "S24"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the coil path, the gooseneck, and flowback iron under flow."
+    }
+  ],
+  "id": "CT-MILL",
+  "parent": "CT-BHA",
+  "group": "bha",
+  "level": "component",
+  "name": "Mill",
+  "aliases": [
+    "mill",
+    "plug mill",
+    "junk mill"
+  ],
+  "function": "The cutting tool on the motor that grinds each composite frac plug into pieces small enough to circulate out.",
+  "tabs": {
+    "overview": "Dressed with carbide or hardfacing; diameter slightly under the casing drift; profile chosen for composite plugs.",
+    "engineering": "Diameter per the casing; hours per mill tracked.",
+    "safety": "Worn mills slow the drillout and leave larger debris.",
+    "evidence": "Public coiled tubing pressure control guide (S24), API RP 16ST and API RP 5C7 scope (S23, S26), field practice (S9)."
+  },
+  "scene": "CT-MILL"
+}

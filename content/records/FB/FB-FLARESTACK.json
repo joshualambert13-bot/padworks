@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Fire and flammable gas",
+      "control": "Flare and tanks sited downwind; hot work controls; static bonding on tanks and lines."
+    }
+  ],
+  "id": "FB-FLARESTACK",
+  "parent": "FB",
+  "group": "disposal",
+  "level": "equipment",
+  "name": "Flare stack",
+  "aliases": [
+    "flare",
+    "flare stack",
+    "flare boom"
+  ],
+  "scene": "FB-FLARESTACK",
+  "function": "The stack with an igniter that burns gas from the separator during flowback until the sales line takes it.",
+  "tabs": {
+    "overview": "Gas from the separator is piped to a vertical stack sited downwind with a pilot or electronic igniter; a knockout pot removes liquids first. Height and distance follow the site plan and radiant heat calculations.",
+    "engineering": "Knockout, igniter, and flame detection; sized for the maximum gas rate.",
+    "connections": "Separator gas outlet; knockout drain to a tank.",
+    "safety": "Radiant heat and flammable gas; siting and wind; ignition confirmed before flow.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9).",
+    "operations": "Lit before the well is opened; monitored continuously.",
+    "failure_modes": "Flameout, liquid carryover, igniter failures."
+  }
+}

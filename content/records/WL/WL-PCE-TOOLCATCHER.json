@@ -38,7 +38,7 @@
       "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
     }
   ],
-  "glb": "/glb/WL/WL-PCE.glb",
+  "glb": "/glb/WL/WL-PCE.7-15K.glb",
   "mesh_nodes": [
     "WL-PCE-TOOLCATCHER"
   ],

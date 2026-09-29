@@ -291,5 +291,60 @@
     "system": "PP",
     "record": "PP-BLENDER",
     "definition": "The unit that mixes water, proppant, and chemicals into slurry at the rate the pumps take it, using a tub with augers and suction and discharge pumps."
+  },
+  {
+    "term": "Injector head",
+    "aliases": [
+      "injector",
+      "CT injector",
+      "chain injector"
+    ],
+    "system": "CT",
+    "record": "CT-STACK-INJECTOR",
+    "definition": "The chain-driven gripper machine on top of the coiled tubing stack that pushes the coil into the well against pressure and pulls it out."
+  },
+  {
+    "term": "Stripper",
+    "aliases": [
+      "packoff",
+      "stripper packer",
+      "side-door stripper"
+    ],
+    "system": "CT",
+    "record": "CT-STACK-STRIPPER",
+    "definition": "The hydraulic elastomer seal around the moving coiled tubing that keeps well pressure in while the coil runs."
+  },
+  {
+    "term": "Quad BOP",
+    "aliases": [
+      "CT BOP",
+      "four-ram BOP",
+      "quad"
+    ],
+    "system": "CT",
+    "record": "CT-STACK-QUADBOP",
+    "definition": "The coiled tubing blowout preventer with blind, shear, slip, and pipe rams stacked in one body."
+  },
+  {
+    "term": "Choke manifold",
+    "aliases": [
+      "flowback manifold",
+      "dual choke",
+      "choke skid"
+    ],
+    "system": "FB",
+    "record": "FB-CHOKEMANIFOLD",
+    "definition": "The skid of plug valves and chokes that takes the well from treating pressure down to separator pressure during flowback, with two runs so one choke can be changed while the other flows."
+  },
+  {
+    "term": "Sand separator",
+    "aliases": [
+      "sand trap",
+      "desander",
+      "cyclonic separator"
+    ],
+    "system": "FB",
+    "record": "FB-SANDSEPARATOR",
+    "definition": "The pressure vessel that drops proppant and plug debris out of the flowback stream before the chokes and separator erode."
   }
 ]

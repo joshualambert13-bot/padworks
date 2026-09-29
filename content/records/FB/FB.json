@@ -1,0 +1,56 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    },
+    {
+      "class": "Fire and flammable gas",
+      "control": "Flare and tanks sited downwind; hot work controls; static bonding on tanks and lines."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors and wind indicators at the flowback spread; escape sets staged."
+    }
+  ],
+  "id": "FB",
+  "level": "system",
+  "name": "Flowback and well testing",
+  "aliases": [
+    "flowback",
+    "well test",
+    "flowback spread",
+    "initial flowback"
+  ],
+  "scene": "FB-SPREAD",
+  "function": "The temporary surface equipment that takes the well from the frac and drillout to production: it controls the well on a choke, removes sand and plug debris, separates gas, oil, and water for measurement, and sends gas to a flare and liquids to tanks or the facility.",
+  "tabs": {
+    "overview": "After the drillout the well is opened through wing B to the flowback spread. Returns are unpredictable at first: frac water, then oil and gas, with proppant and plug debris. A sand separator or plug catcher takes the solids first, the choke manifold holds back pressure and controls the rate, and a test separator splits the phases so each can be measured. Gas goes to the flare stack until the sales line is ready; liquids go to tanks or the production facility.\n\nThe flowback period measures the well's early performance, recovers frac fluid, and protects the production equipment from the solids and pressure swings of the first days.",
+    "engineering": "Equipment is rated for the shut-in wellhead pressure; the choke manifold usually 10,000 psi with the downstream vessels at lower ratings behind the chokes; sour service where H2S is possible. Erosion by proppant sets wall thickness checks on chokes, tees, and elbows.",
+    "connections": "From wing B of the tree through flowback iron to the sand separator, choke manifold, separator, then flare and tanks.",
+    "safety": "Live iron at wellhead pressure upstream of the chokes; flammable gas at the separator, tanks, and flare; H2S possible; erosion failures on the sand-laden side.",
+    "specs": "Choke manifold 10,000 psi common; separators 1,440 psi class typical; flare sited per the site plan.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9).",
+    "operations": "Rigged up during the drillout; runs continuously for days to weeks; handed to production when the well is clean and the facility can take it.",
+    "failure_modes": "Choke washout, sand carryover, separator upsets on slugs, flare outages, frozen lines in winter."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-CHOKEMANIFOLD-GAUGE",
+  "parent": "FB-CHOKEMANIFOLD",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Pressure gauges",
+  "aliases": [
+    "gauge",
+    "pressure gauge"
+  ],
+  "function": "The gauges and transducers reading upstream and downstream choke pressure, which with the choke size give the operator the well's deliverability trend.",
+  "tabs": {
+    "overview": "Gauge with a needle valve; transducers feed the flowback data system.",
+    "engineering": "Ranges to the manifold rating.",
+    "safety": "Needle valve closed before a gauge is changed.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9)."
+  },
+  "glb": "/glb/FB/FB-CHOKEMANIFOLD.glb",
+  "mesh_nodes": [
+    "FB-CHOKEMANIFOLD-GAUGE"
+  ]
+}

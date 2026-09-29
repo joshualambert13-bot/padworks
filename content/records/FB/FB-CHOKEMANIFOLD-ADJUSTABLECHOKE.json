@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-CHOKEMANIFOLD-ADJUSTABLECHOKE",
+  "parent": "FB-CHOKEMANIFOLD",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Adjustable choke",
+  "aliases": [
+    "adjustable choke",
+    "needle choke",
+    "handwheel choke"
+  ],
+  "function": "The choke whose opening is set by a stem and handwheel, with an indicator reading in 64ths of an inch, used to bring the well on and change rate in steps.",
+  "tabs": {
+    "overview": "A needle and seat; the stem screws in and out; erosion-resistant trim. Used for the fine control early in flowback, then swapped for a positive bean once the rate settles.",
+    "engineering": "Sizes to 2 in. bore; 10,000 psi.",
+    "safety": "Erosion of the needle and seat with sand; the indicator drifts as the trim wears.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9)."
+  },
+  "glb": "/glb/FB/FB-CHOKEMANIFOLD.glb",
+  "mesh_nodes": [
+    "FB-CHOKEMANIFOLD-ADJUSTABLECHOKE"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-SANDSEPARATOR",
+  "parent": "FB",
+  "group": "solids",
+  "level": "equipment",
+  "name": "Sand separator",
+  "aliases": [
+    "sand separator",
+    "sand trap",
+    "desander",
+    "cyclonic desander"
+  ],
+  "scene": "FB-SANDSEPARATOR",
+  "function": "The high-pressure vessel upstream of the chokes that drops proppant and debris out of the flowback stream by gravity or cyclone action, protecting the chokes and separator from erosion.",
+  "tabs": {
+    "overview": "Flow enters tangentially or over a baffle; solids fall to the bottom and are dumped through a valve to a sand box on a schedule; clean flow leaves the top. Two units are often run in parallel so one can be dumped while the other flows.",
+    "engineering": "Rated to wellhead pressure (10,000 psi common); capacity in pounds of sand between dumps; erosion-resistant inlet.",
+    "connections": "Wellhead iron in; choke manifold out; dump line to the sand box.",
+    "safety": "Dumping a live vessel is a controlled operation; erosion at the inlet.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9).",
+    "operations": "Dump frequency tracked against sand returns; sand volumes recorded.",
+    "failure_modes": "Sand carryover, inlet erosion, dump valve washout."
+  }
+}

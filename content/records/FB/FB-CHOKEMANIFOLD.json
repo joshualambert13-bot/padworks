@@ -1,0 +1,61 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-CHOKEMANIFOLD",
+  "parent": "FB",
+  "group": "pressure-control",
+  "level": "equipment",
+  "name": "Dual choke manifold",
+  "aliases": [
+    "choke manifold",
+    "choke skid",
+    "dual choke",
+    "flowback manifold"
+  ],
+  "scene": "FB-CHOKEMANIFOLD",
+  "function": "The skid of plug valves and chokes that drops the well pressure to separator pressure and sets the flow rate, with two parallel choke runs so one choke can be changed while the well flows through the other, and a bypass.",
+  "tabs": {
+    "overview": "Flow enters an inlet header with an isolation plug valve and splits to two runs. Each run has an upstream plug valve, a choke, and a downstream plug valve; one choke is adjustable (a stem and handwheel with a position indicator) and the other positive (a fixed bean in a housing). A bypass run with plug valves lets the manifold be isolated. The outlet header carries a pressure gauge and goes to the separator. Chokes are changed on the idle run while the other flows.",
+    "engineering": "Rated to the shut-in wellhead pressure, 10,000 psi common; 3 in. 1502 hammer-union iron; sour-service trim where needed. Choke size in 64ths of an inch sets the rate; the operator opens up in steps as the well cleans up.",
+    "connections": "Inlet from the sand separator (or straight from the wellhead iron); outlet to the test separator; gauge and sample ports.",
+    "safety": "Full wellhead pressure on the inlet side; choke bodies erode with sand and are checked; no one works on a run that is not isolated and bled.",
+    "specs": "Choke sizes 8/64 to 128/64 in.; 3 in. 10K iron; two runs plus bypass.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9).",
+    "operations": "Choke size stepped up over hours to days; changes logged with the rates.",
+    "failure_modes": "Choke washout, plug valve seal leaks, sand packing in the runs, gauge failures."
+  },
+  "glb": "/glb/FB/FB-CHOKEMANIFOLD.glb",
+  "mesh_nodes": [
+    "FB-CHOKEMANIFOLD-SKID",
+    "FB-CHOKEMANIFOLD-INLET",
+    "FB-CHOKEMANIFOLD-PLUGVALVE",
+    "FB-CHOKEMANIFOLD-ADJUSTABLECHOKE",
+    "FB-CHOKEMANIFOLD-POSITIVECHOKE",
+    "FB-CHOKEMANIFOLD-BYPASS",
+    "FB-CHOKEMANIFOLD-OUTLET",
+    "FB-CHOKEMANIFOLD-GAUGE"
+  ]
+}

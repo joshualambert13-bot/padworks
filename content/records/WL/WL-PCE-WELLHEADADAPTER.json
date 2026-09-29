@@ -19,16 +19,16 @@
   "parent": "WL-PCE",
   "group": "pressure-control",
   "level": "component",
-  "name": "Wellhead adapter",
+  "name": "Bottom adapter (hands-free connector)",
   "aliases": [
-    "tree adapter",
-    "flange to union crossover",
-    "swab valve adapter",
-    "quick connect adapter"
+    "tree adapter (wireline)",
+    "quick connect adapter",
+    "stack adapter",
+    "hands-free adapter"
   ],
   "function": "The crossover between the frac tree swab valve flange and the quick union at the bottom of the stack.",
   "tabs": {
-    "overview": "A 6BX flange on the bottom with a BX ring gasket, a quick union pin or box on top. Hands-free remote connectors replace the studded flange on some rig-ups so the stack lands and locks without anyone on the tree.",
+    "overview": "The lowest piece of the stack: a funnel skirt guides the stack onto the tree top adapter, a latch collar locks it, and a spool above carries the first quick union. Remote-latching connectors keep people off the tree while the crane lands the stack; a studded flange crossover is the bolted alternative.",
     "engineering": "API 6A flanged connection at the tree rating; union rated with the stack.",
     "safety": "The adapter is broken and remade every stage on rig-ups that remove it; the ring gasket and studs are inspected each time.",
     "evidence": "Public pressure control equipment catalogs and service descriptions (S6, S7, S13); API RP 67 (S14) and API RP 19B (S15) for the perforating side; field practice (S9)."
@@ -39,7 +39,7 @@
       "control": "Pressure test the stack before opening the swab valve; bleed to zero before breaking any union."
     }
   ],
-  "glb": "/glb/WL/WL-PCE.glb",
+  "glb": "/glb/WL/WL-PCE.7-15K.glb",
   "mesh_nodes": [
     "WL-PCE-WELLHEADADAPTER"
   ],

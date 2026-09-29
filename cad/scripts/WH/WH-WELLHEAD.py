@@ -74,9 +74,10 @@ def build():
     parts["WH-WELLHEAD-LOCKDOWNSCREW"] = screws
     z += th_h
     # tree adapter
-    pm = valve_params(5.125, 15.0)
-    parts["WH-WELLHEAD-TREEADAPTER"] = flanged_spool(5.125, 12.0, 14.0, pm["flange_od"], pm["flange_thk"], pm["bolt_n"], pm["bolt_d"], pm["bolt_circle"]).translate((0, 0, z))
-    z += 14.0
+    pm = valve_params(7.0625, 15.0)
+    ad_h = 2 * pm["flange_thk"] + 0.8 * 7.0625 + 4.0
+    parts["WH-WELLHEAD-TREEADAPTER"] = flanged_spool(7.0625, 0.72 * pm["flange_od"], ad_h, pm["flange_od"], pm["flange_thk"], pm["bolt_n"], pm["bolt_d"], pm["bolt_circle"]).translate((0, 0, z))
+    z += ad_h
     return parts, z
 
 
@@ -86,4 +87,4 @@ if __name__ == "__main__":
     a = ap.parse_args()
     parts, h = build()
     print("wellhead height in.", round(h, 1))
-    export_parts(parts, a.out, "WH-WELLHEAD", extra_stl=False)
+    export_parts(parts, a.out, "WH-WELLHEAD", extra_stl=False, tolerance=0.04)

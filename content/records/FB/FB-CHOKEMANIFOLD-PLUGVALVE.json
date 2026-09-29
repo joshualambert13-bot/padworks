@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-CHOKEMANIFOLD-PLUGVALVE",
+  "parent": "FB-CHOKEMANIFOLD",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Plug valves",
+  "aliases": [
+    "lo-torq valve",
+    "isolation valve"
+  ],
+  "function": "The quarter-turn plug valves that isolate each run and the bypass so a choke can be changed or a run bled with the well flowing through the other.",
+  "tabs": {
+    "overview": "A tapered or cylindrical plug turns a quarter turn in a lubricated body; the position bar on the stem shows open or closed. Greased on a schedule so they turn under pressure.",
+    "engineering": "Rated with the manifold; 3 in. class.",
+    "safety": "Never opened with pressure trapped on the other side without equalizing; the position bar is the field check.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9)."
+  },
+  "glb": "/glb/FB/FB-CHOKEMANIFOLD.glb",
+  "mesh_nodes": [
+    "FB-CHOKEMANIFOLD-PLUGVALVE"
+  ]
+}

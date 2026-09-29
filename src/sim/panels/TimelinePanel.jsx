@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Circle, Disc } from 'lucide-react';
-import { useSim, PHASES, WELL, padRoles, STAGE_COUNT } from '../store.js';
+import { useSim, PHASES, WELL, padRoles, padTelemetry, STAGE_COUNT } from '../store.js';
 
 function PressureChart({ history }) {
   const W = 320, H = 150, padL = 38, padR = 30, padT = 8, padB = 18;
@@ -41,6 +41,7 @@ export default function TimelinePanel() {
   const s = useSim();
   const phaseIdx = PHASES.findIndex(p => p.id === s.phase);
   const roles = padRoles(s);
+  const tele = padTelemetry(s);
   const ROLE = { focus: ['yours', 'text-accent border-accent/60'], frac: ['pumping', 'text-ok border-ok/60'], wireline: ['wireline', 'text-cool border-cool/60'], idle: ['waiting', 'text-mute border-line'], done: ['complete', 'text-mute border-line'] };
   return (
     <div className="h-full overflow-y-auto p-3 space-y-3 text-sm">
@@ -55,6 +56,23 @@ export default function TimelinePanel() {
             </div>
           ))}
         </div>
+        {roles.length > 1 && (
+          <table className="w-full text-[11px] mono mt-2">
+            <thead className="text-mute"><tr><th className="text-left font-normal">Well</th><th className="font-normal">Doing</th><th className="font-normal">bpm</th><th className="font-normal">STP psi</th></tr></thead>
+            <tbody>
+              {tele.map(r => (
+                <tr key={r.i} className={r.i === 0 ? 'text-white' : 'text-mute'}>
+                  <td>W{r.i + 1}{r.i === 0 ? ' *' : ''}</td>
+                  <td className="text-center">{ROLE[r.role][0]}</td>
+                  <td className="text-center">{r.q.toFixed(0)}</td>
+                  <td className="text-center">{r.p.toFixed(0)}</td>
+                </tr>
+              ))}
+              <tr className="text-white border-t border-line"><td>Spread</td><td className="text-center">{tele.filter(r => r.role === 'frac' || (r.i === 0 && s.phase === 'frac')).length} pumping</td><td className="text-center">{tele.filter(r => r.role === 'frac' || (r.i === 0 && s.phase === 'frac')).reduce((a, r) => a + r.q, 0).toFixed(0)}</td><td className="text-center">-</td></tr>
+            </tbody>
+          </table>
+        )}
+        <div className="text-[10px] text-mute mt-1">Well 1 is the live model; the other rows are illustrative, not a split-manifold calculation.</div>
       </div>
       <div className="card p-2">
         <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Completion timeline</div>

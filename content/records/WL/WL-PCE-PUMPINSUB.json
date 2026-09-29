@@ -43,7 +43,7 @@
       "control": "Stay clear of the cable path, sheaves, and the top of the stack while the string is moving."
     }
   ],
-  "glb": "/glb/WL/WL-PCE.glb",
+  "glb": "/glb/WL/WL-PCE.7-15K.glb",
   "mesh_nodes": [
     "WL-PCE-PUMPINSUB"
   ]

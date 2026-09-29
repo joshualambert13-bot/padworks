@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Fire and flammable gas",
+      "control": "Flare and tanks sited downwind; hot work controls; static bonding on tanks and lines."
+    }
+  ],
+  "id": "FB-TANKS",
+  "parent": "FB",
+  "group": "disposal",
+  "level": "equipment",
+  "name": "Flowback tanks",
+  "aliases": [
+    "flowback tanks",
+    "frac tanks (flowback)",
+    "gauge tanks",
+    "holding tanks"
+  ],
+  "scene": "FB-TANKS",
+  "function": "The tanks that receive oil and water from the separator for gauging and haul-off or transfer to the facility.",
+  "tabs": {
+    "overview": "Gauged by hand or level sensor to measure liquid volumes; oil and water in separate tanks; vapor handled by a vent or a vapor recovery unit.",
+    "engineering": "Atmospheric or low-pressure tanks; bonding and grounding; secondary containment.",
+    "connections": "Separator liquid outlets; truck load-out; vent or VRU.",
+    "safety": "Flammable vapor at hatches; confined space; grounding.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9).",
+    "operations": "Gauged per shift; haul-off scheduled.",
+    "failure_modes": "Overfills, vent freezing, corrosion."
+  }
+}

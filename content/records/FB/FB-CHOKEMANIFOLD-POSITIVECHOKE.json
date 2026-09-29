@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    }
+  ],
+  "id": "FB-CHOKEMANIFOLD-POSITIVECHOKE",
+  "parent": "FB-CHOKEMANIFOLD",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Positive choke",
+  "aliases": [
+    "positive choke",
+    "bean choke",
+    "fixed choke"
+  ],
+  "function": "The choke with a fixed-bore bean held in a housing under a hammer-union cap, giving a repeatable rate once the well has settled.",
+  "tabs": {
+    "overview": "Beans are changed by isolating the run, bleeding, and swapping the bean; the bore is stamped in 64ths.",
+    "engineering": "Bean sizes per the program; 10,000 psi housing.",
+    "safety": "The run must be isolated and bled before the cap comes off.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9)."
+  },
+  "glb": "/glb/FB/FB-CHOKEMANIFOLD.glb",
+  "mesh_nodes": [
+    "FB-CHOKEMANIFOLD-POSITIVECHOKE"
+  ]
+}

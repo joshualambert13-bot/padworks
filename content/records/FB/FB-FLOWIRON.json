@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "FB",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S25"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Erosion",
+      "control": "Wall thickness checks on chokes, tees, and elbows carrying proppant returns."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the coil path, the gooseneck, and flowback iron under flow."
+    }
+  ],
+  "id": "FB-FLOWIRON",
+  "parent": "FB",
+  "group": "pressure-control",
+  "level": "equipment",
+  "name": "Flowback iron",
+  "aliases": [
+    "flowback line",
+    "flow line",
+    "well test iron",
+    "high-pressure flowback piping"
+  ],
+  "function": "The high-pressure hammer-union or flanged piping from wing B of the tree to the solids equipment and choke manifold, rated for the shut-in wellhead pressure.",
+  "tabs": {
+    "overview": "Same family as the treating iron but sized for flow rather than pumping; runs are restrained and kept short; elbows and tees are the erosion points.",
+    "engineering": "3 in. 10K class common; restraints; wall thickness inspection.",
+    "connections": "Wing B to the plug catcher, sand separator, and choke manifold.",
+    "safety": "Live at wellhead pressure; erosion; restraints.",
+    "evidence": "Public flowback and well testing overview (S25), field practice (S9).",
+    "operations": "Laid at rig-up; inspected each shift.",
+    "failure_modes": "Erosion washouts at turns, union leaks."
+  }
+}

@@ -43,7 +43,7 @@
       "control": "Certified lifting gear; no one under the lubricator while it is suspended."
     }
   ],
-  "glb": "/glb/WL/WL-PCE.glb",
+  "glb": "/glb/WL/WL-PCE.7-15K.glb",
   "mesh_nodes": [
     "WL-PCE-LUBRICATOR"
   ]

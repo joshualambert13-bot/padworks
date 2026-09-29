@@ -13,7 +13,7 @@
     "rev": "A",
     "author": "AI draft",
     "date": "2026-09-29",
-    "note": "Drop 3 seed"
+    "note": "Drop 5: rebuilt with block wireline valve, hands-free adapter, size variants"
   },
   "id": "WL-PCE",
   "parent": "WL",
@@ -29,8 +29,8 @@
   ],
   "function": "The assembly on top of the frac tree that contains wellhead pressure while the tool string is run and pulled on the cable: wellhead adapter, wireline valve, tool trap, pump-in sub, ball check valve, lubricator sections, tool catcher, grease injection head, and line wiper.",
   "tabs": {
-    "overview": "Bottom to top: the wellhead adapter converts the tree flange to the stack union; the wireline valve is the ram barrier around the cable; the tool trap catches the string if it parts from the cable; the pump-in sub is the fluid port; the ball check seals the bore if the cable blows out of the head; the lubricator sections hold the full tool string above the swab valve; the tool catcher latches the string at the top; the grease injection head seals around the moving cable with grease between the cable and close-fitting flow tubes; the line wiper cleans the cable as it leaves. The stack is assembled on the ground or in the crane, lifted onto the tree, and pressure tested before the swab valve is opened.",
-    "engineering": "Bore matches the tree (5-1/8 in. or 7-1/16 in.). Working pressure matches the tree. Total lubricator length exceeds the longest tool string plus a margin so the string is fully above the swab valve when caught. Quick unions between components are made up by hand or hydraulically. Hydraulic supply to the wireline valve, tool trap, tool catcher, and packoff comes from the grease injection unit.",
+    "overview": "Bottom to top (the model is drawn in 5-1/8 and 7-1/16 in. bores; choose the size above the viewer): the wellhead adapter converts the tree flange to the stack union; the wireline valve is the ram barrier around the cable; the tool trap catches the string if it parts from the cable; the pump-in sub is the fluid port; the ball check seals the bore if the cable blows out of the head; the lubricator sections hold the full tool string above the swab valve; the tool catcher latches the string at the top; the grease injection head seals around the moving cable with grease between the cable and close-fitting flow tubes; the line wiper cleans the cable as it leaves. The stack is assembled on the ground or in the crane, lifted onto the tree, and pressure tested before the swab valve is opened.",
+    "engineering": "Bore matches the tree (5-1/8 in. or 7-1/16 in.). Working pressure matches the tree. Total lubricator length exceeds the longest tool string plus a margin so the string is fully above the swab valve when caught. Quick unions between components are made up by hand or hydraulically. Hydraulic supply to the wireline valve, tool trap, tool catcher, and packoff comes from the grease injection unit. The bottom adapter in the model is a hands-free connector that lands over the tree top adapter, so the crane sets the stack and the latch engages without a person on the tree. The wireline valve is a block body with two ram levels and tie-rod actuators on both sides.",
     "connections": "Below: frac tree swab valve through the wellhead adapter. Side: pump-in sub to the pump-down line. Hydraulic and grease lines to the grease injection unit. Cable in through the line wiper and grease head.",
     "safety": "Two barriers around the cable while the well is open: the grease head in motion and the wireline valve when stopped. Test the stack to the job pressure before opening the swab valve. Bleed to zero before breaking any union. The whole stack is a suspended load between runs.",
     "specs": "Bore 5-1/8 in. or 7-1/16 in.; working pressure 10,000 or 15,000 psi; lubricator section lengths on the order of 8 to 10 ft, three or more sections for plug-and-perf strings.",
@@ -92,7 +92,7 @@
       "control": "Monitors and wind indicators when the well can flow sour gas at the grease head."
     }
   ],
-  "glb": "/glb/WL/WL-PCE.glb",
+  "glb": "/glb/WL/WL-PCE.7-15K.glb",
   "mesh_nodes": [
     "WL-PCE-WELLHEADADAPTER",
     "WL-PCE-QUICKUNION",
@@ -104,5 +104,17 @@
     "WL-PCE-TOOLCATCHER",
     "WL-PCE-GREASEHEAD",
     "WL-PCE-LINEWIPER"
+  ],
+  "variants": [
+    {
+      "key": "5-15K",
+      "label": "5-1/8 in. 15K",
+      "glb": "/glb/WL/WL-PCE.5-15K.glb"
+    },
+    {
+      "key": "7-15K",
+      "label": "7-1/16 in. 15K",
+      "glb": "/glb/WL/WL-PCE.7-15K.glb"
+    }
   ]
 }

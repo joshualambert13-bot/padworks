@@ -1,0 +1,58 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "CT",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9",
+    "S23",
+    "S24"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 5 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Pressure test before opening to the well; bleed down and verify zero before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear of the coil path, the gooseneck, and flowback iron under flow."
+    }
+  ],
+  "id": "CT-STACK-QUADBOP",
+  "parent": "CT-STACK",
+  "group": "pressure-control",
+  "level": "component",
+  "name": "Quad BOP (blind, shear, slip, pipe rams)",
+  "aliases": [
+    "quad BOP",
+    "CT BOP",
+    "four-ram preventer",
+    "combi BOP"
+  ],
+  "function": "The blowout preventer of the coiled tubing stack: four ram sets in one block body, hydraulically closed, that seal the well with the coil in place, hold the coil, cut it, or seal the open bore.",
+  "tabs": {
+    "overview": "From the top: blind rams seal the open bore with no coil in it; shear rams cut the coil and leave the cut open for circulation; slip rams grip the coil against movement; pipe rams seal around the coil (S24). Equalizing and kill ports let pressure be balanced across rams and fluid pumped below them. Tie-rod actuators on both sides of each ram level; manual locks on some designs.",
+    "engineering": "Working pressure 10,000 psi common (S24); ram inserts sized to the coil; bore matched to the BHA.",
+    "safety": "Rams are function-tested before the job and pressure-tested on the stack; the shear ram is the last resort and is only closed with the coil stopped.",
+    "evidence": "Public coiled tubing pressure control guide (S24), API RP 16ST and API RP 5C7 scope (S23, S26), field practice (S9)."
+  },
+  "glb": "/glb/CT/CT-STACK.glb",
+  "mesh_nodes": [
+    "CT-STACK-QUADBOP"
+  ],
+  "standards": [
+    {
+      "standard": "API RP 16ST",
+      "edition": "verify",
+      "paraphrase": "Ram configuration, ratings, and testing for coiled tubing BOPs.",
+      "source": "S23"
+    }
+  ]
+}

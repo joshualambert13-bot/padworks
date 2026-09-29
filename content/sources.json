@@ -196,5 +196,41 @@
     "access": "Public",
     "tier": "E2",
     "url": "https://ironcladenvironmental.com/2023/07/10/a-beginners-guide-to-frac-equipment-types-and-applications/"
+  },
+  {
+    "id": "S23",
+    "title": "API RP 16ST, Coiled Tubing Well Control Equipment Systems",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S24",
+    "title": "Coiled tubing BOP and pressure control equipment guide",
+    "publisher": "Drilling Manual (web)",
+    "edition": "2022, modified 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.drillingmanual.com/coiled-tubing-bop-pressure-control-equipment/"
+  },
+  {
+    "id": "S25",
+    "title": "Flowback and well testing: ensuring safe, efficient production startups",
+    "publisher": "FESCO, Ltd.",
+    "edition": "2025-05-28",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://www.fescoinc.com/news/flowback-and-well-testing-ensuring-safe-efficient-production-startups"
+  },
+  {
+    "id": "S26",
+    "title": "API RP 5C7, Coiled Tubing Operations in Oil and Gas Well Services",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
   }
 ]
