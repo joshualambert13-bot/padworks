@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "Each pump reports to the van; the treater sees which pump is in which gear and pulls one out of the lineup when its numbers drift.",
+    "engineering": "Vendor telemetry; kickout setpoints pushed to each pump.",
+    "safety": "None beyond the pumps.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-PUMPMONITOR",
+  "parent": "DA",
+  "group": "sensors",
+  "level": "component",
+  "name": "Pump and fleet monitoring",
+  "aliases": [
+    "pump monitoring",
+    "fleet data",
+    "engine data",
+    "fluid end monitoring"
+  ],
+  "function": "The data from each pump (rate, discharge pressure, gear, engine load, fluid end vibration) over the fleet network to the van, used to balance the spread and catch a failing pump.",
+  "scene": "PP-FRACPUMP"
+}

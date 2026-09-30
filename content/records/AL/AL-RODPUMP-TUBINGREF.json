@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-RODPUMP-TUBINGREF",
+  "parent": "AL-RODPUMP",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Tubing around the pump (context)",
+  "aliases": [
+    "tubing (pump context)"
+  ],
+  "function": "The production tubing the pump seats in, shown translucent for context.",
+  "tabs": {
+    "overview": "Ghost context in the cut-away; the seating nipple is part of the tubing string.",
+    "engineering": "See UC-TUBING.",
+    "safety": "None beyond the tubing.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-RODPUMP.glb",
+  "mesh_nodes": [
+    "AL-RODPUMP-TUBING"
+  ],
+  "connections": [
+    {
+      "target": "UC-TUBING",
+      "direction": "undirected",
+      "type": "threaded"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "Used on pilot projects and spacing tests more than on routine pads; the event cloud shows fracture height, length, and azimuth against the well spacing.",
+    "engineering": "Array depth and distance limit the detection; velocity model from logs.",
+    "safety": "None beyond the monitor well.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-MICROSEISMIC",
+  "parent": "DA",
+  "group": "downhole",
+  "level": "equipment",
+  "name": "Microseismic monitoring",
+  "aliases": [
+    "microseismic",
+    "geophone array",
+    "frac mapping"
+  ],
+  "function": "Geophone arrays in an offset well or on surface that locate the small seismic events of fracture growth, mapping the treated volume in real time."
+}

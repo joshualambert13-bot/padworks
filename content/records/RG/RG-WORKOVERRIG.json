@@ -1,0 +1,54 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S49",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Tubing handled with elevators and slips by trained crews; the derrick inspected before the job."
+    },
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Hands clear of slips, tongs, and the drawworks; guards on rotating parts."
+    },
+    {
+      "class": "Well control",
+      "control": "BOP drills before the job; kill weight fluid or a tested barrier before the tree comes off."
+    }
+  ],
+  "id": "RG-WORKOVERRIG",
+  "parent": "RG",
+  "group": "rig",
+  "level": "equipment",
+  "name": "Workover (completion) rig",
+  "aliases": [
+    "workover rig",
+    "completion rig",
+    "pulling unit",
+    "service rig",
+    "well service rig"
+  ],
+  "function": "The truck- or trailer-mounted rig with a telescoping mast that runs and pulls tubing and rods on a completed well, sized for tubing hook loads rather than drilling loads.",
+  "tabs": {
+    "overview": "Mast raised over the well on a substructure, drawworks and blocks on wire rope, a doghouse for the crew, a power tong and slips at the floor, pipe racks alongside. In the simulator the rig appears in the production hookup phase, runs the tubing joint by joint with the block traveling, then leaves once the tree is on.",
+    "engineering": "Rated by hook load and mast height (double or triple stands); drawworks and brake matched to the string weight.",
+    "connections": "BOP stack on the wellhead; pipe racks; power tongs; accumulator unit.",
+    "safety": "Mast raising and guying; pipe handling; the block path; well control with the stack.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Rig up, pull the frac stack, nipple up the BOP, run tubing, nipple down, set the tree, rig down.",
+    "failure_modes": "Brake and wire rope wear, mast pin and guy line failures, dropped tubing."
+  },
+  "scene": "RG-WORKOVERRIG"
+}

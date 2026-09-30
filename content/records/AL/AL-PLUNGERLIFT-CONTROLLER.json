@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S41"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-PLUNGERLIFT-CONTROLLER",
+  "parent": "AL-PLUNGERLIFT",
+  "group": "plunger-lift",
+  "level": "component",
+  "name": "Controller and motor valve",
+  "aliases": [
+    "plunger controller",
+    "motor valve",
+    "solar controller"
+  ],
+  "function": "The solar-powered controller that opens and closes the flowline motor valve on time or pressure to cycle the plunger.",
+  "tabs": {
+    "overview": "Reads casing and tubing pressure and the arrival sensor; adjusts shut-in and flow times.",
+    "engineering": "Pneumatic or electric motor valve on the flowline.",
+    "safety": "Low voltage; flowline pressure at the valve.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "AL-PLUNGERLIFT-CONTROLLER"
+}

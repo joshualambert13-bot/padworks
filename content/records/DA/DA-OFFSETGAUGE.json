@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "A frac hit shows as a pressure rise on the offset while a stage is pumped; the treater and the engineer decide whether to change the schedule or protect the parent well.",
+    "engineering": "Surface gauges on the tree; downhole gauges on wireline or the tubing where the well is shut in.",
+    "safety": "Offset well valves confirmed closed before the frac.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-OFFSETGAUGE",
+  "parent": "DA",
+  "group": "downhole",
+  "level": "equipment",
+  "name": "Offset well pressure gauges (frac hit monitoring)",
+  "aliases": [
+    "offset gauge",
+    "frac hit monitoring",
+    "offset well pressure",
+    "parent well gauge"
+  ],
+  "function": "Pressure gauges on the wellheads of neighboring wells (or downhole gauges in them) that show when a fracture reaches them.",
+  "scene": "UC-PRODTREE-GAUGE"
+}

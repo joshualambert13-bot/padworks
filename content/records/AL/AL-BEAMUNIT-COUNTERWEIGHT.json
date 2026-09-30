@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Lockout the prime mover and brake the unit before anyone approaches the beam, cranks, or belts."
+    }
+  ],
+  "id": "AL-BEAMUNIT-COUNTERWEIGHT",
+  "parent": "AL-BEAMUNIT",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Counterweights",
+  "aliases": [
+    "counterweight",
+    "counterbalance"
+  ],
+  "function": "Cast weights on the cranks positioned so the unit lifts the rod string and fluid on the upstroke with the same torque it lifts the weights on the downstroke.",
+  "tabs": {
+    "overview": "Moved along the crank to balance; checked with a dynamometer or motor current.",
+    "engineering": "Per API 11E torque rating.",
+    "safety": "Heavy rotating mass; never adjusted without the brake set and the cranks chocked.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-COUNTERWEIGHT"
+  ]
+}

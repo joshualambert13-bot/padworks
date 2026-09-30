@@ -1,5 +1,5 @@
-import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, CheckCircle2, Lock, ListChecks, Circle, Settings2 } from 'lucide-react';
-import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals } from '../store.js';
+import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, CheckCircle2, Lock, ListChecks, Circle, Settings2, Bolt, Dices } from 'lucide-react';
+import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, LIFTS, EVENTS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals } from '../store.js';
 import SetupPanel from './SetupPanel.jsx';
 
 function ValveRow({ id, v, onCommand, hot }) {
@@ -97,7 +97,7 @@ export default function ControlPanel() {
         <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-mute">Job<button className="btn ml-auto text-[11px] px-2 py-0.5 flex items-center gap-1" onClick={s.backToSetup} title="Back to pad setup (restarts the job)"><Settings2 size={12} />Change setup</button></div>
         <div className="text-[11px] text-mute"><span className="text-white">{basin.label}</span> · {s.pad.wells} well{s.pad.wells > 1 ? 's' : ''}, {mode.label.toLowerCase()} · {(BORES.find(b => b.id === s.pad.bore) || BORES[5]).label} tree</div>
         <div className="text-[11px] text-mute">{completion.label}{sleeve ? ', ' + (s.setup.sleeveSystem === 'openhole' ? 'openhole packers' : 'cemented') : ''}, {s.setup.plugs === 'dissolvable' ? 'dissolvable' : 'millable'} · {s.setup.lateralFt.toLocaleString()} ft lateral, {totals.stages} stages by design, {s.setup.clusters} {sleeve ? 'ports' : 'clusters'} each</div>
-        <div className="text-[11px] text-mute">{fleet.label}: {spread.pumps} pumps, {spread.availableHhp.toLocaleString()} hhp · {s.setup.proppantLbFt.toLocaleString()} lb/ft, {s.setup.fluidBblFt} bbl/ft</div>
+        <div className="text-[11px] text-mute">{fleet.label}: {spread.pumps} pumps, {spread.availableHhp.toLocaleString()} hhp · {s.setup.proppantLbFt.toLocaleString()} lb/ft, {s.setup.fluidBblFt} bbl/ft · lift: {(LIFTS.find(l => l.id === s.setup.lift) || LIFTS[0]).label.toLowerCase()}</div>
         <div className="text-[11px] text-mute">Well 1 is yours to operate. The other wells follow the crews: <span className="mono text-white">{fracWells}</span> pumping, <span className="mono text-white">{wlWells}</span> on {sleeve ? 'ball drop' : 'wireline'} right now.</div>
       </div>
 
@@ -114,6 +114,28 @@ export default function ControlPanel() {
           <button className="btn mt-2 w-full flex items-center justify-center gap-1" onClick={() => s.setPhase(nextPhase.id)}><ArrowRightCircle size={14} />Next: {nextPhase.short}</button>
         )}
       </div>
+
+      {/* training events: the instructor's panel */}
+      <div className="card p-2 space-y-1" data-panel="events">
+        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-mute"><Bolt size={12} />Events (instructor)
+          <button className={'btn ml-auto text-[11px] px-2 py-0.5 flex items-center gap-1 ' + (s.events.random ? 'btn-primary' : '')} onClick={() => s.setRandomEvents(!s.events.random)} title="Fire events at random during the job"><Dices size={12} />Random {s.events.random ? 'on' : 'off'}</button>
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          {EVENTS.filter(e => !(e.pnpOnly && sleeve)).map(e => (
+            <button key={e.id} className="btn text-[11px] px-1" disabled={!e.phases.includes(s.phase) || s.events.active === e.id || (e.id === 'misfire' && s.events.misfireArmed) || (e.id === 'stuck' && s.wl.step !== 'pumpdown') || (e.id === 'valveFault' && s.events.valveFault)} title={e.blurb} onClick={() => s.injectEvent(e.id)}>{e.label}</button>
+          ))}
+        </div>
+        <div className="text-[10px] text-mute">{s.events.active ? 'Active: ' + (EVENTS.find(e => e.id === s.events.active) || {}).label + '. Follow the recovery steps above.' : s.events.misfireArmed ? 'Misfire armed for the next perforating run.' : 'Inject a fault to practice the recovery; the steps card shows the sequence.'}</div>
+      </div>
+
+      {/* production hookup */}
+      {s.phase === 'production' && s.hookup.step !== 'done' && (
+        <div className="card p-2 space-y-1">
+          <div className="text-[10px] uppercase tracking-wide text-mute">Production hookup</div>
+          <div className="text-xs text-mute">{s.hookup.step === 'rig' ? 'Frac stack off; the workover rig moves over the well with the BOP stack.' : s.hookup.step === 'tubing' ? 'Running tubing: ' + s.hookup.joints + ' of 300 joints.' : 'BOP stack off; production tree going on.'}</div>
+          {s.hookup.step === 'tubing' && <div className="h-1 rounded bg-line overflow-hidden"><div className="h-full bg-ok" style={{ width: (s.hookup.progress * 100) + '%' }} /></div>}
+        </div>
+      )}
 
       {/* wireline or ball-drop controls */}
       {s.phase === 'wireline' && !sleeve && (

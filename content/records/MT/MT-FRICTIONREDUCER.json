@@ -1,0 +1,39 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S50"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "Emulsion or dry products metered at the additive unit; salt-tolerant grades for produced water.",
+    "engineering": "Loading in gallons per thousand gallons; friction loop tests.",
+    "safety": "Slippery spills.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9)."
+  },
+  "id": "MT-FRICTIONREDUCER",
+  "parent": "MT-FLUIDSYSTEMS",
+  "group": "fluids",
+  "level": "component",
+  "name": "Friction reducer",
+  "aliases": [
+    "FR",
+    "friction reducer",
+    "polyacrylamide"
+  ],
+  "function": "The polyacrylamide additive that cuts pipe friction so high rates can be pumped at lower surface pressure; loaded higher for high-viscosity systems."
+}

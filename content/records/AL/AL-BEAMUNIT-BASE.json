@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-BEAMUNIT-BASE",
+  "parent": "AL-BEAMUNIT",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Base and foundation",
+  "aliases": [
+    "unit base",
+    "skid (pumping unit)"
+  ],
+  "function": "The steel skid that carries the Samson post, reducer, and prime mover and bolts to the concrete or timber foundation.",
+  "tabs": {
+    "overview": "Sets the geometry of the unit; leveled and anchored so the polished rod stays centered in the stuffing box.",
+    "engineering": "Per API 11E; foundation per the unit size and soil.",
+    "safety": "Anchor bolts checked; no one on the base while running.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-BASE"
+  ]
+}

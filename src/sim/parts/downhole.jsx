@@ -487,6 +487,73 @@ export function Dissolving({ ct, stages, sleeve }) {
   );
 }
 
+
+// Production string in the lateral once the well is on production: tubing from the heel with the lift equipment
+// at its tail (rod pump, ESP, gas lift mandrels, or a plunger and bumper spring), and produced fluid moving to the heel.
+export function ProductionString({ lift = 'flow', active = true }) {
+  const rod = useRef(); const plunger = useRef(); const flow = useRef();
+  const tailX = LATERAL.heelX + (LATERAL.toeX - LATERAL.heelX) * 0.42;
+  const cnt = 160;
+  const seeds = useMemo(() => Array.from({ length: cnt }, () => ({ u: Math.random(), r: Math.random() * 0.35, a: Math.random() * Math.PI * 2 })), []);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  useFrame((state, dt) => {
+    const tm = state.clock.elapsedTime;
+    if (rod.current) rod.current.position.x = tailX - 1.4 + 0.5 * Math.sin(tm * 1.2);
+    if (plunger.current) { const k = (Math.sin(tm * 0.35) + 1) / 2; plunger.current.position.x = tailX - 1.0 - (tailX - 1.0 - LATERAL.heelX - 0.5) * k; }
+    if (!flow.current) return;
+    for (let i = 0; i < cnt; i++) {
+      const s = seeds[i];
+      if (active) { s.u += dt * 0.08 * (0.7 + 0.6 * (i % 3) / 3); if (s.u > 1) s.u -= 1; }
+      const x = LATERAL.toeX - (LATERAL.toeX - LATERAL.heelX) * s.u;
+      dummy.position.set(x, Math.cos(s.a) * s.r, -Math.abs(Math.sin(s.a) * s.r));
+      dummy.scale.setScalar(active ? 1 : 0.0001); dummy.updateMatrix(); flow.current.setMatrixAt(i, dummy.matrix);
+    }
+    flow.current.instanceMatrix.needsUpdate = true;
+  });
+  const tubeR = 0.16;
+  return (
+    <group name="UC-TUBING">
+      <mesh rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tailX) / 2, 0.02, -0.05]}>
+        <cylinderGeometry args={[tubeR, tubeR, tailX - LATERAL.heelX, 12]} />
+        <meshStandardMaterial color="#9aa3ac" metalness={0.85} roughness={0.35} />
+      </mesh>
+      {lift === 'rodpump' && (
+        <group name="AL-RODPUMP">
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.2, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.05, tubeR + 0.05, 2.6, 12]} /><meshStandardMaterial color="#6d757d" metalness={0.85} roughness={0.35} /></mesh>
+          <mesh ref={rod} rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.4, 0.02, -0.05]}><cylinderGeometry args={[0.05, 0.05, 6.0, 8]} /><meshStandardMaterial color="#e8e8e8" metalness={0.6} roughness={0.3} /></mesh>
+          <mesh position={[tailX + 0.2, 0.02, -0.05]}><sphereGeometry args={[0.12, 10, 10]} /><meshStandardMaterial color="#d8d8d8" /></mesh>
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[tailX + 1.4, 0.02, -0.05]}><cylinderGeometry args={[tubeR, tubeR, 2.2, 10]} /><meshStandardMaterial color="#5b6168" metalness={0.8} roughness={0.4} /></mesh>
+        </group>
+      )}
+      {lift === 'esp' && (
+        <group name="AL-ESP">
+          {[[0.0, 2.2, '#3b3f45'], [2.4, 0.9, '#7d8590'], [3.6, 1.4, '#2a5d9f'], [5.6, 2.6, '#8b939c']].map(([dx, len, color], i) => (
+            <mesh key={i} rotation={[0, 0, Math.PI / 2]} position={[tailX + dx + len / 2 - 3.0, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.08, tubeR + 0.08, len, 12]} /><meshStandardMaterial color={color} metalness={0.8} roughness={0.4} /></mesh>
+          ))}
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tailX) / 2, tubeR + 0.08, -0.05]}><cylinderGeometry args={[0.03, 0.03, tailX - LATERAL.heelX, 6]} /><meshStandardMaterial color="#111" /></mesh>
+        </group>
+      )}
+      {lift === 'gaslift' && (
+        <group name="AL-GASLIFT">
+          {[0.2, 0.45, 0.7].map((f, i) => (
+            <mesh key={i} rotation={[0, 0, Math.PI / 2]} position={[LATERAL.heelX + (tailX - LATERAL.heelX) * f, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.09, tubeR + 0.09, 0.9, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.8} roughness={0.35} /></mesh>
+          ))}
+        </group>
+      )}
+      {lift === 'plunger' && (
+        <group name="AL-PLUNGERLIFT">
+          <mesh ref={plunger} rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.0, 0.02, -0.05]}><cylinderGeometry args={[tubeR - 0.03, tubeR - 0.03, 0.7, 10]} /><meshStandardMaterial color="#e0b15a" metalness={0.7} roughness={0.35} /></mesh>
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[tailX - 0.3, 0.02, -0.05]}><cylinderGeometry args={[tubeR - 0.04, tubeR - 0.04, 0.5, 8]} /><meshStandardMaterial color="#444" wireframe /></mesh>
+        </group>
+      )}
+      <instancedMesh ref={flow} args={[null, null, cnt]} frustumCulled={false}>
+        <sphereGeometry args={[0.05, 6, 6]} />
+        <meshStandardMaterial color="#3a2a12" emissive="#5a3a10" emissiveIntensity={0.5} />
+      </instancedMesh>
+    </group>
+  );
+}
+
 export function HeelMarker() {
   return (
     <group position={[LATERAL.heelX - 0.5, 0, 0]}>

@@ -1,0 +1,55 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "SC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S42",
+    "S47",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Certified lifting gear; screens and packers handled with thread protectors and stabbing guides."
+    }
+  ],
+  "id": "SC",
+  "level": "system",
+  "name": "Sand control",
+  "aliases": [
+    "sand control",
+    "SC",
+    "sand screens",
+    "sand exclusion"
+  ],
+  "function": "The completions that keep formation sand out of the wellbore in weak formations: gravel packs around screens, standalone screens and slotted liners, frac packs, and chemical consolidation.",
+  "tabs": {
+    "overview": "Shale wells rarely need downhole sand control; their sand problem is proppant flowback handled at surface (FB). Weak sandstone reservoirs, offshore and in many conventional fields, do: the standard answer is a gravel pack, which public sources put at more than 90 percent of sand control completions. A screen is run across the interval and sized gravel is pumped into the annulus so the formation sand bridges on the gravel and the gravel is held by the screen. Frac packs combine a short fracture with a gravel pack; standalone screens rely on the formation sand bridging on the screen itself; resin consolidation glues the sand grains in place.",
+    "engineering": "Gravel sized from the formation sand distribution; screen slot narrower than the gravel; screens designed and tested to ISO 17824. Screens or liners without gravel plug over time in most formations.",
+    "connections": "Casing and perforations (CM, WL); production packer and tubing above (UC); the gravel pack service tools on the workstring (RG).",
+    "safety": "Pumping pressures during the pack; heavy screen assemblies handled with the rig.",
+    "evidence": "PetroWiki sand control techniques (S42), ISO 17824 for screens (S47), API RP 19C for gravel testing (S12 if held), field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Perforate, clean out, run the screen assembly with the gravel pack packer, set, pump the pack through the crossover, reverse out, pull the service tool, run the completion.",
+    "failure_modes": "Screen erosion or plugging, incomplete packs leaving voids, packer or seal leaks, sand production returning."
+  },
+  "standards": [
+    {
+      "standard": "ISO 17824",
+      "edition": "verify",
+      "paraphrase": "Sand screen design, manufacture, and testing.",
+      "source": "S47"
+    }
+  ]
+}

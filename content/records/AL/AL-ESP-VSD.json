@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S40",
+    "S45"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "High voltage",
+      "control": "Only qualified people at the drive, transformer, and junction box; lockout before cable work."
+    }
+  ],
+  "id": "AL-ESP-VSD",
+  "parent": "AL-ESP",
+  "group": "esp",
+  "level": "component",
+  "name": "Variable speed drive, transformer, and junction box",
+  "aliases": [
+    "VSD",
+    "ESP drive",
+    "switchboard",
+    "step-up transformer",
+    "junction box"
+  ],
+  "function": "The surface electrical package: the drive that sets the motor frequency, the transformer that steps its output to the motor voltage, and the vented junction box where the well cable meets the surface cable.",
+  "tabs": {
+    "overview": "The drive starts the motor softly and trims the rate; the junction box vents gas that migrates up the cable so it never reaches the drive.",
+    "engineering": "Drive sized to the motor current; transformer to the cable voltage.",
+    "safety": "High voltage; the junction box is never sealed.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "AL-ESP-VSD"
+}

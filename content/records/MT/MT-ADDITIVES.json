@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S50"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "Small volumes metered continuously; the program sets each concentration per the water analysis and the formation.",
+    "engineering": "Compatibility tested with the water and each other.",
+    "safety": "Data sheets on site; biocides and acids are the hazardous ones.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9)."
+  },
+  "id": "MT-ADDITIVES",
+  "parent": "MT-FLUIDSYSTEMS",
+  "group": "fluids",
+  "level": "component",
+  "name": "Biocide, scale inhibitor, surfactant, clay control, buffers",
+  "aliases": [
+    "biocide",
+    "scale inhibitor",
+    "surfactant",
+    "clay stabilizer",
+    "KCl",
+    "buffer",
+    "fluid loss additive"
+  ],
+  "function": "The supporting additives: biocide against bacteria in the water, scale inhibitor against mineral deposits, surfactant for cleanup, clay stabilizer against swelling, buffers for pH, and fluid-loss additives where leakoff is high."
+}

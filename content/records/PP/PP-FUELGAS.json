@@ -1,0 +1,42 @@
+{
+  "id": "PP-FUELGAS",
+  "system": "PP",
+  "parent": "PP",
+  "group": "power",
+  "level": "equipment",
+  "name": "Fuel gas trailers (CNG or LNG)",
+  "aliases": [
+    "CNG trailers",
+    "LNG trailers",
+    "fuel gas supply",
+    "virtual pipeline"
+  ],
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "drawn_in_3d": true,
+  "scene": "PP-FUELGAS",
+  "sources": [
+    "S37",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "High-pressure gas",
+      "control": "Injection line rated and restrained; compressor isolated and blown down before work."
+    }
+  ],
+  "function": "Rows of high-pressure or cryogenic gas trailers parked along the pad edge that supply fuel gas to dual-fuel engines and to the generators of an electric fleet where no field gas line exists.",
+  "tabs": {
+    "overview": "Trailers are swapped by truck as they empty; a decant or vaporizer skid regulates the gas to the conditioning skid. The simulator draws them for the gas-burning fleets.",
+    "engineering": "Trailer count from the fleet gas demand and the swap cycle.",
+    "safety": "High-pressure or cryogenic gas; exclusion zone and no ignition sources.",
+    "evidence": "Electric fleet article (S37); pad photographs for layout only (S9)."
+  }
+}

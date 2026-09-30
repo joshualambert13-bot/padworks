@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S50",
+    "S51",
+    "S52",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Silica dust",
+      "control": "Enclosed transfer, dust collection, respirators in the sand area."
+    },
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "Pad Setup picks the proppant type and intensity and the fluid system; these records explain the choices. Proppant is sized sand or ceramic chosen for the closure stress; the fluid is water with friction reducer (slickwater), viscosified with polymer (linear or crosslinked gel) where transport matters, plus biocide, scale inhibitor, surfactant, clay control, buffers, and breakers as the program calls for. Cement and casing grades are chosen for the well design, not the frac.",
+    "engineering": "Proppant tested to API RP 19C; fluids qualified on rheology and breaker tests at bottomhole temperature; casing per API 5CT; cement per API 10A.",
+    "safety": "Silica dust at the sand area; chemical handling at the additive unit; hot or reactive fluids in acid jobs.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9).",
+    "failure_modes": "Proppant crush and embedment, fluid gel damage to the pack, incompatible additives, bacterial souring from untreated water."
+  },
+  "id": "MT",
+  "level": "system",
+  "name": "Materials and consumables",
+  "aliases": [
+    "materials",
+    "consumables",
+    "MT",
+    "proppant and chemicals",
+    "frac chemicals"
+  ],
+  "function": "What the job consumes: proppant, base fluid and its additives, cement, casing and tubing grades, and the elastomers and consumables in the tools."
+}

@@ -1,0 +1,34 @@
+{
+  "id": "LG",
+  "system": "LG",
+  "level": "system",
+  "name": "Logistics, power, and pad infrastructure",
+  "aliases": [
+    "logistics",
+    "pad infrastructure",
+    "LG",
+    "pad layout"
+  ],
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "drawn_in_3d": false,
+  "sources": [
+    "S9",
+    "S38"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [],
+  "function": "Everything on the pad that is not process equipment: the pad itself and its berm, the lease road, containment, sand and water storage and delivery, lighting, parking, and the traffic plan that moves trucks through it.",
+  "tabs": {
+    "overview": "A frac pad is a bermed, graded surface of caliche or crushed stone with a lease road in, rows for the pumps and missile, a sand area (silos or boxes), water tanks or pits with lay-flat lines, the data van and chemical units, the flowback area downwind, and parking outside the red zone. The simulator repaints the terrain, vegetation, and sky by basin and places the furniture from pad photographs read for layout only.",
+    "engineering": "Layout follows the red zone, the crane radius over the wells, truck turning circles, and prevailing wind for the flare.",
+    "safety": "Traffic, dust, night lighting, and the red zone boundary.",
+    "evidence": "Pad photographs (S9); EIA regions (S38)."
+  }
+}

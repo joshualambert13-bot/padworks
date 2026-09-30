@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S27",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "The production casing takes the frac pressure, so its burst rating sets the treating pressure ceiling with the tree; sour wells use restricted-yield grades; premium connections for gas tightness and high torque.",
+    "engineering": "Per API Spec 5CT; design factors per the operator standard.",
+    "safety": "None beyond handling.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9)."
+  },
+  "id": "MT-CASINGGRADES",
+  "parent": "MT",
+  "group": "tubulars",
+  "level": "equipment",
+  "name": "Casing and tubing grades and connections",
+  "aliases": [
+    "casing grade",
+    "P110",
+    "L80",
+    "tubing grade",
+    "steel grades",
+    "API connection"
+  ],
+  "function": "The steel grades (API 5CT: J55, L80, N80, P110 and others) and connections (API round, buttress, premium) chosen for burst, collapse, tension, and sour service.",
+  "standards": [
+    {
+      "standard": "API Spec 5CT",
+      "edition": "verify",
+      "paraphrase": "Casing and tubing grades, dimensions, and testing.",
+      "source": "S27"
+    }
+  ]
+}

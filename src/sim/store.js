@@ -8,34 +8,34 @@ import { create } from 'zustand';
 // not a design value. The basin table sets typical starting values that the user can override.
 export const BASINS = [
   { id: 'permian-delaware', label: 'Permian: Delaware Basin', region: 'West Texas and southeast New Mexico', blurb: 'Flat desert floor of caliche and creosote scrub with mesas on the horizon. Deep, high-pressure oil and gas targets; 15K trees are common.',
-    tvdFt: 10500, fracGradient: 0.85, bore: '7-15K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: 'mixed', fleet: 'efrac-turbine', completion: 'pnp',
+    tvdFt: 10500, fracGradient: 0.85, bore: '7-15K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: 'mixed', fleet: 'efrac-turbine', completion: 'pnp', lift: 'esp',
     terrain: { ground: '#b8a27c', pad: '#d2c8ad', relief: 0.6, veg: 'scrub', density: 0.3, vegColor: '#5f6b3c', sky: '#bcd0e6', fog: '#d9d4c4' } },
   { id: 'permian-midland', label: 'Permian: Midland Basin', region: 'West Texas', blurb: 'Flat to gently rolling mesquite country on red-tan soil. Stacked oil targets at moderate depth; 10K and 15K trees both in use.',
-    tvdFt: 8500, fracGradient: 0.75, bore: '7-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: '100mesh', fleet: 'dualfuel', completion: 'pnp',
+    tvdFt: 8500, fracGradient: 0.75, bore: '7-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: '100mesh', fleet: 'dualfuel', completion: 'pnp', lift: 'rodpump',
     terrain: { ground: '#b48d66', pad: '#cdbfa3', relief: 0.3, veg: 'mesquite', density: 0.25, vegColor: '#566b35', sky: '#b9cfe8', fog: '#dbd3c3' } },
   { id: 'eagle-ford', label: 'Eagle Ford', region: 'South Texas', blurb: 'Rolling brush country of mesquite and huisache on olive-brown soil, humid haze. Oil, condensate, and gas windows along the trend.',
-    tvdFt: 9500, fracGradient: 0.85, bore: '5-15K', lateralFt: 8500, stageSpacingFt: 220, clusters: 5, proppantLbFt: 1800, fluidBblFt: 35, fluid: 'slickwater', proppant: '40-70', fleet: 'dualfuel', completion: 'pnp',
+    tvdFt: 9500, fracGradient: 0.85, bore: '5-15K', lateralFt: 8500, stageSpacingFt: 220, clusters: 5, proppantLbFt: 1800, fluidBblFt: 35, fluid: 'slickwater', proppant: '40-70', fleet: 'dualfuel', completion: 'pnp', lift: 'gaslift',
     terrain: { ground: '#8b8a5a', pad: '#c7bc9c', relief: 0.9, veg: 'brush', density: 0.6, vegColor: '#4c6b34', sky: '#a9c4e0', fog: '#cfd8d6' } },
   { id: 'bakken', label: 'Bakken and Three Forks (Williston)', region: 'North Dakota and Montana', blurb: 'Rolling prairie of green-gold grass under a big sky, few trees. Openhole sliding sleeve completions were common here before plug and perf took over.',
-    tvdFt: 10500, fracGradient: 0.75, bore: '5-15K', lateralFt: 10000, stageSpacingFt: 250, clusters: 4, proppantLbFt: 1200, fluidBblFt: 25, fluid: 'hybrid', proppant: '40-70', fleet: 'diesel', completion: 'sleeve',
+    tvdFt: 10500, fracGradient: 0.75, bore: '5-15K', lateralFt: 10000, stageSpacingFt: 250, clusters: 4, proppantLbFt: 1200, fluidBblFt: 25, fluid: 'hybrid', proppant: '40-70', fleet: 'diesel', completion: 'sleeve', lift: 'esp',
     terrain: { ground: '#8f9a58', pad: '#bdb59a', relief: 1.4, veg: 'grass', density: 0.05, vegColor: '#4e6b3a', sky: '#9fc3ea', fog: '#cfe0f0' } },
   { id: 'haynesville', label: 'Haynesville', region: 'Northwest Louisiana and East Texas', blurb: 'Pine forest on red clay, humid. Deep, hot, high-pressure dry gas: 15K trees and iron are the rule and treating pressures run high.',
-    tvdFt: 12000, fracGradient: 0.95, bore: '7-15K', lateralFt: 8000, stageSpacingFt: 180, clusters: 6, proppantLbFt: 2500, fluidBblFt: 45, fluid: 'hvfr', proppant: '100mesh', fleet: 'efrac-turbine', completion: 'pnp',
+    tvdFt: 12000, fracGradient: 0.95, bore: '7-15K', lateralFt: 8000, stageSpacingFt: 180, clusters: 6, proppantLbFt: 2500, fluidBblFt: 45, fluid: 'hvfr', proppant: '100mesh', fleet: 'efrac-turbine', completion: 'pnp', lift: 'flow',
     terrain: { ground: '#5f6d3a', pad: '#b8a58a', relief: 0.8, veg: 'pine', density: 0.9, vegColor: '#2f5a2e', sky: '#a9bfd6', fog: '#c6d2d8' } },
   { id: 'marcellus', label: 'Marcellus (Appalachia)', region: 'Pennsylvania and West Virginia', blurb: 'Hardwood-forested hills; small pads cut into hillsides with crushed stone surfaces. Shallower dry gas with long laterals.',
-    tvdFt: 7000, fracGradient: 0.85, bore: '5-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2200, fluidBblFt: 45, fluid: 'slickwater', proppant: '100mesh', fleet: 'efrac-genset', completion: 'pnp',
+    tvdFt: 7000, fracGradient: 0.85, bore: '5-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2200, fluidBblFt: 45, fluid: 'slickwater', proppant: '100mesh', fleet: 'efrac-genset', completion: 'pnp', lift: 'plunger',
     terrain: { ground: '#5c6e3f', pad: '#a7a08e', relief: 3.0, veg: 'hardwood', density: 0.85, vegColor: '#3e6b34', sky: '#a3bdd8', fog: '#c0ccd6' } },
   { id: 'dj', label: 'DJ Basin (Niobrara)', region: 'Northeast Colorado', blurb: 'High plains of short buff grass, wide horizons, clear air. Moderate depth and pressure; pads sit close to towns, so electric fleets are favored for noise.',
-    tvdFt: 7500, fracGradient: 0.75, bore: '5-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 5, proppantLbFt: 1500, fluidBblFt: 30, fluid: 'slickwater', proppant: '40-70', fleet: 'grid', completion: 'pnp',
+    tvdFt: 7500, fracGradient: 0.75, bore: '5-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 5, proppantLbFt: 1500, fluidBblFt: 30, fluid: 'slickwater', proppant: '40-70', fleet: 'grid', completion: 'pnp', lift: 'plunger',
     terrain: { ground: '#a89f6f', pad: '#c4b99a', relief: 0.7, veg: 'grass', density: 0.02, vegColor: '#6b7a44', sky: '#9fc0ea', fog: '#d6dde8' } },
   { id: 'anadarko', label: 'Anadarko (SCOOP and STACK)', region: 'Central Oklahoma', blurb: 'Rolling plains on red soil with scattered oaks and cedars. Deep, high-pressure targets in the SCOOP; shallower stacked targets in the STACK.',
-    tvdFt: 11000, fracGradient: 0.85, bore: '5-15K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 1800, fluidBblFt: 38, fluid: 'slickwater', proppant: 'mixed', fleet: 'dualfuel', completion: 'pnp',
+    tvdFt: 11000, fracGradient: 0.85, bore: '5-15K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 1800, fluidBblFt: 38, fluid: 'slickwater', proppant: 'mixed', fleet: 'dualfuel', completion: 'pnp', lift: 'gaslift',
     terrain: { ground: '#9c7c56', pad: '#c3b394', relief: 1.0, veg: 'scrub', density: 0.2, vegColor: '#587a3a', sky: '#b4cbe6', fog: '#d8d0c4' } },
   { id: 'powder-river', label: 'Powder River Basin', region: 'Northeast Wyoming', blurb: 'Sage steppe on buff soil with broken hills. Moderate depth oil targets; long hauls for sand and water.',
-    tvdFt: 9000, fracGradient: 0.7, bore: '5-10K', lateralFt: 9500, stageSpacingFt: 220, clusters: 5, proppantLbFt: 1400, fluidBblFt: 30, fluid: 'hybrid', proppant: '40-70', fleet: 'diesel', completion: 'pnp',
+    tvdFt: 9000, fracGradient: 0.7, bore: '5-10K', lateralFt: 9500, stageSpacingFt: 220, clusters: 5, proppantLbFt: 1400, fluidBblFt: 30, fluid: 'hybrid', proppant: '40-70', fleet: 'diesel', completion: 'pnp', lift: 'rodpump',
     terrain: { ground: '#a3a077', pad: '#c2b99b', relief: 1.8, veg: 'sage', density: 0.45, vegColor: '#7a8a6a', sky: '#a9c6ea', fog: '#d5dbe4' } },
   { id: 'utica', label: 'Utica (Appalachia)', region: 'Eastern Ohio', blurb: 'Rolling farmland and woodlots. Deep dry gas and condensate with high pressure in the deeper window.',
-    tvdFt: 9000, fracGradient: 0.9, bore: '5-15K', lateralFt: 11000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: '100mesh', fleet: 'efrac-genset', completion: 'pnp',
+    tvdFt: 9000, fracGradient: 0.9, bore: '5-15K', lateralFt: 11000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: '100mesh', fleet: 'efrac-genset', completion: 'pnp', lift: 'flow',
     terrain: { ground: '#64733f', pad: '#a7a08e', relief: 2.2, veg: 'hardwood', density: 0.6, vegColor: '#3f6a36', sky: '#a8c0d8', fog: '#c3cdd5' } },
 ];
 
@@ -63,6 +63,22 @@ export const FLUIDS = [
   { id: 'hvfr', label: 'High-viscosity friction reducer', fric: 0.95, transport: 1.2, blurb: 'Higher-loaded friction reducer that adds some viscosity for transport without a gel system.' },
   { id: 'hybrid', label: 'Hybrid (slickwater pad, linear gel)', fric: 1.15, transport: 1.4, blurb: 'Slickwater pad followed by linear gel stages that carry higher concentrations.' },
   { id: 'crosslinked', label: 'Crosslinked gel', fric: 1.45, transport: 1.7, blurb: 'Borate or zirconate crosslinked gel: best transport, highest friction, needs breakers and cleanup.' },
+];
+export const LIFTS = [
+  { id: 'flow', label: 'Natural flow', blurb: 'The well flows on reservoir pressure through the production tree and choke; lift is added later when it loads up.' },
+  { id: 'rodpump', label: 'Rod pump (beam unit)', blurb: 'A beam pumping unit strokes a rod string to a positive-displacement pump at the bottom of the tubing. The workhorse of low-rate oil wells.' },
+  { id: 'esp', label: 'Electric submersible pump', blurb: 'A multistage centrifugal pump and motor at the bottom of the tubing, powered by a cable from a drive at surface. High rates, sensitive to sand and gas.' },
+  { id: 'gaslift', label: 'Gas lift', blurb: 'Compressed gas injected down the annulus through valves in mandrels lightens the tubing column so the well flows. Tolerant of sand and deviation.' },
+  { id: 'plunger', label: 'Plunger lift', blurb: 'A free piston cycles between a bumper spring at the tubing tail and a lubricator on the tree, sweeping liquid out of a gas well.' },
+];
+// Training events that an instructor can inject (or that fire at random when enabled). Each has a recovery sequence in nextSteps.
+export const EVENTS = [
+  { id: 'misfire', label: 'Gun misfire', phases: ['wireline'], pnpOnly: true, blurb: 'One or more clusters do not fire. Pull out, inspect, re-arm, and run again for the missed clusters.' },
+  { id: 'stuck', label: 'Tool string stuck', phases: ['wireline'], pnpOnly: true, blurb: 'The pump-down string stops in the lateral. Work the line and pump to free it before continuing.' },
+  { id: 'valveFault', label: 'Working valve actuator fault', phases: ['frac', 'wireline'], blurb: 'The zipper working valve will not move on command. Check hydraulic supply and switch to the backup circuit.' },
+  { id: 'sandOut', label: 'Sand delivery interrupted', phases: ['frac'], blurb: 'The conveyor stops: proppant concentration falls to zero mid-stage. Hold rate on clean fluid until sand resumes, then stage back in.' },
+  { id: 'prvLift', label: 'Relief valve lift', phases: ['frac'], blurb: 'The missile relief valve lifts on a pressure spike. Pumps offline, find the cause, reset.' },
+  { id: 'screenout', label: 'Screenout', phases: ['frac'], blurb: 'The near-wellbore packs off and pressure ramps. Cut sand, flush, and stage back in lower.' },
 ];
 export const PROPPANTS = [
   { id: '100mesh', label: '100 mesh sand', bridge: 0.9, blurb: 'Fine sand for near-wellbore and far-field placement; lowest bridging risk in the perforations.' },
@@ -119,11 +135,13 @@ export const JOB_TIME_SCALE = 30;   // one second of simulation stands for 30 se
 // Fixed illustrative constants
 export const CONST = { waterPpg: 8.34, sandSgPpg: 22.1, casingBoreIn: 4.778 };
 const VALVE_TRAVEL_S = 3.0;    // hydraulic actuator or handwheel travel time (simplified)
+const a_any = (a) => a.overpressure || a.prvLifted || a.kickout || a.screenout || !!a.interlock;
 
 export function basinOf(s) { return BASINS.find(b => b.id === s.setup.basin) || BASINS[0]; }
 export function fleetOf(s) { return FLEETS.find(f => f.id === s.setup.fleet) || FLEETS[0]; }
 export function fluidOf(s) { return FLUIDS.find(f => f.id === s.setup.fluid) || FLUIDS[0]; }
 export function proppantOf(s) { return PROPPANTS.find(p => p.id === s.setup.proppant) || PROPPANTS[0]; }
+export function liftOf(s) { return LIFTS.find(l => l.id === s.setup.lift) || LIFTS[0]; }
 export function boreOf(s) { return BORES.find(b => b.id === s.pad.bore) || BORES[5]; }
 
 // Well and pressure parameters derived from the setup (illustrative)
@@ -239,7 +257,7 @@ function defaultSetup() {
   const b = BASINS[0];
   return { basin: b.id, tvdFt: b.tvdFt, fracGradient: b.fracGradient, completion: b.completion, sleeveSystem: 'cemented', plugs: 'composite',
     lateralFt: b.lateralFt, stageSpacingFt: b.stageSpacingFt, clusters: b.clusters, stagesShown: 5,
-    fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt };
+    fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, lift: b.lift || 'flow' };
 }
 
 const freshJob = (setup, pad) => ({
@@ -248,6 +266,8 @@ const freshJob = (setup, pad) => ({
   pumpRate: 0, ppa: 0, pumpsOnline: false, surfacePsi: 0, bhtpPsi: 0, hydroPsi: 0, frictionPsi: 0, netPsi: 0,
   slurryPpg: CONST.waterPpg, cumSlurryBbl: 0, cumProppantLb: 0, history: [], ballsDropped: 0,
   alarms: { overpressure: false, prvLifted: false, kickout: false, screenout: false, interlock: '' }, log: [],
+  events: { active: null, random: false, sandTimer: 0, valveFault: false, misfireArmed: false, misfired: 0, fired: [] },
+  hookup: { step: 'rig', progress: 0, joints: 0 },
 });
 
 export const useSim = create((set, get) => ({
@@ -298,7 +318,7 @@ export const useSim = create((set, get) => ({
   setBasin: (id) => {
     const b = BASINS.find(x => x.id === id) || BASINS[0];
     get().setSetup({ basin: b.id, tvdFt: b.tvdFt, fracGradient: b.fracGradient, completion: b.completion, lateralFt: b.lateralFt, stageSpacingFt: b.stageSpacingFt,
-      clusters: b.clusters, fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, sleeveSystem: b.id === 'bakken' ? 'openhole' : 'cemented' });
+      clusters: b.clusters, fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, sleeveSystem: b.id === 'bakken' ? 'openhole' : 'cemented', lift: b.lift || 'flow' });
     get().setPad({ bore: b.bore });
   },
   startJob: () => {
@@ -328,6 +348,9 @@ export const useSim = create((set, get) => ({
     if (id === 'crown' && (s.surfacePsi > 500 || s.pumpRate > 0) && target === 0) {
       return set({ alarms: { ...s.alarms, interlock: 'Crown valve is not closed against flow. Stop pumping and bleed the inlet block first.' } });
     }
+    if (id === 'zipWork' && s.events.valveFault) {
+      return set({ alarms: { ...s.alarms, interlock: 'Working valve actuator fault: the valve does not respond to the control unit. Check the hydraulic supply and switch to the backup circuit.' } });
+    }
     if (id === 'iso' && target === 0 && s.pumpsOnline && s.pumpRate > 0) {
       return set({ alarms: { ...s.alarms, interlock: 'Missile isolation valve is not closed against flow: the spread would deadhead. Pumps offline first.' } });
     }
@@ -353,9 +376,77 @@ export const useSim = create((set, get) => ({
     else if (action === 'phaseFlowback') { g.setPhase('flowback'); }
     else if (action === 'phaseProduction') { g.setPhase('production'); }
     else if (action === 'start') { g.startJob(); }
+    else if (action === 'workLine') { g.workLine(); }
+    else if (action === 'resetActuator') { g.resetActuator(); }
+    else if (action === 'rerunGuns') { g.rerunGuns(); }
+    else if (action === 'hookupNext') { g.hookupNext(); }
+    else if (action === 'clearEvent') { g.clearEvent(); }
     else if (action === 'reset') { g.reset(); }
   },
   acknowledgeAlarms: () => set(s => ({ alarms: { ...s.alarms, overpressure: false, prvLifted: false, screenout: false, kickout: false } })),
+  // ----- training events -----
+  setRandomEvents: (random) => set(s => ({ events: { ...s.events, random } })),
+  injectEvent: (id) => {
+    const s = get();
+    const ev = EVENTS.find(e => e.id === id);
+    if (!ev || s.phase === 'setup') return;
+    const sleeve = s.setup.completion === 'sleeve';
+    if (ev.pnpOnly && sleeve) return;
+    const events = { ...s.events, fired: [...s.events.fired, id] };
+    if (id === 'misfire') {
+      // takes effect when the guns fire: the last cluster (or two) fails
+      set({ events: { ...events, misfireArmed: true } });
+      get().addLog('EVENT: a gun misfire is armed for the next perforating run.');
+    } else if (id === 'stuck') {
+      if (s.wl.step !== 'pumpdown') { get().addLog('Event ignored: no string moving in the lateral right now.'); return; }
+      set({ events: { ...events, active: 'stuck' }, wl: { step: 'stuck', progress: s.wl.progress } });
+      get().addLog('EVENT: tool string stuck in the lateral.');
+    } else if (id === 'valveFault') {
+      set({ events: { ...events, active: 'valveFault', valveFault: true } });
+      get().addLog('EVENT: zipper working valve actuator does not respond.');
+    } else if (id === 'sandOut') {
+      set({ events: { ...events, active: 'sandOut', sandTimer: 25 }, ppa: 0 });
+      get().addLog('EVENT: sand delivery interrupted. Proppant concentration fell to zero.');
+    } else if (id === 'prvLift') {
+      set({ events: { ...events, active: 'prvLift' }, alarms: { ...s.alarms, prvLifted: true }, surfacePsi: Math.max(s.surfacePsi, wellParams(s).prvSetPsi + 200), pumpsOnline: false });
+      get().addLog('EVENT: pressure spike, relief valve lifted on the missile.');
+    } else if (id === 'screenout') {
+      set({ events: { ...events, active: 'screenout' }, alarms: { ...s.alarms, screenout: true }, netPsi: Math.max(s.netPsi, 2600) });
+      get().addLog('EVENT: SCREENOUT: treating pressure ramping at constant rate.');
+    }
+  },
+  clearEvent: () => set(s => ({ events: { ...s.events, active: null } })),
+  workLine: () => {
+    const s = get();
+    if (s.wl.step !== 'stuck') return;
+    set({ wl: { step: 'freeing', progress: 0 } });
+    get().addLog('Working the line: tension cycles and pump-down rate to free the string.');
+  },
+  resetActuator: () => {
+    const s = get();
+    if (!s.events.valveFault) return;
+    set({ events: { ...s.events, valveFault: false, active: s.events.active === 'valveFault' ? null : s.events.active } });
+    get().addLog('Working valve on the backup hydraulic circuit: actuator responds.');
+  },
+  rerunGuns: () => {
+    const s = get();
+    const st = s.stages[s.stage];
+    if (s.phase !== 'wireline' || !st || st.clustersFired >= s.setup.clusters) return;
+    if (s.valves.swab.pos < 0.99 || s.valves.crown.pos < 0.99 || s.valves.umv.pos < 0.99 || s.valves.lmv.pos < 0.99) {
+      return set({ alarms: { ...s.alarms, interlock: 'Swab, crown, and master valves must be open with the lubricator rigged before running in.' } });
+    }
+    set({ wl: { step: 'pumpdown', progress: 0 }, events: { ...s.events, misfireArmed: false, misfired: 0 } });
+    get().addLog('Re-running guns for the ' + (s.setup.clusters - st.clustersFired) + ' missed cluster' + (s.setup.clusters - st.clustersFired > 1 ? 's' : '') + '.');
+  },
+  // ----- production hookup sub-steps -----
+  hookupNext: () => {
+    const s = get();
+    if (s.phase !== 'production') return;
+    const h = s.hookup;
+    if (h.step === 'rig') { set({ hookup: { step: 'tubing', progress: 0, joints: 0 } }); get().addLog('Workover rig and BOP stack rigged up; running production tubing.'); }
+    else if (h.step === 'tubing' && h.progress >= 1) { set({ hookup: { ...h, step: 'tree' } }); get().addLog('Tubing landed. Nippling down the BOP stack, installing the production tree.'); }
+    else if (h.step === 'tree') { set({ hookup: { ...h, step: 'done' } }); get().addLog('Production tree tested; flowline and lift hooked up. Well on production.'); }
+  },
   addLog: (msg) => set(s => ({ log: [{ t: s.t, msg }, ...s.log].slice(0, 60) })),
 
   setPhase: (phase) => {
@@ -390,6 +481,7 @@ export const useSim = create((set, get) => ({
       patch.valves = { ...v, swab: tv('swab', 0), wingA: tv('wingA', 0), zipWork: tv('zipWork', 0), zipIso: tv('zipIso', 0), wingB: tv('wingB', 1) };
     } else if (phase === 'rigup' || phase === 'production') {
       patch.lubricatorRigged = false; patch.ctRigged = false;
+      if (phase === 'production') patch.hookup = { step: 'rig', progress: 0, joints: 0 };
     }
     set(patch);
     get().addLog('Phase: ' + phasesFor(cur.setup).find(p => p.id === phase).label);
@@ -561,9 +653,30 @@ export const useSim = create((set, get) => ({
       bhtpPsi = surfacePsi + hydroPsi;
     }
 
+    // Training events: sand delivery timer, random firing
+    let events = s.events;
+    if (events.sandTimer > 0) {
+      const left = events.sandTimer - dt;
+      events = { ...events, sandTimer: Math.max(0, left), active: left <= 0 && events.active === 'sandOut' ? null : events.active };
+      if (left <= 0) get().addLog('Sand delivery restored: conveyor running again.');
+      else if (s.ppa > 0) patch.ppa = 0;
+    }
+    if (events.random && !events.active && !events.misfireArmed && !a_any(s.alarms) && Math.random() < dt * 0.004) {
+      const sleeve0 = s.setup.completion === 'sleeve';
+      const pool = EVENTS.filter(e => e.phases.includes(s.phase) && !(e.pnpOnly && sleeve0) && !(e.id === 'stuck' && s.wl.step !== 'pumpdown') && !(e.id === 'sandOut' && s.ppa <= 0) && !(e.id === 'screenout' && !(q > 0)) && !(e.id === 'prvLift' && !(q > 0)));
+      if (pool.length) { const pick = pool[Math.floor(Math.random() * pool.length)]; setTimeout(() => get().injectEvent(pick.id), 0); }
+    }
+    if (events !== s.events) patch.events = events;
+
     // Wireline or ball-drop sequence progression
     let lubricatorRigged = s.lubricatorRigged;
-    if (s.phase === 'wireline' && wl.step !== 'idle' && wl.step !== 'done') {
+    if (s.phase === 'wireline' && wl.step === 'stuck') {
+      // stuck: nothing moves until the line is worked
+    } else if (s.phase === 'wireline' && wl.step === 'freeing') {
+      const p = wl.progress + 0.35 * dt * (0.5 + 0.5 * Math.min(1, s.pumpRate / 20));
+      if (p >= 1) { wl = { step: 'pumpdown', progress: Math.min(0.98, s.wl.progress) }; get().addLog('String free and moving again.'); patch.events = { ...events, active: null }; }
+      else wl = { step: 'freeing', progress: p };
+    } else if (s.phase === 'wireline' && wl.step !== 'idle' && wl.step !== 'done') {
       if (sleeve) {
         if (wl.step === 'launch') {
           const p = wl.progress + 1.2 * dt;
@@ -593,23 +706,38 @@ export const useSim = create((set, get) => ({
           if (p >= 1) {
             stages = stages.map((x, i) => i === s.stage ? { ...x, plugSet: true } : x);
             wl = { step: 'armed', progress: 0 };
-            get().addLog('Plug set toe-ward of the new perforations. Guns armed.');
+            get().addLog(st && st.plugSet ? 'Plug already set on this stage; guns armed for the missed clusters.' : 'Plug set toe-ward of the new perforations. Guns armed.');
           } else wl = { step: 'setplug', progress: p };
         } else if (wl.step === 'perforate') {
           const n = s.setup.clusters;
-          const p = wl.progress + 0.35 * dt * (3 / n);
-          const fired = Math.min(n, Math.floor(p * n) + 1);
+          const already = st ? st.clustersFired : 0;
+          const remaining = Math.max(1, n - already);
+          const p = wl.progress + 0.35 * dt * (3 / remaining);
+          let fired = Math.min(n, already + Math.floor(p * remaining) + 1);
+          // an armed misfire leaves the last cluster (two on big stages) unfired
+          const missing = events.misfireArmed ? (n >= 6 ? 2 : 1) : 0;
+          if (missing && fired > n - missing) fired = n - missing;
           stages = stages.map((x, i) => i === s.stage ? { ...x, clustersFired: fired, perforated: fired >= 1 } : x);
           wl = p >= 1 ? { step: 'pooh', progress: 0 } : { step: 'perforate', progress: p };
-          if (p >= 1) get().addLog('All clusters fired. Pulling out of hole.');
+          if (p >= 1) {
+            if (missing) { get().addLog('MISFIRE: ' + missing + ' cluster' + (missing > 1 ? 's' : '') + ' did not fire. Pulling out of hole.'); events = { ...events, misfired: missing, misfireArmed: false }; patch.events = events; }
+            else get().addLog('All clusters fired. Pulling out of hole.');
+          }
         } else if (wl.step === 'pooh') {
           const p = wl.progress + 0.15 * dt;
           wl = p >= 1 ? { step: 'done', progress: 1 } : { step: 'pooh', progress: p };
-          if (p >= 1) get().addLog('Tool string in the lubricator. Close swab valve, swap to frac.');
+          if (p >= 1) get().addLog(events.misfired > 0 ? 'Tool string in the lubricator. Inspect the guns, re-arm, and run again for the missed clusters.' : 'Tool string in the lubricator. Close swab valve, swap to frac.');
         }
       }
     }
     if (wl !== s.wl) patch.wl = wl;
+
+    // Production hookup: the workover rig runs tubing joint by joint
+    if (s.phase === 'production' && s.hookup.step === 'tubing' && s.hookup.progress < 1) {
+      const p = Math.min(1, s.hookup.progress + 0.06 * dt);
+      patch.hookup = { ...s.hookup, progress: p, joints: Math.round(p * 300) };
+      if (p >= 1) get().addLog('Production tubing landed in the tubing hanger: 300 joints.');
+    }
 
     // Drillout progression: coiled tubing runs to each plug (or ball seat) from the heel and mills it.
     // Dissolvable plugs or balls degrade on their own, toe first, with no coiled tubing in the hole.
@@ -728,6 +856,37 @@ export function nextSteps(s) {
     push('Acknowledge the screenout, then stage sand back in at a lower concentration', false, { action: 'ack', label: 'Acknowledge' });
     return { blocked: true, title: 'Screenout: pressure ramping at constant rate', why: (st && st.fracComplete ? 'The stage design was already placed and sand kept coming: the near-wellbore packed off. ' : '') + 'Too much proppant for the rate and fluid; the perforations or near-wellbore are packing off.', steps };
   }
+  // ---- training events in progress
+  if (s.phase === 'wireline' && (s.wl.step === 'stuck' || s.wl.step === 'freeing')) {
+    push('String stopped in the lateral: do not pull to the weak point. Note line tension and depth', true);
+    push('Pump-down rate up to 20 to 25 bpm to push the string', s.pumpRate >= 20, { action: 'rateLow', label: 'Rate 15 bpm' });
+    push('Work the line: tension cycles within the safe pull while pumping', s.wl.step === 'freeing', { action: 'workLine', label: 'Work the line' });
+    push('String free: continue the pump-down', false);
+    return { blocked: true, title: 'Tool string stuck', why: 'The plug and guns stopped moving in the lateral (debris, a dogleg, or low pump-down rate).', steps };
+  }
+  if (!sleeve && s.phase === 'wireline' && s.wl.step === 'done' && st && st.perforated && st.clustersFired < s.setup.clusters) {
+    const missed = s.setup.clusters - st.clustersFired;
+    push('Tool string back in the lubricator: close the swab, bleed, and inspect the guns', true);
+    push('Confirm the misfire: ' + missed + ' of ' + s.setup.clusters + ' clusters did not fire (surface pressure and gun inspection)', true);
+    push('Re-dress and re-arm the guns for the missed cluster' + (missed > 1 ? 's' : '') + '; the plug is already set', true);
+    push('Swab valve open, lubricator tested', open(v.swab), { valve: 'swab' });
+    push('Run in hole again and fire the missed cluster' + (missed > 1 ? 's' : ''), false, { action: 'rerunGuns', label: 'Run guns again' });
+    return { blocked: true, title: 'Gun misfire: ' + missed + ' cluster' + (missed > 1 ? 's' : '') + ' unfired', why: 'Pumping on a stage with missed clusters treats fewer entry points and risks a screenout.', steps };
+  }
+  if (s.events.valveFault && (s.phase === 'frac' || s.phase === 'wireline')) {
+    push('Working valve does not respond: confirm at the control unit (no position change, no pressure on the actuator line)', true);
+    push('Pumps offline, rate to zero until the leg can be operated', !s.pumpsOnline && s.pumpRate === 0, { action: 'rateZero', label: 'Rate to 0' });
+    push('Check hydraulic supply and hoses; switch the leg to the backup circuit', false, { action: 'resetActuator', label: 'Backup circuit' });
+    push('Cycle the valve and confirm position, then continue', false, { valve: 'zipWork' });
+    return { blocked: true, title: 'Working valve actuator fault', why: 'Hydraulic supply lost or an actuator seal failed on the zipper working valve.', steps };
+  }
+  if (s.events.active === 'sandOut' && s.phase === 'frac') {
+    push('Sand delivery stopped: concentration is at zero. Do not shut down; keep the fracture open', true);
+    push('Hold rate on clean fluid so the near-wellbore stays open', s.pumpsOnline && s.pumpRate >= 60, { action: 'rateFlush', label: 'Rate 60 bpm' });
+    push('Restart the conveyor or switch to the second sand system (about ' + Math.ceil(s.events.sandTimer) + ' s)', s.events.sandTimer <= 0);
+    push('Sand back in from 0.5 PPA and rebuild the schedule', false);
+    return { blocked: true, title: 'Sand delivery interrupted', why: 'The conveyor or silo feed stopped mid-stage.', steps };
+  }
   if (a.interlock) {
     const m = a.interlock;
     if (m.startsWith('Close the zipper')) { push('Close the zipper working valve', closed(v.zipWork), { valve: 'zipWork' }); push('Then open the swab valve', open(v.swab), { valve: 'swab' }); }
@@ -827,6 +986,16 @@ export function nextSteps(s) {
     push('Well cleaned up: hand over to production', s.fb.cumBbl > 200, { action: 'phaseProduction', label: 'Production hookup' });
     return { blocked: false, title: 'Flowback and well test', steps };
   }
+  const lift = liftOf(s);
+  const h = s.hookup;
+  if (h.step !== 'done') {
+    push('Frac stack off, workover rig over the well, BOP stack nippled up and tested on the tubing head', h.step !== 'rig', { action: 'hookupNext', label: 'Rig up' });
+    push('Run the production tubing with the packer, nipples, and lift hardware; land it in the tubing hanger' + (h.step === 'tubing' ? ' (' + h.joints + ' of 300 joints)' : ''), h.step === 'tree' || h.step === 'done', h.step === 'tubing' ? { action: 'hookupNext', label: h.progress >= 1 ? 'Nipple down' : 'Running tubing', gate: h.progress >= 1 } : {});
+    push('Nipple down the BOP stack; install and test the production tree', h.step === 'done', h.step === 'tree' ? { action: 'hookupNext', label: 'Install the tree' } : {});
+    push('Hook up the flowline and ' + (lift.id === 'flow' ? 'open the well on the choke' : 'commission the ' + lift.label.toLowerCase()), false);
+    return { blocked: false, title: 'Production hookup', steps };
+  }
+  push(lift.id === 'flow' ? 'Production tree and flowline hooked up; the well flows on reservoir pressure through the choke' : 'Production tree hooked up; ' + lift.label.toLowerCase() + ' installed and running', true);
   push('Job complete. Back to setup to run another pad', false, { action: 'reset', label: 'Back to setup' });
-  return { blocked: false, title: 'On production', steps };
+  return { blocked: false, title: 'On production: ' + lift.label.toLowerCase(), steps };
 }

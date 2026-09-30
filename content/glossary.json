@@ -445,5 +445,104 @@
     "system": "PP",
     "record": "PP-JOBDESIGN",
     "definition": "Lateral length divided by stage count; tighter spacing means more stages, more wireline runs or balls, and more time on the pad."
+  },
+  {
+    "term": "Artificial lift",
+    "aliases": [
+      "lift",
+      "AL",
+      "rod pump",
+      "ESP",
+      "gas lift",
+      "plunger lift"
+    ],
+    "system": "AL",
+    "record": "AL",
+    "definition": "Any method that adds energy to lift fluid from a well that will not flow on its own: a beam unit stroking a rod pump, an electric submersible pump, injected gas, or a plunger."
+  },
+  {
+    "term": "Standing and traveling valves",
+    "aliases": [
+      "standing valve",
+      "traveling valve",
+      "ball and seat (pump)"
+    ],
+    "system": "AL",
+    "record": "AL-RODPUMP",
+    "definition": "The two check valves of a rod pump: the standing valve in the barrel opens on the upstroke to fill it, the traveling valve in the plunger opens on the downstroke so the plunger passes through the fluid it will lift on the next upstroke."
+  },
+  {
+    "term": "Gravel pack",
+    "aliases": [
+      "GP",
+      "cased-hole gravel pack",
+      "openhole gravel pack",
+      "frac pack"
+    ],
+    "system": "SC",
+    "record": "SC-GRAVELPACK",
+    "definition": "A sand control completion in which sized gravel is packed around a screen so the formation sand bridges on the gravel and the gravel is held by the screen."
+  },
+  {
+    "term": "Wire-wrapped screen",
+    "aliases": [
+      "WWS",
+      "sand screen",
+      "premium screen",
+      "slotted liner"
+    ],
+    "system": "SC",
+    "record": "SC-GRAVELPACK-SCREEN",
+    "definition": "A base pipe wrapped with keystone wire on ribs, leaving a slot narrower than the gravel or the formation sand it must hold."
+  },
+  {
+    "term": "BOP stack",
+    "aliases": [
+      "blowout preventer",
+      "BOP",
+      "annular",
+      "rams",
+      "nipple up",
+      "nipple down"
+    ],
+    "system": "RG",
+    "record": "RG-BOPSTACK",
+    "definition": "The preventers bolted on the wellhead while a rig has pipe in the hole: an annular that closes on anything, pipe rams that close on the pipe, blind rams that close on an open hole, and a spool with kill and choke outlets."
+  },
+  {
+    "term": "Nipple up and nipple down",
+    "aliases": [
+      "NU",
+      "ND",
+      "rig up the stack"
+    ],
+    "system": "RG",
+    "record": "RG-BOPSTACK",
+    "definition": "Installing (nipple up) or removing (nipple down) the BOP stack or the tree on the wellhead, with the pressure test that follows."
+  },
+  {
+    "term": "Frac van",
+    "aliases": [
+      "data van",
+      "treater van",
+      "control van"
+    ],
+    "system": "DA",
+    "record": "DA-FRACVAN",
+    "definition": "The control room trailer where the treater runs the job from live pressure, rate, and density readings and the pump controls."
+  },
+  {
+    "term": "Proppant",
+    "aliases": [
+      "frac sand",
+      "sand",
+      "ceramic proppant",
+      "resin-coated sand",
+      "100 mesh",
+      "40/70"
+    ],
+    "system": "MT",
+    "record": "MT-PROPPANT",
+    "definition": "The sized sand or ceramic pumped into the fracture to hold it open after the pressure comes off; sized by mesh, chosen by closure stress."
   }
 ]

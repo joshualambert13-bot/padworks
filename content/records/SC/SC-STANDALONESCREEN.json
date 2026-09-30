@@ -1,0 +1,42 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "SC",
+  "drawn_in_3d": false,
+  "sources": [
+    "S42",
+    "S47"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "SC-STANDALONESCREEN",
+  "parent": "SC",
+  "group": "screens",
+  "level": "equipment",
+  "name": "Standalone screens and slotted liners",
+  "aliases": [
+    "standalone screen",
+    "SAS",
+    "slotted liner",
+    "screen only"
+  ],
+  "function": "Screens or slotted liners run across the interval without gravel, relying on the formation sand bridging on the openings.",
+  "tabs": {
+    "overview": "Cheaper and simpler than a gravel pack, used in openhole horizontals in well-sorted sands; public guidance warns they plug over time in most formations. Slot width is sometimes sized to the 10 percentile grain size so the coarser grains bridge.",
+    "engineering": "Slot or mesh sized from sieve analysis; erosion and plugging are the design limits.",
+    "safety": "Handled with protectors on the rig.",
+    "evidence": "PetroWiki sand control techniques (S42), ISO 17824 for screens (S47), API RP 19C for gravel testing (S12 if held), field practice (S9). Generic geometry; not an OEM design.",
+    "failure_modes": "Plugging, erosion, hot spots where flow concentrates."
+  }
+}

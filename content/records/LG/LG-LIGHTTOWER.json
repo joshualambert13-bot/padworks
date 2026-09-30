@@ -1,0 +1,35 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "Diesel or solar units with a telescoping mast and four lamp heads; placed at the well row, the pumps, and the sand area.",
+    "engineering": "Coverage per the pad layout.",
+    "safety": "Mast lowered before moves; glare toward the crane operator avoided.",
+    "evidence": "Pad photographs read for layout only (S9)."
+  },
+  "id": "LG-LIGHTTOWER",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Light towers",
+  "aliases": [
+    "light tower",
+    "light plant",
+    "pad lighting"
+  ],
+  "function": "Trailer-mounted mast lights placed around the pad for night operations.",
+  "scene": "LG-LIGHTTOWER"
+}

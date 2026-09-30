@@ -22,14 +22,21 @@ function PulseRing({ r }) {
 // A block-body gate valve. `open` is 0..1 position. kind: 'manual' | 'hydraulic'.
 // axis: 'vertical' (bore along Y) or 'horizontal' (bore along X). The stem always points to -Z
 // (the operator side) so actuators and handwheels line up along the pad, as on a real stack.
-export function GateValveBlock({ open = 1, kind = 'manual', axis = 'vertical', bore = 0.18, name, position = [0, 0, 0], label, dim = false, pulse = false }) {
+export const WELL_COLORS = ['#2f8f4e', '#2b62b8', '#d0d4d8', '#c23a2c', '#d9a400', '#e0762a', '#7a3fa8', '#1f9c8f', '#8a6d3b', '#4a7fb5', '#b03a6e', '#5b8a2b', '#c9c9c9', '#3d4f9a', '#a3521c', '#6d6d6d'];
+export function tintMat(color, dim = false) {
+  if (!color) return dim ? MAT.dimSteel : MAT.darkSteel;
+  if (!dim) return { color, metalness: 0.5, roughness: 0.55 };
+  const c = new THREE.Color(color).multiplyScalar(0.45);
+  return { color: '#' + c.getHexString(), metalness: 0.6, roughness: 0.6 };
+}
+export function GateValveBlock({ open = 1, kind = 'manual', axis = 'vertical', bore = 0.18, name, position = [0, 0, 0], label, dim = false, pulse = false, tint = null }) {
   const body = bore * 2.4;     // block across the bore
   const len = bore * 3.1;      // block along the bore (between hubs)
   const ftf = bore * 6.3;      // flange face to face
   const flangeR = bore * 1.4;
   const indicator = open > 0.99 ? '#35e08f' : open < 0.01 ? '#ff4d4d' : '#ffb020';
   const stemTravel = bore * 1.1 * open;
-  const matBody = dim ? MAT.dimSteel : MAT.darkSteel;
+  const matBody = tint ? tintMat(tint, dim) : dim ? MAT.dimSteel : MAT.darkSteel;
   const inner = (
     <group>
       {/* body block, bore along local Y; hubs to the end flanges */}
@@ -102,10 +109,10 @@ export function treeDims(bore) {
 // Wellhead, tree adapter, lower master (manual), upper master (hyd.), cross with a manual then a hydraulic
 // wing valve each side, crown valve (hyd.), flanged inlet block for the spooled treating line, swab (hyd.),
 // top adapter. Wing A (-X) is the pump-down side, wing B (+X) the flowback side; the inlet faces -X to the zipper.
-export function FracTree({ valves, showLabels, lubricator = false, wlStep = 'idle', bore = 0.18, dim = false, name = 'WH-FRACTREE', partner = false, focusValve = null, launcher = false, ballsLeft = 0 }) {
+export function FracTree({ valves, showLabels, lubricator = false, wlStep = 'idle', bore = 0.18, dim = false, name = 'WH-FRACTREE', partner = false, focusValve = null, launcher = false, ballsLeft = 0, tint = null }) {
   const d = treeDims(bore);
   const v = valves;
-  const mat = dim ? MAT.dimSteel : MAT.darkSteel;
+  const mat = tint ? tintMat(tint, dim) : dim ? MAT.dimSteel : MAT.darkSteel;
   const nm = (k) => (partner ? undefined : k);
   return (
     <group name={partner ? undefined : name}>
@@ -114,31 +121,31 @@ export function FracTree({ valves, showLabels, lubricator = false, wlStep = 'idl
       <Cyl r={0.48} h={0.08} position={[0, 0.7, 0]} mat={MAT.steel} />
       <Cyl r={0.4} h={0.7} position={[0, 1.05, 0]} mat={mat} name={nm('WH-CASINGSPOOL')} />
       <Cyl r={0.47} h={0.08} position={[0, 1.4, 0]} mat={MAT.steel} />
-      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[0.62, 1.05, 0]} dim={dim} />
-      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[-0.62, 1.05, 0]} dim={dim} />
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[0.62, 1.05, 0]} dim={dim} tint={tint} />
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[-0.62, 1.05, 0]} dim={dim} tint={tint} />
       <Cyl r={0.38} h={0.6} position={[0, 1.7, 0]} mat={mat} name={nm('WH-TUBINGHEAD')} />
       <Cyl r={bore * 1.4} h={d.adapterH} position={[0, d.wellheadTop + d.adapterH / 2, 0]} mat={MAT.steel} name={nm('WH-TREEADAPTER')} />
-      <GateValveBlock open={v.lmv.pos} kind="manual" bore={bore} position={[0, d.lmvY, 0]} name={nm('WH-FRACTREE-LMV')} pulse={focusValve === 'lmv'} label={showLabels ? 'Lower master (manual)' : null} dim={dim} />
-      <GateValveBlock open={v.umv.pos} kind="hydraulic" bore={bore} position={[0, d.umvY, 0]} name={nm('WH-FRACTREE-UMV')} pulse={focusValve === 'umv'} label={showLabels ? 'Upper master (hyd.)' : null} dim={dim} />
+      <GateValveBlock open={v.lmv.pos} kind="manual" bore={bore} position={[0, d.lmvY, 0]} name={nm('WH-FRACTREE-LMV')} pulse={focusValve === 'lmv'} label={showLabels ? 'Lower master (manual)' : null} dim={dim} tint={tint} />
+      <GateValveBlock open={v.umv.pos} kind="hydraulic" bore={bore} position={[0, d.umvY, 0]} name={nm('WH-FRACTREE-UMV')} pulse={focusValve === 'umv'} label={showLabels ? 'Upper master (hyd.)' : null} dim={dim} tint={tint} />
       <group name={nm('WH-FRACTREE-CROSS')} position={[0, d.crossY, 0]}>
         <Box size={[bore * 2.4, d.crossH, bore * 2.4 * 1.55]} mat={mat} />
         <Cyl r={bore * 1.4} h={bore * 0.9} rotation={[0, 0, Math.PI / 2]} position={[bore * 1.2 + bore * 0.45, 0, 0]} mat={MAT.steel} />
         <Cyl r={bore * 1.4} h={bore * 0.9} rotation={[0, 0, Math.PI / 2]} position={[-bore * 1.2 - bore * 0.45, 0, 0]} mat={MAT.steel} />
       </group>
       {/* wing A (-X, pump-down side): manual inboard, hydraulic outboard */}
-      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[-d.wingInnerX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGA-MAN')} dim={dim} />
-      <GateValveBlock open={v.wingA.pos} kind="hydraulic" axis="horizontal" bore={bore} position={[-d.wingOuterX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGA-HYD')} pulse={focusValve === 'wingA'} label={showLabels ? 'Wing A: manual + hyd. (pump-down)' : null} dim={dim} />
+      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[-d.wingInnerX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGA-MAN')} dim={dim} tint={tint} />
+      <GateValveBlock open={v.wingA.pos} kind="hydraulic" axis="horizontal" bore={bore} position={[-d.wingOuterX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGA-HYD')} pulse={focusValve === 'wingA'} label={showLabels ? 'Wing A: manual + hyd. (pump-down)' : null} dim={dim} tint={tint} />
       {/* wing B (+X, flowback side) */}
-      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[d.wingInnerX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGB-MAN')} dim={dim} />
-      <GateValveBlock open={v.wingB.pos} kind="hydraulic" axis="horizontal" bore={bore} position={[d.wingOuterX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGB-HYD')} pulse={focusValve === 'wingB'} label={showLabels ? 'Wing B: manual + hyd. (flowback)' : null} dim={dim} />
-      <GateValveBlock open={v.crown.pos} kind="hydraulic" bore={bore} position={[0, d.crownY, 0]} name={nm('WH-FRACTREE-CROWN')} pulse={focusValve === 'crown'} label={showLabels ? 'Crown valve (hyd.)' : null} dim={dim} />
+      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[d.wingInnerX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGB-MAN')} dim={dim} tint={tint} />
+      <GateValveBlock open={v.wingB.pos} kind="hydraulic" axis="horizontal" bore={bore} position={[d.wingOuterX, d.crossY, 0]} name={nm('WH-FRACTREE-WINGB-HYD')} pulse={focusValve === 'wingB'} label={showLabels ? 'Wing B: manual + hyd. (flowback)' : null} dim={dim} tint={tint} />
+      <GateValveBlock open={v.crown.pos} kind="hydraulic" bore={bore} position={[0, d.crownY, 0]} name={nm('WH-FRACTREE-CROWN')} pulse={focusValve === 'crown'} label={showLabels ? 'Crown valve (hyd.)' : null} dim={dim} tint={tint} />
       {/* inlet block with a flanged hub toward the zipper (-X) */}
       <group name={nm('WH-FRACTREE-INLETBLOCK')} position={[0, d.inletY, 0]}>
         <Box size={[bore * 2.4, d.inletH, bore * 2.4 * 1.55]} mat={mat} />
         <Cyl r={bore * 1.4} h={bore * 0.9} rotation={[0, 0, Math.PI / 2]} position={[-bore * 1.2 - bore * 0.45, 0, 0]} mat={MAT.steel} />
         {showLabels && <Label position={[-bore * 3, bore * 1.2, 0]} text={'Inlet block (flanged spool from zipper)'} />}
       </group>
-      <GateValveBlock open={v.swab.pos} kind="hydraulic" bore={bore} position={[0, d.swabY, 0]} name={nm('WH-FRACTREE-SWAB')} pulse={focusValve === 'swab'} label={showLabels ? 'Swab valve (hyd., wireline access)' : null} dim={dim} />
+      <GateValveBlock open={v.swab.pos} kind="hydraulic" bore={bore} position={[0, d.swabY, 0]} name={nm('WH-FRACTREE-SWAB')} pulse={focusValve === 'swab'} label={showLabels ? 'Swab valve (hyd., wireline access)' : null} dim={dim} tint={tint} />
       {launcher && <BallLauncher baseY={d.swabY + d.ftf / 2} bore={bore} ballsLeft={ballsLeft} showLabels={showLabels} dim={dim} name={nm('WH-FRACTREE-BALLLAUNCHER')} />}
       {!lubricator && !launcher && (
         <group name={nm('WH-FRACTREE-TOPADAPTER')} position={[0, d.swabY + d.ftf / 2, 0]}>
@@ -185,8 +192,9 @@ export function BallLauncher({ baseY, bore, ballsLeft = 0, showLabels, dim, name
 // ---------------------------------------------------------------- production tree (production phase)
 // Small manual tree on the tubing head after the frac stack comes off: adapter, two masters, flow cross,
 // production wing with an actuated choke to the flowline, kill wing with a gauge, swab valve, cap with gauge.
-export function ProductionTree({ showLabels, name = 'UC-PRODTREE', partner = false }) {
+export function ProductionTree({ showLabels, name = 'UC-PRODTREE', partner = false, tint = null, lift = 'flow' }) {
   const bore = 0.078;                      // 3-1/16 in.
+  const body = tint ? tintMat(tint, partner) : MAT.darkSteel;
   const ftf = bore * 6.6;
   const nm = (k) => (partner ? undefined : k);
   let y = 2.0;
@@ -211,15 +219,15 @@ export function ProductionTree({ showLabels, name = 'UC-PRODTREE', partner = fal
       <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[-0.62, 1.05, 0]} />
       <Cyl r={0.38} h={0.6} position={[0, 1.7, 0]} mat={MAT.darkSteel} name={nm('WH-TUBINGHEAD')} />
       <Cyl r={bore * 1.5} h={adH} position={[0, adY, 0]} mat={MAT.steel} name={nm('UC-PRODTREE-TUBINGHEADADAPTER')} />
-      <GateValveBlock open={1} kind="manual" bore={bore} position={[0, lmvY, 0]} name={nm('UC-PRODTREE-LMV')} label={showLabels ? 'Lower master' : null} />
-      <GateValveBlock open={1} kind="manual" bore={bore} position={[0, umvY, 0]} name={nm('UC-PRODTREE-UMV')} label={showLabels ? 'Upper master' : null} />
+      <GateValveBlock open={1} kind="manual" bore={bore} position={[0, lmvY, 0]} tint={tint} name={nm('UC-PRODTREE-LMV')} label={showLabels ? 'Lower master' : null} />
+      <GateValveBlock open={1} kind="manual" bore={bore} position={[0, umvY, 0]} tint={tint} name={nm('UC-PRODTREE-UMV')} label={showLabels ? 'Upper master' : null} />
       <group name={nm('UC-PRODTREE-FLOWCROSS')} position={[0, crossY, 0]}>
-        <Box size={[bore * 2.4, crossH, bore * 3.7]} mat={MAT.darkSteel} />
+        <Box size={[bore * 2.4, crossH, bore * 3.7]} mat={body} />
         <Cyl r={bore * 1.5} h={bore * 0.7} rotation={[0, 0, Math.PI / 2]} position={[bore * 1.2 + bore * 0.35, 0, 0]} mat={MAT.steel} />
         <Cyl r={bore * 1.5} h={bore * 0.7} rotation={[0, 0, Math.PI / 2]} position={[-bore * 1.2 - bore * 0.35, 0, 0]} mat={MAT.steel} />
       </group>
       {/* production wing (+X): wing valve, choke with actuator, flowline drop */}
-      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[wingX, crossY, 0]} name={nm('UC-PRODTREE-WINGVALVE')} label={showLabels ? 'Production wing' : null} />
+      <GateValveBlock open={1} kind="manual" axis="horizontal" bore={bore} position={[wingX, crossY, 0]} tint={tint} name={nm('UC-PRODTREE-WINGVALVE')} label={showLabels ? 'Production wing' : null} />
       <group name={nm('UC-PRODTREE-CHOKE')} position={[chokeX, crossY, 0]}>
         <Box size={[bore * 3.6, bore * 2.2, bore * 2.2]} mat={MAT.darkSteel} />
         <Cyl r={bore * 0.9} h={bore * 1.2} position={[-bore * 0.4, bore * 1.6, 0]} mat={MAT.steel} />
@@ -228,17 +236,233 @@ export function ProductionTree({ showLabels, name = 'UC-PRODTREE', partner = fal
       </group>
       <PipeRun points={[[chokeX + bore * 1.8, crossY, 0], [chokeX + bore * 4.5, crossY, 0], [chokeX + bore * 4.5, 0.3, 0], [chokeX + bore * 4.5, 0.3, 6.0]]} r={bore * 0.6} mat={MAT.darkSteel} />
       {/* kill wing (-X): valve and companion flange with gauge */}
-      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={bore} position={[-wingX, crossY, 0]} name={nm('UC-PRODTREE-KILLWING')} label={showLabels ? 'Kill wing' : null} />
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={bore} position={[-wingX, crossY, 0]} tint={tint} name={nm('UC-PRODTREE-KILLWING')} label={showLabels ? 'Kill wing' : null} />
       <Cyl r={bore * 1.5} h={bore * 0.6} rotation={[0, 0, Math.PI / 2]} position={[-wingX - ftf / 2 - bore * 0.3, crossY, 0]} mat={MAT.steel} />
       <Cyl r={bore * 0.9} h={0.04} rotation={[0, 0, Math.PI / 2]} position={[-wingX - ftf / 2 - bore * 1.4, crossY, 0]} mat={MAT.white} name={nm('UC-PRODTREE-GAUGE')} />
-      <GateValveBlock open={0} kind="manual" bore={bore} position={[0, swabY, 0]} name={nm('UC-PRODTREE-SWAB')} label={showLabels ? 'Swab valve' : null} />
-      <group name={nm('UC-PRODTREE-TREECAP')} position={[0, capY, 0]}>
-        <Cyl r={bore * 1.5} h={bore * 0.6} position={[0, bore * 0.3, 0]} mat={MAT.steel} />
-        <Cyl r={bore * 0.9} r2={bore * 0.4} h={bore * 1.4} position={[0, bore * 1.3, 0]} mat={MAT.darkSteel} />
-        <Cyl r={0.02} h={bore * 2.0} position={[0, bore * 3.0, 0]} mat={MAT.steel} />
-        <Cyl r={bore * 0.8} h={0.04} rotation={[Math.PI / 2, 0, 0]} position={[0, bore * 4.4, 0]} mat={MAT.white} />
-        {showLabels && <Label position={[bore * 3, bore * 5, 0]} text={'Tree cap and gauge'} />}
+      <GateValveBlock open={lift === 'plunger' || lift === 'rodpump' ? 1 : 0} kind="manual" bore={bore} position={[0, swabY, 0]} tint={tint} name={nm('UC-PRODTREE-SWAB')} label={showLabels ? 'Swab valve' : null} />
+      {lift === 'rodpump' ? (
+        <group name={nm('AL-BEAMUNIT-STUFFINGBOX')} position={[0, capY, 0]}>
+          <Box size={[bore * 3.0, bore * 2.4, bore * 2.4]} position={[0, bore * 1.2, 0]} mat={body} />
+          <Cyl r={bore * 0.6} h={bore * 2.0} rotation={[0, 0, Math.PI / 2]} position={[bore * 2.4, bore * 1.2, 0]} mat={MAT.steel} />
+          <Cyl r={bore * 1.1} h={bore * 2.2} position={[0, bore * 3.5, 0]} mat={MAT.steel} />
+          <Cyl r={bore * 1.4} h={bore * 0.4} position={[0, bore * 4.8, 0]} mat={MAT.darkSteel} />
+          {showLabels && <Label position={[bore * 3, bore * 6, 0]} text={'Pumping tee and stuffing box'} />}
+        </group>
+      ) : lift === 'plunger' ? (
+        <group name={nm('AL-PLUNGERLIFT-LUBRICATOR')} position={[0, capY, 0]}>
+          <Cyl r={bore * 1.5} h={bore * 0.6} position={[0, bore * 0.3, 0]} mat={MAT.steel} />
+          <Cyl r={bore * 1.0} h={1.4} position={[0, 0.75, 0]} mat={MAT.steel} />
+          <Cyl r={bore * 1.3} h={0.12} position={[0, 1.5, 0]} mat={MAT.darkSteel} />
+          <Box size={[0.12, 0.1, 0.08]} position={[bore * 1.1, 1.1, 0]} mat={MAT.blue} />
+          <Cyl r={0.05} h={0.5} rotation={[0, 0, Math.PI / 2]} position={[-bore * 1.3, 0.5, 0]} mat={MAT.steel} />
+          {showLabels && <Label position={[bore * 3, 1.9, 0]} text={'Plunger lubricator and arrival sensor'} />}
+        </group>
+      ) : (
+        <group name={nm('UC-PRODTREE-TREECAP')} position={[0, capY, 0]}>
+          <Cyl r={bore * 1.5} h={bore * 0.6} position={[0, bore * 0.3, 0]} mat={MAT.steel} />
+          <Cyl r={bore * 0.9} r2={bore * 0.4} h={bore * 1.4} position={[0, bore * 1.3, 0]} mat={MAT.darkSteel} />
+          <Cyl r={0.02} h={bore * 2.0} position={[0, bore * 3.0, 0]} mat={MAT.steel} />
+          <Cyl r={bore * 0.8} h={0.04} rotation={[Math.PI / 2, 0, 0]} position={[0, bore * 4.4, 0]} mat={MAT.white} />
+          {showLabels && <Label position={[bore * 3, bore * 5, 0]} text={'Tree cap and gauge'} />}
+        </group>
+      )}
+      {lift === 'rodpump' && <PumpingUnit topY={capY + bore * 6.0} partner={partner} showLabels={showLabels} />}
+      {lift === 'esp' && <EspSurface partner={partner} showLabels={showLabels} />}
+      {lift === 'gaslift' && <GasLiftSurface partner={partner} showLabels={showLabels} />}
+      {lift === 'plunger' && <PlungerController partner={partner} />}
+    </group>
+  );
+}
+
+
+
+// ---------------------------------------------------------------- workover rig and BOP stack (production hookup)
+// BOP stack on the tubing head during the hookup: adapter, drilling spool with kill and choke outlets, double ram
+// preventer with bonnets, annular preventer, and a bell nipple. Generic proportions.
+export function BopStack({ showLabels, name = 'RG-BOPSTACK' }) {
+  const r = 0.34;
+  return (
+    <group name={name}>
+      <Cyl r={1.1} r2={1.1} h={0.05} position={[0, 0.025, 0]} mat={MAT.darkSteel} />
+      <Cyl r={0.42} h={0.7} position={[0, 0.35, 0]} mat={MAT.darkSteel} name="WH-CASINGHEAD" />
+      <Cyl r={0.48} h={0.08} position={[0, 0.7, 0]} mat={MAT.steel} />
+      <Cyl r={0.4} h={0.7} position={[0, 1.05, 0]} mat={MAT.darkSteel} name="WH-CASINGSPOOL" />
+      <Cyl r={0.47} h={0.08} position={[0, 1.4, 0]} mat={MAT.steel} />
+      <Cyl r={0.38} h={0.6} position={[0, 1.7, 0]} mat={MAT.darkSteel} name="WH-TUBINGHEAD" />
+      <Cyl r={0.5} h={0.3} position={[0, 2.15, 0]} mat={MAT.steel} name="RG-BOPSTACK-ADAPTER" />
+      <group name="RG-BOPSTACK-SPOOL" position={[0, 2.75, 0]}>
+        <Cyl r={r} h={0.9} mat={MAT.darkSteel} />
+        <Cyl r={0.5} h={0.12} position={[0, -0.45, 0]} mat={MAT.steel} />
+        <Cyl r={0.5} h={0.12} position={[0, 0.45, 0]} mat={MAT.steel} />
+        <Cyl r={0.12} h={0.7} rotation={[0, 0, Math.PI / 2]} position={[0.55, 0, 0]} mat={MAT.darkSteel} />
+        <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.07} position={[1.2, 0, 0]} />
+        <Cyl r={0.12} h={0.7} rotation={[0, 0, Math.PI / 2]} position={[-0.55, 0, 0]} mat={MAT.darkSteel} />
+        <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.07} position={[-1.2, 0, 0]} />
       </group>
+      <group name="RG-BOPSTACK-RAMS" position={[0, 4.0, 0]}>
+        <Box size={[1.1, 1.5, 0.9]} mat={MAT.darkSteel} />
+        {[-0.35, 0.35].map((dy, i) => [1, -1].map(sx => (
+          <group key={i + '-' + sx} position={[sx * 0.95, dy, 0]}>
+            <Box size={[0.8, 0.5, 0.7]} mat={MAT.steel} />
+            <Cyl r={0.12} h={0.6} rotation={[0, 0, Math.PI / 2]} position={[sx * 0.65, 0, 0]} mat={MAT.darkSteel} />
+            <Cyl r={0.2} h={0.1} rotation={[0, 0, Math.PI / 2]} position={[sx * 0.95, 0, 0]} mat={MAT.rubber} />
+          </group>
+        )))}
+        <Cyl r={0.55} h={0.12} position={[0, -0.8, 0]} mat={MAT.steel} />
+        <Cyl r={0.55} h={0.12} position={[0, 0.8, 0]} mat={MAT.steel} />
+      </group>
+      <group name="RG-BOPSTACK-ANNULAR" position={[0, 5.5, 0]}>
+        <Cyl r={0.62} r2={0.5} h={0.9} mat={MAT.darkSteel} />
+        <Cyl r={0.5} r2={0.62} h={0.3} position={[0, 0.6, 0]} mat={MAT.darkSteel} />
+        <Cyl r={0.66} h={0.12} position={[0, -0.5, 0]} mat={MAT.steel} />
+      </group>
+      <Cyl r={0.3} h={0.8} position={[0, 6.5, 0]} mat={MAT.steel} name="RG-BOPSTACK-BELLNIPPLE" />
+      {showLabels && <Label position={[1.4, 5.5, 0]} text={'BOP stack: annular, double rams, spool'} />}
+    </group>
+  );
+}
+// Workover (completion) rig over the well: substructure, mast, crown, traveling block on a line, drawworks,
+// doghouse, pipe racks with tubing. The block travels while tubing is being run.
+export function WorkoverRig({ active = false, showLabels, position = [0, 0, 0] }) {
+  const block = useRef();
+  useFrame((state) => { if (block.current) block.current.position.y = 9.5 + (active ? 5.0 * (0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 0.7)) : 3.0); });
+  return (
+    <group position={position} name="RG-WORKOVERRIG">
+      <Box size={[6.0, 2.2, 5.0]} position={[3.0, 1.1, 0]} mat={MAT.dimSteel} name="RG-WORKOVERRIG-SUBSTRUCTURE" />
+      <Box size={[6.0, 0.3, 5.0]} position={[3.0, 2.35, 0]} mat={MAT.darkSteel} />
+      {[[-1.4, 1.2], [-1.4, -1.2], [1.4, 1.2], [1.4, -1.2]].map(([dx, dz], i) => (
+        <Cyl key={i} r={0.12} h={18} position={[0.1 + dx * 0.5, 2.5 + 9, dz]} rotation={[0, 0, 0]} mat={MAT.redIron} />
+      ))}
+      {[4, 8, 12, 16].map((h, i) => <Box key={i} size={[1.6, 0.1, 2.6]} position={[0.1, 2.5 + h, 0]} mat={MAT.redIron} />)}
+      <Box size={[2.0, 0.6, 3.0]} position={[0.1, 20.6, 0]} mat={MAT.darkSteel} name="RG-WORKOVERRIG-CROWN" />
+      <group ref={block} position={[0, 12, 0]} name="RG-WORKOVERRIG-BLOCK">
+        <Box size={[0.5, 1.4, 0.7]} mat={MAT.darkSteel} />
+        <Box size={[0.4, 0.8, 0.5]} position={[0, -1.1, 0]} mat={MAT.steel} />
+        <Cyl r={0.05} h={2.4} position={[0, -2.4, 0]} mat={MAT.steel} />
+      </group>
+      <Cyl r={0.02} h={12} position={[0, 15, 0.35]} mat={MAT.rubber} />
+      <Box size={[2.0, 1.4, 1.6]} position={[4.6, 3.2, 1.4]} mat={MAT.darkSteel} name="RG-WORKOVERRIG-DRAWWORKS" />
+      <Box size={[2.4, 2.2, 2.4]} position={[4.5, 3.6, -1.6]} mat={MAT.white} name="RG-WORKOVERRIG-DOGHOUSE" />
+      <Trailer length={12} width={2.8} position={[9.5, 0, 0]}><Box size={[2.8, 2.2, 2.4]} position={[-4.2, 2.2, 0]} mat={MAT.white} /></Trailer>
+      {/* pipe rack with tubing joints */}
+      <group position={[8.0, 0, 5.5]} name="RG-WORKOVERRIG-PIPERACK">
+        <Box size={[0.3, 1.2, 4.0]} position={[-4, 0.6, 0]} mat={MAT.yellow} />
+        <Box size={[0.3, 1.2, 4.0]} position={[4, 0.6, 0]} mat={MAT.yellow} />
+        {Array.from({ length: 12 }).map((_, i) => <Cyl key={i} r={0.04} h={9.5} rotation={[0, 0, Math.PI / 2]} position={[0, 1.3 + Math.floor(i / 6) * 0.1, -1.5 + (i % 6) * 0.6]} mat={MAT.steel} />)}
+      </group>
+      {showLabels && <Label position={[2, 22, 0]} text={'Workover rig (tubing run)'} />}
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------- artificial lift (production phase)
+// Conventional beam pumping unit on a skid west of the tree, horsehead over the well. The crank turns, the beam
+// rocks, the bridle and polished rod follow. Generic proportions of a mid-size unit.
+export function PumpingUnit({ topY = 3.0, partner = false, showLabels }) {
+  const beam = useRef(); const crankL = useRef(); const crankR = useRef(); const pitman = useRef(); const rod = useRef();
+  const pivot = [-4.6, 3.9, 0];        // center bearing (world, relative to the well)
+  const beamLen = 7.0, headR = 1.7;
+  const reducer = [-6.7, 1.5, 0], crankLen = 0.95;
+  useFrame((state) => {
+    const th = state.clock.elapsedTime * 1.2 * (partner ? 0.9 : 1);
+    const tilt = 0.16 * Math.sin(th);
+    if (beam.current) beam.current.rotation.z = tilt;
+    if (crankL.current) crankL.current.rotation.z = th;
+    if (crankR.current) crankR.current.rotation.z = th;
+    if (pitman.current) {
+      const px = reducer[0] + crankLen * Math.cos(th), py = reducer[1] + crankLen * Math.sin(th);
+      const tx = pivot[0] - (beamLen / 2 - 0.4) * Math.cos(tilt), ty = pivot[1] - (beamLen / 2 - 0.4) * Math.sin(tilt) - 0.3;
+      const dx = tx - px, dy = ty - py; const L = Math.hypot(dx, dy);
+      pitman.current.position.set((px + tx) / 2, (py + ty) / 2, 0);
+      pitman.current.rotation.z = Math.atan2(dy, dx) - Math.PI / 2;
+      pitman.current.scale.y = L;
+    }
+    if (rod.current) rod.current.position.y = 0.15 + headR * Math.sin(tilt) * 0.5;
+  });
+  const nm = (k) => (partner ? undefined : k);
+  return (
+    <group name={nm('AL-BEAMUNIT')}>
+      <Box size={[5.8, 0.3, 1.9]} position={[-5.1, 0.15, 0]} mat={MAT.darkSteel} name={nm('AL-BEAMUNIT-BASE')} />
+      {/* Samson post: three legs to the center bearing */}
+      {[[-6.0, 0.7], [-6.0, -0.7], [-3.7, 0]].map(([x, z], i) => {
+        const dx = pivot[0] - x, dy = pivot[1] - 0.3, dz = -z; const L = Math.hypot(dx, dy, dz);
+        return <Box key={i} size={[0.2, L, 0.2]} position={[(x + pivot[0]) / 2, (0.3 + pivot[1]) / 2, z / 2]} rotation={[Math.atan2(dz, dy) * 0, 0, -Math.atan2(dx, dy)]} mat={MAT.redIron} name={i === 0 ? nm('AL-BEAMUNIT-SAMSONPOST') : undefined} />;
+      })}
+      <Box size={[0.6, 0.25, 1.0]} position={pivot} mat={MAT.darkSteel} />
+      {/* walking beam with horsehead at the +X end and the equalizer at the tail */}
+      <group ref={beam} position={pivot} name={nm('AL-BEAMUNIT-WALKINGBEAM')}>
+        <Box size={[beamLen, 0.5, 0.35]} position={[0, 0.25, 0]} mat={MAT.redIron} />
+        <mesh position={[beamLen / 2 - 0.3, -0.7, 0]} rotation={[Math.PI / 2, 0, 0]} name={nm('AL-BEAMUNIT-HORSEHEAD')}>
+          <cylinderGeometry args={[headR, headR, 0.4, 24, 1, false, -0.5, 1.7]} />
+          <meshStandardMaterial {...MAT.redIron} side={THREE.DoubleSide} />
+        </mesh>
+        <Box size={[0.5, 0.25, 1.6]} position={[-beamLen / 2 + 0.4, -0.05, 0]} mat={MAT.darkSteel} name={nm('AL-BEAMUNIT-EQUALIZER')} />
+      </group>
+      {/* pitman arm (scaled to length each frame), cranks, counterweights, reducer, motor and belt guard */}
+      <group ref={pitman} name={nm('AL-BEAMUNIT-PITMAN')}><Box size={[0.16, 1, 0.16]} position={[0, 0, 0.75]} mat={MAT.darkSteel} /><Box size={[0.16, 1, 0.16]} position={[0, 0, -0.75]} mat={MAT.darkSteel} /></group>
+      {[[crankL, 0.95], [crankR, -0.95]].map(([ref, z], i) => (
+        <group key={i} ref={ref} position={[reducer[0], reducer[1], z]} name={i === 0 ? nm('AL-BEAMUNIT-CRANK') : undefined}>
+          <Box size={[crankLen * 2 + 0.6, 0.35, 0.12]} mat={MAT.darkSteel} />
+          <Box size={[0.75, 0.55, 0.28]} position={[-crankLen + 0.1, 0, z > 0 ? 0.2 : -0.2]} mat={MAT.rubber} name={i === 0 ? nm('AL-BEAMUNIT-COUNTERWEIGHT') : undefined} />
+        </group>
+      ))}
+      <Box size={[1.3, 1.1, 1.5]} position={[reducer[0], reducer[1] - 0.1, 0]} mat={MAT.darkSteel} name={nm('AL-BEAMUNIT-GEARREDUCER')} />
+      <Box size={[1.5, 0.5, 1.7]} position={[reducer[0], 0.55, 0]} mat={MAT.darkSteel} />
+      <Cyl r={0.3} h={0.8} rotation={[0, 0, Math.PI / 2]} position={[-8.4, 0.75, 0]} mat={MAT.darkSteel} name={nm('AL-BEAMUNIT-PRIMEMOVER')} />
+      <Box size={[2.2, 0.9, 0.12]} position={[-7.6, 1.3, -0.95]} rotation={[0, 0, 0.35]} mat={MAT.redIron} name={nm('AL-BEAMUNIT-BELTGUARD')} />
+      {/* bridle and polished rod over the well */}
+      <group ref={rod} name={nm('AL-BEAMUNIT-POLISHEDROD')}>
+        <Cyl r={0.012} h={pivot[1] + 0.3 - topY} position={[0, topY + (pivot[1] + 0.3 - topY) / 2, 0.08]} mat={MAT.rubber} />
+        <Cyl r={0.012} h={pivot[1] + 0.3 - topY} position={[0, topY + (pivot[1] + 0.3 - topY) / 2, -0.08]} mat={MAT.rubber} />
+        <Box size={[0.35, 0.12, 0.4]} position={[0, topY + 0.6, 0]} mat={MAT.steel} />
+        <Cyl r={0.02} h={1.3} position={[0, topY + 0.1, 0]} mat={MAT.white} />
+      </group>
+      {showLabels && <Label position={[-5, 6.2, 0]} text={'Beam pumping unit (rod pump)'} />}
+    </group>
+  );
+}
+// ESP surface: variable speed drive and transformer on a skid, junction box, cable to the wellhead penetrator.
+export function EspSurface({ partner = false, showLabels }) {
+  const nm = (k) => (partner ? undefined : k);
+  return (
+    <group name={nm('AL-ESP-SURFACE')}>
+      <Box size={[3.0, 0.2, 2.0]} position={[-4.5, 0.1, 3.0]} mat={MAT.dimSteel} />
+      <Box size={[1.2, 2.0, 0.8]} position={[-5.2, 1.2, 3.0]} mat={MAT.blue} name={nm('AL-ESP-VSD')} />
+      <Box size={[1.2, 1.4, 1.2]} position={[-3.7, 0.9, 3.0]} mat={MAT.steel} name={nm('AL-ESP-TRANSFORMER')} />
+      {[-0.35, 0, 0.35].map((dz, i) => <Box key={i} size={[1.3, 1.2, 0.05]} position={[-3.7, 0.9, 3.0 + dz]} mat={MAT.darkSteel} />)}
+      <Box size={[0.4, 0.5, 0.3]} position={[-1.6, 1.6, 1.4]} mat={MAT.steel} name={nm('AL-ESP-JUNCTIONBOX')} />
+      <Cyl r={0.04} h={1.6} position={[-1.6, 0.8, 1.4]} mat={MAT.darkSteel} />
+      <PipeRun points={[[-4.6, 1.9, 3.0], [-1.6, 1.9, 1.4], [-0.5, 1.9, 0.3], [-0.42, 1.55, 0.2]]} r={0.03} mat={MAT.rubber} />
+      <Box size={[0.22, 0.22, 0.22]} position={[-0.42, 1.5, 0.2]} mat={MAT.brass} name={nm('AL-ESP-PENETRATOR')} />
+      {showLabels && <Label position={[-4.5, 3.0, 3.0]} text={'ESP drive, transformer, and cable'} />}
+    </group>
+  );
+}
+// Gas lift surface: compressor skid with cooler, injection line to the casing side outlet, meter run.
+export function GasLiftSurface({ partner = false, showLabels }) {
+  const nm = (k) => (partner ? undefined : k);
+  return (
+    <group name={nm('AL-GASLIFT-SURFACE')}>
+      <Box size={[5.0, 0.25, 2.2]} position={[-8.0, 0.12, 5.0]} mat={MAT.yellow} name={nm('AL-GASLIFT-COMPRESSOR')} />
+      <Cyl r={0.5} h={2.0} rotation={[0, 0, Math.PI / 2]} position={[-9.2, 1.0, 5.0]} mat={MAT.darkSteel} />
+      <Box size={[1.4, 1.2, 1.2]} position={[-7.0, 0.85, 5.0]} mat={MAT.steel} />
+      <Box size={[1.6, 1.8, 0.5]} position={[-6.0, 1.3, 5.0]} mat={MAT.darkSteel} />
+      <Cyl r={0.45} h={2.4} rotation={[0, 0, Math.PI / 2]} position={[-8.0, 2.0, 4.2]} mat={MAT.steel} />
+      <PipeRun points={[[-5.6, 0.6, 5.0], [-2.5, 0.6, 5.0], [-2.5, 0.6, 0.0], [-1.2, 1.05, 0.0], [-0.9, 1.05, 0.0]]} r={0.05} mat={MAT.yellow} name={nm('AL-GASLIFT-INJECTIONLINE')} />
+      <Box size={[0.3, 0.3, 0.3]} position={[-2.5, 0.75, 2.5]} mat={MAT.blue} name={nm('AL-GASLIFT-METER')} />
+      {showLabels && <Label position={[-8, 3.4, 5]} text={'Gas lift compressor and injection line'} />}
+    </group>
+  );
+}
+// Plunger lift controller on a post with a solar panel, and the motor valve on the flowline.
+export function PlungerController({ partner = false }) {
+  const nm = (k) => (partner ? undefined : k);
+  return (
+    <group name={nm('AL-PLUNGERLIFT-CONTROLLER')}>
+      <Cyl r={0.04} h={2.2} position={[2.2, 1.1, 1.6]} mat={MAT.darkSteel} />
+      <Box size={[0.4, 0.5, 0.25]} position={[2.2, 1.7, 1.6]} mat={MAT.steel} />
+      <Box size={[0.7, 0.5, 0.04]} position={[2.2, 2.4, 1.5]} rotation={[-0.6, 0, 0]} mat={{ color: '#1c2f5a', metalness: 0.4, roughness: 0.3 }} />
+      <Box size={[0.3, 0.45, 0.3]} position={[1.9, 2.75, 0]} mat={MAT.blue} name={nm('AL-PLUNGERLIFT-MOTORVALVE')} />
     </group>
   );
 }
@@ -701,10 +925,11 @@ export function Pickups({ position, count = 6 }) {
   );
 }
 // Flanged treating spools: red iron with block elbows and flange rings at every joint (large-bore monoline).
-export function FlangedRun({ points, r = 0.1, name }) {
+export function FlangedRun({ points, r = 0.1, name, color = null }) {
+  const mat = color ? { color, metalness: 0.5, roughness: 0.55 } : MAT.redIron;
   return (
     <group name={name}>
-      {points.slice(1).map((p, i) => <Pipe key={i} from={points[i]} to={p} r={r} mat={MAT.redIron} unions={false} />)}
+      {points.slice(1).map((p, i) => <Pipe key={i} from={points[i]} to={p} r={r} mat={mat} unions={false} />)}
       {points.slice(1, -1).map((p, i) => {
         const a = points[i], b = points[i + 2];
         const d1 = [p[0] - a[0], p[1] - a[1], p[2] - a[2]], d2 = [b[0] - p[0], b[1] - p[1], b[2] - p[2]];
@@ -712,7 +937,7 @@ export function FlangedRun({ points, r = 0.1, name }) {
         const straight = (d1[0] * d2[0] + d1[1] * d2[1] + d1[2] * d2[2]) / (l1 * l2) > 0.98;
         return straight
           ? <Cyl key={'e' + i} r={r * 2.1} h={r * 1.2} position={p} rotation={Math.abs(d1[1]) / l1 > 0.7 ? [0, 0, 0] : Math.abs(d1[0]) / l1 > 0.7 ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0]} mat={MAT.darkSteel} />
-          : <Box key={'e' + i} size={[r * 3.2, r * 3.2, r * 3.2]} position={p} mat={MAT.redIron} />;
+          : <Box key={'e' + i} size={[r * 3.2, r * 3.2, r * 3.2]} position={p} mat={mat} />;
       })}
       {points.slice(1).map((p, i) => {
         const a = points[i]; const d = [p[0] - a[0], p[1] - a[1], p[2] - a[2]]; const len = Math.hypot(...d) || 1;

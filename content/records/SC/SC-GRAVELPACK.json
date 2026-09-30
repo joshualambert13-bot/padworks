@@ -1,0 +1,63 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "SC",
+  "drawn_in_3d": true,
+  "sources": [
+    "S42",
+    "S47",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "SC-GRAVELPACK",
+  "parent": "SC",
+  "group": "gravel-pack",
+  "level": "equipment",
+  "name": "Cased-hole gravel pack (cut-away)",
+  "aliases": [
+    "gravel pack",
+    "GP",
+    "cased-hole gravel pack",
+    "gravel pack completion",
+    "frac pack"
+  ],
+  "function": "The screen assembly and gravel placed across a perforated interval so sand cannot enter the wellbore: gravel pack packer and crossover above, blank pipe, screen on a perforated base pipe, gravel in the annulus and perforations, sump packer and seal assembly below.",
+  "tabs": {
+    "overview": "The sump packer is set below the interval first. The screen assembly runs on the gravel pack packer with the crossover tool and washpipe inside; the packer sets, the crossover ports open, and gravel slurry is pumped down the workstring, out through the crossover into the annulus around the screen, packing the perforations and the annulus while the carrier fluid returns through the screen and up the washpipe. The service tool and washpipe come out; the seal assembly of the completion stabs into the packer. The cut-away shows every element with the casing, cement, and formation as ghost context; a frac pack uses the same hardware with a short fracture pumped first.",
+    "engineering": "Gravel sized about six times the formation sand median (a widely used rule); screen slot narrower than the smallest gravel; pack quality logged with density tools.",
+    "connections": "Casing and perforations (CM, WL); production packer and tubing above (UC); workstring during the pack (RG).",
+    "safety": "Pack pumped at rate and pressure against the packer; heavy assembly on the rig.",
+    "evidence": "PetroWiki sand control techniques (S42), ISO 17824 for screens (S47), API RP 19C for gravel testing (S12 if held), field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Sump packer, clean-out, screen run, set, pack, reverse, pull, complete.",
+    "failure_modes": "Voids from premature screenout, screen damage on running, packer leaks, fines plugging the pack."
+  },
+  "glb": "/glb/SC/SC-GRAVELPACK.glb",
+  "scene": "SC-GRAVELPACK",
+  "mesh_nodes": [
+    "SC-GRAVELPACK-GPPACKER",
+    "SC-GRAVELPACK-CROSSOVER",
+    "SC-GRAVELPACK-BLANKPIPE",
+    "SC-GRAVELPACK-SCREEN",
+    "SC-GRAVELPACK-BASEPIPE",
+    "SC-GRAVELPACK-GRAVEL",
+    "SC-GRAVELPACK-SUMPPACKER",
+    "SC-GRAVELPACK-SEALASSEMBLY"
+  ],
+  "ghost_nodes": [
+    "SC-GRAVELPACK-CASING",
+    "SC-GRAVELPACK-FORMATION",
+    "SC-GRAVELPACK-WASHPIPE"
+  ]
+}

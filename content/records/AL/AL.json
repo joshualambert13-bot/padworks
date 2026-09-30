@@ -1,0 +1,87 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S39",
+    "S40",
+    "S41",
+    "S43",
+    "S44",
+    "S45",
+    "S46",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Lockout the prime mover and brake the unit before anyone approaches the beam, cranks, or belts."
+    },
+    {
+      "class": "High voltage",
+      "control": "Only qualified people at the drive, transformer, and junction box; lockout before cable work."
+    },
+    {
+      "class": "High-pressure gas",
+      "control": "Injection line rated and restrained; compressor isolated and blown down before work."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear under the horsehead and beside the bridle; a parted rod string drops the load."
+    }
+  ],
+  "id": "AL",
+  "level": "system",
+  "name": "Artificial lift",
+  "aliases": [
+    "artificial lift",
+    "lift",
+    "AL",
+    "pumping",
+    "lift method"
+  ],
+  "function": "The equipment that adds energy to lift fluid once a well will not flow on reservoir pressure alone: beam pumping units with rod pumps, electric submersible pumps, gas lift, and plunger lift, each with its surface and downhole halves.",
+  "tabs": {
+    "overview": "Most shale wells start on natural flow and go on lift within months to a few years as pressure declines and liquids load the tubing. The method is chosen in Pad Setup and appears in the production phase: the beam unit strokes a rod pump at the tubing tail; the ESP hangs a motor and pump on the tubing fed by a cable; gas lift injects compressed gas down the annulus through valves in mandrels; a plunger cycles between a bumper spring and a lubricator on the tree. Rod pumps suit low rates and simple operations, ESPs high rates and deep wells with clean fluid, gas lift sandy or deviated wells with gas available, plunger lift gas wells with modest liquid.",
+    "engineering": "Selection follows rate, depth, gas fraction, solids, deviation, power available, and the workover cost of each method. Standards: API 11AX (pumps), 11E (pumping units), 11S (ESP), 11V (gas lift).",
+    "connections": "Production tree and tubing head (UC); flowline; power or gas supply; wellhead penetrator or stuffing box at the tree.",
+    "safety": "Rotating machinery and the bridle load at the beam unit; high voltage on ESP surface equipment; high-pressure gas on gas lift; a plunger arriving at the lubricator.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Installed with a workover or completion rig after flowback, or later when the well loads up; the ESP and rod pump need the tubing pulled to change.",
+    "failure_modes": "Rod parts and pump wear (rod pump); motor burn, cable damage, and gas or sand lock (ESP); valve leaks and compressor outages (gas lift); plunger sticking or fast arrivals (plunger)."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 11AX",
+      "edition": "verify",
+      "paraphrase": "Subsurface pump assemblies and components.",
+      "source": "S43"
+    },
+    {
+      "standard": "API Spec 11E",
+      "edition": "verify",
+      "paraphrase": "Pumping unit design and rating.",
+      "source": "S44"
+    },
+    {
+      "standard": "API RP 11S",
+      "edition": "verify",
+      "paraphrase": "ESP installation, operation, and testing practices.",
+      "source": "S45"
+    },
+    {
+      "standard": "API Spec 11V1",
+      "edition": "verify",
+      "paraphrase": "Gas lift valves and mandrels.",
+      "source": "S46"
+    }
+  ]
+}

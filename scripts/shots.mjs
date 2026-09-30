@@ -77,7 +77,7 @@ await clickWhenEnabled(p, 'Fire guns', 90000);
 await wait(1200);
 await shot(p, '04-sim-downhole-perforate');
 await clickWhenEnabled(p, /Swap to frac/, 90000);
-await wait(1500);
+await wait(6000);   // let the swab valve finish closing before the zipper leg is opened (interlock)
 // open the flow path: the zipper leg working valve into the inlet block (crown, masters, and the leg isolation are open; swab closes on phase change)
 for (const label of ['Zipper leg: upper working valve']) {
   const row = p.locator('div', { hasText: label }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
@@ -199,6 +199,7 @@ await p.close();
 
 }
 
+if (process.env.ONLY !== 'main') {
 // ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip
 p = await page(1440, 900);
 await p.goto(base + '/simulate'); await wait(4500);
@@ -280,10 +281,77 @@ for (const [id, n] of [['WH-ZIPPER', '87'], ['WH-ZIPPER-LEG', '88'], ['WH-ZIPPER
   if (id === 'DT-FRACSLEEVE') { await p.keyboard.press('s'); await wait(1500); await shot(p, '92b-record-DT-FRACSLEEVE-cutaway'); }
   if (id === 'PP-MISSILE') { await p.keyboard.press('e'); await wait(1500); await shot(p, '90b-record-PP-MISSILE-explode'); }
 }
+// Drop 8: artificial lift in the production phase, color-coded wells, AL and SC records
+for (const [lift, n] of [['rodpump', '96'], ['esp', '97'], ['gaslift', '98'], ['plunger', '99']]) {
+  await p.goto(base + '/simulate'); await wait(3500);
+  await p.selectOption('select[data-select="lift"]', lift); await wait(300);
+  await startJob(p);
+  await p.getByRole('button', { name: 'Production' }).first().click(); await wait(500);
+  await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(3500);
+  await shot(p, n + '-production-' + lift);
+  if (lift === 'rodpump' || lift === 'esp') { await p.getByRole('button', { name: 'Downhole' }).click(); await wait(3000); await shot(p, n + 'b-production-' + lift + '-downhole'); }
+}
+await p.goto(base + '/simulate'); await wait(3500);
+await p.selectOption('select[title="Camera preset"]', 'row'); await wait(3000);
+await shot(p, '100-row-color-coded-wells');
+for (const [id, n] of [['AL', '101'], ['AL-BEAMUNIT', '102'], ['AL-RODPUMP', '103'], ['AL-RODPUMP-TRAVELINGVALVE', '104'], ['AL-ESP', '105'], ['SC-GRAVELPACK', '106'], ['SC-GRAVELPACK-SCREEN', '107']]) {
+  await p.goto(base + '/library/' + (id === 'AL' ? 'AL' : 'equipment/' + id)); await wait(6000);
+  await shot(p, n + '-record-' + id);
+  if (id === 'AL-RODPUMP') { await p.keyboard.press('s'); await wait(1500); await shot(p, '103b-record-AL-RODPUMP-cutaway'); }
+  if (id === 'SC-GRAVELPACK') { await p.keyboard.press('e'); await wait(1500); await shot(p, '106b-record-SC-GRAVELPACK-explode'); }
+}
+// Drop 9: training events and the production hookup, RG, DA, MT records
+{
+  await p.goto(base + '/simulate'); await wait(3500);
+  await startJob(p); await p.selectOption('select', '4');
+  await p.getByRole('button', { name: 'Wireline' }).first().click(); await wait(800);
+  await p.getByRole('button', { name: 'Gun misfire' }).click(); await wait(300);
+  await clickWhenEnabled(p, 'Run in hole'); await setRange(p, 0, 20); await wait(2500);
+  await p.getByRole('button', { name: 'Tool string stuck' }).click(); await wait(1500);
+  await shot(p, '108-event-stuck-tool');
+  await clickWhenEnabled(p, 'Work the line', 20000); await wait(4000);
+  await clickWhenEnabled(p, 'Fire guns', 120000); await wait(6000);
+  await p.getByRole('button', { name: 'Downhole' }).click(); await wait(2000);
+  await shot(p, '109-event-misfire');
+  await clickWhenEnabled(p, 'Run guns again', 60000); await wait(1000);
+  await clickWhenEnabled(p, 'Fire guns', 120000); await wait(8000);
+  await clickWhenEnabled(p, /Swap to frac/, 60000); await wait(6000);
+  await p.getByRole('button', { name: 'Working valve actuator fault' }).click(); await wait(500);
+  {
+    const row = p.locator('div', { hasText: 'Zipper leg: upper working valve' }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
+    await row.getByRole('button', { name: 'Open' }).click().catch(() => {});
+  }
+  await wait(800); await p.getByRole('button', { name: 'Surface' }).click(); await wait(500);
+  await shot(p, '110-event-valve-fault');
+  await clickWhenEnabled(p, 'Backup circuit', 20000); await wait(500);
+  {
+    const row = p.locator('div', { hasText: 'Zipper leg: upper working valve' }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
+    await row.getByRole('button', { name: 'Open' }).click().catch(() => {});
+  }
+  await wait(4500);
+  await clickWhenEnabled(p, 'Pumps online'); await setRange(p, 0, 80); await setRange(p, 1, 1.5); await wait(6000);
+  await p.getByRole('button', { name: 'Sand delivery interrupted' }).click(); await wait(1500);
+  await shot(p, '111-event-sand-delivery');
+  await p.getByRole('button', { name: 'Production' }).first().click(); await wait(800);
+  await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(2500);
+  await shot(p, '112-hookup-rig-and-bop');
+  await clickWhenEnabled(p, 'Rig up', 20000); await wait(9000);
+  await shot(p, '113-hookup-running-tubing');
+  await clickWhenEnabled(p, 'Nipple down', 120000); await wait(1500);
+  await shot(p, '114-hookup-tree-on');
+  await clickWhenEnabled(p, 'Install the tree', 20000); await wait(2500);
+  await shot(p, '115-hookup-done');
+}
+for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS', '118'], ['RG-BOPSTACK-ANNULAR', '119'], ['DA-FRACVAN', '120'], ['MT-PROPPANT', '121'], ['MT-FLUIDSYSTEMS', '122']]) {
+  await p.goto(base + '/library/' + (id === 'RG' ? 'RG' : 'equipment/' + id)); await wait(6000);
+  await shot(p, n + '-record-' + id);
+  if (id === 'RG-BOPSTACK') { await p.keyboard.press('e'); await wait(1500); await shot(p, '117b-record-RG-BOPSTACK-explode'); }
+}
 await p.close();
+}
 
 // ---------------- Phone
-if (process.env.ONLY !== 'drop7') {
+if (!process.env.ONLY) {
 p = await page(390, 844, true);
 await p.goto(base + '/simulate'); await wait(5000);
 await shot(p, '21-phone-sim-3d');

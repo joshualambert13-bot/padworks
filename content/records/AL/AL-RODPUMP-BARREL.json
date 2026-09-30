@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-RODPUMP-BARREL",
+  "parent": "AL-RODPUMP",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Pump barrel",
+  "aliases": [
+    "barrel",
+    "pump barrel"
+  ],
+  "function": "The honed tube the plunger strokes in; its bore sets the pump displacement.",
+  "tabs": {
+    "overview": "Heavy-wall or thin-wall barrel per API 11AX; chrome or nickel plated bores for sand.",
+    "engineering": "API 11AX.",
+    "safety": "Pulled with the pump.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-RODPUMP.glb",
+  "mesh_nodes": [
+    "AL-RODPUMP-BARREL"
+  ]
+}

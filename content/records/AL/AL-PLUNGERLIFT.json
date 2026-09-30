@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S41",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear under the horsehead and beside the bridle; a parted rod string drops the load."
+    }
+  ],
+  "id": "AL-PLUNGERLIFT",
+  "parent": "AL",
+  "group": "plunger-lift",
+  "level": "equipment",
+  "name": "Plunger lift",
+  "aliases": [
+    "plunger lift",
+    "free piston lift",
+    "plunger (lift)"
+  ],
+  "function": "A free piston that falls to a bumper spring at the tubing tail while the well is shut in, then rides the gas back to a lubricator on the tree, sweeping the liquid ahead of it.",
+  "tabs": {
+    "overview": "A controller on a post cycles the motor valve on the flowline: shut in to build pressure, open to bring the plunger up with its liquid slug, flow, then shut in again as the plunger falls. An arrival sensor on the lubricator times each cycle. Uses the well's own gas, no pump, few moving parts; suited to gas wells with modest liquid. The simulator draws the lubricator on the tree, the controller, and the plunger cycling in the tubing.",
+    "engineering": "Needs enough gas-liquid ratio and shut-in pressure to lift the slug; plunger types (solid, pad, bypass) for fall speed and seal.",
+    "connections": "Tree cap replaced by the lubricator (UC); flowline motor valve; bumper spring in the tubing tail.",
+    "safety": "A fast arrival hammers the lubricator; the catcher and arrival sensor limit that; the lubricator is a pressure vessel at tubing pressure.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Cycle tuned from arrival times and casing pressure.",
+    "failure_modes": "Plunger sticking, worn plungers that will not seal, fast arrivals, controller valve leaks."
+  },
+  "scene": "AL-PLUNGERLIFT"
+}

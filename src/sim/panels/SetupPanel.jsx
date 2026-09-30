@@ -1,7 +1,7 @@
 // Pad Setup: every variable of the job is chosen here before the simulation starts. The 3D pad
 // updates live as choices change. Values are illustrative starting points, not design values.
-import { PlayCircle, MapPin, Layers3, Wrench, Drill, Ruler, Fuel, Beaker, Info } from 'lucide-react';
-import { useSim, BASINS, COMPLETIONS, SLEEVE_SYSTEMS, PLUG_TYPES, FLEETS, FLUIDS, PROPPANTS, FRAC_MODES, BORES, MAX_WELLS, basinOf, estimateStp, spreadSizing, designTotals, wellParams } from '../store.js';
+import { PlayCircle, MapPin, Layers3, Wrench, Drill, Ruler, Fuel, Beaker, Info, ArrowUpFromLine } from 'lucide-react';
+import { useSim, BASINS, COMPLETIONS, SLEEVE_SYSTEMS, PLUG_TYPES, FLEETS, FLUIDS, PROPPANTS, LIFTS, FRAC_MODES, BORES, MAX_WELLS, basinOf, estimateStp, spreadSizing, designTotals, wellParams } from '../store.js';
 
 function Section({ icon: Icon, title, children }) {
   return (
@@ -123,6 +123,14 @@ export default function SetupPanel() {
         <div className="text-[11px] text-mute">{fluid.blurb}</div>
         <Range label="Fluid intensity" value={s.setup.fluidBblFt} unit="bbl/ft" min={10} max={80} step={1} onChange={v => s.setSetup({ fluidBblFt: v })} name="fluidBblFt" />
         <div className="text-[11px] text-mute">Per well: <span className="mono text-white">{(totals.proppantLb / 1e6).toFixed(1)} million lb</span> of proppant and <span className="mono text-white">{Math.round(totals.fluidBbl).toLocaleString()} bbl</span> of fluid; per stage <span className="mono text-white">{Math.round(totals.stageProppantLb / 1000)} klb</span> and <span className="mono text-white">{Math.round(totals.stageFluidBbl).toLocaleString()} bbl</span>.</div>
+      </Section>
+
+      <Section icon={ArrowUpFromLine} title="Artificial lift (production phase)">
+        <select className="btn w-full" value={s.setup.lift} onChange={e => s.setSetup({ lift: e.target.value })} title="Artificial lift" data-select="lift">
+          {LIFTS.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+        </select>
+        <div className="text-[11px] text-mute">{(LIFTS.find(l => l.id === s.setup.lift) || LIFTS[0]).blurb}</div>
+        <div className="text-[10px] text-mute">Shows up in the production phase: the equipment at the tree and the string in the downhole view.</div>
       </Section>
 
       <div className="text-[10px] text-mute flex items-start gap-1"><Info size={12} className="shrink-0 mt-0.5" /><span>Basin values are typical public ranges rounded for training. Nothing here comes from a specific operator or well.</span></div>

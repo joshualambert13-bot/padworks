@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useSim } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
-import { Formation, Casing, Stage, FluidFlow, PerfFlash, WirelineString, BallInFlight, CoiledTubing, Dissolving, HeelMarker, clusterX, stageX } from './parts/downhole.jsx';
+import { Formation, Casing, Stage, FluidFlow, PerfFlash, WirelineString, BallInFlight, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX } from './parts/downhole.jsx';
 
 function Ticker({ enabled }) {
   const tick = useSim(s => s.tick);
@@ -14,14 +14,15 @@ function Ticker({ enabled }) {
 function FollowStage({ follow }) {
   const stage = useSim(s => s.stage);
   const count = useSim(s => s.stages.length);
+  const phase = useSim(s => s.phase);
   const { camera, controls } = useThree();
   useEffect(() => {
     if (!follow || !controls) return;
-    const x = stageX(stage);
+    const x = phase === 'production' ? -6 : stageX(stage);
     camera.position.set(x + 2, 7, 26);
     controls.target.set(x - 1, -0.4, 0);
     controls.update();
-  }, [stage, count, follow, camera, controls]);
+  }, [stage, count, phase, follow, camera, controls]);
   return null;
 }
 
@@ -52,6 +53,7 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
       {!sleeve && <WirelineString wl={s.wl} stage={s.stage} />}
       {sleeve && <BallInFlight wl={s.wl} stage={s.stage} />}
       {s.setup.plugs === 'dissolvable' ? <Dissolving ct={s.ct} stages={s.stages} sleeve={sleeve} /> : <CoiledTubing ct={s.ct} stages={s.stages} sleeve={sleeve} />}
+      {s.phase === 'production' && <ProductionString lift={s.setup.lift} active />}
       </group>
       <OrbitControls makeDefault enableDamping dampingFactor={0.08} minDistance={2} maxDistance={80} />
     </Canvas>

@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S41",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "High-pressure gas",
+      "control": "Injection line rated and restrained; compressor isolated and blown down before work."
+    }
+  ],
+  "id": "AL-GASLIFT-COMPRESSOR",
+  "parent": "AL-GASLIFT",
+  "group": "gas-lift",
+  "level": "component",
+  "name": "Compressor and injection line",
+  "aliases": [
+    "gas lift compressor",
+    "injection line",
+    "lift gas meter"
+  ],
+  "function": "The wellsite compressor (or the tie-in to a central system) and the metered injection line to the casing side outlet.",
+  "tabs": {
+    "overview": "Gas engine or electric compressor with a cooler; the injection choke and meter set the rate per well.",
+    "engineering": "Discharge pressure above the deepest valve opening pressure plus line losses.",
+    "safety": "High-pressure gas; blowdown before work.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "AL-GASLIFT-COMPRESSOR"
+}

@@ -1,0 +1,42 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": false,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-RODSTRING",
+  "parent": "AL",
+  "group": "rod-lift",
+  "level": "equipment",
+  "name": "Sucker rod string",
+  "aliases": [
+    "sucker rods",
+    "rod string",
+    "rods",
+    "fiberglass rods"
+  ],
+  "function": "The string of steel (or fiberglass) rods, 25 or 30 ft long, coupled from the polished rod down to the pump plunger, carrying the pump load through the tubing.",
+  "tabs": {
+    "overview": "Rods from 5/8 to 1-1/4 in. in a tapered string, heavier at the top where the load is highest; rod guides where the tubing curves; a sinker bar above the pump to keep the string in tension on the downstroke.",
+    "engineering": "Taper design per API 11B; stretch and load from the pump depth, fluid, and stroke.",
+    "safety": "Rod parts drop the bridle load; fished with the rig.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design.",
+    "failure_modes": "Fatigue parts at couplings, wear against the tubing in the curve, corrosion pitting."
+  }
+}

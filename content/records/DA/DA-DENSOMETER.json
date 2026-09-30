@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "Nuclear (gamma) or non-nuclear (Coriolis) types; the concentration on the plot comes from this reading, not from the sand screw setting.",
+    "engineering": "Zeroed on clean fluid at the start of each stage.",
+    "safety": "Nuclear sources are licensed and badged.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-DENSOMETER",
+  "parent": "DA",
+  "group": "sensors",
+  "level": "component",
+  "name": "Densometer and proppant concentration",
+  "aliases": [
+    "densometer",
+    "densitometer",
+    "nuclear densometer",
+    "PPA meter"
+  ],
+  "function": "The density meter on the slurry line that reads slurry density and, with the clean fluid density, gives proppant concentration in pounds added per gallon.",
+  "scene": "PP-BLENDER"
+}

@@ -340,5 +340,140 @@
     "access": "Public",
     "tier": "E2",
     "url": "https://www.eia.gov/petroleum/drilling/"
+  },
+  {
+    "id": "S39",
+    "title": "PetroWiki: Sucker-rod lift (surface unit, rod string, downhole pump, gas anchors)",
+    "publisher": "Society of Petroleum Engineers",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://petrowiki.spe.org/Sucker-rod_lift"
+  },
+  {
+    "id": "S40",
+    "title": "PetroWiki: Electrical submersible pumps (components, rate range, limits)",
+    "publisher": "Society of Petroleum Engineers",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://petrowiki.spe.org/Electrical_submersible_pumps"
+  },
+  {
+    "id": "S41",
+    "title": "PetroWiki: Gas lift (continuous and intermittent, plunger note)",
+    "publisher": "Society of Petroleum Engineers",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://petrowiki.spe.org/Gas_lift"
+  },
+  {
+    "id": "S42",
+    "title": "PetroWiki: Sand control techniques (gravel pack share, screens and liners, consolidation, resin-coated gravel, slot sizing)",
+    "publisher": "Society of Petroleum Engineers",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://petrowiki.spe.org/Sand_control_techniques"
+  },
+  {
+    "id": "S43",
+    "title": "API Spec 11AX, Subsurface Sucker Rod Pump Assemblies, Components, and Fittings",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S44",
+    "title": "API Spec 11E, Pumping Units",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S45",
+    "title": "API RP 11S series, Electric Submersible Pump installation, operation, and testing",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S46",
+    "title": "API Spec 11V1 and RP 11V5, Gas Lift Valves and Mandrels, and Gas Lift Operations",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S47",
+    "title": "ISO 17824, Sand screens (design, manufacture, and testing)",
+    "publisher": "International Organization for Standardization",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S48",
+    "title": "API Spec 16A, Drill-through Equipment (ram and annular preventers, spools)",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S49",
+    "title": "API Std 53, Well Control Equipment Systems for Drilling Wells (stack arrangements, accumulator sizing, testing)",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S50",
+    "title": "PetroWiki: Fracturing fluids and additives (fluid types; polymers, crosslinkers, friction reducers, biocides, buffers, surfactants, breakers, scale inhibitors)",
+    "publisher": "Society of Petroleum Engineers",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://petrowiki.spe.org/Fracturing_fluids_and_additives"
+  },
+  {
+    "id": "S51",
+    "title": "PetroWiki: Propping agents and fracture conductivity (sand, resin-coated sand, ceramic, bauxite; conductivity factors)",
+    "publisher": "Society of Petroleum Engineers",
+    "edition": "read 2026",
+    "access": "Public",
+    "tier": "E2",
+    "url": "https://petrowiki.spe.org/Propping_agents_and_fracture_conductivity"
+  },
+  {
+    "id": "S52",
+    "title": "API RP 19C, Measurement of Properties of Proppants (sieve, sphericity, crush, acid solubility)",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
+  },
+  {
+    "id": "S53",
+    "title": "API RP 16ST, Coiled Tubing Well Control Equipment Systems",
+    "publisher": "American Petroleum Institute",
+    "edition": "verify edition held",
+    "access": "Paid standard",
+    "tier": "E1",
+    "url": ""
   }
 ]

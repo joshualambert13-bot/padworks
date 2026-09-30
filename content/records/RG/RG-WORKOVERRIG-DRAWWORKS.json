@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Hands clear of slips, tongs, and the drawworks; guards on rotating parts."
+    }
+  ],
+  "id": "RG-WORKOVERRIG-DRAWWORKS",
+  "parent": "RG-WORKOVERRIG",
+  "group": "rig",
+  "level": "component",
+  "name": "Drawworks and brake",
+  "aliases": [
+    "drawworks",
+    "hoist",
+    "brake (rig)"
+  ],
+  "function": "The winch that spools the drilling line to raise and lower the block, with the brake that holds the string.",
+  "tabs": {
+    "overview": "Engine or electric drive; band or disc brake; the driller controls it from the doghouse or floor console.",
+    "engineering": "Line pull and brake capacity for the string weight.",
+    "safety": "Brake tests before running pipe.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "RG-WORKOVERRIG-DRAWWORKS"
+}

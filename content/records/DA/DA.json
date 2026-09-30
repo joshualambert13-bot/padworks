@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": false,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "Every number on the simulator control panel exists as a sensor on the pad: transducers on the missile and the wellhead, flowmeters on the blender discharge, a densometer on the slurry line, chemical pump totalizers, and the pump and engine data over the fleet network. The frac van collects them and shows the treating plot. Offset wells carry gauges to watch for frac hits; some pads run fiber for distributed acoustic and temperature sensing, or microseismic arrays, to see where the fractures go.",
+    "engineering": "Transducer ranges above the relief setting; densometer calibration with fluid density; data logged per stage and archived with the job report.",
+    "safety": "Instrument power isolated at the sensor; cable trays and covers across walkways.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data.",
+    "failure_modes": "Transducer drift or plugging, densometer source faults, data dropouts on the fleet network."
+  },
+  "id": "DA",
+  "level": "system",
+  "name": "Data acquisition and monitoring",
+  "aliases": [
+    "data acquisition",
+    "DA",
+    "instrumentation",
+    "monitoring",
+    "frac data"
+  ],
+  "function": "The sensors, cabling, and displays that let the treater and the company representative see the job: surface pressure and rate, slurry density and proppant concentration, chemical rates, pump health, downhole gauges, fiber, and microseismic where used."
+}

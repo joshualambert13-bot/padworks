@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S50",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "Slickwater carries sand by velocity and leaves the least damage; linear and crosslinked gels carry more sand at lower rates and need breakers to clean up; hybrids pump slickwater first and gel later. Pad Setup uses the fluid choice to set friction and screenout tolerance.",
+    "engineering": "Viscosity at bottomhole temperature, friction pressure, proppant transport, and break time are the design tests.",
+    "safety": "Chemical handling; hot crosslinked fluids in some systems.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9)."
+  },
+  "id": "MT-FLUIDSYSTEMS",
+  "parent": "MT",
+  "group": "fluids",
+  "level": "equipment",
+  "name": "Fracturing fluid systems",
+  "aliases": [
+    "frac fluid",
+    "slickwater",
+    "linear gel",
+    "crosslinked gel",
+    "hybrid fluid",
+    "HVFR",
+    "foam frac"
+  ],
+  "function": "The base fluid designs: slickwater (water plus friction reducer), high-viscosity friction reducer systems, linear polymer gels, crosslinked gels, and the less common foam, oil-based, and acid-based fluids."
+}

@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Stay clear under the horsehead and beside the bridle; a parted rod string drops the load."
+    }
+  ],
+  "id": "AL-BEAMUNIT-BRIDLE",
+  "parent": "AL-BEAMUNIT",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Bridle and carrier bar",
+  "aliases": [
+    "bridle",
+    "wireline hanger",
+    "carrier bar"
+  ],
+  "function": "The pair of wire ropes from the horsehead to the carrier bar that hangs the polished rod clamp.",
+  "tabs": {
+    "overview": "Follows the horsehead arc so the rod stays vertical.",
+    "engineering": "Rated above the peak polished rod load.",
+    "safety": "Never under the carrier bar while the unit runs.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-BRIDLE"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Lockout the prime mover and brake the unit before anyone approaches the beam, cranks, or belts."
+    },
+    {
+      "class": "High voltage",
+      "control": "Only qualified people at the drive, transformer, and junction box; lockout before cable work."
+    }
+  ],
+  "id": "AL-BEAMUNIT-PRIMEMOVER",
+  "parent": "AL-BEAMUNIT",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Prime mover and belt guard",
+  "aliases": [
+    "prime mover (pumping unit)",
+    "motor (pumping unit)",
+    "gas engine",
+    "belt guard"
+  ],
+  "function": "The electric motor or gas engine that drives the reducer through V-belts under a guard.",
+  "tabs": {
+    "overview": "NEMA D motors with high slip are common; a variable speed drive or a pump-off controller cycles the unit.",
+    "engineering": "Sized to the peak torque with the counterbalance set.",
+    "safety": "Belts and sheaves guarded; lockout before belt work.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-PRIMEMOVER",
+    "AL-BEAMUNIT-BELTGUARD"
+  ]
+}

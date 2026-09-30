@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-RODPUMP-SEATINGNIPPLE",
+  "parent": "AL-RODPUMP",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Seating nipple and hold-down",
+  "aliases": [
+    "seating nipple",
+    "hold-down",
+    "mechanical hold-down",
+    "cup hold-down"
+  ],
+  "function": "The profile in the tubing that the pump seats in and the hold-down (cups or a mechanical lock) that keeps it there against the pumping load.",
+  "tabs": {
+    "overview": "Top or bottom hold-down per the pump designation; the nipple is run with the tubing.",
+    "engineering": "API 11AX.",
+    "safety": "The pump is unseated by picking up the rods before pulling.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-RODPUMP.glb",
+  "mesh_nodes": [
+    "AL-RODPUMP-SEATINGNIPPLE",
+    "AL-RODPUMP-HOLDDOWN"
+  ]
+}

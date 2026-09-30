@@ -1,0 +1,50 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S28",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "The cement sheath in the CM records is these materials placed; the frac depends on it for stage isolation in cemented completions.",
+    "engineering": "Per API Spec 10A; slurry design tested for thickening time and strength at downhole temperature.",
+    "safety": "Cement dust and caustic slurry.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9)."
+  },
+  "id": "MT-CEMENT",
+  "parent": "MT",
+  "group": "cement",
+  "level": "equipment",
+  "name": "Cement classes and additives",
+  "aliases": [
+    "oilwell cement",
+    "API cement class",
+    "Class H",
+    "Class G",
+    "cement additives"
+  ],
+  "function": "The oilwell cements (API classes, commonly G and H on land) and the additives (retarders, accelerators, extenders, fluid-loss control, weighting agents) that place them across the intervals the casing design calls for.",
+  "standards": [
+    {
+      "standard": "API Spec 10A",
+      "edition": "verify",
+      "paraphrase": "Cements and materials for well cementing.",
+      "source": "S28"
+    }
+  ]
+}

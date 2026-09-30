@@ -3,7 +3,7 @@ DT-FRACSLEEVE: cut-away of a ball-drop frac sleeve in 5-1/2 in. casing, shown sh
 its seat: outer housing with threaded pin and box ends and four port windows, the inner sleeve (shifted
 toe-ward), the graduated ball seat, the frac ball, the shear screws that held the sleeve closed, the body
 seals, and a swellable packer element on the casing below the sleeve for an openhole system. The casing
-joints either side are ghost context. Half of the housing and sleeve are cut away on the +Y side so the
+joints either side are ghost context. Half of the housing and sleeve are cut away on the -Y side (the side facing the viewer camera) so the
 interior reads in the viewer. Generic geometry; proportions only, not an OEM design.
 
 Axes: X along the wellbore (toe at +X), Z up. Inches.
@@ -35,7 +35,7 @@ def tube_x(od, id_, length, x0):
 
 def half_cut(solid):
     """Remove the +Y half so the interior shows."""
-    return solid.cut(cq.Workplane("XY").box(400, 40, 40).translate((0, 20, 0)))
+    return solid.cut(cq.Workplane("XY").box(400, 40, 40).translate((0, -20, 0)))
 
 
 def build():

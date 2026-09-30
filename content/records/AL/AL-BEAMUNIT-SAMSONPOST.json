@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-BEAMUNIT-SAMSONPOST",
+  "parent": "AL-BEAMUNIT",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Samson post and center bearing",
+  "aliases": [
+    "Samson post",
+    "A-frame",
+    "center bearing"
+  ],
+  "function": "The A-frame that carries the walking beam on the center bearing, taking the whole rod load plus the counterbalance.",
+  "tabs": {
+    "overview": "Three legs to a saddle bearing; the beam pivots here so the horsehead end and the tail end move opposite ways.",
+    "engineering": "Structure rating per API 11E.",
+    "safety": "Ladder access only with the unit braked.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-SAMSONPOST"
+  ]
+}

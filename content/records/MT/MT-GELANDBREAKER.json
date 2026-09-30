@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S50"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "Gel carries sand; crosslinked gel carries more at high temperature; the breaker returns the fluid to water so the pack cleans up. Too little breaker leaves damage; too much breaks the gel early.",
+    "engineering": "Rheology and break tests at bottomhole temperature; pH buffers control the crosslink.",
+    "safety": "Oxidizer handling.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9)."
+  },
+  "id": "MT-GELANDBREAKER",
+  "parent": "MT-FLUIDSYSTEMS",
+  "group": "fluids",
+  "level": "component",
+  "name": "Gelling agents, crosslinkers, and breakers",
+  "aliases": [
+    "guar",
+    "gel",
+    "crosslinker",
+    "borate",
+    "breaker",
+    "oxidizer breaker",
+    "enzyme breaker"
+  ],
+  "function": "The polymer (guar or derivatives) that viscosifies the fluid, the crosslinker (borate or metal) that builds a stronger gel, and the breaker (oxidizer or enzyme) that degrades it after placement."
+}

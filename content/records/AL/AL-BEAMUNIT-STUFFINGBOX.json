@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors at the tree; escape sets staged."
+    }
+  ],
+  "id": "AL-BEAMUNIT-STUFFINGBOX",
+  "parent": "AL-BEAMUNIT",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Stuffing box and pumping tee",
+  "aliases": [
+    "stuffing box (rod lift)",
+    "pumping tee",
+    "rod BOP"
+  ],
+  "function": "The packing gland on the pumping tee that seals around the moving polished rod while production leaves through the tee side outlet.",
+  "tabs": {
+    "overview": "Packing tightened as it wears; a rod BOP below it isolates the well for packing changes.",
+    "engineering": "Rated with the tree.",
+    "safety": "Leak is the first sign of packing wear; bled through the tee before service.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-STUFFINGBOX",
+    "AL-BEAMUNIT-WELLHEAD"
+  ]
+}

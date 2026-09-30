@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-RODPUMP-GASANCHOR",
+  "parent": "AL-RODPUMP",
+  "group": "rod-lift",
+  "level": "component",
+  "name": "Gas anchor",
+  "aliases": [
+    "gas anchor",
+    "gas separator (rod pump)",
+    "poor boy anchor",
+    "mud anchor",
+    "dip tube"
+  ],
+  "function": "The downhole separator below the pump intake: fluid enters an outer mud anchor, gas breaks out upward, and liquid is drawn through a dip tube into the pump.",
+  "tabs": {
+    "overview": "Natural or poor-boy designs; sized so the downward liquid velocity is below the bubble rise velocity.",
+    "engineering": "Per the well gas fraction.",
+    "safety": "Undersized anchors gas-lock the pump.",
+    "evidence": "Gas separator types per PetroWiki sucker-rod lift (S39)."
+  },
+  "glb": "/glb/AL/AL-RODPUMP.glb",
+  "mesh_nodes": [
+    "AL-RODPUMP-GASANCHOR"
+  ]
+}

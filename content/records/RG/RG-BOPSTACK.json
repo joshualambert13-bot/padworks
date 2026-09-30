@@ -1,0 +1,84 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S48",
+    "S49",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Test the stack to the program pressures; bleed and verify zero before breaking any connection."
+    },
+    {
+      "class": "Well control",
+      "control": "BOP drills before the job; kill weight fluid or a tested barrier before the tree comes off."
+    }
+  ],
+  "id": "RG-BOPSTACK",
+  "parent": "RG",
+  "group": "well-control",
+  "level": "equipment",
+  "name": "Workover BOP stack (cut-away)",
+  "aliases": [
+    "BOP stack",
+    "blowout preventer stack",
+    "BOPs",
+    "workover stack",
+    "annular and rams"
+  ],
+  "function": "The stack of preventers on the tubing head while the rig has pipe in the hole: adapter, drilling spool with kill and choke outlets, double ram preventer (pipe rams and blind rams), annular preventer, and bell nipple.",
+  "tabs": {
+    "overview": "Bottom to top: the adapter flange on the tubing head, a drilling spool whose two side outlets take the kill line and the choke line, a double ram body with pipe rams below (closed on the tubing profile in the cut-away) and blind rams above (open), the annular preventer whose piston squeezes a rubber element inward to seal on any pipe or the open hole, and a bell nipple with the flowline nipple that returns fluid to the tanks. Each ram has a bonnet and a hydraulic operator each side; the annular closes from below its piston. All of it is closed from the accumulator unit at the remote panel or the driller's panel.",
+    "engineering": "Preventers per API Spec 16A; stack arrangement, test pressures, and closing times per API Std 53; the 7-1/16 in. 5K class shown suits most land completions.",
+    "connections": "Tubing head below (WH); kill line and choke line on the spool (FB choke manifold on workovers); accumulator hydraulic lines; bell nipple flowline to the tanks.",
+    "safety": "Pressure tested after nipple up; function tested each shift; the annular is closed first on a kick with pipe across it, rams second.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Nipple up on the tubing head after the tree comes off, test, run or pull pipe, nipple down before the tree goes back on.",
+    "failure_modes": "Element wear, ram packer damage, bonnet seal leaks, operator seal leaks, hydraulic hose damage."
+  },
+  "glb": "/glb/RG/RG-BOPSTACK.glb",
+  "scene": "RG-BOPSTACK",
+  "mesh_nodes": [
+    "RG-BOPSTACK-ADAPTER",
+    "RG-BOPSTACK-SPOOL",
+    "RG-BOPSTACK-SIDEOUTLET",
+    "RG-BOPSTACK-RAMBODY",
+    "RG-BOPSTACK-PIPERAM",
+    "RG-BOPSTACK-BLINDRAM",
+    "RG-BOPSTACK-BONNET",
+    "RG-BOPSTACK-OPERATOR",
+    "RG-BOPSTACK-ANNULARBODY",
+    "RG-BOPSTACK-PISTON",
+    "RG-BOPSTACK-ELEMENT",
+    "RG-BOPSTACK-BELLNIPPLE",
+    "RG-BOPSTACK-STUDS"
+  ],
+  "ghost_nodes": [
+    "RG-BOPSTACK-TUBINGHEAD"
+  ],
+  "standards": [
+    {
+      "standard": "API Spec 16A",
+      "edition": "verify",
+      "paraphrase": "Ram and annular preventer design, materials, and testing.",
+      "source": "S48"
+    },
+    {
+      "standard": "API Std 53",
+      "edition": "verify",
+      "paraphrase": "Stack arrangement, testing frequency, and accumulator capacity.",
+      "source": "S49"
+    }
+  ]
+}

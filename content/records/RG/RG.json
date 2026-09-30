@@ -1,0 +1,74 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": false,
+  "sources": [
+    "S48",
+    "S49",
+    "S53",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Well control",
+      "control": "BOP drills before the job; kill weight fluid or a tested barrier before the tree comes off."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Test the stack to the program pressures; bleed and verify zero before breaking any connection."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Tubing handled with elevators and slips by trained crews; the derrick inspected before the job."
+    },
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Hands clear of slips, tongs, and the drawworks; guards on rotating parts."
+    },
+    {
+      "class": "H2S",
+      "control": "Monitors at the floor and the bell nipple; escape sets staged."
+    }
+  ],
+  "id": "RG",
+  "level": "system",
+  "name": "Completion and workover rigs and well control",
+  "aliases": [
+    "well control",
+    "RG",
+    "rigs",
+    "well servicing"
+  ],
+  "function": "The rigs that run and pull tubing and rods and the well control equipment that keeps the well contained while they do: workover and completion rigs, snubbing units, BOP stacks, accumulators, and the tubing handling tools.",
+  "tabs": {
+    "overview": "A frac pad sees a rig twice: a drilling rig before the completion, and a workover (completion) rig after the frac and drillout to pull the frac stack, run the production tubing with its packer and lift hardware, and set the production tree. With pipe in the hole the wellhead carries a BOP stack instead of a tree: an annular, rams, and a spool with kill and choke lines, closed hydraulically from an accumulator unit. Snubbing units run pipe into a live well against pressure. The simulator shows the rig, the BOP stack, and the tubing run in the production hookup phase.",
+    "engineering": "Stack arrangements, test pressures, and accumulator sizing follow API Std 53; the preventers themselves API Spec 16A; coiled tubing stacks API RP 16ST. Rig size follows the hook load of the tubing string.",
+    "connections": "Wellhead and tubing head (WH, UC); tubing and packer (UC); lift hardware (AL); flowline and choke (FB).",
+    "safety": "Well control is the governing hazard: barriers verified before the tree comes off; BOP drills; pipe handling and dropped objects on the floor; H2S at the bell nipple.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Move in, rig up, kill or confirm barriers, nipple down the tree, nipple up and test the stack, pull or run pipe, nipple down the stack, set and test the tree, rig down.",
+    "failure_modes": "Preventer element wear, ram seal leaks, accumulator precharge loss, elevator and slip damage to tubing, drawworks brake failures."
+  },
+  "standards": [
+    {
+      "standard": "API Spec 16A",
+      "edition": "verify",
+      "paraphrase": "Drill-through equipment: ram and annular preventers and spools.",
+      "source": "S48"
+    },
+    {
+      "standard": "API Std 53",
+      "edition": "verify",
+      "paraphrase": "Well control equipment systems: arrangements, testing, accumulators.",
+      "source": "S49"
+    }
+  ]
+}

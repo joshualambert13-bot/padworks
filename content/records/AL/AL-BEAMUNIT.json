@@ -1,0 +1,91 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S44",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Lockout the prime mover and brake the unit before anyone approaches the beam, cranks, or belts."
+    },
+    {
+      "class": "Line of fire",
+      "control": "Stay clear under the horsehead and beside the bridle; a parted rod string drops the load."
+    }
+  ],
+  "id": "AL-BEAMUNIT",
+  "parent": "AL",
+  "group": "rod-lift",
+  "level": "equipment",
+  "name": "Beam pumping unit (conventional)",
+  "aliases": [
+    "beam pumping unit",
+    "pumpjack",
+    "beam unit",
+    "horsehead pump",
+    "nodding donkey"
+  ],
+  "function": "The surface machine of rod lift: a prime mover turns a gear reducer whose cranks rock a walking beam on a Samson post, so the horsehead lifts and lowers the polished rod and the rod string below it.",
+  "tabs": {
+    "overview": "Base to horsehead: a skid base, the Samson post carrying the center bearing, the walking beam with the horsehead at the well end and the equalizer at the tail, two pitman arms from the equalizer down to the crank pins, two cranks with counterweights on the slow shaft of the gear reducer, the prime mover (electric motor or gas engine) driving the reducer through V-belts under a guard, and the bridle from the horsehead to the polished rod clamp. The polished rod runs through a stuffing box on the pumping tee at the tree. Counterweights balance the rod load so the motor works evenly on both strokes. The model is shown mid-upstroke and the simulator animates the crank, beam, and rod.",
+    "engineering": "Rated by API 11E designation (reducer torque, structure load, stroke length). Stroke length and strokes per minute set the displacement with the pump bore; the counterbalance is set from dynamometer cards.",
+    "connections": "Polished rod to the rod string; stuffing box on the pumping tee (UC tree); power to the prime mover; flowline from the tee.",
+    "safety": "Rotating cranks and counterweights, the belt drive, and the beam sweep are the pinch and line-of-fire zones; brake and lockout before anyone approaches; a parted rod string drops the bridle load.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Set on a foundation over the well, aligned to the polished rod, balanced, then run on a timer or a pump-off controller.",
+    "failure_modes": "Structural bearing wear, reducer gear damage from imbalance, belt failures, stuffing box leaks, polished rod breaks."
+  },
+  "glb": "/glb/AL/AL-BEAMUNIT.glb",
+  "scene": "AL-BEAMUNIT",
+  "mesh_nodes": [
+    "AL-BEAMUNIT-BASE",
+    "AL-BEAMUNIT-SAMSONPOST",
+    "AL-BEAMUNIT-WALKINGBEAM",
+    "AL-BEAMUNIT-HORSEHEAD",
+    "AL-BEAMUNIT-EQUALIZER",
+    "AL-BEAMUNIT-PITMAN",
+    "AL-BEAMUNIT-CRANK",
+    "AL-BEAMUNIT-COUNTERWEIGHT",
+    "AL-BEAMUNIT-GEARREDUCER",
+    "AL-BEAMUNIT-PRIMEMOVER",
+    "AL-BEAMUNIT-BELTGUARD",
+    "AL-BEAMUNIT-BRIDLE",
+    "AL-BEAMUNIT-POLISHEDROD",
+    "AL-BEAMUNIT-STUFFINGBOX",
+    "AL-BEAMUNIT-WELLHEAD"
+  ],
+  "standards": [
+    {
+      "standard": "API Spec 11E",
+      "edition": "verify",
+      "paraphrase": "Pumping unit structure, reducer rating, and testing.",
+      "source": "S44"
+    }
+  ],
+  "connections": [
+    {
+      "target": "AL-RODPUMP",
+      "direction": "downstream",
+      "type": "mechanical",
+      "note": "through the rod string"
+    },
+    {
+      "target": "UC-PRODTREE",
+      "direction": "downstream",
+      "type": "threaded",
+      "note": "stuffing box on the pumping tee"
+    }
+  ]
+}

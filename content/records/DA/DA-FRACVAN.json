@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "The treating plot is the same picture as the simulator chart: surface pressure, slurry rate, and proppant concentration, with the kickout line. The treater watches the pressure trend for a screenout or a break, adjusts rate and sand, and calls the shutdown. Company representatives watch the same plot from a second seat.",
+    "engineering": "One-second data; job logs per stage; redundant transducers averaged.",
+    "safety": "The van sits outside the red zone; radios to the pumps and the wireline unit.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-FRACVAN",
+  "parent": "DA",
+  "group": "surface",
+  "level": "equipment",
+  "name": "Frac van (data van) and the treating plot",
+  "aliases": [
+    "treater van",
+    "treating plot",
+    "job plot",
+    "van (frac data)"
+  ],
+  "function": "The control trailer where the treater runs the job: the treating plot of pressure, rate, and density against time, the pump controls, and the chemical setpoints.",
+  "scene": "PP-DATAVAN",
+  "connections": [
+    {
+      "target": "PP-DATAVAN",
+      "direction": "undirected",
+      "type": "data"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "Boxes arrive full on trucks, stack two high in rows, and are set on a feeder that empties them onto the blender conveyor; no pneumatic transfer, so less dust and noise.",
+    "engineering": "Box count from the stage proppant and the truck cycle time.",
+    "safety": "Forklift and crane traffic; silica dust controls at the feeder.",
+    "evidence": "Pad photographs read for layout only (S9)."
+  },
+  "id": "LG-SANDBOXES",
+  "parent": "LG",
+  "group": "sand",
+  "level": "equipment",
+  "name": "Sand boxes (containerized sand)",
+  "aliases": [
+    "sand box",
+    "sand containers",
+    "box sand",
+    "containerized proppant"
+  ],
+  "function": "Sand delivered and stored in stackable containers that gravity-feed a conveyor to the blender, the alternative to pneumatic silos.",
+  "scene": "LG-SANDBOXES",
+  "connections": [
+    {
+      "target": "PP-SANDHANDLING",
+      "direction": "downstream",
+      "type": "mechanical"
+    }
+  ]
+}

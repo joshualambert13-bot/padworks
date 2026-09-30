@@ -1,0 +1,54 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S41",
+    "S46",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "High-pressure gas",
+      "control": "Injection line rated and restrained; compressor isolated and blown down before work."
+    }
+  ],
+  "id": "AL-GASLIFT",
+  "parent": "AL",
+  "group": "gas-lift",
+  "level": "equipment",
+  "name": "Gas lift system",
+  "aliases": [
+    "gas lift",
+    "GL",
+    "continuous gas lift",
+    "intermittent gas lift"
+  ],
+  "function": "Compressed gas injected down the casing annulus and into the tubing through valves in side pocket mandrels, lightening the fluid column so the well flows.",
+  "tabs": {
+    "overview": "Continuous gas lift injects steadily to cut the tubing fluid density, the common mode for higher rates; intermittent lift injects slugs of gas to displace liquid, for low rates. Unloading valves at several depths open in sequence from the top as the annulus is unloaded, then close, leaving injection through the deepest operating valve or orifice. Surface: a compressor (or a central gas lift system), the injection line with a choke and meter, and the casing side outlet at the tree. The simulator draws the compressor skid and injection line and the mandrels on the tubing.",
+    "engineering": "Valves per API 11V1; design and operations per API RP 11V5; the compressor is the expensive element.",
+    "connections": "Casing side outlet on the wellhead (WH); tubing mandrels (UC); gas supply.",
+    "safety": "High-pressure gas at the line and compressor; fuel gas leaks.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Unloaded stage by stage; the injection rate tuned to the well.",
+    "failure_modes": "Valve leaks or failures to close, compressor outages, hydrates in the line, tubing-casing communication."
+  },
+  "scene": "AL-GASLIFT",
+  "standards": [
+    {
+      "standard": "API Spec 11V1",
+      "edition": "verify",
+      "paraphrase": "Gas lift valves, orifices, reverse flow valves, and dummy valves.",
+      "source": "S46"
+    }
+  ]
+}

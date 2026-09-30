@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "Clean rate minus slurry rate gives the sand volume; the pump stroke counters give a cross-check.",
+    "engineering": "Calibrated with the fluid; turbine meters foul with sand, magnetic meters do not.",
+    "safety": "None beyond the lines.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-FLOWMETER",
+  "parent": "DA",
+  "group": "sensors",
+  "level": "component",
+  "name": "Flowmeters (clean rate, slurry rate)",
+  "aliases": [
+    "flowmeter",
+    "turbine meter",
+    "magnetic flowmeter",
+    "rate meter"
+  ],
+  "function": "The turbine or magnetic meters on the blender suction (clean rate) and discharge (slurry rate) that give the treating rate.",
+  "scene": "PP-BLENDER"
+}

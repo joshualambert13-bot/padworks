@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Chemicals",
+      "control": "Data sheets on site; eye and skin protection at the additive unit; spill kits."
+    }
+  ],
+  "tabs": {
+    "overview": "Setpoints in gallons per thousand gallons of clean fluid; the van compares delivered to designed.",
+    "engineering": "Positive-displacement pump strokes or flowmeters per additive.",
+    "safety": "Chemical handling per the data sheets.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-CHEMTOTALIZER",
+  "parent": "DA",
+  "group": "sensors",
+  "level": "component",
+  "name": "Chemical rate meters and totalizers",
+  "aliases": [
+    "chem totalizer",
+    "additive rate",
+    "FR rate",
+    "chemical meters"
+  ],
+  "function": "The meters on each additive pump that report the rate and total of friction reducer, biocide, scale inhibitor, and the other chemicals against the program.",
+  "scene": "PP-CHEMADD"
+}

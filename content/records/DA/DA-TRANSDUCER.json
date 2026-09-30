@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "DA",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Electrical",
+      "control": "Instrument power isolated before sensor changes; cables routed off the ground."
+    }
+  ],
+  "tabs": {
+    "overview": "Two on the missile for the pump-side reading, one on the wellhead for the true treating pressure, one on the annulus to catch communication; ranges above the relief setting.",
+    "engineering": "Calibrated before the job; hammer union or NPT mounts with an isolation valve.",
+    "safety": "Replaced with the pumps off and the line bled.",
+    "evidence": "Field practice at the frac van and wellsite instrumentation (S9); pressure transducer practice (S31 missile patent for header instruments); no vendor data."
+  },
+  "id": "DA-TRANSDUCER",
+  "parent": "DA",
+  "group": "sensors",
+  "level": "component",
+  "name": "Pressure transducers (missile, wellhead, annulus)",
+  "aliases": [
+    "pressure transducer",
+    "PT",
+    "wellhead pressure sensor",
+    "annulus pressure"
+  ],
+  "function": "Strain-gauge transducers on the missile header, the wellhead (treating pressure), and the casing annulus that feed the plot and the kickout logic.",
+  "scene": "PP-MISSILE-TRANSDUCER"
+}

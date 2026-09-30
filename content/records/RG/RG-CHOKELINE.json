@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": false,
+  "sources": [
+    "S49",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Test the stack to the program pressures; bleed and verify zero before breaking any connection."
+    }
+  ],
+  "id": "RG-CHOKELINE",
+  "parent": "RG",
+  "group": "well-control",
+  "level": "equipment",
+  "name": "Choke manifold and kill line (workover)",
+  "aliases": [
+    "workover choke manifold",
+    "kill line",
+    "choke line",
+    "well control manifold"
+  ],
+  "function": "The manifold that takes a kick through an adjustable choke while the kill line pumps kill fluid: the same hardware family as the flowback choke manifold, plumbed to the stack outlets.",
+  "tabs": {
+    "overview": "Choke line from the spool to the manifold; kill line from the pumps to the spool; gauges and a mud gas separator downstream on drilling rigs.",
+    "engineering": "Rated with the stack; per API Std 53 arrangement.",
+    "safety": "Lined up and tested before the stack is put to work.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "connections": [
+    {
+      "target": "FB-CHOKEMANIFOLD",
+      "direction": "undirected",
+      "type": "flanged",
+      "note": "same hardware family"
+    }
+  ]
+}

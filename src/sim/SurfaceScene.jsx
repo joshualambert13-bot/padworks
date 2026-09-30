@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, ContactShadows } from '@react-three/drei';
 import { useSim, padRoles, nextSteps, basinOf, spreadSizing } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
-import { Ground, FracTree, ProductionTree, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, Pickups, FlangedRun } from './parts/surface.jsx';
+import { Ground, FracTree, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, Pickups, FlangedRun, WELL_COLORS } from './parts/surface.jsx';
 import { PipeRun, Pipe, MAT, Label } from './parts/primitives.jsx';
 
 const WELL_SPACING = 8;   // meters between wellheads along the row
@@ -104,14 +104,16 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
         <group key={i} position={[0, 0, wellZ[i]]}>
           {i === 0
             ? (s.phase === 'production'
-              ? <ProductionTree showLabels={showLabels && preset === 'tree'} />
-              : <FracTree valves={s.valves} showLabels={showLabels && preset === 'tree'} lubricator={s.lubricatorRigged} wlStep={s.wl.step} bore={bore} focusValve={focusValve} launcher={sleeve} ballsLeft={Math.max(0, s.stages.length - 1 - s.ballsDropped)} />)
+              ? (s.hookup.step === 'rig' || s.hookup.step === 'tubing'
+                ? <BopStack showLabels={showLabels && preset === 'tree'} />
+                : <ProductionTree showLabels={showLabels && preset === 'tree'} tint={WELL_COLORS[i % WELL_COLORS.length]} lift={s.hookup.step === 'done' ? s.setup.lift : 'flow'} />)
+              : <FracTree valves={s.valves} showLabels={showLabels && preset === 'tree'} lubricator={s.lubricatorRigged} wlStep={s.wl.step} bore={bore} focusValve={focusValve} launcher={sleeve} ballsLeft={Math.max(0, s.stages.length - 1 - s.ballsDropped)} tint={WELL_COLORS[i % WELL_COLORS.length]} />)
             : (r.role === 'done'
-              ? <ProductionTree showLabels={false} partner />
-              : <FracTree valves={partnerValves(r.role)} showLabels={false} lubricator={!sleeve && r.role === 'wireline'} wlStep={r.role === 'wireline' ? 'pumpdown' : 'idle'} bore={bore} dim partner launcher={sleeve} ballsLeft={3} />)}
-          {/* flanged treating spools from the zipper leg outlet up to the inlet block (gone once the well is on production) */}
+              ? <ProductionTree showLabels={false} partner tint={WELL_COLORS[i % WELL_COLORS.length]} lift={s.setup.lift} />
+              : <FracTree valves={partnerValves(r.role)} showLabels={false} lubricator={!sleeve && r.role === 'wireline'} wlStep={r.role === 'wireline' ? 'pumpdown' : 'idle'} bore={bore} dim partner launcher={sleeve} ballsLeft={3} tint={WELL_COLORS[i % WELL_COLORS.length]} />)}
+          {/* flanged treating spools from the zipper leg outlet up to the inlet block, in the well's color (gone once the well is on production) */}
           {!((i === 0 && s.phase === 'production') || (i > 0 && r.role === 'done')) && (
-            <FlangedRun points={[[ZIPPER_X - 1.0 + zd.outletX, zd.topY, 0], [(ZIPPER_X - 1.0 + zd.outletX - bore * 2.6) / 2, zd.topY, 0], [-bore * 2.6, d.inletY, 0]]} r={bore * 0.6} />
+            <FlangedRun points={[[ZIPPER_X - 1.0 + zd.outletX, zd.topY, 0], [(ZIPPER_X - 1.0 + zd.outletX - bore * 2.6) / 2, zd.topY, 0], [-bore * 2.6, d.inletY, 0]]} r={bore * 0.6} color={WELL_COLORS[i % WELL_COLORS.length]} />
           )}
           {showLabels && i > 0 && <Label position={[2.5, d.topY + 0.6, 0]} text={'Well ' + (i + 1) + ': ' + (r.role === 'frac' ? 'pumping' : r.role === 'wireline' ? (sleeve ? 'ball drop' : 'wireline') : r.role === 'done' ? 'complete' : 'waiting') + ' · stage ' + Math.min(r.stage + 1, s.stages.length)} />}
           {i === 0 && showLabels && <Label position={[2.5, d.topY + 0.6, 0]} text={'Well 1: your well'} />}
@@ -151,6 +153,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
         </group>
       ))}
       {s.ctRigged && <CTUnit position={[16, 0, -10]} treeTop={treeTop} showLabels={showLabels} active={s.ct.progress > 0} />}
+      {s.phase === 'production' && s.hookup.step !== 'done' && <WorkoverRig active={s.hookup.step === 'tubing'} showLabels={showLabels} />}
       <FlowbackSpread position={[14, 0, 22 + rowLen]} showLabels={showLabels} flaring={s.phase === 'flowback' && s.valves.wingB.pos > 0.99} />
       {s.phase !== 'production' && <PipeRun points={[[d.wingOuterX + d.ftf / 2, d.crossY, 0], [d.wingOuterX + 3, d.crossY, 0], [d.wingOuterX + 4, 2.0, 0], [d.wingOuterX + 4, 0.9, 6], [12.8, 0.9, 21.4 + rowLen]]} r={0.075} />}
 

@@ -1,0 +1,36 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "A geomembrane liner with a raised berm around the row of trees; hoses and iron cross it on ramps; pumped out as it collects fluid.",
+    "engineering": "Sized to the tree footprint plus working room.",
+    "safety": "Trip hazard at the berm; slick liner when wet.",
+    "evidence": "Pad photographs read for layout only (S9)."
+  },
+  "id": "LG-CONTAINMENT",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Well row containment liner",
+  "aliases": [
+    "containment",
+    "liner",
+    "berm (well row)",
+    "spill containment"
+  ],
+  "function": "The lined and bermed area around the wellheads that catches spills and washdown during the completion.",
+  "scene": "LG-CONTAINMENT"
+}

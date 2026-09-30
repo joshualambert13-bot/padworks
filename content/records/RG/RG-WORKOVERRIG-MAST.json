@@ -1,0 +1,42 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Dropped object",
+      "control": "Tubing handled with elevators and slips by trained crews; the derrick inspected before the job."
+    }
+  ],
+  "id": "RG-WORKOVERRIG-MAST",
+  "parent": "RG-WORKOVERRIG",
+  "group": "rig",
+  "level": "component",
+  "name": "Mast, crown, and traveling block",
+  "aliases": [
+    "mast",
+    "derrick (workover)",
+    "crown block",
+    "traveling block",
+    "blocks"
+  ],
+  "function": "The telescoping mast with the crown block at the top and the traveling block on the drilling line that lifts the tubing.",
+  "tabs": {
+    "overview": "The block travels one joint per cycle while tubing is run; elevators under the block latch each joint.",
+    "engineering": "Rated hook load; line count and drilling line size.",
+    "safety": "Block path and dropped objects.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "RG-WORKOVERRIG-CROWN"
+}

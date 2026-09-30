@@ -1,0 +1,46 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point and rotating equipment",
+      "control": "Hands clear of slips, tongs, and the drawworks; guards on rotating parts."
+    },
+    {
+      "class": "Dropped object",
+      "control": "Tubing handled with elevators and slips by trained crews; the derrick inspected before the job."
+    }
+  ],
+  "id": "RG-TUBINGHANDLING",
+  "parent": "RG",
+  "group": "rig",
+  "level": "equipment",
+  "name": "Tubing handling: elevators, slips, tongs, pipe racks",
+  "aliases": [
+    "elevators",
+    "slips",
+    "power tongs",
+    "pipe rack",
+    "tubing tongs"
+  ],
+  "function": "The tools that hold and make up tubing at the floor: elevators under the block, slips in the rotary or bowl, power tongs for make-up torque, and the racks that stage the joints.",
+  "tabs": {
+    "overview": "One joint per cycle: pick up from the rack, stab, make up with the tongs to the connection torque, pull the slips, lower, set the slips, latch the next joint.",
+    "engineering": "Tong torque per the connection; slips sized to the tubing OD; elevators rated above the string weight.",
+    "safety": "Hands clear of slips and tongs; thread protectors; tong line of fire.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "RG-WORKOVERRIG-PIPERACK"
+}

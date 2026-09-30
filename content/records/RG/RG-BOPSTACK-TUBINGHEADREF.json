@@ -1,0 +1,54 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S48",
+    "S49",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Test the stack to the program pressures; bleed and verify zero before breaking any connection."
+    },
+    {
+      "class": "Well control",
+      "control": "BOP drills before the job; kill weight fluid or a tested barrier before the tree comes off."
+    }
+  ],
+  "id": "RG-BOPSTACK-TUBINGHEADREF",
+  "parent": "RG-BOPSTACK",
+  "group": "well-control",
+  "level": "component",
+  "name": "Tubing head (context)",
+  "aliases": [
+    "tubing head (BOP context)"
+  ],
+  "function": "The tubing head the stack sits on, shown translucent for context.",
+  "tabs": {
+    "overview": "See the WH tubing head record.",
+    "engineering": "None.",
+    "safety": "None.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design."
+  },
+  "glb": "/glb/RG/RG-BOPSTACK.glb",
+  "mesh_nodes": [
+    "RG-BOPSTACK-TUBINGHEAD"
+  ],
+  "connections": [
+    {
+      "target": "WH-TUBINGHEAD",
+      "direction": "undirected",
+      "type": "flanged"
+    }
+  ]
+}

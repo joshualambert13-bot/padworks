@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "RG",
+  "drawn_in_3d": false,
+  "sources": [
+    "S49",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Well control",
+      "control": "BOP drills before the job; kill weight fluid or a tested barrier before the tree comes off."
+    },
+    {
+      "class": "Stored pressure",
+      "control": "Test the stack to the program pressures; bleed and verify zero before breaking any connection."
+    }
+  ],
+  "id": "RG-SNUBBINGUNIT",
+  "parent": "RG",
+  "group": "rig",
+  "level": "equipment",
+  "name": "Snubbing unit",
+  "aliases": [
+    "snubbing",
+    "hydraulic workover unit",
+    "HWO",
+    "snubbing jack"
+  ],
+  "function": "A hydraulic unit with traveling and stationary slips that pushes or pulls pipe through a stripping stack into a well under pressure, so the well need not be killed.",
+  "tabs": {
+    "overview": "Used to run or pull tubing on live wells and for fishing under pressure; stationary and traveling slips alternate grip as the jack strokes; a stripper and BOP stack seal on the pipe.",
+    "engineering": "Push and pull capacity; stripper rating; stack per API Std 53.",
+    "safety": "Pipe-light conditions push the pipe out of the hole; slip sequencing is the control.",
+    "evidence": "API Spec 16A (S48), API Std 53 (S49), API RP 16ST (S53), field practice (S9). Generic geometry; not an OEM design."
+  }
+}

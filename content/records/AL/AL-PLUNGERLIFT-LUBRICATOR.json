@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S41",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-PLUNGERLIFT-LUBRICATOR",
+  "parent": "AL-PLUNGERLIFT",
+  "group": "plunger-lift",
+  "level": "component",
+  "name": "Plunger lubricator and catcher",
+  "aliases": [
+    "lubricator (plunger)",
+    "plunger catcher",
+    "arrival sensor"
+  ],
+  "function": "The housing on the tree cap that receives the plunger, with a spring or catcher, an arrival sensor, and a cap for changing the plunger.",
+  "tabs": {
+    "overview": "The plunger stops here on each arrival; the catcher holds it for inspection; the sensor tells the controller it arrived.",
+    "engineering": "Rated to the tree.",
+    "safety": "Bled through the cap valve before opening.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design."
+  },
+  "scene": "AL-PLUNGERLIFT-LUBRICATOR"
+}

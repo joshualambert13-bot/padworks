@@ -1,0 +1,72 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "AL",
+  "drawn_in_3d": true,
+  "sources": [
+    "S39",
+    "S43",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-29",
+    "note": "Drop 8 seed"
+  },
+  "hazards": [
+    {
+      "class": "Stored pressure",
+      "control": "Bleed the tubing and casing to zero and verify before breaking any connection."
+    }
+  ],
+  "id": "AL-RODPUMP",
+  "parent": "AL",
+  "group": "rod-lift",
+  "level": "equipment",
+  "name": "Rod pump (insert pump, cut-away)",
+  "aliases": [
+    "rod pump",
+    "subsurface pump",
+    "insert pump",
+    "bottomhole pump",
+    "sucker rod pump"
+  ],
+  "function": "The positive-displacement pump at the tubing tail, stroked by the rod string: a plunger in a barrel with a traveling valve in the plunger and a standing valve in the barrel.",
+  "tabs": {
+    "overview": "The insert pump is run on the rods and seats in a seating nipple in the tubing on a hold-down. Upstroke: the traveling valve closes and the plunger lifts the fluid above it while the standing valve opens and the barrel fills from below. Downstroke: the standing valve closes and the traveling valve opens as the plunger passes down through the fluid. A gas anchor below the intake separates free gas so the pump fills with liquid. The cut-away shows the barrel, plunger mid-stroke, both ball-and-seat valves in their cages, the valve rod and coupling, the hold-down and seating nipple, and the gas anchor, with the tubing as ghost context.",
+    "engineering": "API 11AX designations name bore, barrel and plunger type, and seating. Displacement is bore area times stroke times strokes per minute less slippage; deep wells use smaller bores to limit rod load.",
+    "connections": "Rod string above; seating nipple in the tubing (UC); gas anchor below.",
+    "safety": "Pulled with the rods on a rig; the well is killed or the tubing isolated first.",
+    "evidence": "PetroWiki sucker-rod lift, ESP, and gas lift pages (S39, S40, S41); API 11AX, 11E, 11S, 11V (S43 to S46); field practice (S9). Generic geometry; not an OEM design.",
+    "operations": "Spaced so the plunger does not tag the standing valve; monitored by dynamometer.",
+    "failure_modes": "Valve leaks (worn balls and seats), plunger and barrel wear from sand, gas lock, stuck plunger."
+  },
+  "glb": "/glb/AL/AL-RODPUMP.glb",
+  "scene": "AL-RODPUMP",
+  "mesh_nodes": [
+    "AL-RODPUMP-SEATINGNIPPLE",
+    "AL-RODPUMP-HOLDDOWN",
+    "AL-RODPUMP-BARREL",
+    "AL-RODPUMP-STANDINGVALVE",
+    "AL-RODPUMP-STANDINGBALL",
+    "AL-RODPUMP-PLUNGER",
+    "AL-RODPUMP-TRAVELINGVALVE",
+    "AL-RODPUMP-TRAVELINGBALL",
+    "AL-RODPUMP-VALVEROD",
+    "AL-RODPUMP-RODCOUPLING",
+    "AL-RODPUMP-GASANCHOR"
+  ],
+  "ghost_nodes": [
+    "AL-RODPUMP-TUBING"
+  ],
+  "standards": [
+    {
+      "standard": "API Spec 11AX",
+      "edition": "verify",
+      "paraphrase": "Subsurface pump assemblies, components, and fittings.",
+      "source": "S43"
+    }
+  ]
+}

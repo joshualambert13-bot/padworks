@@ -1,0 +1,55 @@
+{
+  "status": "draft",
+  "evidence_tier": "E2",
+  "reviewers": [],
+  "system": "MT",
+  "drawn_in_3d": false,
+  "sources": [
+    "S51",
+    "S52",
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-09-30",
+    "note": "Drop 9 seed"
+  },
+  "hazards": [
+    {
+      "class": "Silica dust",
+      "control": "Enclosed transfer, dust collection, respirators in the sand area."
+    }
+  ],
+  "tabs": {
+    "overview": "Mesh names give the sieve range: 100 mesh is fine sand for far-field placement and lower bridging risk; 40/70 and 30/50 are coarser for near-wellbore conductivity. Fracture conductivity is propped width times pack permeability, and it falls with stress, crushing, embedment, and gel damage. Shale wells today pump mostly regional 100 mesh and 40/70 sand at high intensity; ceramics appear in deep, high-stress wells.",
+    "engineering": "Tested per API RP 19C: sieve distribution, sphericity and roundness, acid solubility, crush at stress; conductivity from long-term conductivity tests.",
+    "safety": "Respirable silica at every transfer point; enclosed systems, dust collection, and monitoring.",
+    "evidence": "PetroWiki fracturing fluids and additives (S50), propping agents (S51), API RP 19C (S52), API Spec 5CT (S27), API Spec 10A (S28), field practice (S9).",
+    "failure_modes": "Crushed fines that plug the pack, embedment in soft rock, proppant flowback into the wellbore."
+  },
+  "id": "MT-PROPPANT",
+  "parent": "MT",
+  "group": "proppant",
+  "level": "equipment",
+  "name": "Proppant: sand, resin-coated sand, ceramic",
+  "aliases": [
+    "proppant",
+    "frac sand",
+    "100 mesh",
+    "40/70",
+    "30/50",
+    "ceramic proppant",
+    "resin-coated sand",
+    "bauxite"
+  ],
+  "function": "The sized granular material pumped into the fracture to hold it open: natural silica sand at low stress, resin-coated sand for strength and flowback control, intermediate strength ceramic and sintered bauxite at high closure stress.",
+  "standards": [
+    {
+      "standard": "API RP 19C",
+      "edition": "verify",
+      "paraphrase": "Proppant property measurement.",
+      "source": "S52"
+    }
+  ]
+}
