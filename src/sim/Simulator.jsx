@@ -5,7 +5,9 @@ import DownholeScene from './DownholeScene.jsx';
 import ControlPanel from './panels/ControlPanel.jsx';
 import TimelinePanel from './panels/TimelinePanel.jsx';
 import { useSim, phasesFor } from './store.js';
+import { lessonById } from './lessons.js';
 import HoverPopup from './HoverPopup.jsx';
+import SessionSummary from './SessionSummary.jsx';
 
 const VIEWS = [
   { id: 'surface', label: 'Surface', icon: Layers },
@@ -45,6 +47,10 @@ export default function Simulator() {
   const PHASES = phasesFor(setup);
   const alarms = useSim(s => s.alarms);
   const anyAlarm = alarms.overpressure || alarms.screenout || alarms.kickout;
+  const lesson = useSim(s => s.lesson);
+  const L = lesson.id ? lessonById(lesson.id) : null;
+  const lessonText = L ? 'Lesson ' + L.n + ': ' + L.title + (lesson.finished ? ' · complete' : ' · step ' + (lesson.doneMask.indexOf(false) + 1) + ' of ' + L.steps.length) + ' · ' : '';
+  const summary = ui.summary;
 
   const toolbar = (
     <div className="absolute top-2 left-2 right-2 z-20 flex flex-wrap items-center gap-1 pointer-events-none">
@@ -69,13 +75,14 @@ export default function Simulator() {
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
       </div>
       <div className={'w-full mt-1 text-xs px-2 py-1 rounded pointer-events-none ' + (anyAlarm ? 'bg-bad/80 text-white' : 'bg-black/50 text-mute')}>
-        {anyAlarm ? 'ALARM ACTIVE: see the control panel' : phase === 'setup' ? 'Pad setup: the pad rebuilds as you choose. Press Start the job when ready.' : PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}
+        {anyAlarm ? 'ALARM ACTIVE: see the control panel' : phase === 'setup' ? 'Pad setup: pick a guided lesson or set up the pad yourself, then press Start the job.' : lessonText + PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}
       </div>
     </div>
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
+      {summary && <SessionSummary />}
       {/* mobile tab bar */}
       <div className="md:hidden flex border-b border-line bg-panel">
         {[['controls', 'Controls', SlidersHorizontal], ['3d', '3D', BoxIcon], ['timeline', 'Timeline', ListOrdered]].map(([id, label, Icon]) => (

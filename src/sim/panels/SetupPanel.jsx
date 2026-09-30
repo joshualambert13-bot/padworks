@@ -1,7 +1,38 @@
 // Pad Setup: every variable of the job is chosen here before the simulation starts. The 3D pad
 // updates live as choices change. Values are illustrative starting points, not design values.
-import { PlayCircle, MapPin, Layers3, Wrench, Drill, Ruler, Fuel, Beaker, Info, ArrowUpFromLine } from 'lucide-react';
-import { useSim, BASINS, COMPLETIONS, SLEEVE_SYSTEMS, PLUG_TYPES, FLEETS, FLUIDS, PROPPANTS, LIFTS, FRAC_MODES, BORES, MAX_WELLS, basinOf, estimateStp, spreadSizing, designTotals, wellParams } from '../store.js';
+import { PlayCircle, MapPin, Layers3, Wrench, Drill, Ruler, Fuel, Beaker, Info, ArrowUpFromLine, GraduationCap, FileText } from 'lucide-react';
+import { useSim, BASINS, COMPLETIONS, SLEEVE_SYSTEMS, PLUG_TYPES, FLEETS, FLUIDS, PROPPANTS, LIFTS, FRAC_MODES, BORES, MAX_WELLS, basinOf, estimateStp, spreadSizing, designTotals, wellParams, scoreOf } from '../store.js';
+import { LESSONS } from '../lessons.js';
+import { bestFor } from '../progress.js';
+
+// Guided lessons: eight scripted sequences with checkpoints and a score. Results stay in this browser.
+function Lessons({ s }) {
+  const done = LESSONS.filter(l => bestFor(s.lessonResults, l.id)).length;
+  return (
+    <div className="card p-2 space-y-2 border-cool/40" data-panel="lessons">
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-mute"><GraduationCap size={12} />Guided lessons<span className="ml-auto mono">{done}/{LESSONS.length} passed</span></div>
+      <div className="text-[11px] text-mute">Each lesson sets up the pad, puts the job at the right point, and walks you through one sequence with checkpoints, hints, and a score. Free play is below.</div>
+      <ol className="space-y-1">
+        {LESSONS.map(l => {
+          const best = bestFor(s.lessonResults, l.id);
+          return (
+            <li key={l.id} className="flex items-start gap-2 text-xs">
+              <span className="mono text-[10px] text-mute mt-0.5 w-4">{l.n}.</span>
+              <span className="flex-1 min-w-0"><span className="text-white">{l.title}</span><span className="text-mute"> · target {l.targetSec} s</span>
+                <span className="block text-[10px] text-mute truncate" title={l.blurb}>{l.blurb}</span></span>
+              {best && <span className={'mono text-[10px] mt-0.5 ' + (best.grade === 'A' ? 'text-ok' : best.grade === 'B' ? 'text-accent' : 'text-warn')} title={'Best: ' + best.score + ' points, ' + best.secs + ' s'}>{best.score} {best.grade}</span>}
+              <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.startLesson(l.id)} data-action={'lesson-' + l.id}>Start</button>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="flex items-center gap-1 text-[10px] text-mute">
+        {s.lastJob && <button className="btn text-[11px] px-2 py-0.5 flex items-center gap-1" onClick={s.openSummary} data-action="summary"><FileText size={12} />Last job summary <span className="mono">{scoreOf(s.lastJob.score).total} {scoreOf(s.lastJob.score).grade}</span></button>}
+        {s.lessonResults.length > 0 && <button className="ml-auto text-mute underline" onClick={s.clearLessonResults} title="Results are stored only in this browser">Clear results</button>}
+      </div>
+    </div>
+  );
+}
 
 function Section({ icon: Icon, title, children }) {
   return (
@@ -52,6 +83,8 @@ export default function SetupPanel() {
         <div className="text-[11px] text-mute">Choose the job before the first valve moves. The pad on the right rebuilds as you go. Every number is an illustrative starting point for training, not a design value.</div>
         <button className="btn btn-primary w-full flex items-center justify-center gap-1" onClick={s.startJob} data-action="start"><PlayCircle size={14} />Start the job</button>
       </div>
+
+      <Lessons s={s} />
 
       <Section icon={MapPin} title="Basin">
         <select className="btn w-full" value={s.setup.basin} onChange={e => s.setBasin(e.target.value)} title="Basin" data-select="basin">

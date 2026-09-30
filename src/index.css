@@ -34,3 +34,21 @@ input[type="range"] { accent-color: var(--color-accent); width: 100%; }
 .badge { font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 999px; border: 1px solid var(--color-line); text-transform: uppercase; letter-spacing: 0.04em; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #2a3646; border-radius: 4px; }
+
+/* Session summary: print only the summary, on white, with the log fully expanded */
+@media print {
+  html, body, #root { height: auto; background: #fff; color: #111; }
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; max-width: none; background: #fff !important; color: #111 !important; border: 0; box-shadow: none; }
+  .print-area .card { background: #fff !important; border-color: #bbb !important; break-inside: avoid; }
+  .print-area .text-mute { color: #444 !important; }
+  .print-area .text-white { color: #111 !important; }
+  .print-area .text-ok { color: #15803d !important; }
+  .print-area .text-accent { color: #92400e !important; }
+  .print-area .text-warn { color: #b45309 !important; }
+  .print-area .text-bad { color: #b91c1c !important; }
+  .print-area .text-cool { color: #1d4ed8 !important; }
+  .print-area .print-all { max-height: none !important; overflow: visible !important; }
+  .no-print { display: none !important; }
+}

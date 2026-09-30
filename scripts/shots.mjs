@@ -59,7 +59,7 @@ async function waitText(p, text, timeout = 90000) {
 
 // ---------------- Desktop simulator walkthrough
 let p;
-if (process.env.ONLY !== 'drop7') {
+if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10') {
 p = await page(1440, 900);
 await p.goto(base + '/simulate'); await wait(4000);
 await shot(p, '00-sim-setup');
@@ -200,8 +200,9 @@ await p.close();
 }
 
 if (process.env.ONLY !== 'main') {
-// ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip
 p = await page(1440, 900);
+if (process.env.ONLY !== 'drop10') {
+// ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip
 await p.goto(base + '/simulate'); await wait(4500);
 await p.selectOption('select[title="Camera preset"]', 'basin'); await wait(2500);
 await shot(p, '70-setup-basin-delaware');
@@ -346,6 +347,83 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   await p.goto(base + '/library/' + (id === 'RG' ? 'RG' : 'equipment/' + id)); await wait(6000);
   await shot(p, n + '-record-' + id);
   if (id === 'RG-BOPSTACK') { await p.keyboard.press('e'); await wait(1500); await shot(p, '117b-record-RG-BOPSTACK-explode'); }
+}
+}
+// Drop 10: guided lessons, scoring, session summary
+{
+  await p.goto(base + '/simulate'); await wait(3500);
+  await shot(p, '123-lessons-picker');
+  // lesson 1: first wireline run
+  await p.click('[data-action="lesson-L1"]'); await wait(1200); await p.selectOption('select', '4');
+  await shot(p, '124-lesson1-start');
+  await clickWhenEnabled(p, 'Next: Wireline'); await wait(4000);
+  await clickWhenEnabled(p, 'Run in hole'); await setRange(p, 0, 20); await wait(1500);
+  await shot(p, '125-lesson1-pumpdown');
+  await clickWhenEnabled(p, 'Fire guns', 120000); await wait(1000);
+  await clickWhenEnabled(p, /Swap to frac/, 120000); await wait(1500);
+  await waitText(p, 'Lesson complete', 20000); await wait(300);
+  await shot(p, '126-lesson1-complete');
+  // lesson 3: kickout recovery
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L3"]'); await wait(800); await p.selectOption('select', '4');
+  await waitText(p, 'Job stopped: Pumps kicked out', 30000); await wait(400);
+  await shot(p, '127-lesson3-kickout');
+  await clickWhenEnabled(p, 'Rate to 0'); await wait(2500);
+  {
+    const row = p.locator('div', { hasText: 'Zipper leg: upper working valve' }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
+    await row.getByRole('button', { name: 'Open' }).click();
+  }
+  await wait(4000);
+  await clickWhenEnabled(p, 'Acknowledge'); await wait(500);
+  await clickWhenEnabled(p, 'Pumps online'); await setRange(p, 0, 80); await wait(300); await setRange(p, 1, 0.5); await wait(1500);
+  await waitText(p, 'Lesson complete', 20000); await wait(300);
+  await shot(p, '128-lesson3-complete');
+  // free play: a valve moved against the sequence costs points; the score chip updates
+  await clickWhenEnabled(p, 'Free play'); await wait(300); await p.selectOption('select', '1');
+  {
+    const row = p.locator('div', { hasText: 'Upper master valve' }).filter({ has: p.getByRole('button', { name: 'Close' }) }).last();
+    await row.getByRole('button', { name: 'Close' }).click();
+  }
+  await wait(400); await shot(p, '129-score-wrong-move');
+  {
+    const row = p.locator('div', { hasText: 'Upper master valve' }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
+    await row.getByRole('button', { name: 'Open' }).click().catch(() => {});
+  }
+  await wait(3500); await p.selectOption('select', '4');
+  // event recovery is timed against a target
+  await p.getByRole('button', { name: 'Working valve actuator fault' }).click(); await wait(2500);
+  await clickWhenEnabled(p, 'Stop pumping'); await wait(600);
+  await clickWhenEnabled(p, 'Backup circuit'); await wait(800);
+  await waitText(p, 'Recovered from working valve actuator fault', 20000);
+  await shot(p, '130-event-recovery-timed');
+  // session summary, screen and print
+  await p.click('[data-action="summary"]'); await wait(800);
+  await shot(p, '131-session-summary');
+  await p.emulateMedia({ media: 'print' }); await wait(500);
+  await p.screenshot({ path: path.join(out, '132-session-summary-print.png'), fullPage: true });
+  await p.emulateMedia({ media: 'screen' }); await wait(300);
+  await p.locator('[data-panel="summary"]').getByTitle('Close').click(); await wait(400);
+  // lesson 8: production hookup
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L8"]'); await wait(800); await p.selectOption('select', '4');
+  await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(1500);
+  await clickWhenEnabled(p, 'Rig up'); await wait(3000);
+  await shot(p, '133-lesson8-running-tubing');
+  await clickWhenEnabled(p, 'Nipple down', 120000); await wait(1000);
+  await clickWhenEnabled(p, 'Install the tree'); await wait(1500);
+  await waitText(p, 'Lesson complete', 20000); await wait(300);
+  await shot(p, '134-lesson8-complete');
+  // lesson 5: toe sleeve, first checkpoints
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L5"]'); await wait(800); await p.selectOption('select', '4');
+  await clickWhenEnabled(p, 'Next: Toe sleeve'); await wait(4000);
+  await clickWhenEnabled(p, 'Pumps on, 15 bpm'); await wait(500);
+  await clickWhenEnabled(p, 'Pressure up'); await waitText(p, 'Toe sleeve opened', 60000); await wait(500);
+  await p.getByRole('button', { name: 'Downhole' }).click(); await wait(2000);
+  await shot(p, '135-lesson5-toe-open');
+  // the setup panel now shows the best results
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await shot(p, '136-lessons-with-results');
 }
 await p.close();
 }

@@ -1,6 +1,66 @@
-import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, CheckCircle2, Lock, ListChecks, Circle, Settings2, Bolt, Dices } from 'lucide-react';
-import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, LIFTS, EVENTS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals } from '../store.js';
+import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, CheckCircle2, Lock, ListChecks, Circle, Settings2, Bolt, Dices, GraduationCap, Trophy, FileText, Lightbulb, XCircle } from 'lucide-react';
+import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, LIFTS, EVENTS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals, scoreOf } from '../store.js';
+import { lessonById, nextLessonId, stepValve } from '../lessons.js';
 import SetupPanel from './SetupPanel.jsx';
+
+// Score chip: points and grade for the job so far, and the way into the session summary
+export function ScoreChip({ s }) {
+  const L = s.lesson.id && !s.lesson.finished ? lessonById(s.lesson.id) : null;
+  const sc = L ? scoreOf(s.score, { since: s.lesson.startedAt, exempt: L.exempt || [] }) : scoreOf(s.score);
+  const color = sc.grade === 'A' ? 'text-ok' : sc.grade === 'B' ? 'text-accent' : sc.grade === 'C' ? 'text-warn' : 'text-bad';
+  return (
+    <button className="btn flex items-center gap-1" onClick={s.openSummary} title={(L ? 'Lesson score so far (before the time check). ' : 'Job score so far. ') + 'Opens the session summary: deductions, recoveries, stage times'} data-action="summary">
+      <Trophy size={14} className={color} /><span className="mono text-xs">{sc.total}</span><span className={'mono text-xs ' + color}>{sc.grade}</span>
+    </button>
+  );
+}
+
+// Guided lesson card: the lesson's own checkpoints in order, with the hint for the one that is up
+function LessonCard({ s }) {
+  const L = lessonById(s.lesson.id);
+  if (!L) return null;
+  const mask = s.lesson.doneMask;
+  const idx = mask.indexOf(false);
+  const doneCount = mask.filter(Boolean).length;
+  const r = s.lesson.result;
+  const nextId = nextLessonId(L.id);
+  return (
+    <div className={'card p-2 space-y-1 ' + (s.lesson.finished ? 'border-ok/60 bg-ok/10' : 'border-cool/60')} data-panel="lesson">
+      <div className="flex items-center gap-1 text-xs font-semibold text-cool"><GraduationCap size={14} /><span>Lesson {L.n} of 8: {L.title}</span>
+        <span className="ml-auto mono text-[10px] text-mute">{doneCount}/{L.steps.length}</span>
+        {!s.lesson.finished && <button className="text-mute" title="Leave the lesson; the job continues" onClick={s.quitLesson}><XCircle size={14} /></button>}
+      </div>
+      <div className="h-1 rounded bg-line overflow-hidden"><div className="h-full bg-cool" style={{ width: (doneCount / L.steps.length * 100) + '%' }} /></div>
+      {s.lesson.finished && r && (
+        <div className="text-xs space-y-1" data-lesson-result>
+          <div className="flex items-center gap-2"><Trophy size={14} className="text-ok" /><span className="font-semibold">Lesson complete: <span className="mono">{r.score}</span> points, grade <span className="mono">{r.grade}</span></span></div>
+          <div className="text-[11px] text-mute">{r.secs} s against a target of {r.targetSec} s{r.timePts ? ' (' + r.timePts + ' points off for time)' : ''}. {r.deductions.length ? r.deductions.length + ' deduction' + (r.deductions.length > 1 ? 's' : '') + ': ' + r.deductions.map(d => d.label.split(':')[0].toLowerCase() + ' (' + d.pts + ')').join(', ') + '.' : 'No deductions.'}</div>
+          <div className="flex gap-1">
+            {nextId && <button className="btn btn-primary text-[11px] px-2 py-0.5" onClick={s.nextLesson}>Next: lesson {L.n + 1}</button>}
+            <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.startLesson(L.id)}>Run it again</button>
+            <button className="btn text-[11px] px-2 py-0.5" onClick={s.quitLesson}>Free play</button>
+          </div>
+        </div>
+      )}
+      <ol className="space-y-1">
+        {L.steps.map((step, i) => {
+          const done = !!mask[i];
+          const isCurrent = i === idx;
+          const valve = isCurrent ? stepValve(step, s) : null;
+          return (
+            <li key={i} className={'flex items-start gap-2 text-xs ' + (done ? 'text-mute line-through' : isCurrent ? 'text-white' : 'text-mute')}>
+              {done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-cool' : '')} />}
+              <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
+              {isCurrent && step.action && <button className="btn btn-primary text-[11px] px-2 py-0.5" onClick={() => s.guide(step.action)}>{step.label || 'Do it'}</button>}
+              {isCurrent && !step.action && valve && s.valves[valve] && <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.commandValve(valve, s.valves[valve].target === 1 ? 0 : 1)}>{s.valves[valve].target === 1 ? 'Close' : 'Open'}</button>}
+            </li>
+          );
+        })}
+      </ol>
+      {idx >= 0 && L.steps[idx].hint && <div className="flex items-start gap-1 text-[11px] text-mute"><Lightbulb size={12} className="shrink-0 mt-0.5 text-cool" /><span>{L.steps[idx].hint}</span></div>}
+    </div>
+  );
+}
 
 function ValveRow({ id, v, onCommand, hot }) {
   const open = v.pos > 0.99, closed = v.pos < 0.01;
@@ -48,7 +108,11 @@ export default function ControlPanel() {
   const liveRate = s.pumpsOnline && !s.alarms.kickout ? s.pumpRate : 0;
   const guide = nextSteps(s);
   const current = guide.steps.find(x => !x.done);
-  const hotValve = current && current.valve ? current.valve : null;
+  const lessonOn = !!s.lesson.id && !s.lesson.finished;
+  const L = lessonOn ? lessonById(s.lesson.id) : null;
+  const lessonIdx = lessonOn ? s.lesson.doneMask.indexOf(false) : -1;
+  const lessonValve = L && lessonIdx >= 0 && !guide.blocked ? stepValve(L.steps[lessonIdx], s) : null;
+  const hotValve = lessonValve || (current && current.valve ? current.valve : null);
   const basin = basinOf(s);
   const spread = spreadSizing(s);
   const totals = designTotals(s);
@@ -63,10 +127,17 @@ export default function ControlPanel() {
         <select className="btn" value={s.speed} onChange={e => s.setSpeed(Number(e.target.value))}>
           {[0.5, 1, 2, 4].map(x => <option key={x} value={x}>{x}x</option>)}
         </select>
-        <button className="btn flex items-center gap-1 ml-auto" onClick={s.reset} title="Back to pad setup"><RotateCcw size={14} />Reset</button>
+        <div className="ml-auto flex items-center gap-1">
+          <ScoreChip s={s} />
+          <button className="btn flex items-center gap-1" onClick={s.reset} title="Back to pad setup"><RotateCcw size={14} />Reset</button>
+        </div>
       </div>
 
-      {/* next steps: what still has to happen, in order, for the job to continue */}
+      {/* guided lesson, when one is running */}
+      {s.lesson.id && <LessonCard s={s} />}
+
+      {/* next steps: what still has to happen, in order, for the job to continue (during a lesson only when the job is stopped) */}
+      {(!lessonOn || guide.blocked) && (
       <div className={'card p-2 space-y-1 ' + (guide.blocked ? 'border-bad/70 bg-bad/10' : 'border-accent/40')}>
         <div className={'flex items-center gap-1 text-xs font-semibold ' + (guide.blocked ? 'text-bad' : 'text-accent')}>
           {guide.blocked ? <AlertTriangle size={14} /> : <ListChecks size={14} />}
@@ -91,6 +162,7 @@ export default function ControlPanel() {
           })}
         </ol>
       </div>
+      )}
 
       {/* job summary from setup */}
       <div className="card p-2 space-y-1">
@@ -122,7 +194,7 @@ export default function ControlPanel() {
         </div>
         <div className="grid grid-cols-2 gap-1">
           {EVENTS.filter(e => !(e.pnpOnly && sleeve)).map(e => (
-            <button key={e.id} className="btn text-[11px] px-1" disabled={!e.phases.includes(s.phase) || s.events.active === e.id || (e.id === 'misfire' && s.events.misfireArmed) || (e.id === 'stuck' && s.wl.step !== 'pumpdown') || (e.id === 'valveFault' && s.events.valveFault)} title={e.blurb} onClick={() => s.injectEvent(e.id)}>{e.label}</button>
+            <button key={e.id} className="btn text-[11px] px-1" disabled={!e.phases.includes(s.phase) || s.events.active === e.id || (e.id === 'misfire' && s.events.misfireArmed) || (e.id === 'stuck' && s.wl.step !== 'pumpdown') || (e.id === 'valveFault' && s.events.valveFault) || ((e.id === 'screenout' || e.id === 'prvLift' || e.id === 'sandOut') && liveRate <= 0) || (e.id === 'screenout' && s.alarms.screenout)} title={e.blurb} onClick={() => s.injectEvent(e.id)}>{e.label}</button>
           ))}
         </div>
         <div className="text-[10px] text-mute">{s.events.active ? 'Active: ' + (EVENTS.find(e => e.id === s.events.active) || {}).label + '. Follow the recovery steps above.' : s.events.misfireArmed ? 'Misfire armed for the next perforating run.' : 'Inject a fault to practice the recovery; the steps card shows the sequence.'}</div>
