@@ -68,6 +68,8 @@ export default function Simulator() {
             <option value="zipper">Zipper manifold</option>
             <option value="pumps">Pumps and missile</option>
             <option value="sand">Sand and blender</option>
+            <option value="tanks">Frac tanks</option>
+            <option value="support">Data van and power</option>
             <option value="flowback">Flowback spread</option>
             <option value="basin">Basin view</option>
           </select>

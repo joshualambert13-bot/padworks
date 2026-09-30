@@ -21,6 +21,7 @@ const errors = [];
 async function page(w, h, mobile = false) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
   const p = await ctx.newPage();
+  p.setDefaultTimeout(90000);   // software rendering in CI is slow; a click can wait several frames
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text().slice(0, 300)); });
   return p;

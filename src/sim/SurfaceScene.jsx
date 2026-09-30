@@ -24,11 +24,18 @@ function presets(rowCenter, rowLen, production = false, k = 1) {
     zipper: { pos: [-17, 7, rowCenter - 15], target: [-8, 2.4, rowCenter - 1] },
     pumps: { pos: [-6, 19, 38], target: [-30, 2, 4] },
     sand:  { pos: [-44, 18, 44], target: [-62, 4, 8] },
+    tanks: { pos: [-40, 14, 62], target: [-56, 2, 38] },
+    support: { pos: [-2, 16, -60], target: [-22, 2, -34] },
     flowback: { pos: [34, 14, 44 + rowLen], target: [26, 1, 20 + rowLen] },
     basin: { pos: [90, 60, 160 + rowLen], target: [-20, 0, rowCenter] },
   };
 }
 
+// Render counters for the headless checks (window.__padworksStats), no cost when nobody reads them.
+function RenderStats() {
+  useFrame((state) => { const r = state.gl.info.render; window.__padworksStats = { calls: r.calls, triangles: r.triangles, geometries: state.gl.info.memory.geometries }; window.__padworksScene = state.scene; });
+  return null;
+}
 function CameraPreset({ preset, rowCenter, rowLen, production, k }) {
   const { camera, controls } = useThree();
   useEffect(() => {
@@ -91,6 +98,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <fog attach="fog" args={[terrain.fog, 180 + rowLen, 620 + rowLen]} />
       <ambientLight intensity={0.55} />
       <directionalLight position={[60, 90, 30]} intensity={1.7} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-100} shadow-camera-right={100} shadow-camera-top={100} shadow-camera-bottom={-100} />
+      <RenderStats />
       <hemisphereLight args={[terrain.sky, terrain.ground, 0.55]} />
       <Ticker enabled={tickHere} />
       <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} k={0.6 + 0.4 * bore / 0.18} />
