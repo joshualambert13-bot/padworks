@@ -59,7 +59,9 @@ const summaryRow = (s) => ({ id: s.id, kind: s.kind, title: s.title, grade: s.gr
 export async function handle(req, res) {
   try {
     const url = new URL(req.url, 'http://x');
-    const path = url.pathname.replace(/^\/api\/?/, '').replace(/\/+$/, '');
+    // Vercel rewrites /api/* to /api/index?__path=...; locally the dev server passes the original URL. Either form works.
+    const forced = url.searchParams.get('__path');
+    const path = (forced != null ? forced : url.pathname.replace(/^\/api\/?/, '')).replace(/^\/+|\/+$/g, '');
     const parts = path.split('/').filter(Boolean);
     const method = req.method.toUpperCase();
     if (method !== 'GET' && method !== 'HEAD' && !(req.headers['content-type'] || '').includes('application/json')) throw bad('Send JSON.');
