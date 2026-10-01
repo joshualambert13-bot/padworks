@@ -6,26 +6,30 @@ import { useHover, pickHandlers } from './hover.js';
 import { PadEnvironment, LITE } from './parts/lighting.jsx';
 
 const UNDERGROUND = { sky: '#5c6a78', fog: '#3a424c', ground: '#23272c' };
-import { Formation, Casing, Stage, FluidFlow, PerfFlash, WirelineString, BallInFlight, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX } from './parts/downhole.jsx';
+import { Formation, Casing, Stage, FluidFlow, FlowbackFlow, CuttingsBed, PerfFlash, WirelineString, BallInFlight, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX, plugX, sleeveX, LATERAL } from './parts/downhole.jsx';
 
 function Ticker({ enabled }) {
   const tick = useSim(s => s.tick);
-  useFrame((_, dt) => { if (enabled) tick(dt); });
+  useFrame((state, dt) => { if (enabled) tick(dt); window.__padworksDownView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
   return null;
 }
 
+// The camera follows the work: the current stage while fracturing, the plug being milled during drillout, the heel
+// while the well cleans up and produces.
 function FollowStage({ follow }) {
   const stage = useSim(s => s.stage);
   const count = useSim(s => s.stages.length);
   const phase = useSim(s => s.phase);
+  const atPlug = useSim(s => s.ct.atPlug);
+  const sleeve = useSim(s => s.setup.completion === 'sleeve');
   const { camera, controls } = useThree();
   useEffect(() => {
     if (!follow || !controls) return;
-    const x = phase === 'production' ? -6 : stageX(stage);
+    const x = phase === 'production' || phase === 'flowback' ? -6 : phase === 'drillout' && atPlug >= 0 ? (sleeve ? sleeveX(atPlug) : plugX(atPlug)) : stageX(stage);
     camera.position.set(x + 2, 7, 26);
     controls.target.set(x - 1, -0.4, 0);
     controls.update();
-  }, [stage, count, phase, follow, camera, controls]);
+  }, [stage, count, phase, atPlug, sleeve, follow, camera, controls]);
   return null;
 }
 
@@ -35,7 +39,12 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
   const st = s.stages[s.stage];
   const sleeve = s.setup.completion === 'sleeve';
   const openhole = sleeve && s.setup.sleeveSystem === 'openhole';
-  const firingCluster = s.wl.step === 'perforate' ? Math.min(s.setup.clusters - 1, st.clustersFired - 1) : -1;
+  const firingCluster = s.wl.step === 'perforate' && st.clustersFired > 0 ? Math.max(0, s.setup.clusters - st.clustersFired) : -1;   // bottom-up: toe-most first
+  const settled = s.phase === 'drillout' || s.phase === 'flowback' || s.phase === 'production';
+  const cleanup = Math.min(1, s.fb.cumBbl / 200);
+  const flowingBack = s.phase === 'flowback' && s.valves.wingB.pos > 0.99;
+  const pumpingDown = s.phase === 'wireline' && !sleeve && s.wl.step === 'pumpdown' && pumping;
+  const stringX = LATERAL.heelX + (plugX(s.stage) - LATERAL.heelX) * s.wl.progress;
   const show = useHover(h => h.show), hide = useHover(h => h.hide);
   const pick = pickHandlers('downhole', show, hide);
   return (
@@ -52,8 +61,11 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
       <Formation grid={showLabels} />
       <Casing openhole={openhole} />
       <HeelMarker />
-      {s.stages.map(stage => <Stage key={stage.index} stage={stage} isCurrent={stage.index === s.stage} netPsi={s.netPsi} showLabels={showLabels} sleeve={sleeve} openhole={openhole} />)}
+      {s.stages.map(stage => <Stage key={stage.index} stage={stage} isCurrent={stage.index === s.stage} netPsi={s.netPsi} showLabels={showLabels} sleeve={sleeve} openhole={openhole} settled={settled} />)}
       <FluidFlow rate={s.pumpRate} currentStage={s.stage} active={pumping && ((s.phase === 'frac' && st.perforated) || (s.phase === 'wireline' && sleeve))} ppa={s.ppa} />
+      {pumpingDown && <FluidFlow rate={s.pumpRate} currentStage={s.stage} active ppa={0} targetOverride={stringX - 0.3} spray={false} />}
+      <FlowbackFlow active={flowingBack} choke={s.fb.choke} cleanup={cleanup} stages={s.stages} sleeve={sleeve} />
+      {s.setup.plugs !== 'dissolvable' && <CuttingsBed stages={s.stages} cleanup={s.phase === 'flowback' || s.phase === 'production' ? (s.phase === 'production' ? 1 : cleanup) : 0} sleeve={sleeve} />}
       {!sleeve && Array.from({ length: s.setup.clusters }).map((_, c) => <PerfFlash key={c} x={clusterX(s.stage, c)} active={firingCluster === c} />)}
       {!sleeve && <WirelineString wl={s.wl} stage={s.stage} />}
       {sleeve && <BallInFlight wl={s.wl} stage={s.stage} />}

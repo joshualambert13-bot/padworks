@@ -818,9 +818,8 @@ export const useSim = create((set, get) => ({
         } else if (wl.step === 'perforate') {
           const n = s.setup.clusters;
           const already = st ? st.clustersFired : 0;
-          const remaining = Math.max(1, n - already);
-          const p = wl.progress + 0.35 * dt * (3 / remaining);
-          let fired = Math.min(n, already + Math.floor(p * remaining) + 1);
+          const p = wl.progress + 0.5 * dt;                              // the gun run takes about 2 s of job time: one cluster after another, toe first
+          let fired = Math.max(already, Math.min(n, Math.floor(p * n) + 1));
           // an armed misfire leaves the last cluster (two on big stages) unfired
           const missing = events.misfireArmed ? (n >= 6 ? 2 : 1) : 0;
           if (missing && fired > n - missing) fired = n - missing;

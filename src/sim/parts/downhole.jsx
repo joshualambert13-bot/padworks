@@ -108,20 +108,24 @@ function fracColor(net) {
 }
 
 // Bi-wing fracture at one cluster: a thin main plane plus two smaller branches, height limited by the layers above and below.
-function Fracture({ extent, color, seed }) {
+// `settled`: pumping is over and the fracture has closed on its proppant, so the pressure glow is gone and the
+// wings read as a faint propped plane rather than a lit one.
+function Fracture({ extent, color, seed, settled = false }) {
   const scale = 7 * extent;
   const branch = [0.55, 0.4];
   const alpha = useMemo(() => fractureAlpha(), []);
+  const c = settled ? '#6f8aa6' : color;
+  const glow = settled ? 0.15 : 1.1, op = settled ? 0.28 : 0.55;
   return (
     <group>
       <mesh rotation={[0, Math.PI / 2, 0]} scale={[1, 0.5, 1]}>
         <planeGeometry args={[scale * 2, scale * 2]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.1} transparent opacity={0.55} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={glow} transparent opacity={op} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       {branch.map((b, i) => (
         <mesh key={i} rotation={[0, Math.PI / 2 + (i ? -0.32 : 0.28) * (seed % 2 ? 1 : -1), 0.12 * (i ? -1 : 1)]} scale={[1, 0.42, 1]} position={[0.15 * (i ? -1 : 1), 0, 0]}>
           <planeGeometry args={[scale * b * 2, scale * b * 2]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.8} transparent opacity={0.38} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
+          <meshStandardMaterial color={c} emissive={c} emissiveIntensity={glow * 0.7} transparent opacity={op * 0.7} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
       ))}
     </group>
@@ -248,7 +252,7 @@ function FracPlug({ index, showLabels, milled }) {
 }
 
 // One stage: perforation clusters or sleeve, plug or ball, fractures, proppant points
-export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole }) {
+export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, settled = false }) {
   const color = useMemo(() => fracColor(isCurrent ? netPsi : 400), [isCurrent, netPsi]);
   const px = plugX(stage.index);
   const n = clusters();
@@ -260,7 +264,7 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole }
           <SleeveSub open={stage.perforated} ballSeated={stage.plugSet && !stage.plugMilled} toe={stage.index === 0} ports={n} showLabels={showLabels} index={stage.index} />
           {stage.perforated && stage.fracExtent > 0 && Array.from({ length: Math.max(1, Math.min(3, Math.round(n / 2))) }).map((_, c, arr) => (
             <group key={c} position={[(c - (arr.length - 1) / 2) * 0.5, 0, 0]}>
-              <Fracture extent={stage.fracExtent * (1 - 0.12 * c)} color={color} seed={stage.index + c} />
+              <Fracture extent={stage.fracExtent * (1 - 0.12 * c)} color={color} seed={stage.index + c} settled={settled} />
               <Proppant extent={stage.fracExtent * (1 - 0.12 * c)} fill={stage.proppantFill} />
             </group>
           ))}
@@ -268,14 +272,14 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole }
       ) : (
         Array.from({ length: n }).map((_, c) => {
           const x = clusterX(stage.index, c);
-          const fired = c < stage.clustersFired;
+          const fired = c >= n - stage.clustersFired;            // bottom-up: the toe-most cluster fires first
           const stressShadow = 1 - 0.08 * Math.abs(c - (n - 1) / 2);
           return (
             <group key={c} position={[x, 0, 0]}>
               <PerfCluster fired={fired} />
               {fired && stage.fracExtent > 0 && (
                 <group>
-                  <Fracture extent={stage.fracExtent * stressShadow} color={color} seed={stage.index * 7 + c} />
+                  <Fracture extent={stage.fracExtent * stressShadow} color={color} seed={stage.index * 7 + c} settled={settled} />
                   <Proppant extent={stage.fracExtent * stressShadow} fill={stage.proppantFill} />
                 </group>
               )}
@@ -324,13 +328,13 @@ function Proppant({ extent, fill }) {
 }
 
 // Fluid particles moving from the heel to the open perforations of the current stage, then out into the fractures
-export function FluidFlow({ rate, currentStage, active, ppa }) {
+export function FluidFlow({ rate, currentStage, active, ppa, targetOverride = null, spray = true }) {
   const cnt = 360;
   const ref = useRef();
   const seeds = useMemo(() => Array.from({ length: cnt }, () => ({ u: Math.random(), r: Math.random() * 0.4, a: Math.random() * Math.PI * 2, spray: Math.random() < 0.3, s: Math.random() })), []);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const sleeve = useSim.getState().setup.completion === 'sleeve';
-  const targetX = currentStage != null ? (sleeve ? sleeveX(currentStage) : clusterX(currentStage, Math.floor((clusters() - 1) / 2))) : LATERAL.toeX;
+  const targetX = targetOverride != null ? targetOverride : currentStage != null ? (sleeve ? sleeveX(currentStage) : clusterX(currentStage, Math.floor((clusters() - 1) / 2))) : LATERAL.toeX;
   useFrame((_, dt) => {
     if (!ref.current) return;
     const speed = active ? 0.02 + rate / 100 * 0.35 : 0;
@@ -339,7 +343,7 @@ export function FluidFlow({ rate, currentStage, active, ppa }) {
       s.u += speed * dt * (0.8 + 0.4 * (i % 5) / 5);
       if (s.u > 1) s.u -= 1;
       let x, y, z;
-      if (s.spray && s.u > 0.85) {
+      if (spray && s.spray && s.u > 0.85) {
         // leaving the wellbore through the perforations into the fracture plane
         const k = (s.u - 0.85) / 0.15;
         x = targetX + (s.s - 0.5) * 0.3;
@@ -367,22 +371,75 @@ export function FluidFlow({ rate, currentStage, active, ppa }) {
   );
 }
 
-// Perforating flash particles at a cluster when it fires
+// Perforating: a flash in the bore and six shaped-charge jets punching out through the casing at the gun's phasing,
+// each a bright cone that reaches into the rock and fades as the tunnel it leaves behind appears.
+const PHASING = [40, 100, 160, 220, 280, 340];
 export function PerfFlash({ x, active }) {
   const ref = useRef();
+  const jets = useRef([]);
   const life = useRef(0);
   useFrame((_, dt) => {
     if (!ref.current) return;
     life.current = active ? Math.min(1, life.current + dt * 3) : Math.max(0, life.current - dt * 2);
-    const s = 0.2 + life.current * 1.6;
+    const k = life.current;
+    const pulse = Math.sin(Math.min(1, k) * Math.PI);                  // the flash blooms and is gone; the jets outlast it
+    const s = 0.15 + pulse * 0.9;
     ref.current.scale.set(s, s, s);
-    ref.current.material.opacity = life.current * 0.9;
+    ref.current.material.opacity = pulse * 0.75;
+    jets.current.forEach((m, i) => {
+      if (!m) return;
+      const jk = Math.max(0, Math.min(1, k * 1.4 - i * 0.05));        // the shots go off within a few hundredths of a second
+      m.scale.set(0.5 + jk * 0.6, 0.2 + jk * 1.1, 0.5 + jk * 0.6);
+      m.material.opacity = jk * (1 - 0.45 * jk);
+    });
   });
   return (
-    <mesh ref={ref} position={[x, 0, 0]}>
-      <sphereGeometry args={[0.5, 12, 12]} />
-      <meshBasicMaterial color="#ffb020" transparent opacity={0} />
-    </mesh>
+    <group position={[x, 0, 0]}>
+      <mesh ref={ref}>
+        <sphereGeometry args={[0.5, 12, 12]} />
+        <meshBasicMaterial color="#ffb020" transparent opacity={0} />
+      </mesh>
+      {PHASING.map((a, i) => {
+        const rad = THREE.MathUtils.degToRad(a);
+        return (
+          <mesh key={a} ref={el => (jets.current[i] = el)} rotation={[rad, 0, 0]} position={[(i - 2.5) * 0.09, Math.cos(rad) * 0.85, -Math.sin(rad) * 0.85]}>
+            <coneGeometry args={[0.09, 1.3, 8]} />
+            <meshBasicMaterial color="#ffd27a" transparent opacity={0} depthWrite={false} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Plug setting sequence on the wireline string: run in with everything retracted, then as the setting tool
+// strokes, the slips ride up their cones and bite the casing, the element is squeezed out against the wall, and at
+// the end the tool shears off and backs away, leaving the plug set. `progress` 0..1 drives it.
+function PlugSetting({ progress }) {
+  const k = Math.max(0, Math.min(1, progress));
+  const bite = Math.min(1, k / 0.6);                     // slips first
+  const squeeze = Math.max(0, Math.min(1, (k - 0.3) / 0.5));  // then the element
+  const shear = k > 0.9 ? (k - 0.9) / 0.1 : 0;          // then the release
+  const slipR = 0.3 + bite * 0.14;
+  const elemR = 0.31 + squeeze * 0.17;
+  return (
+    <group>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 1.3, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0.02, 0, 0]} scale={[1, elemR / 0.31, elemR / 0.31]}><cylinderGeometry args={[0.31, 0.31, 0.3 - squeeze * 0.06, 16]} /><meshStandardMaterial color="#1a1a1a" roughness={0.95} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0.28 - squeeze * 0.04, 0, 0]}><cylinderGeometry args={[0.44, 0.33, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[-0.24 + squeeze * 0.04, 0, 0]}><cylinderGeometry args={[0.33, 0.44, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
+      {[0.5 - bite * 0.06, -0.46 + bite * 0.06].map((x, kk) => (
+        <group key={kk} position={[x, 0, 0]}>
+          {[0, 60, 120, 180, 240, 300].map(a => {
+            const rad = THREE.MathUtils.degToRad(a);
+            return <mesh castShadow key={a} position={[0, Math.cos(rad) * slipR, Math.sin(rad) * slipR]} rotation={[rad, 0, 0]}><boxGeometry args={[0.18, 0.1, 0.16]} /><meshStandardMaterial color="#8a8f95" metalness={0.8} roughness={0.4} /></mesh>;
+          })}
+        </group>
+      ))}
+      {/* setting tool: sleeve over the mandrel strokes toward the plug, then the shear stud lets go and the tool backs off */}
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[-0.95 - 0.1 * squeeze + 0.5 * shear, 0, 0]}><cylinderGeometry args={[0.22, 0.22, 0.5, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.9} roughness={0.3} /></mesh>
+      <mesh rotation={[0, 0, Math.PI / 2]} position={[-0.72 + 0.5 * shear, 0, 0]}><cylinderGeometry args={[0.06, 0.06, 0.3, 8]} /><meshStandardMaterial color="#d8d8d8" metalness={0.8} roughness={0.3} /></mesh>
+    </group>
   );
 }
 
@@ -391,9 +448,11 @@ export function WirelineString({ wl, stage }) {
   if (!wl || wl.step === 'idle' || wl.step === 'done') return null;
   const px = plugX(stage);
   let x;
-  if (wl.step === 'pumpdown') x = LATERAL.heelX + (px - LATERAL.heelX) * wl.progress;
-  else if (wl.step === 'pooh') x = px - (px - LATERAL.heelX) * wl.progress;
-  else x = px;
+  const released = wl.step === 'armed' || wl.step === 'perforate' || wl.step === 'pooh';
+  if (wl.step === 'pumpdown' || wl.step === 'stuck') x = LATERAL.heelX + (px - LATERAL.heelX) * wl.progress;
+  else if (wl.step === 'freeing') x = LATERAL.heelX + (px - LATERAL.heelX) * Math.min(0.98, wl.progress);   // worked free and moving again
+  else if (wl.step === 'pooh') x = px - 0.5 - (px - 0.5 - LATERAL.heelX) * wl.progress;
+  else x = released ? px - 0.5 : px;                      // after the shear the string sits half a meter back from the plug
   const gunsLen = Math.min(4.2, stageLen() * 0.6);
   return (
     <group name="WL-TOOLSTRING-DOWNHOLE">
@@ -412,10 +471,8 @@ export function WirelineString({ wl, stage }) {
       <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[x - 0.6, 0, -0.05]}>
         <cylinderGeometry args={[0.2, 0.2, 0.9, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.9} roughness={0.3} />
       </mesh>
-      {(wl.step === 'pumpdown' || wl.step === 'setplug') && (
-        <group position={[x, 0, 0]}>
-          <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.36, 0.36, 1.2, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
-        </group>
+      {(wl.step === 'pumpdown' || wl.step === 'stuck' || wl.step === 'freeing' || wl.step === 'setplug') && (
+        <group position={[x, 0, 0]}><PlugSetting progress={wl.step === 'setplug' ? wl.progress : 0} /></group>
       )}
     </group>
   );
@@ -431,29 +488,51 @@ export function BallInFlight({ wl, stage }) {
   );
 }
 
-// Coiled tubing with a motor and mill at the end; debris particles when milling
+// Coiled tubing with a motor and mill at the end. While milling, cuttings (composite flakes and slip fragments)
+// tumble heel-ward in the annular return flow, riding the low side with a slow spiral, and the mill throws sparks.
 export function CoiledTubing({ ct, stages, sleeve = false }) {
   const mill = useRef();
   const debris = useRef();
-  const cnt = 80;
-  const seeds = useMemo(() => Array.from({ length: cnt }, () => ({ u: Math.random(), y: (Math.random() - 0.5) * 0.4, z: -Math.random() * 0.3 })), []);
+  const sparks = useRef();
+  const cnt = 160, nSparks = 48;
+  const seeds = useMemo(() => Array.from({ length: cnt }, (_, i) => ({ u: Math.random(), a: Math.random() * Math.PI * 2, r: 0.15 + Math.random() * 0.25, w: 1.5 + Math.random() * 2, big: i % 7 === 0, rot: Math.random() * 6 })), []);
+  const sparkSeeds = useMemo(() => Array.from({ length: nSparks }, () => ({ u: Math.random(), a: Math.random() * Math.PI * 2, v: 0.6 + Math.random() * 0.9 })), []);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const tipX = LATERAL.heelX + (LATERAL.toeX - LATERAL.heelX) * ct.progress;
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     if (mill.current) mill.current.rotation.x += dt * (ct.milling > 0 ? 25 : 6);
-    if (!debris.current) return;
     const active = ct.milling > 0;
-    for (let i = 0; i < cnt; i++) {
-      const s = seeds[i];
-      if (active) { s.u += dt * 0.35; if (s.u > 1) s.u -= 1; }
-      const x = tipX - (tipX - LATERAL.heelX) * s.u;
-      dummy.position.set(x, s.y, s.z);
-      const sc = active ? 1 : 0.0001;
-      dummy.scale.set(sc, sc, sc);
-      dummy.updateMatrix();
-      debris.current.setMatrixAt(i, dummy.matrix);
+    const tm = state.clock.elapsedTime;
+    if (debris.current) {
+      for (let i = 0; i < cnt; i++) {
+        const s = seeds[i];
+        if (active) { s.u += dt * (0.25 + 0.15 * (i % 4) / 4); if (s.u > 1) s.u -= 1; }
+        const x = tipX - (tipX - LATERAL.heelX) * s.u;
+        const ang = s.a + tm * s.w;
+        const r = s.r * (1 - 0.6 * s.u);                                  // cuttings settle toward the low side as they travel
+        dummy.position.set(x, -0.42 + r * (0.5 + 0.5 * Math.cos(ang)) + 0.05, -Math.abs(Math.sin(ang)) * r * 0.8 - 0.05);
+        dummy.rotation.set(s.rot + tm * s.w, s.rot, 0);
+        const sc = active ? (s.big ? 1.8 : 1) : 0.0001;
+        dummy.scale.set(sc, sc, sc);
+        dummy.updateMatrix();
+        debris.current.setMatrixAt(i, dummy.matrix);
+      }
+      debris.current.instanceMatrix.needsUpdate = true;
     }
-    debris.current.instanceMatrix.needsUpdate = true;
+    if (sparks.current) {
+      for (let i = 0; i < nSparks; i++) {
+        const s = sparkSeeds[i];
+        if (active) { s.u += dt * s.v * 2.2; if (s.u > 1) { s.u -= 1; s.a = Math.random() * Math.PI * 2; } }
+        const k = s.u;
+        dummy.position.set(tipX + 0.35 - k * 1.4, Math.cos(s.a) * (0.2 + k * 0.25) * 1.0 - k * k * 0.5, -Math.abs(Math.sin(s.a)) * (0.2 + k * 0.25) - 0.04);
+        dummy.rotation.set(0, 0, 0);
+        const sc = active ? (1 - k) * 1.2 : 0.0001;
+        dummy.scale.set(sc, sc, sc);
+        dummy.updateMatrix();
+        sparks.current.setMatrixAt(i, dummy.matrix);
+      }
+      sparks.current.instanceMatrix.needsUpdate = true;
+    }
   });
   if (ct.progress <= 0.001) return null;
   const targetX = ct.atPlug >= 0 ? (sleeve ? sleeveX(ct.atPlug) : plugX(ct.atPlug)) : 0;
@@ -478,10 +557,89 @@ export function CoiledTubing({ ct, stages, sleeve = false }) {
         </mesh>
       )}
       <instancedMesh ref={debris} args={[null, null, cnt]} frustumCulled={false}>
-        <boxGeometry args={[0.07, 0.05, 0.05]} />
-        <meshStandardMaterial color="#7a4a1e" />
+        <boxGeometry args={[0.07, 0.02, 0.05]} />
+        <meshStandardMaterial color="#6b4520" roughness={0.9} />
+      </instancedMesh>
+      <instancedMesh ref={sparks} args={[null, null, nSparks]} frustumCulled={false}>
+        <sphereGeometry args={[0.03, 5, 5]} />
+        <meshBasicMaterial color="#ffb347" />
       </instancedMesh>
     </group>
+  );
+}
+
+// Cuttings bed: what settles on the low side of the lateral after each plug is milled, from the heel out to the
+// toe-most milled plug; flowback cleans it up (the bed shortens and thins with the cleanup fraction).
+export function CuttingsBed({ stages, cleanup = 0, sleeve = false }) {
+  const milled = stages.filter(x => x.plugMilled);
+  if (milled.length === 0 || cleanup >= 0.98) return null;
+  const toeMost = Math.min(...milled.map(x => x.index));
+  const xEnd = sleeve ? sleeveX(toeMost) : plugX(toeMost);
+  const len = Math.max(0.1, (xEnd - LATERAL.heelX) * (1 - cleanup));
+  const h = 0.09 * (1 - 0.7 * cleanup);
+  return (
+    <mesh position={[LATERAL.heelX + len / 2, -LATERAL.casingR + h / 2 + 0.01, -0.12]} receiveShadow>
+      <boxGeometry args={[len, h, 0.5]} />
+      <meshStandardMaterial color="#5a3d1e" roughness={1} />
+    </mesh>
+  );
+}
+
+// Flowback: produced fluid comes out of every perforated cluster into the wellbore and runs to the heel. Early
+// in the cleanup the near-wellbore sand comes back with it (tan grains among the blue water); as the cleanup
+// fraction rises the returns run clean. Speed follows the choke.
+export function FlowbackFlow({ active, choke = 0.35, cleanup = 0, stages, sleeve = false }) {
+  const cnt = 320;
+  const ref = useRef();
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const colorA = useMemo(() => new THREE.Color('#3aa7ff'), []);
+  const colorB = useMemo(() => new THREE.Color('#c9a56a'), []);
+  const sources = useMemo(() => {
+    const out = [];
+    stages.forEach(st => {
+      if (!st.perforated) return;
+      if (sleeve) out.push(sleeveX(st.index));
+      else for (let c = 0; c < st.clustersFired; c++) out.push(clusterX(st.index, c));
+    });
+    return out.length ? out : [LATERAL.toeX - 1];
+  }, [stages, sleeve]);
+  const seeds = useMemo(() => Array.from({ length: cnt }, (_, i) => ({ u: Math.random(), src: i % sources.length, a: Math.random() * Math.PI * 2, r: 0.1 + Math.random() * 0.3, sand: Math.random() })), [sources]);
+  useFrame((_, dt) => {
+    if (!ref.current) return;
+    const speed = active ? 0.04 + choke * 0.22 : 0;
+    for (let i = 0; i < cnt; i++) {
+      const s = seeds[i];
+      s.u += speed * dt * (0.7 + 0.6 * (i % 5) / 5);
+      if (s.u > 1) { s.u -= 1; s.src = Math.floor(Math.random() * sources.length); }
+      const sx = sources[s.src] ?? sources[0];
+      let x, y, z;
+      if (s.u < 0.15) {                                                  // out of the fracture into the bore
+        const k = 1 - s.u / 0.15;
+        x = sx + (s.a - Math.PI) * 0.03;
+        y = Math.max(-2.6, Math.min(2.6, Math.cos(s.a) * (0.4 + k * 2.2)));
+        z = -Math.abs(Math.sin(s.a)) * (0.4 + k * 1.6) * 0.3;
+      } else {                                                           // along the lateral to the heel
+        const k = (s.u - 0.15) / 0.85;
+        x = sx - (sx - LATERAL.heelX + 0.8) * k;
+        y = Math.cos(s.a) * s.r;
+        z = -Math.abs(Math.sin(s.a) * s.r);
+      }
+      const isSand = s.sand < 0.45 * (1 - cleanup);
+      dummy.position.set(x, y, z);
+      const sc = active ? (isSand ? 0.8 : 1) : 0.0001;
+      dummy.scale.set(sc, sc, sc);
+      dummy.updateMatrix();
+      ref.current.setMatrixAt(i, dummy.matrix);
+      ref.current.setColorAt(i, isSand ? colorB : colorA);
+    }
+    ref.current.instanceMatrix.needsUpdate = true;
+    if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
+  });
+  return (
+    <instancedMesh ref={ref} args={[null, null, cnt]} frustumCulled={false}>
+      <sphereGeometry args={[0.055, 6, 6]} />
+      <meshStandardMaterial color="#ffffff" emissive="#8fb8e8" emissiveIntensity={0.45} roughness={0.3} metalness={0} />
+    </instancedMesh>
   );
 }
 
