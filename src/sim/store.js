@@ -2,6 +2,31 @@
 // Everything here is simplified motion and illustrative curves. It is not a
 // hydraulic fracturing simulator and must be labeled as such in the UI.
 import { create } from 'zustand';
+import { LESSONS, lessonById, nextLessonId } from './lessons.js';
+import { loadResults, saveResults } from './progress.js';
+
+// ---------------------------------------------------------------------------------------------
+// Scoring. A job (or a lesson) starts at 100. Points come off for moves against the sequence and for
+// recoveries that run past their time target. The numbers are training weights, not an industry scale.
+export const DEDUCT = {
+  interlock: { pts: 2, label: 'Interlock: valve command rejected' },
+  wrongMove: { pts: 3, label: 'Valve moved against the sequence' },
+  kickout: { pts: 10, label: 'Pumps kicked out at maximum treating pressure' },
+  overpressure: { pts: 8, label: 'Pumped against a closed valve (overpressure or relief valve lift)' },
+  screenout: { pts: 12, label: 'Screenout: too much sand for the rate and fluid' },
+};
+// Time-to-recover targets for injected events, in seconds of simulation time
+export const EVENT_TARGETS = { misfire: 60, stuck: 45, valveFault: 30, sandOut: 40, prvLift: 45, screenout: 60 };
+export function gradeOf(total) { return total >= 90 ? 'A' : total >= 80 ? 'B' : total >= 70 ? 'C' : total >= 60 ? 'D' : 'F'; }
+// Score of a job so far (or of a lesson window when since and exempt are given)
+export function scoreOf(score, { since = 0, exempt = [] } = {}) {
+  const ded = score.deductions.filter(d => d.t >= since && !exempt.includes(d.code));
+  const pts = ded.reduce((a, d) => a + d.pts, 0);
+  const total = Math.max(0, 100 - pts);
+  return { total, pts, grade: gradeOf(total), deductions: ded };
+}
+const freshScore = () => ({ deductions: [], events: [], open: {}, kickouts: 0, overpressures: 0, screenouts: 0, interlocks: 0, wrongMoves: 0, moves: 0, phaseSec: {}, stages: {}, opEpisode: false });
+const freshLesson = () => ({ id: null, doneMask: [], startedAt: 0, finished: false, result: null });
 
 // ---------------------------------------------------------------------------------------------
 // Pad setup vocabulary. Every value here is an illustrative starting point for a training pad,
@@ -268,7 +293,11 @@ const freshJob = (setup, pad) => ({
   alarms: { overpressure: false, prvLifted: false, kickout: false, screenout: false, interlock: '' }, log: [],
   events: { active: null, random: false, sandTimer: 0, valveFault: false, misfireArmed: false, misfired: 0, fired: [] },
   hookup: { step: 'rig', progress: 0, joints: 0 },
+  score: freshScore(),
+  lesson: freshLesson(),
 });
+// Snapshot of a finished job for the session summary after a reset
+const snapshotJob = (s) => (s.phase === 'setup' ? s.lastJob : { setup: s.setup, pad: s.pad, t: s.t, phase: s.phase, stages: s.stages, score: s.score, log: s.log, events: s.events, lesson: s.lesson, when: Date.now() });
 
 export const useSim = create((set, get) => ({
   // ----- mode and time -----
@@ -276,8 +305,10 @@ export const useSim = create((set, get) => ({
   speed: 1,
   setup: defaultSetup(),
   pad: { wells: 4, mode: 'zipper', bore: BASINS[0].bore },
-  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d' },
+  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false },
   ...freshJob(defaultSetup(), { wells: 4, mode: 'zipper', bore: BASINS[0].bore }),
+  lessonResults: loadResults(),
+  lastJob: null,
 
   // ----- actions -----
   toggleRunning: () => set(s => ({ running: !s.running })),
@@ -328,39 +359,68 @@ export const useSim = create((set, get) => ({
     const b = basinOf(get());
     get().addLog('Job started: ' + b.label + ', ' + s.pad.wells + ' well' + (s.pad.wells > 1 ? 's' : '') + ', ' + (COMPLETIONS.find(c => c.id === s.setup.completion) || COMPLETIONS[0]).label + ', ' + boreOf(get()).label);
   },
-  backToSetup: () => set(s => ({ ...freshJob(s.setup, s.pad), phase: 'setup' })),
+  backToSetup: () => set(s => ({ ...freshJob(s.setup, s.pad), phase: 'setup', lastJob: snapshotJob(s) })),
   commandValve: (id, target) => {
     const s = get();
     const v = s.valves[id];
     if (!v) return;
+    if (v.target === target) return;
     const sleeve = s.setup.completion === 'sleeve';
     const zipOpen = s.valves.zipWork.pos > 0.01 && s.valves.zipIso.pos > 0.01;
-    // Interlocks that reflect field practice (simplified):
+    const deduct = (code, detail) => ({ ...s.score, deductions: [...s.score.deductions, { t: s.t, code, label: DEDUCT[code].label + (detail ? ': ' + detail : ''), pts: DEDUCT[code].pts }], interlocks: s.score.interlocks + (code === 'interlock' ? 1 : 0), wrongMoves: s.score.wrongMoves + (code === 'wrongMove' ? 1 : 0), moves: s.score.moves + 1 });
+    // Interlocks that reflect field practice (simplified). A rejected command costs points.
+    const block = (msg) => set({ alarms: { ...s.alarms, interlock: msg }, score: deduct('interlock', v.label) });
     if (id === 'lmv' && (s.surfacePsi > 500 || s.pumpRate > 0)) {
-      return set({ alarms: { ...s.alarms, interlock: 'Lower master valve is not cycled under pressure or flow. Bleed down first.' } });
+      return block('Lower master valve is not cycled under pressure or flow. Bleed down first.');
     }
     if (!sleeve && id === 'swab' && target === 1 && zipOpen) {
-      return set({ alarms: { ...s.alarms, interlock: 'Close the zipper working valve before opening the swab valve: the inlet block sits below the swab.' } });
+      return block('Close the zipper working valve before opening the swab valve: the inlet block sits below the swab.');
     }
     if (!sleeve && (id === 'zipWork' || id === 'zipIso') && target === 1 && s.valves.swab.pos > 0.01 && (id === 'zipWork' ? s.valves.zipIso.pos > 0.01 : s.valves.zipWork.pos > 0.01)) {
-      return set({ alarms: { ...s.alarms, interlock: 'Close the swab valve (lubricator access) before opening the zipper leg to the inlet block.' } });
+      return block('Close the swab valve (lubricator access) before opening the zipper leg to the inlet block.');
     }
     if (id === 'crown' && (s.surfacePsi > 500 || s.pumpRate > 0) && target === 0) {
-      return set({ alarms: { ...s.alarms, interlock: 'Crown valve is not closed against flow. Stop pumping and bleed the inlet block first.' } });
+      return block('Crown valve is not closed against flow. Stop pumping and bleed the inlet block first.');
     }
     if (id === 'zipWork' && s.events.valveFault) {
-      return set({ alarms: { ...s.alarms, interlock: 'Working valve actuator fault: the valve does not respond to the control unit. Check the hydraulic supply and switch to the backup circuit.' } });
+      return block('Working valve actuator fault: the valve does not respond to the control unit. Check the hydraulic supply and switch to the backup circuit.');
     }
     if (id === 'iso' && target === 0 && s.pumpsOnline && s.pumpRate > 0) {
-      return set({ alarms: { ...s.alarms, interlock: 'Missile isolation valve is not closed against flow: the spread would deadhead. Pumps offline first.' } });
+      return block('Missile isolation valve is not closed against flow: the spread would deadhead. Pumps offline first.');
     }
-    set({ valves: { ...s.valves, [id]: { ...v, target } }, alarms: { ...s.alarms, interlock: '' } });
+    // Scoring: moving a valve out of a state the current sequence already has checked off is a wrong move
+    // (for example closing a master during a frac stage). Neutral moves are not scored.
+    const step = nextSteps(s).steps.find(x => x.valve === id && x.done);
+    const against = step && ((v.pos > 0.99 && target === 0) || (v.pos < 0.01 && target === 1));
+    const score = against ? deduct('wrongMove', v.label) : { ...s.score, moves: s.score.moves + 1 };
+    if (against) get().addLog('Against the sequence: ' + v.label + ' ' + (target === 1 ? 'opened' : 'closed') + ' (' + DEDUCT.wrongMove.pts + ' points).');
+    set({ valves: { ...s.valves, [id]: { ...v, target } }, alarms: { ...s.alarms, interlock: '' }, score });
   },
+  // ----- guided lessons -----
+  startLesson: (id) => {
+    const L = lessonById(id);
+    if (!L) return;
+    if (get().phase !== 'setup') get().backToSetup();
+    set({ setup: defaultSetup(), pad: { wells: 4, mode: 'zipper', bore: BASINS[0].bore } });   // a lesson starts from the defaults, not from the last free-play setup
+    get().setBasin((L.setup && L.setup.basin) || BASINS[0].id);
+    if (L.setup) get().setSetup(L.setup);
+    if (L.pad) get().setPad(L.pad);
+    get().startJob();
+    if (L.prep) L.prep(get, set);
+    set(s => ({ lesson: { id: L.id, doneMask: L.steps.map(() => false), startedAt: s.t, finished: false, result: null }, ui: { ...s.ui, summary: false } }));
+    get().addLog('Lesson ' + L.n + ' started: ' + L.title + '. Target ' + L.targetSec + ' s.');
+  },
+  quitLesson: () => { const L = lessonById(get().lesson.id); set({ lesson: freshLesson() }); if (L) get().addLog('Lesson ' + L.n + ' left; the job continues in free play.'); },
+  nextLesson: () => { const id = nextLessonId(get().lesson.id); if (id) get().startLesson(id); else get().reset(); },
+  clearLessonResults: () => { set({ lessonResults: [] }); saveResults([]); },
+  openSummary: () => set(s => ({ ui: { ...s.ui, summary: true } })),
+  closeSummary: () => set(s => ({ ui: { ...s.ui, summary: false } })),
   clearInterlock: () => set(s => ({ alarms: { ...s.alarms, interlock: '' } })),
   // actions referenced by the next-steps guidance
   guide: (action) => {
     const g = get();
     if (action === 'rateZero') { g.setPumpRate(0); }
+    else if (action === 'stop') { g.setPumpRate(0); g.setPumpsOnline(false); }
     else if (action === 'ppaZero') { g.setPpa(0); }
     else if (action === 'rateFlush') { g.setPumpRate(60); if (!g.pumpsOnline && !g.alarms.kickout) g.setPumpsOnline(true); }
     else if (action === 'rateLow') { g.setPumpRate(15); if (!g.pumpsOnline && !g.alarms.kickout) g.setPumpsOnline(true); }
@@ -393,6 +453,8 @@ export const useSim = create((set, get) => ({
     const sleeve = s.setup.completion === 'sleeve';
     if (ev.pnpOnly && sleeve) return;
     const events = { ...s.events, fired: [...s.events.fired, id] };
+    // time-to-recover clock starts now (a misfire starts when it shows up at surface: see the tick)
+    if (id !== 'misfire' && !(id === 'stuck' && s.wl.step !== 'pumpdown')) set({ score: { ...s.score, open: { ...s.score.open, [id]: { at: s.t } } } });
     if (id === 'misfire') {
       // takes effect when the guns fire: the last cluster (or two) fails
       set({ events: { ...events, misfireArmed: true } });
@@ -483,6 +545,12 @@ export const useSim = create((set, get) => ({
       patch.lubricatorRigged = false; patch.ctRigged = false;
       if (phase === 'production') patch.hookup = { step: 'rig', progress: 0, joints: 0 };
     }
+    // per-stage clock for the session summary
+    if (phase === 'wireline' || phase === 'frac') {
+      const rec = cur.score.stages[cur.stage] || { stage: cur.stage };
+      const next = phase === 'wireline' ? { ...rec, wlStart: rec.wlStart ?? cur.t } : { ...rec, wlEnd: rec.wlEnd ?? cur.t, fracStart: rec.fracStart ?? cur.t };
+      patch.score = { ...cur.score, stages: { ...cur.score.stages, [cur.stage]: next } };
+    }
     set(patch);
     get().addLog('Phase: ' + phasesFor(cur.setup).find(p => p.id === phase).label);
   },
@@ -527,7 +595,7 @@ export const useSim = create((set, get) => ({
       get().addLog('Advance to stage ' + (s.stage + 2));
     }
   },
-  reset: () => set(s => ({ ...freshJob(s.setup, s.pad), phase: 'setup' })),
+  reset: () => set(s => ({ ...freshJob(s.setup, s.pad), phase: 'setup', lastJob: snapshotJob(s) })),
 
   // ----- the tick: called from the render loop with dt in seconds of sim time -----
   tick: (dtRaw) => {
@@ -536,6 +604,14 @@ export const useSim = create((set, get) => ({
     const dt = Math.min(dtRaw, 0.1) * s.speed;
     const t = s.t + dt;
     const patch = { t };
+    // scoring accumulators for this tick
+    let score = { ...s.score, phaseSec: { ...s.score.phaseSec, [s.phase]: (s.score.phaseSec[s.phase] || 0) + dt } };
+    // a lesson that stages a fault on purpose (kickout, screenout) exempts that code: logged at zero points
+    const lessonExempt = s.lesson.id && !s.lesson.finished ? ((lessonById(s.lesson.id) || {}).exempt || []) : [];
+    const deduct = (code, detail, pts) => {
+      const staged = lessonExempt.includes(code);
+      score = { ...score, deductions: [...score.deductions, { t, code, label: (DEDUCT[code] ? DEDUCT[code].label : detail) + (DEDUCT[code] && detail ? ': ' + detail : '') + (staged ? ' (staged by the lesson, no points)' : ''), pts: staged ? 0 : (pts ?? DEDUCT[code].pts) }] };
+    };
     const WELL = wellParams(s);
     const fluid = fluidOf(s), prop = proppantOf(s);
     const totals = designTotals(s);
@@ -593,12 +669,16 @@ export const useSim = create((set, get) => ({
         // Screenout condition: concentration too high for the rate and the fluid's transport, or the pack is full and sand keeps coming
         const limitPpa = 2.5 * fluid.transport / prop.bridge;
         const over = stageLb / Math.max(1, totals.stageProppantLb);   // proppant pumped past the stage design packs the near-wellbore
-        const screening = (ppa > limitPpa && q < 45) || (ppa > limitPpa * 1.6) || (over >= 1.25 && ppa > 0.5);
+        // an injected screenout holds until sand is off and the rate is up to flush
+        const forced = s.events.active === 'screenout' && !(ppa === 0 && q >= 30);
+        const screening = forced || (ppa > limitPpa && q < 45) || (ppa > limitPpa * 1.6) || (over >= 1.25 && ppa > 0.5);
         const targetNet = 250 + 550 * ext + 300 * fill + (screening ? 2500 : 0);
         netPsi += (targetNet - netPsi) * Math.min(1, dt * (screening ? 0.6 : 0.25));
+        const wasComplete = st.fracComplete;
         stages = stages.map((x, i) => i === s.stage ? { ...x, fracExtent: ext, proppantFill: fill, stageSlurryBbl: stageBbl, stageProppantLb: stageLb, fracComplete: ext >= 1 && fill >= 0.6 } : x);
+        if (!wasComplete && stages[s.stage].fracComplete) { const rec = score.stages[s.stage] || { stage: s.stage }; score = { ...score, stages: { ...score.stages, [s.stage]: { ...rec, fracEnd: t, placed: fill } } }; }
         if (screening && !alarms.screenout) { alarms.screenout = true; get().addLog('SCREENOUT: treating pressure ramping at constant rate. Cut sand and flush.'); }
-        if (!screening) alarms.screenout = false;
+        if (!screening && netPsi < 1500) alarms.screenout = false;
         patch.cumSlurryBbl = s.cumSlurryBbl + dBbl;
         patch.cumProppantLb = s.cumProppantLb + dLb;
       } else {
@@ -607,6 +687,7 @@ export const useSim = create((set, get) => ({
       }
     } else {
       netPsi += (0 - netPsi) * Math.min(1, dt * 0.3);
+      alarms.screenout = false;
     }
 
     // Surface treating pressure
@@ -653,8 +734,25 @@ export const useSim = create((set, get) => ({
       bhtpPsi = surfacePsi + hydroPsi;
     }
 
+    // Scoring: alarm transitions this tick. Injected events do not count against the operator; the
+    // recovery time does (below).
+    if (alarms.kickout && !s.alarms.kickout) {
+      const rec = score.stages[s.stage] || { stage: s.stage };
+      score = { ...score, kickouts: score.kickouts + 1, stages: { ...score.stages, [s.stage]: { ...rec, kickouts: (rec.kickouts || 0) + 1 } } };
+      if (s.events.active !== 'prvLift') deduct('kickout', 'stage ' + (s.stage + 1));
+    }
+    if ((alarms.overpressure && !s.alarms.overpressure) || (alarms.prvLifted && !s.alarms.prvLifted)) {
+      if (!score.opEpisode) { score = { ...score, opEpisode: true, overpressures: score.overpressures + 1 }; if (s.events.active !== 'prvLift') deduct('overpressure', 'stage ' + (s.stage + 1)); }
+    }
+    if (!alarms.overpressure && !alarms.prvLifted && score.opEpisode) score = { ...score, opEpisode: false };
+    if (alarms.screenout && !s.alarms.screenout) {
+      score = { ...score, screenouts: score.screenouts + 1 };
+      if (s.events.active !== 'screenout') deduct('screenout', 'stage ' + (s.stage + 1));
+    }
+
     // Training events: sand delivery timer, random firing
     let events = s.events;
+    if (events.active === 'screenout' && !alarms.screenout) events = { ...events, active: null };
     if (events.sandTimer > 0) {
       const left = events.sandTimer - dt;
       events = { ...events, sandTimer: Math.max(0, left), active: left <= 0 && events.active === 'sandOut' ? null : events.active };
@@ -720,7 +818,7 @@ export const useSim = create((set, get) => ({
           stages = stages.map((x, i) => i === s.stage ? { ...x, clustersFired: fired, perforated: fired >= 1 } : x);
           wl = p >= 1 ? { step: 'pooh', progress: 0 } : { step: 'perforate', progress: p };
           if (p >= 1) {
-            if (missing) { get().addLog('MISFIRE: ' + missing + ' cluster' + (missing > 1 ? 's' : '') + ' did not fire. Pulling out of hole.'); events = { ...events, misfired: missing, misfireArmed: false }; patch.events = events; }
+            if (missing) { get().addLog('MISFIRE: ' + missing + ' cluster' + (missing > 1 ? 's' : '') + ' did not fire. Pulling out of hole.'); events = { ...events, misfired: missing, misfireArmed: false }; patch.events = events; score = { ...score, open: { ...score.open, misfire: { at: t } } }; }
             else get().addLog('All clusters fired. Pulling out of hole.');
           }
         } else if (wl.step === 'pooh') {
@@ -791,9 +889,62 @@ export const useSim = create((set, get) => ({
     }
 
     Object.assign(patch, { surfacePsi, bhtpPsi, hydroPsi, frictionPsi, netPsi, slurryPpg, alarms, stages, lubricatorRigged });
+
+    // Time to recover: close the clock on any injected event whose recovery condition is now met
+    const ev = patch.events || events;
+    const stNow = stages[s.stage];
+    for (const id in score.open) {
+      const o = score.open[id];
+      let resolved = false;
+      if (id === 'stuck') resolved = wl.step !== 'stuck' && wl.step !== 'freeing';
+      else if (id === 'valveFault') resolved = !ev.valveFault;
+      else if (id === 'sandOut') resolved = ev.sandTimer <= 0 && (patch.ppa ?? s.ppa) > 0;
+      else if (id === 'prvLift') resolved = !alarms.prvLifted && !alarms.overpressure && !alarms.kickout;
+      else if (id === 'screenout') resolved = !alarms.screenout;
+      else if (id === 'misfire') resolved = !!stNow && stNow.clustersFired >= s.setup.clusters;
+      if (resolved) {
+        const secs = t - o.at;
+        const target = EVENT_TARGETS[id] || 60;
+        const pts = Math.min(8, Math.ceil(Math.max(0, secs - target) / 15));
+        const label = (EVENTS.find(e => e.id === id) || { label: id }).label;
+        const open = { ...score.open }; delete open[id];
+        score = { ...score, open, events: [...score.events, { id, label, at: o.at, secs, target, pts }] };
+        if (pts > 0) deduct('slow', 'Slow recovery: ' + label.toLowerCase() + ' in ' + Math.round(secs) + ' s (target ' + target + ' s)', pts);
+        get().addLog('Recovered from ' + label.toLowerCase() + ' in ' + Math.round(secs) + ' s (target ' + target + ' s' + (pts ? ', ' + pts + ' points off' : '') + ').');
+      }
+    }
+    patch.score = score;
+
+    // Guided lesson: advance through the checkpoints in order (a checkpoint stays met once met)
+    if (s.lesson.id && !s.lesson.finished) {
+      const L = lessonById(s.lesson.id);
+      if (L) {
+        const ns = { ...s, ...patch };
+        const mask = L.steps.map((_, i) => !!s.lesson.doneMask[i]);
+        let i = mask.indexOf(false); if (i < 0) i = mask.length;
+        let changed = false;
+        while (i < L.steps.length && L.steps[i].done(ns)) { mask[i] = true; changed = true; i++; }
+        if (i >= L.steps.length) {
+          const secs = t - s.lesson.startedAt;
+          const base = scoreOf(score, { since: s.lesson.startedAt, exempt: L.exempt || [] });
+          const over = Math.max(0, secs - L.targetSec);
+          const timePts = Math.min(20, Math.ceil(over / (L.targetSec * 0.1)));
+          const total = Math.max(0, base.total - timePts);
+          const result = { score: total, grade: gradeOf(total), secs: Math.round(secs), targetSec: L.targetSec, timePts, deductions: base.deductions };
+          patch.lesson = { ...s.lesson, doneMask: mask, finished: true, result };
+          const entry = { id: L.id, n: L.n, title: L.title, score: total, grade: result.grade, secs: result.secs, targetSec: L.targetSec, when: Date.now() };
+          patch.lessonResults = [...s.lessonResults, entry];
+          saveResults(patch.lessonResults);
+          get().addLog('Lesson ' + L.n + ' complete: ' + total + ' points, grade ' + result.grade + ', ' + result.secs + ' s (target ' + L.targetSec + ' s).');
+        } else if (changed) patch.lesson = { ...s.lesson, doneMask: mask };
+      }
+    }
     set(patch);
   },
 }));
+
+// test hook: the headless checks fast-forward the simulation through this handle
+if (typeof window !== 'undefined') window.__padworksSim = useSim;
 
 // ---------------------------------------------------------------------------------------------
 // Next steps: the ordered list of what still has to happen, in sequence, for the job to continue.
@@ -875,7 +1026,7 @@ export function nextSteps(s) {
   }
   if (s.events.valveFault && (s.phase === 'frac' || s.phase === 'wireline')) {
     push('Working valve does not respond: confirm at the control unit (no position change, no pressure on the actuator line)', true);
-    push('Pumps offline, rate to zero until the leg can be operated', !s.pumpsOnline && s.pumpRate === 0, { action: 'rateZero', label: 'Rate to 0' });
+    push('Pumps offline, rate to zero until the leg can be operated', !s.pumpsOnline && s.pumpRate === 0, { action: 'stop', label: 'Stop pumping' });
     push('Check hydraulic supply and hoses; switch the leg to the backup circuit', false, { action: 'resetActuator', label: 'Backup circuit' });
     push('Cycle the valve and confirm position, then continue', false, { valve: 'zipWork' });
     return { blocked: true, title: 'Working valve actuator fault', why: 'Hydraulic supply lost or an actuator seal failed on the zipper working valve.', steps };
@@ -891,9 +1042,9 @@ export function nextSteps(s) {
     const m = a.interlock;
     if (m.startsWith('Close the zipper')) { push('Close the zipper working valve', closed(v.zipWork), { valve: 'zipWork' }); push('Then open the swab valve', open(v.swab), { valve: 'swab' }); }
     else if (m.startsWith('Close the swab valve')) { push('Close the swab valve', closed(v.swab), { valve: 'swab' }); push('Then open the zipper leg', open(v.zipIso) && open(v.zipWork), { valve: !open(v.zipIso) ? 'zipIso' : 'zipWork' }); }
-    else if (m.startsWith('Lower master')) { push('Pumps offline and rate to zero', !s.pumpsOnline && s.pumpRate === 0, { action: 'rateZero', label: 'Rate to 0' }); push('Bleed the tree below 500 psi', s.surfacePsi <= 500); push('Then cycle the lower master', false, { valve: 'lmv' }); }
-    else if (m.startsWith('Crown valve')) { push('Pumps offline and rate to zero', !s.pumpsOnline && s.pumpRate === 0, { action: 'rateZero', label: 'Rate to 0' }); push('Bleed the inlet block below 500 psi', s.surfacePsi <= 500); push('Then close the crown valve', false, { valve: 'crown' }); }
-    else if (m.startsWith('Missile isolation')) { push('Pumps offline and rate to zero', !s.pumpsOnline && s.pumpRate === 0, { action: 'rateZero', label: 'Rate to 0' }); push('Then close the missile isolation valve', false, { valve: 'iso' }); }
+    else if (m.startsWith('Lower master')) { push('Pumps offline and rate to zero', !s.pumpsOnline && s.pumpRate === 0, { action: 'stop', label: 'Stop pumping' }); push('Bleed the tree below 500 psi', s.surfacePsi <= 500); push('Then cycle the lower master', false, { valve: 'lmv' }); }
+    else if (m.startsWith('Crown valve')) { push('Pumps offline and rate to zero', !s.pumpsOnline && s.pumpRate === 0, { action: 'stop', label: 'Stop pumping' }); push('Bleed the inlet block below 500 psi', s.surfacePsi <= 500); push('Then close the crown valve', false, { valve: 'crown' }); }
+    else if (m.startsWith('Missile isolation')) { push('Pumps offline and rate to zero', !s.pumpsOnline && s.pumpRate === 0, { action: 'stop', label: 'Stop pumping' }); push('Then close the missile isolation valve', false, { valve: 'iso' }); }
     else if (m.startsWith('Swab, crown')) { push('Lower master open', open(v.lmv), { valve: 'lmv' }); push('Upper master open', open(v.umv), { valve: 'umv' }); push('Crown valve open', open(v.crown), { valve: 'crown' }); push('Zipper working valve closed', closed(v.zipWork), { valve: 'zipWork' }); push('Swab valve open', open(v.swab), { valve: 'swab' }); push('Then run in hole', false, { action: 'run', label: 'Run in hole' }); }
     else if (m.startsWith('Masters, crown')) { flowPath(); push('Then release the ball', false, { action: 'run', label: 'Release ball' }); }
     else if (m.startsWith('Open the swab valve to the ball')) { push('Swab valve open to the ball launcher', open(v.swab), { valve: 'swab' }); push('Then release the ball', false, { action: 'run', label: 'Release ball' }); }
