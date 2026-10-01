@@ -27,6 +27,8 @@ async function page(w, h, mobile = false) {
   return p;
 }
 const base = `http://localhost:${PORT}`;
+// LITE=1 runs the simulator in lite rendering (hard shadows, no environment map) so the long logic pass stays fast under software GL
+const SIM = '/simulate' + (process.env.LITE ? '?lite=1' : '');
 const shot = (p, name) => p.screenshot({ path: path.join(out, name + '.png') });
 async function setRange(p, index, value) {
   await p.evaluate(([i, v]) => {
@@ -62,7 +64,7 @@ async function waitText(p, text, timeout = 90000) {
 let p;
 if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10') {
 p = await page(1440, 900);
-await p.goto(base + '/simulate'); await wait(4000);
+await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
 await startJob(p);
 await p.selectOption('select', '4'); // speed 4x (first select is the speed control)
@@ -173,7 +175,7 @@ for (const [id, n] of [['UC-PRODTREE', '63'], ['UC-PRODTREE-CHOKE', '64'], ['CM-
   await shot(p, n + '-record-' + id);
   if (id === 'CM-WELLBORE') { await p.keyboard.press('s'); await wait(1500); await shot(p, '65b-record-CM-WELLBORE-cutaway'); }
 }
-await p.goto(base + '/simulate'); await wait(4000);
+await p.goto(base + SIM); await wait(4000);
 await startJob(p);
 await p.getByRole('button', { name: 'Production' }).first().click(); await wait(500);
 await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(3000);
@@ -185,7 +187,7 @@ await shot(p, '51-system-DT');
 await p.goto(base + '/checks'); await wait(1500);
 await shot(p, '20-integrity');
 // Drop 4: pad configuration in the simulator
-await p.goto(base + '/simulate'); await wait(4000);
+await p.goto(base + SIM); await wait(4000);
 await setNamedRange(p, 'wells', 6); await wait(400);
 await p.getByRole('button', { name: 'Trimul' }).click(); await wait(300);
 await startJob(p);
@@ -204,7 +206,7 @@ if (process.env.ONLY !== 'main') {
 p = await page(1440, 900);
 if (process.env.ONLY !== 'drop10') {
 // ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip
-await p.goto(base + '/simulate'); await wait(4500);
+await p.goto(base + SIM); await wait(4500);
 await p.selectOption('select[title="Camera preset"]', 'basin'); await wait(2500);
 await shot(p, '70-setup-basin-delaware');
 await p.selectOption('select[data-select="basin"]', 'haynesville'); await wait(3000);
@@ -248,7 +250,7 @@ await shot(p, '80-sleeve-ball-seated-downhole');
 await p.getByRole('button', { name: 'Surface' }).click(); await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(2500);
 await shot(p, '81-sleeve-tree-ball-drop');
 // kickout guidance: pump against a closed path in a plug and perf job on the Permian
-await p.goto(base + '/simulate'); await wait(4000);
+await p.goto(base + SIM); await wait(4000);
 await p.selectOption('select[data-select="basin"]', 'permian-delaware'); await wait(800);
 await startJob(p); await p.selectOption('select', '4');
 await p.getByRole('button', { name: 'Frac' }).first().click(); await wait(800);
@@ -285,7 +287,7 @@ for (const [id, n] of [['WH-ZIPPER', '87'], ['WH-ZIPPER-LEG', '88'], ['WH-ZIPPER
 }
 // Drop 8: artificial lift in the production phase, color-coded wells, AL and SC records
 for (const [lift, n] of [['rodpump', '96'], ['esp', '97'], ['gaslift', '98'], ['plunger', '99']]) {
-  await p.goto(base + '/simulate'); await wait(3500);
+  await p.goto(base + SIM); await wait(3500);
   await p.selectOption('select[data-select="lift"]', lift); await wait(300);
   await startJob(p);
   await p.getByRole('button', { name: 'Production' }).first().click(); await wait(500);
@@ -293,7 +295,7 @@ for (const [lift, n] of [['rodpump', '96'], ['esp', '97'], ['gaslift', '98'], ['
   await shot(p, n + '-production-' + lift);
   if (lift === 'rodpump' || lift === 'esp') { await p.getByRole('button', { name: 'Downhole' }).click(); await wait(3000); await shot(p, n + 'b-production-' + lift + '-downhole'); }
 }
-await p.goto(base + '/simulate'); await wait(3500);
+await p.goto(base + SIM); await wait(3500);
 await p.selectOption('select[title="Camera preset"]', 'row'); await wait(3000);
 await shot(p, '100-row-color-coded-wells');
 for (const [id, n] of [['AL', '101'], ['AL-BEAMUNIT', '102'], ['AL-RODPUMP', '103'], ['AL-RODPUMP-TRAVELINGVALVE', '104'], ['AL-ESP', '105'], ['SC-GRAVELPACK', '106'], ['SC-GRAVELPACK-SCREEN', '107']]) {
@@ -304,7 +306,7 @@ for (const [id, n] of [['AL', '101'], ['AL-BEAMUNIT', '102'], ['AL-RODPUMP', '10
 }
 // Drop 9: training events and the production hookup, RG, DA, MT records
 {
-  await p.goto(base + '/simulate'); await wait(3500);
+  await p.goto(base + SIM); await wait(3500);
   await startJob(p); await p.selectOption('select', '4');
   await p.getByRole('button', { name: 'Wireline' }).first().click(); await wait(800);
   await p.getByRole('button', { name: 'Gun misfire' }).click(); await wait(300);
@@ -352,7 +354,7 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
 }
 // Drop 10: guided lessons, scoring, session summary
 {
-  await p.goto(base + '/simulate'); await wait(3500);
+  await p.goto(base + SIM); await wait(3500);
   await shot(p, '123-lessons-picker');
   // lesson 1: first wireline run
   await p.click('[data-action="lesson-L1"]'); await wait(1200); await p.selectOption('select', '4');
@@ -432,7 +434,7 @@ await p.close();
 // ---------------- Phone
 if (!process.env.ONLY) {
 p = await page(390, 844, true);
-await p.goto(base + '/simulate'); await wait(5000);
+await p.goto(base + SIM); await wait(5000);
 await shot(p, '21-phone-sim-3d');
 await p.getByRole('button', { name: 'Controls' }).click(); await wait(800);
 await shot(p, '22-phone-sim-controls');

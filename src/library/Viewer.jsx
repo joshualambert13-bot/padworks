@@ -3,6 +3,9 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
+import { PadEnvironment, LITE } from '../sim/parts/lighting.jsx';
+
+const VIEWER_SKY = { sky: '#b9cbe0', fog: '#d8d5cc', ground: '#5a5044' };
 import * as THREE from 'three';
 import { Focus, EyeOff, Blend, Scissors, Expand, RotateCcw } from 'lucide-react';
 
@@ -19,6 +22,8 @@ function Model({ url, selected, mode, explode, ghost, onPick, onNodes, onLoaded 
         o.material.transparent = true;
         o.material.side = THREE.DoubleSide;
         o.material.clipShadows = true;
+        o.castShadow = true; o.receiveShadow = true;
+        if (o.material.color && o.material.color.getHSL({ h: 0, s: 0, l: 0 }).l < 0.12) { o.material.metalness = 0.05; o.material.roughness = 0.85; }
         const key = o.name || o.parent?.name;
         o.userData.key = key;
         if (key) names.push(key);
@@ -131,12 +136,14 @@ export default function Viewer({ url, highlight = [], nodeLabels = {}, ghost = [
   return (
     <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] h-full min-h-[420px]">
       <div className="relative bg-ink">
-        <Canvas dpr={[1, 1.5]} camera={{ position: [2, 1.2, 2], fov: 40 }} gl={{ antialias: true, localClippingEnabled: true }} onCreated={({ gl }) => { gl.localClippingEnabled = true; }}>
+        <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [2, 1.2, 2], fov: 40 }} gl={{ antialias: true, localClippingEnabled: true }} onCreated={({ gl }) => { gl.localClippingEnabled = true; }}>
           <color attach="background" args={['#0b0f14']} />
-          <ambientLight intensity={0.9} />
-          <directionalLight position={[3, 5, 2]} intensity={2.2} />
-          <directionalLight position={[-3, 2, -2]} intensity={0.5} />
-          <hemisphereLight args={['#c9d6e8', '#2a2419', 0.6]} />
+          {!LITE && <PadEnvironment terrain={VIEWER_SKY} intensity={0.65} />}
+          {LITE && <hemisphereLight args={['#c9d6e8', '#2a2419', 0.5]} />}
+          <ambientLight intensity={0.15} />
+          <directionalLight position={[3, 5, 2]} intensity={2.0} color="#fff3e0" castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0003} shadow-normalBias={0.02} />
+          <directionalLight position={[-3, 2, -2]} intensity={0.35} />
+          <hemisphereLight args={['#c9d6e8', '#2a2419', 0.25]} />
           <Suspense fallback={null}>
             <Model url={url} selected={selected} mode={mode} explode={explode} ghost={ghost} onPick={(k) => setSelected(k ? [k] : [])} onNodes={setNodes} onLoaded={() => { setLoaded(true); frameSel(); }} />
           </Suspense>

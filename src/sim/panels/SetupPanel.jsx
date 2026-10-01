@@ -19,7 +19,7 @@ function Lessons({ s }) {
             <li key={l.id} className="flex items-start gap-2 text-xs">
               <span className="mono text-[10px] text-mute mt-0.5 w-4">{l.n}.</span>
               <span className="flex-1 min-w-0"><span className="text-white">{l.title}</span><span className="text-mute"> · target {l.targetSec} s</span>
-                <span className="block text-[10px] text-mute truncate" title={l.blurb}>{l.blurb}</span></span>
+                <span className="line-clamp-1 text-[10px] text-mute" title={l.blurb}>{l.blurb}</span></span>
               {best && <span className={'mono text-[10px] mt-0.5 ' + (best.grade === 'A' ? 'text-ok' : best.grade === 'B' ? 'text-accent' : 'text-warn')} title={'Best: ' + best.score + ' points, ' + best.secs + ' s'}>{best.score} {best.grade}</span>}
               <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.startLesson(l.id)} data-action={'lesson-' + l.id}>Start</button>
             </li>

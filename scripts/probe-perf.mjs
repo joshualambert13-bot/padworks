@@ -7,7 +7,7 @@ await wait(2500);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] });
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const p = await ctx.newPage();
-await p.goto(`http://localhost:${PORT}/simulate`); await wait(5000);
+await p.goto(`http://localhost:${PORT}/simulate` + (process.env.LITE ? '?lite=1' : '')); await wait(5000);
 const frame = async () => p.evaluate(() => new Promise(r => { let n = 0; const t0 = performance.now(); function f() { n++; if (n < 15) requestAnimationFrame(f); else r((performance.now() - t0) / n); } requestAnimationFrame(f); }));
 console.log('setup frame ms', (await frame()).toFixed(0));
 const info = await p.evaluate(() => window.__padworksStats || null);

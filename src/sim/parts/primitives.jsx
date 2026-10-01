@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { wearTexture, BlobShadow } from './lighting.jsx';
 
 // ---------------------------------------------------------------- merged static geometry
 // Repeated furniture (wheels, rails, ladders, stairs, fittings) is merged into one BufferGeometry per
@@ -37,32 +38,35 @@ export function Merged({ parts, deps = [], mat = MAT.steel, name, position = [0,
   return <mesh geometry={geom} position={position} rotation={rotation} name={name} castShadow={shadow} receiveShadow><meshStandardMaterial {...mat} side={doubleSide ? THREE.DoubleSide : THREE.FrontSide} /></mesh>;
 }
 
+// Materials respond to the sky environment map (Drop 12): bare metal is metallic and fairly smooth, paint is
+// dielectric with a shared wear map that varies its roughness, rubber and tires are rough and dark.
+const wear = typeof document !== 'undefined' ? wearTexture() : null;
+const paint = (color, roughness = 0.55, metalness = 0.12) => ({ color, metalness, roughness, roughnessMap: wear || undefined });
 export const MAT = {
-  steel:   { color: '#7d8590', metalness: 0.85, roughness: 0.35 },
-  darkSteel: { color: '#4a535d', metalness: 0.6, roughness: 0.5 },
-  redIron: { color: '#a3261d', metalness: 0.6, roughness: 0.5 },
-  yellow:  { color: '#d9a400', metalness: 0.3, roughness: 0.6 },
-  white:   { color: '#d7dde5', metalness: 0.2, roughness: 0.6 },
-  blue:    { color: '#2a5d9f', metalness: 0.4, roughness: 0.55 },
-  green:   { color: '#2e8b57', metalness: 0.4, roughness: 0.55 },
-  rubber:  { color: '#1d1f22', metalness: 0.0, roughness: 0.95 },
-  brass:   { color: '#b08d3c', metalness: 0.9, roughness: 0.3 },
-  tire:    { color: '#141618', metalness: 0.0, roughness: 1.0 },
+  steel:   { color: '#9aa2ab', metalness: 0.9, roughness: 0.32 },
+  darkSteel: { color: '#4d565f', metalness: 0.8, roughness: 0.45 },
+  redIron: paint('#9e2a22', 0.5, 0.2),
+  yellow:  paint('#d9a400', 0.55),
+  white:   paint('#d7dde5', 0.55),
+  blue:    paint('#2a5d9f', 0.5),
+  green:   paint('#2e8b57', 0.5),
+  rubber:  { color: '#1d1f22', metalness: 0.0, roughness: 0.92 },
+  brass:   { color: '#b8944a', metalness: 0.95, roughness: 0.3 },
+  tire:    { color: '#141618', metalness: 0.0, roughness: 0.95 },
   ground:  { color: '#4b4235', metalness: 0.0, roughness: 1.0 },
   sand:    { color: '#c9b47a', metalness: 0.0, roughness: 1.0 },
   dimSteel: { color: '#2c3137', metalness: 0.7, roughness: 0.6 },
-  // added for the detail pass
-  paintRed: { color: '#8f1f1f', metalness: 0.35, roughness: 0.5 },
-  paintWhite: { color: '#e4e8ec', metalness: 0.15, roughness: 0.55 },
-  cream:   { color: '#d9cfae', metalness: 0.15, roughness: 0.6 },
-  alu:     { color: '#b8bec4', metalness: 0.9, roughness: 0.3 },
-  chassis: { color: '#2a2d31', metalness: 0.5, roughness: 0.7 },
-  grating: { color: '#3a3f45', metalness: 0.6, roughness: 0.75 },
-  glass:   { color: '#7fb3ff', metalness: 0.1, roughness: 0.1 },
-  hose:    { color: '#24262a', metalness: 0.05, roughness: 0.9 },
-  orange:  { color: '#d9642a', metalness: 0.3, roughness: 0.6 },
-  rust:    { color: '#6e4a2c', metalness: 0.4, roughness: 0.8 },
-  black:   { color: '#0e0f11', metalness: 0.3, roughness: 0.8 },
+  paintRed: paint('#8f1f1f', 0.5, 0.15),
+  paintWhite: paint('#e4e8ec', 0.5),
+  cream:   paint('#d9cfae', 0.55),
+  alu:     { color: '#c3c8cd', metalness: 0.95, roughness: 0.28 },
+  chassis: paint('#2a2d31', 0.7, 0.3),
+  grating: { color: '#3a3f45', metalness: 0.7, roughness: 0.7 },
+  glass:   { color: '#20304a', metalness: 0.9, roughness: 0.06 },
+  hose:    { color: '#24262a', metalness: 0.05, roughness: 0.85 },
+  orange:  paint('#d9642a', 0.55),
+  rust:    { color: '#6e4a2c', metalness: 0.35, roughness: 0.85 },
+  black:   paint('#0e0f11', 0.75, 0.3),
 };
 
 export function Box({ size = [1, 1, 1], position = [0, 0, 0], rotation = [0, 0, 0], mat = MAT.steel, name, castShadow = true, children, ...rest }) {
@@ -232,6 +236,7 @@ export function Trailer({ length = 12, width = 2.6, position = [0, 0, 0], rotati
       <Merged mat={MAT.tire} deps={[length, axles, f, width]} parts={() => axleX.flatMap(x => wheelZ.map(z => ({ g: G.cyl(R, W * 2.1, 14), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] })))} />
       <Merged mat={MAT.alu} deps={[length, axles, f, width]} shadow={false} parts={() => axleX.flatMap(x => wheelZ.flatMap(z => [{ g: G.cyl(R * 0.6, W * 2.1 + 0.02, 10), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] }, { g: G.cyl(R * 0.22, W * 2.1 + 0.1, 8), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] }]))} />
       <Box size={[length, 0.08, width]} position={[0, deckY - 0.04, 0]} mat={MAT.grating} />
+      <BlobShadow size={[length + 1.5, width + 2.0]} />
       {[-1, 1].map(side => <mesh key={'l' + side} position={[-f * (length / 2 + 0.02), deckY - 0.2, side * (width / 2 - 0.1)]}><boxGeometry args={[0.03, 0.08, 0.14]} /><meshStandardMaterial color="#ff2a2a" emissive="#ff2a2a" emissiveIntensity={0.6} /></mesh>)}
       {children}
     </group>

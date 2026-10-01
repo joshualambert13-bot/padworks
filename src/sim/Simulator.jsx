@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered } from 'lucide-react';
+import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles } from 'lucide-react';
+import { LITE, setLite } from './parts/lighting.jsx';
 import SurfaceScene from './SurfaceScene.jsx';
 import DownholeScene from './DownholeScene.jsx';
 import ControlPanel from './panels/ControlPanel.jsx';
@@ -69,12 +70,14 @@ export default function Simulator() {
             <option value="pumps">Pumps and missile</option>
             <option value="sand">Sand and blender</option>
             <option value="tanks">Frac tanks</option>
+            <option value="gate">Pad entrance</option>
             <option value="support">Data van and power</option>
             <option value="flowback">Flowback spread</option>
             <option value="basin">Basin view</option>
           </select>
         )}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
+        <button className="btn flex items-center gap-1" title={LITE ? 'Lite rendering: hard shadows, no sky reflections. Click for full quality (reloads the page).' : 'Full rendering: sky reflections, soft shadows, ground detail. Click for lite mode on a slow machine (reloads the page).'} onClick={() => setLite(!LITE)}><Sparkles size={14} />{LITE ? 'Lite' : 'Full'}</button>
       </div>
       <div className={'w-full mt-1 text-xs px-2 py-1 rounded pointer-events-none ' + (anyAlarm ? 'bg-bad/80 text-white' : 'bg-black/50 text-mute')}>
         {anyAlarm ? 'ALARM ACTIVE: see the control panel' : phase === 'setup' ? 'Pad setup: pick a guided lesson or set up the pad yourself, then press Start the job.' : lessonText + PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}
@@ -92,12 +95,12 @@ export default function Simulator() {
         ))}
       </div>
       <div className="flex-1 min-h-0 grid md:grid-cols-[320px_1fr_320px] xl:grid-cols-[340px_1fr_360px]">
-        <aside className={'min-h-0 border-r border-line bg-panel ' + (mobileTab === 'controls' ? 'block' : 'hidden md:block')}><ControlPanel /></aside>
-        <section className={'relative min-h-0 ' + (mobileTab === '3d' ? 'block' : 'hidden md:block')}>
+        <aside className={'min-h-0 min-w-0 overflow-hidden border-r border-line bg-panel ' + (mobileTab === 'controls' ? 'block' : 'hidden md:block')}><ControlPanel /></aside>
+        <section className={'relative min-h-0 min-w-0 ' + (mobileTab === '3d' ? 'block' : 'hidden md:block')}>
           <Viewport view={view} showLabels={showLabels} preset={preset} />
           {toolbar}
         </section>
-        <aside className={'min-h-0 border-l border-line bg-panel ' + (mobileTab === 'timeline' ? 'block' : 'hidden md:block')}><TimelinePanel /></aside>
+        <aside className={'min-h-0 min-w-0 overflow-hidden border-l border-line bg-panel ' + (mobileTab === 'timeline' ? 'block' : 'hidden md:block')}><TimelinePanel /></aside>
       </div>
     </div>
   );
