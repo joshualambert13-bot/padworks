@@ -81,6 +81,71 @@ export function padTexture() {
   texCache.set(k, tex);
   return tex;
 }
+
+// Rock textures for the downhole section: shale (fine dark laminations), sandstone (grainy, faint bedding),
+// limestone (lighter, blocky with joints). Grayscale; the layer color tints them.
+export function rockTexture(kind) {
+  const k = 'rock-' + kind;
+  if (texCache.has(k)) return texCache.get(k);
+  if (typeof document === 'undefined') return null;
+  const size = 256;
+  const c = document.createElement('canvas'); c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    let v = 0, a = 1, f = kind === 'sand' ? 12 : 6, norm = 0;
+    for (let o = 0; o < 4; o++) { v += a * vnoiseWrapped(x / size * f, y / size * f, f); norm += a; a *= 0.55; f *= 2; }
+    v = v / norm - 0.5;
+    let g = kind === 'shale' ? 0.5 + v * 0.3 : kind === 'sand' ? 0.66 + v * 0.42 : 0.72 + v * 0.3;
+    if (kind === 'shale') { const lam = Math.sin(y * 0.9 + vnoiseWrapped(x / size * 4, y / size * 4, 4) * 3) ; if (lam > 0.75) g -= 0.18; if (lam < -0.9) g += 0.06; }
+    if (kind === 'sand') { const bed = Math.sin(y * 0.25 + vnoiseWrapped(x / size * 3, 0, 3) * 2); if (bed > 0.92) g -= 0.1; }
+    if (kind === 'lime') { if (y % 64 < 2 || (x + (y > 128 ? 32 : 0)) % 96 < 2) g -= 0.22; }
+    const gg = Math.max(0, Math.min(255, Math.round(g * 255)));
+    const pidx = (y * size + x) * 4; img.data[pidx] = gg; img.data[pidx + 1] = gg; img.data[pidx + 2] = gg; img.data[pidx + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.anisotropy = 4;
+  texCache.set(k, tex);
+  return tex;
+}
+// Round soft dot for point sprites (proppant grains)
+export function dotTexture() {
+  const k = 'dot';
+  if (texCache.has(k)) return texCache.get(k);
+  if (typeof document === 'undefined') return null;
+  const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(16, 16, 2, 16, 16, 15);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.7, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 32, 32);
+  const tex = new THREE.CanvasTexture(c);
+  texCache.set(k, tex);
+  return tex;
+}
+// Irregular fracture face: noise alpha so the wing edge breaks up
+export function fractureAlpha() {
+  const k = 'fracalpha';
+  if (texCache.has(k)) return texCache.get(k);
+  if (typeof document === 'undefined') return null;
+  const size = 128;
+  const c = document.createElement('canvas'); c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const dx = (x - size / 2) / (size / 2), dy = (y - size / 2) / (size / 2);
+    const r = Math.hypot(dx, dy);
+    const n = vnoiseWrapped(x / size * 6, y / size * 6, 6) * 0.5 + vnoiseWrapped(x / size * 12, y / size * 12, 12) * 0.25;
+    const edge = 1 - r + (n - 0.4) * 0.5;
+    const a = Math.max(0, Math.min(1, edge * 2.2));
+    const gg = Math.round(a * 255);
+    const pidx = (y * size + x) * 4; img.data[pidx] = gg; img.data[pidx + 1] = gg; img.data[pidx + 2] = gg; img.data[pidx + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  texCache.set(k, tex);
+  return tex;
+}
 // Radial blob for contact shadows (white alpha falloff; tinted black by the material)
 export function blobTexture() {
   const k = 'blob';

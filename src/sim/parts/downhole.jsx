@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSim } from '../store.js';
 import { Label } from './primitives.jsx';
+import { rockTexture, dotTexture, fractureAlpha, LITE } from './lighting.jsx';
 
 export const LATERAL = { heelX: -16, toeX: 16, casingR: 0.5, holeR: 0.68 };
 const count = () => useSim.getState().stages.length;
@@ -17,41 +18,44 @@ export const plugX = (i) => LATERAL.toeX - i * stageLen() - 0.45;               
 export const sleeveX = (i) => stageX(i);                                                    // frac sleeve sub at the stage center
 
 const LAYERS = [
-  { y: 4.6, h: 1.4, color: '#7a6a52' },
-  { y: 3.3, h: 1.2, color: '#66573f' },
-  { y: 2.1, h: 1.2, color: '#8a7a5a' },
-  { y: 1.05, h: 0.9, color: '#5d6a74' },
-  { y: 0, h: 1.2, color: '#414c56' },   // target: a darker shale band around the lateral
-  { y: -1.05, h: 0.9, color: '#5d6a74' },
-  { y: -2.1, h: 1.2, color: '#7a6b4f' },
-  { y: -3.3, h: 1.2, color: '#5e5040' },
-  { y: -4.6, h: 1.4, color: '#4c4236' },
+  { y: 4.6, h: 1.4, color: '#8c7a5e', kind: 'sand' },
+  { y: 3.3, h: 1.2, color: '#5e5040', kind: 'shale' },
+  { y: 2.1, h: 1.2, color: '#9a8a66', kind: 'sand' },
+  { y: 1.05, h: 0.9, color: '#6f7a84', kind: 'lime' },
+  { y: 0, h: 1.2, color: '#3f4a55', kind: 'shale' },   // target: a darker shale band around the lateral
+  { y: -1.05, h: 0.9, color: '#6f7a84', kind: 'lime' },
+  { y: -2.1, h: 1.2, color: '#8a7a5a', kind: 'sand' },
+  { y: -3.3, h: 1.2, color: '#55483a', kind: 'shale' },
+  { y: -4.6, h: 1.4, color: '#5a4e40', kind: 'sand' },
 ];
 
-export function Formation() {
+// Layered formation: each bed is a textured box (rock texture tinted by the bed color, bump for grain), the section
+// face carries bedding lines and a few natural fractures. The schematic grid shows only with labels.
+export function Formation({ grid = false }) {
   const bedding = useMemo(() => Array.from({ length: 26 }, (_, i) => ({ y: -5.2 + i * 0.4 + ((i * 7) % 3) * 0.05, x: ((i * 13) % 7) - 3, w: 30 + ((i * 5) % 9) })), []);
+  const tex = useMemo(() => ({ sand: rockTexture('sand'), shale: rockTexture('shale'), lime: rockTexture('lime') }), []);
+  const maps = useMemo(() => LAYERS.map(l => { const t = tex[l.kind]; if (!t) return null; const c = t.clone(); c.needsUpdate = true; c.repeat.set(10, Math.max(1, Math.round(l.h / 1.2))); return c; }), [tex]);
   return (
     <group name="FORMATION">
       {LAYERS.map((l, i) => (
         <mesh key={i} position={[0, l.y, -4.5]} receiveShadow>
           <boxGeometry args={[44, l.h, 9]} />
-          <meshStandardMaterial color={l.color} roughness={1} metalness={0} />
+          <meshStandardMaterial color={l.color} roughness={1} metalness={0} map={maps[i] || undefined} bumpMap={LITE ? undefined : maps[i] || undefined} bumpScale={0.08} />
         </mesh>
       ))}
-      {/* bedding planes on the section face and a few natural fractures */}
       {bedding.map((b, i) => (
         <mesh key={i} position={[b.x, b.y, 0.01]}>
-          <planeGeometry args={[b.w, 0.03]} />
-          <meshBasicMaterial color="#1c2027" transparent opacity={0.5} />
+          <planeGeometry args={[b.w, 0.025]} />
+          <meshBasicMaterial color="#1c2027" transparent opacity={0.35} />
         </mesh>
       ))}
       {[-11, -3, 6, 13].map((x, i) => (
         <mesh key={'nf' + i} position={[x, 0.2, 0.012]} rotation={[0, 0, THREE.MathUtils.degToRad(70 + i * 9)]}>
-          <planeGeometry args={[0.04, 3.2]} />
-          <meshBasicMaterial color="#141820" transparent opacity={0.55} />
+          <planeGeometry args={[0.035, 3.2]} />
+          <meshBasicMaterial color="#141820" transparent opacity={0.6} />
         </mesh>
       ))}
-      <gridHelper args={[44, 22, '#2b2f36', '#22262c']} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.02]} />
+      {grid && <gridHelper args={[44, 22, '#2b2f36', '#22262c']} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.02]} />}
     </group>
   );
 }
@@ -60,6 +64,7 @@ export function Formation() {
 // Cemented: a cement sheath fills the annulus. Openhole: a rugose borehole wall and no cement.
 export function Casing({ openhole = false }) {
   const len = LATERAL.toeX - LATERAL.heelX + 2;
+  const cementTex = useMemo(() => { const t = rockTexture('sand'); if (!t) return null; const c = t.clone(); c.needsUpdate = true; c.repeat.set(2, 12); return c; }, []);
   const wall = useMemo(() => {
     const g = new THREE.CylinderGeometry(LATERAL.holeR, LATERAL.holeR, len, 40, 24, true, Math.PI, Math.PI);
     const p = g.attributes.position;
@@ -77,14 +82,14 @@ export function Casing({ openhole = false }) {
       {openhole ? (
         <mesh geometry={wall}><meshStandardMaterial color="#4a5058" roughness={1} side={THREE.DoubleSide} /></mesh>
       ) : (
-        <mesh>
+        <mesh receiveShadow>
           <cylinderGeometry args={[LATERAL.holeR, LATERAL.holeR, len, 24, 1, true, Math.PI, Math.PI]} />
-          <meshStandardMaterial color="#9a9a90" roughness={0.9} side={THREE.DoubleSide} />
+          <meshStandardMaterial color="#b9b5a6" roughness={0.95} metalness={0} side={THREE.DoubleSide} map={cementTex || undefined} />
         </mesh>
       )}
-      <mesh>
-        <cylinderGeometry args={[LATERAL.casingR, LATERAL.casingR, len, 24, 1, true, Math.PI, Math.PI]} />
-        <meshStandardMaterial color="#8b939c" metalness={0.8} roughness={0.35} side={THREE.DoubleSide} />
+      <mesh receiveShadow>
+        <cylinderGeometry args={[LATERAL.casingR, LATERAL.casingR, len, 32, 1, true, Math.PI, Math.PI]} />
+        <meshStandardMaterial color="#9aa2aa" metalness={0.9} roughness={0.32} side={THREE.DoubleSide} />
       </mesh>
       {/* couplings every 12 m */}
       {Array.from({ length: Math.floor(len / 4) }).map((_, i) => (
@@ -106,16 +111,17 @@ function fracColor(net) {
 function Fracture({ extent, color, seed }) {
   const scale = 7 * extent;
   const branch = [0.55, 0.4];
+  const alpha = useMemo(() => fractureAlpha(), []);
   return (
     <group>
       <mesh rotation={[0, Math.PI / 2, 0]} scale={[1, 0.5, 1]}>
-        <circleGeometry args={[scale, 44]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.9} transparent opacity={0.45} side={THREE.DoubleSide} depthWrite={false} />
+        <planeGeometry args={[scale * 2, scale * 2]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.1} transparent opacity={0.55} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       {branch.map((b, i) => (
         <mesh key={i} rotation={[0, Math.PI / 2 + (i ? -0.32 : 0.28) * (seed % 2 ? 1 : -1), 0.12 * (i ? -1 : 1)]} scale={[1, 0.42, 1]} position={[0.15 * (i ? -1 : 1), 0, 0]}>
-          <circleGeometry args={[scale * b, 32]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.7} transparent opacity={0.3} side={THREE.DoubleSide} depthWrite={false} />
+          <planeGeometry args={[scale * b * 2, scale * b * 2]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.8} transparent opacity={0.38} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
       ))}
     </group>
@@ -202,12 +208,12 @@ function SleeveSub({ open, ballSeated, toe, ports = 4, showLabels, index }) {
 function Packer({ x }) {
   return (
     <group position={[x, 0, 0]} name="DT-OPENHOLEPACKER">
-      <mesh rotation={[0, 0, Math.PI / 2]}>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[LATERAL.holeR - 0.02, LATERAL.holeR - 0.02, 1.4, 24, 1, true, Math.PI, Math.PI]} />
         <meshStandardMaterial color="#2b2622" roughness={0.95} side={THREE.DoubleSide} />
       </mesh>
       {[-0.8, 0.8].map((dx, i) => (
-        <mesh key={i} rotation={[0, 0, Math.PI / 2]} position={[dx, 0, 0]}>
+        <mesh castShadow key={i} rotation={[0, 0, Math.PI / 2]} position={[dx, 0, 0]}>
           <cylinderGeometry args={[LATERAL.casingR + 0.08, LATERAL.casingR + 0.08, 0.25, 24, 1, true, Math.PI, Math.PI]} />
           <meshStandardMaterial color="#4b5259" metalness={0.85} roughness={0.4} side={THREE.DoubleSide} />
         </mesh>
@@ -219,23 +225,23 @@ function Packer({ x }) {
 // Composite frac plug: upper slips, cone, element, cone, lower slips, mandrel, ball on the seat
 function FracPlug({ index, showLabels, milled }) {
   if (milled) return (
-    <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 0.05, 16]} /><meshStandardMaterial color="#4a4a4a" transparent opacity={0.4} /></mesh>
+    <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 0.05, 16]} /><meshStandardMaterial color="#4a4a4a" transparent opacity={0.4} /></mesh>
   );
   return (
     <group name={'DT-FRACPLUG-' + (index + 1)}>
-      <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 1.3, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[0.02, 0, 0]}><cylinderGeometry args={[0.44, 0.44, 0.3, 16]} /><meshStandardMaterial color="#1a1a1a" roughness={0.95} /></mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[0.28, 0, 0]}><cylinderGeometry args={[0.44, 0.33, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[-0.24, 0, 0]}><cylinderGeometry args={[0.33, 0.44, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 1.3, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0.02, 0, 0]}><cylinderGeometry args={[0.44, 0.44, 0.3, 16]} /><meshStandardMaterial color="#1a1a1a" roughness={0.95} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0.28, 0, 0]}><cylinderGeometry args={[0.44, 0.33, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[-0.24, 0, 0]}><cylinderGeometry args={[0.33, 0.44, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
       {[0.5, -0.46].map((x, k) => (
         <group key={k} position={[x, 0, 0]}>
           {[0, 60, 120, 180, 240, 300].map(a => {
             const rad = THREE.MathUtils.degToRad(a);
-            return <mesh key={a} position={[0, Math.cos(rad) * 0.4, Math.sin(rad) * 0.4]} rotation={[rad, 0, 0]}><boxGeometry args={[0.18, 0.1, 0.16]} /><meshStandardMaterial color="#8a8f95" metalness={0.8} roughness={0.4} /></mesh>;
+            return <mesh castShadow key={a} position={[0, Math.cos(rad) * 0.4, Math.sin(rad) * 0.4]} rotation={[rad, 0, 0]}><boxGeometry args={[0.18, 0.1, 0.16]} /><meshStandardMaterial color="#8a8f95" metalness={0.8} roughness={0.4} /></mesh>;
           })}
         </group>
       ))}
-      <mesh position={[-0.78, 0, 0]}><sphereGeometry args={[0.2, 12, 12]} /><meshStandardMaterial color="#d8d8d8" metalness={0.3} roughness={0.4} /></mesh>
+      <mesh castShadow position={[-0.78, 0, 0]}><sphereGeometry args={[0.2, 12, 12]} /><meshStandardMaterial color="#d8d8d8" metalness={0.3} roughness={0.4} /></mesh>
       {showLabels && <Label position={[0, 0.9, 0]} text={`Plug ${index + 1}`} />}
     </group>
   );
@@ -294,20 +300,25 @@ function Proppant({ extent, fill }) {
   const geom = useMemo(() => {
     const g = new THREE.BufferGeometry();
     const pos = new Float32Array(max * 3);
+    const col = new Float32Array(max * 3);
     for (let i = 0; i < max; i++) {
       const r = Math.sqrt(Math.random()), a = Math.random() * Math.PI * 2;
       pos[i * 3] = (Math.random() - 0.5) * 0.08;
       pos[i * 3 + 1] = Math.sin(a) * r * 0.5;
       pos[i * 3 + 2] = Math.cos(a) * r;
+      const v = 0.8 + Math.random() * 0.3;
+      col[i * 3] = v; col[i * 3 + 1] = v * (0.9 + Math.random() * 0.1); col[i * 3 + 2] = v * 0.7;
     }
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     return g;
   }, []);
   const n = Math.floor(max * fill);
   geom.setDrawRange(0, n);
+  const dot = useMemo(() => dotTexture(), []);
   return (
     <points geometry={geom} scale={[1, 7 * extent, 7 * extent]}>
-      <pointsMaterial color="#e8d28a" size={0.09} sizeAttenuation />
+      <pointsMaterial vertexColors size={0.13} sizeAttenuation map={dot || undefined} alphaTest={0.4} transparent depthWrite={false} />
     </points>
   );
 }
@@ -332,7 +343,7 @@ export function FluidFlow({ rate, currentStage, active, ppa }) {
         // leaving the wellbore through the perforations into the fracture plane
         const k = (s.u - 0.85) / 0.15;
         x = targetX + (s.s - 0.5) * 0.3;
-        y = Math.cos(s.a) * (0.45 + k * 3.0);
+        y = Math.max(-3.2, Math.min(3.2, Math.cos(s.a) * (0.45 + k * 2.6)));
         z = -Math.abs(Math.sin(s.a)) * (0.45 + k * 2.0) * 0.3;
       } else {
         x = LATERAL.heelX + (targetX - LATERAL.heelX) * Math.min(1, s.u / 0.85);
@@ -350,8 +361,8 @@ export function FluidFlow({ rate, currentStage, active, ppa }) {
   const color = ppa > 0.1 ? '#c9b47a' : '#3aa7ff';
   return (
     <instancedMesh ref={ref} args={[null, null, cnt]} frustumCulled={false}>
-      <sphereGeometry args={[0.06, 6, 6]} />
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} />
+      <sphereGeometry args={[0.055, 6, 6]} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.9} roughness={0.3} metalness={0} />
     </instancedMesh>
   );
 }
@@ -386,24 +397,24 @@ export function WirelineString({ wl, stage }) {
   const gunsLen = Math.min(4.2, stageLen() * 0.6);
   return (
     <group name="WL-TOOLSTRING-DOWNHOLE">
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + x - gunsLen) / 2, 0.05, -0.05]}>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + x - gunsLen) / 2, 0.05, -0.05]}>
         <cylinderGeometry args={[0.012, 0.012, Math.max(0.01, x - gunsLen - LATERAL.heelX), 6]} />
         <meshStandardMaterial color="#111" />
       </mesh>
       {/* guns and setting tool ahead of the plug (heel side), plug at the front (toe side) */}
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[x - gunsLen / 2 - 0.4, 0, -0.05]}>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[x - gunsLen / 2 - 0.4, 0, -0.05]}>
         <cylinderGeometry args={[0.18, 0.18, gunsLen, 12]} />
         <meshStandardMaterial color="#3b3f45" metalness={0.8} roughness={0.4} />
       </mesh>
       {Array.from({ length: clusters() }).map((_, c) => (
-        <mesh key={c} position={[x - gunsLen + 0.3 + c * (gunsLen - 0.8) / Math.max(1, clusters() - 1), 0.19, -0.05]}><sphereGeometry args={[0.04, 6, 6]} /><meshStandardMaterial color="#111" /></mesh>
+        <mesh castShadow key={c} position={[x - gunsLen + 0.3 + c * (gunsLen - 0.8) / Math.max(1, clusters() - 1), 0.19, -0.05]}><sphereGeometry args={[0.04, 6, 6]} /><meshStandardMaterial color="#111" /></mesh>
       ))}
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[x - 0.6, 0, -0.05]}>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[x - 0.6, 0, -0.05]}>
         <cylinderGeometry args={[0.2, 0.2, 0.9, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.9} roughness={0.3} />
       </mesh>
       {(wl.step === 'pumpdown' || wl.step === 'setplug') && (
         <group position={[x, 0, 0]}>
-          <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.36, 0.36, 1.2, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.36, 0.36, 1.2, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
         </group>
       )}
     </group>
@@ -448,20 +459,20 @@ export function CoiledTubing({ ct, stages, sleeve = false }) {
   const targetX = ct.atPlug >= 0 ? (sleeve ? sleeveX(ct.atPlug) : plugX(ct.atPlug)) : 0;
   return (
     <group name="CT-DOWNHOLE">
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tipX) / 2, 0.04, -0.04]}>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tipX) / 2, 0.04, -0.04]}>
         <cylinderGeometry args={[0.07, 0.07, Math.max(0.01, tipX - LATERAL.heelX), 10]} />
         <meshStandardMaterial color="#8b939c" metalness={0.85} roughness={0.35} />
       </mesh>
       <group position={[tipX - 1.6, 0.04, -0.04]} name="CT-BHA">
-        <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.16, 0.16, 1.6, 12]} /><meshStandardMaterial color="#3b3f45" metalness={0.8} roughness={0.4} /></mesh>
-        <mesh rotation={[0, 0, Math.PI / 2]} position={[1.1, 0, 0]}><cylinderGeometry args={[0.19, 0.19, 0.6, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.9} roughness={0.3} /></mesh>
+        <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.16, 0.16, 1.6, 12]} /><meshStandardMaterial color="#3b3f45" metalness={0.8} roughness={0.4} /></mesh>
+        <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[1.1, 0, 0]}><cylinderGeometry args={[0.19, 0.19, 0.6, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.9} roughness={0.3} /></mesh>
       </group>
       <mesh ref={mill} rotation={[0, 0, -Math.PI / 2]} position={[tipX + 0.15, 0.04, -0.04]} name="CT-MILL">
         <coneGeometry args={[0.3, 0.5, 6]} />
         <meshStandardMaterial color="#c0c4c9" metalness={0.9} roughness={0.25} />
       </mesh>
       {ct.atPlug >= 0 && stages[ct.atPlug] && !stages[ct.atPlug].plugMilled && (
-        <mesh position={[targetX, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1 - ct.milling * 0.98, 1]}>
+        <mesh castShadow position={[targetX, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1 - ct.milling * 0.98, 1]}>
           <cylinderGeometry args={[0.43, 0.43, sleeve ? 0.5 : 1.1, 16]} />
           <meshStandardMaterial color="#ff8a00" emissive="#ff5a00" emissiveIntensity={ct.milling > 0 ? 1.2 : 0} transparent opacity={0.9} />
         </mesh>
@@ -513,37 +524,37 @@ export function ProductionString({ lift = 'flow', active = true }) {
   const tubeR = 0.16;
   return (
     <group name="UC-TUBING">
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tailX) / 2, 0.02, -0.05]}>
+      <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tailX) / 2, 0.02, -0.05]}>
         <cylinderGeometry args={[tubeR, tubeR, tailX - LATERAL.heelX, 12]} />
         <meshStandardMaterial color="#9aa3ac" metalness={0.85} roughness={0.35} />
       </mesh>
       {lift === 'rodpump' && (
         <group name="AL-RODPUMP">
-          <mesh rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.2, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.05, tubeR + 0.05, 2.6, 12]} /><meshStandardMaterial color="#6d757d" metalness={0.85} roughness={0.35} /></mesh>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.2, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.05, tubeR + 0.05, 2.6, 12]} /><meshStandardMaterial color="#6d757d" metalness={0.85} roughness={0.35} /></mesh>
           <mesh ref={rod} rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.4, 0.02, -0.05]}><cylinderGeometry args={[0.05, 0.05, 6.0, 8]} /><meshStandardMaterial color="#e8e8e8" metalness={0.6} roughness={0.3} /></mesh>
-          <mesh position={[tailX + 0.2, 0.02, -0.05]}><sphereGeometry args={[0.12, 10, 10]} /><meshStandardMaterial color="#d8d8d8" /></mesh>
-          <mesh rotation={[0, 0, Math.PI / 2]} position={[tailX + 1.4, 0.02, -0.05]}><cylinderGeometry args={[tubeR, tubeR, 2.2, 10]} /><meshStandardMaterial color="#5b6168" metalness={0.8} roughness={0.4} /></mesh>
+          <mesh castShadow position={[tailX + 0.2, 0.02, -0.05]}><sphereGeometry args={[0.12, 10, 10]} /><meshStandardMaterial color="#d8d8d8" /></mesh>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[tailX + 1.4, 0.02, -0.05]}><cylinderGeometry args={[tubeR, tubeR, 2.2, 10]} /><meshStandardMaterial color="#5b6168" metalness={0.8} roughness={0.4} /></mesh>
         </group>
       )}
       {lift === 'esp' && (
         <group name="AL-ESP">
           {[[0.0, 2.2, '#3b3f45'], [2.4, 0.9, '#7d8590'], [3.6, 1.4, '#2a5d9f'], [5.6, 2.6, '#8b939c']].map(([dx, len, color], i) => (
-            <mesh key={i} rotation={[0, 0, Math.PI / 2]} position={[tailX + dx + len / 2 - 3.0, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.08, tubeR + 0.08, len, 12]} /><meshStandardMaterial color={color} metalness={0.8} roughness={0.4} /></mesh>
+            <mesh castShadow key={i} rotation={[0, 0, Math.PI / 2]} position={[tailX + dx + len / 2 - 3.0, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.08, tubeR + 0.08, len, 12]} /><meshStandardMaterial color={color} metalness={0.8} roughness={0.4} /></mesh>
           ))}
-          <mesh rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tailX) / 2, tubeR + 0.08, -0.05]}><cylinderGeometry args={[0.03, 0.03, tailX - LATERAL.heelX, 6]} /><meshStandardMaterial color="#111" /></mesh>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.heelX + tailX) / 2, tubeR + 0.08, -0.05]}><cylinderGeometry args={[0.03, 0.03, tailX - LATERAL.heelX, 6]} /><meshStandardMaterial color="#111" /></mesh>
         </group>
       )}
       {lift === 'gaslift' && (
         <group name="AL-GASLIFT">
           {[0.2, 0.45, 0.7].map((f, i) => (
-            <mesh key={i} rotation={[0, 0, Math.PI / 2]} position={[LATERAL.heelX + (tailX - LATERAL.heelX) * f, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.09, tubeR + 0.09, 0.9, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.8} roughness={0.35} /></mesh>
+            <mesh castShadow key={i} rotation={[0, 0, Math.PI / 2]} position={[LATERAL.heelX + (tailX - LATERAL.heelX) * f, 0.02, -0.05]}><cylinderGeometry args={[tubeR + 0.09, tubeR + 0.09, 0.9, 12]} /><meshStandardMaterial color="#b08d3c" metalness={0.8} roughness={0.35} /></mesh>
           ))}
         </group>
       )}
       {lift === 'plunger' && (
         <group name="AL-PLUNGERLIFT">
           <mesh ref={plunger} rotation={[0, 0, Math.PI / 2]} position={[tailX - 1.0, 0.02, -0.05]}><cylinderGeometry args={[tubeR - 0.03, tubeR - 0.03, 0.7, 10]} /><meshStandardMaterial color="#e0b15a" metalness={0.7} roughness={0.35} /></mesh>
-          <mesh rotation={[0, 0, Math.PI / 2]} position={[tailX - 0.3, 0.02, -0.05]}><cylinderGeometry args={[tubeR - 0.04, tubeR - 0.04, 0.5, 8]} /><meshStandardMaterial color="#444" wireframe /></mesh>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[tailX - 0.3, 0.02, -0.05]}><cylinderGeometry args={[tubeR - 0.04, tubeR - 0.04, 0.5, 8]} /><meshStandardMaterial color="#444" wireframe /></mesh>
         </group>
       )}
       <instancedMesh ref={flow} args={[null, null, cnt]} frustumCulled={false}>

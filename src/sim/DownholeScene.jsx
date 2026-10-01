@@ -3,6 +3,9 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useSim } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
+import { PadEnvironment, LITE } from './parts/lighting.jsx';
+
+const UNDERGROUND = { sky: '#5c6a78', fog: '#3a424c', ground: '#23272c' };
 import { Formation, Casing, Stage, FluidFlow, PerfFlash, WirelineString, BallInFlight, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX } from './parts/downhole.jsx';
 
 function Ticker({ enabled }) {
@@ -36,15 +39,17 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
   const show = useHover(h => h.show), hide = useHover(h => h.hide);
   const pick = pickHandlers('downhole', show, hide);
   return (
-    <Canvas dpr={[1, 1.5]} camera={{ position: [4, 5, 16], fov: 45, near: 0.1, far: 300 }} gl={{ antialias: true }}>
+    <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [4, 5, 16], fov: 45, near: 0.1, far: 300 }} gl={{ antialias: true, toneMappingExposure: 1.1 }}>
       <color attach="background" args={['#0b0f14']} />
-      <ambientLight intensity={1.1} />
-      <directionalLight position={[10, 20, 30]} intensity={2.0} />
-      <hemisphereLight args={['#dfe7f2', '#3a2f22', 0.8]} />
+      {!LITE && <PadEnvironment terrain={UNDERGROUND} intensity={0.55} />}
+      <ambientLight intensity={LITE ? 0.8 : 0.35} />
+      <directionalLight position={[10, 20, 30]} intensity={2.2} color="#fff1dc" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-24} shadow-camera-right={24} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-camera-near={5} shadow-camera-far={80} shadow-bias={-0.0003} shadow-normalBias={0.02} />
+      <directionalLight position={[-14, 6, 20]} intensity={0.5} color="#cfe0ff" />
+      <hemisphereLight args={['#dfe7f2', '#3a2f22', LITE ? 0.7 : 0.4]} />
       <Ticker enabled={tickHere} />
       <FollowStage follow={follow} />
       <group {...pick} key={s.stages.length + '-' + s.setup.clusters + '-' + s.setup.completion + '-' + s.setup.sleeveSystem}>
-      <Formation />
+      <Formation grid={showLabels} />
       <Casing openhole={openhole} />
       <HeelMarker />
       {s.stages.map(stage => <Stage key={stage.index} stage={stage} isCurrent={stage.index === s.stage} netPsi={s.netPsi} showLabels={showLabels} sleeve={sleeve} openhole={openhole} />)}
