@@ -11,6 +11,8 @@ import * as THREE from 'three';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { Focus, EyeOff, Blend, Scissors, Expand, RotateCcw } from 'lucide-react';
 import { PadEnvironment, LITE } from '../sim/parts/lighting.jsx';
+import { Effects } from '../sim/parts/effects.jsx';
+import { ContextLoss } from '../sim/parts/stability.jsx';
 import { Label } from '../sim/parts/primitives.jsx';
 
 const VIEWER_SKY = { sky: '#b9cbe0', fog: '#d8d5cc', ground: '#5a5044' };
@@ -250,6 +252,8 @@ export default function Viewer({ url, highlight = [], nodeLabels = {}, ghost = [
           <Framer trigger={frame} selected={selected} scope={scope} ghost={ghost} />
           <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
           <Turntable active={loaded && !touched} />
+          <ContextLoss />
+          {bounds && <Effects ao={{ aoRadius: R * 0.35, distanceFalloff: 0.5, intensity: 2.0 }} bloom={{ intensity: 0.15 }} guard={false} />}
         </Canvas>
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
           <Btn icon={Focus} label={!selected.length ? 'Frame (F)' : scope === 'selection' ? 'Frame all (F)' : 'Frame part (F)'} onClick={frameToggle} />

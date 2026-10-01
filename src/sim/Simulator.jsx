@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles } from 'lucide-react';
 import { LITE, setLite } from './parts/lighting.jsx';
+import { useFx, fxOn, FX_LIMIT_MS } from './parts/effects.jsx';
+import { Wand2 } from 'lucide-react';
 import SurfaceScene from './SurfaceScene.jsx';
 import DownholeScene from './DownholeScene.jsx';
 import ControlPanel from './panels/ControlPanel.jsx';
@@ -52,6 +54,8 @@ export default function Simulator() {
   const L = lesson.id ? lessonById(lesson.id) : null;
   const lessonText = L ? 'Lesson ' + L.n + ': ' + L.title + (lesson.finished ? ' · complete' : ' · step ' + (lesson.doneMask.indexOf(false) + 1) + ' of ' + L.steps.length) + ' · ' : '';
   const summary = ui.summary;
+  const fx = useFx();
+  const fxLive = fxOn(fx);
 
   const toolbar = (
     <div className="absolute top-2 left-2 right-2 z-20 flex flex-wrap items-center gap-1 pointer-events-none">
@@ -78,6 +82,7 @@ export default function Simulator() {
         )}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
         <button className="btn flex items-center gap-1" title={LITE ? 'Lite rendering: hard shadows, no sky reflections. Click for full quality (reloads the page).' : 'Full rendering: sky reflections, soft shadows, ground detail. Click for lite mode on a slow machine (reloads the page).'} onClick={() => setLite(!LITE)}><Sparkles size={14} />{LITE ? 'Lite' : 'Full'}</button>
+        {!LITE && <button className={'btn flex items-center gap-1 ' + (fxLive ? '' : 'text-mute')} title={fxLive ? 'Effects on: ambient occlusion and bloom. Click to turn them off.' : fx.auto ? 'Effects turned off automatically: this machine averaged ' + fx.frameMs + ' ms per frame with them on (limit ' + FX_LIMIT_MS + ' ms). Click to try again.' : 'Effects off. Click for ambient occlusion and bloom.'} onClick={() => fx.setWanted(!fxLive)} data-action="effects"><Wand2 size={14} />{fxLive ? 'Effects' : 'Effects off'}</button>}
       </div>
       <div className={'w-full mt-1 text-xs px-2 py-1 rounded pointer-events-none ' + (anyAlarm ? 'bg-bad/80 text-white' : 'bg-black/50 text-mute')}>
         {anyAlarm ? 'ALARM ACTIVE: see the control panel' : phase === 'setup' ? 'Pad setup: pick a guided lesson or set up the pad yourself, then press Start the job.' : lessonText + PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}

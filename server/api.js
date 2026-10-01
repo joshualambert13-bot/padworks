@@ -150,6 +150,14 @@ export async function handle(req, res) {
         if (!rows[0]) throw new ApiError(404, 'No such summary.');
         return send(res, 200, { ...summaryRow(rows[0]), payload: rows[0].payload });
       }
+      // error report on a record or a page: anyone signed in can file one; admins and instructors read them
+      if (parts[1] === 'reports' && method === 'POST') {
+        const b = await readJson(req);
+        const message = String(b.message || '').trim().slice(0, 4000);
+        if (message.length < 5) throw bad('Say what is wrong (a few words at least).');
+        const rows = await db.query('INSERT INTO reports (user_id, record_id, page, message) VALUES ($1, $2, $3, $4) RETURNING id, created_at', [me.id, String(b.recordId || '').slice(0, 80), String(b.page || '').slice(0, 200), message]);
+        return send(res, 200, { ok: true, id: rows[0].id, at: rows[0].created_at });
+      }
       throw new ApiError(404, 'Not found.');
     }
 
@@ -231,6 +239,23 @@ export async function handle(req, res) {
         const rows = await db.query('SELECT s.*, u.username, u.display_name FROM job_summaries s JOIN users u ON u.id = s.user_id WHERE s.id = $1', [Number(parts[2])]);
         if (!rows[0]) throw new ApiError(404, 'No such summary.');
         return send(res, 200, { ...summaryRow(rows[0]), username: rows[0].username, displayName: rows[0].display_name, payload: rows[0].payload });
+      }
+      if (parts[1] === 'reports' && !parts[2] && method === 'GET') {
+        const rows = await db.query('SELECT r.*, u.username, u.display_name FROM reports r LEFT JOIN users u ON u.id = r.user_id ORDER BY (r.status = \'open\') DESC, r.created_at DESC LIMIT 500');
+        return send(res, 200, { reports: rows.map(r => ({ id: r.id, recordId: r.record_id, page: r.page, message: r.message, status: r.status, at: r.created_at, username: r.username, displayName: r.display_name })) });
+      }
+      if (parts[1] === 'reports' && parts[2] && method === 'PATCH') {
+        adminOnly();
+        const b = await readJson(req);
+        const status = b.status === 'resolved' ? 'resolved' : 'open';
+        const rows = await db.query('UPDATE reports SET status = $1 WHERE id = $2 RETURNING id', [status, Number(parts[2])]);
+        if (!rows[0]) throw new ApiError(404, 'No such report.');
+        return send(res, 200, { ok: true });
+      }
+      if (parts[1] === 'reports' && parts[2] && method === 'DELETE') {
+        adminOnly();
+        await db.query('DELETE FROM reports WHERE id = $1', [Number(parts[2])]);
+        return send(res, 200, { ok: true });
       }
       if (parts[1] === 'export.csv' && method === 'GET') {
         const users = await db.query('SELECT * FROM users ORDER BY username');

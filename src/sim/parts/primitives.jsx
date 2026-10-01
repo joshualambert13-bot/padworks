@@ -1,7 +1,8 @@
 // Procedural building blocks shared by the surface and downhole scenes.
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { wearTexture, BlobShadow } from './lighting.jsx';
 
 // ---------------------------------------------------------------- merged static geometry
@@ -10,6 +11,7 @@ import { wearTexture, BlobShadow } from './lighting.jsx';
 // p: position, r: rotation (Euler), s: scale }. Geometries are cloned, transformed, merged, and released.
 const G = {
   box: (w, h, d) => new THREE.BoxGeometry(w, h, d),
+  rbox: (w, h, d, r = 0.06, seg = 2) => mergeVertices(new RoundedBoxGeometry(w, h, d, seg, Math.min(r, w / 2, h / 2, d / 2))),   // rounded edges (indexed so it merges with the rest)
   cyl: (r, h, seg, r2) => new THREE.CylinderGeometry(r2 ?? r, r, h, seg || (r < 0.1 ? 8 : r < 0.25 ? 12 : r < 0.7 ? 16 : 24)),
   cylOpen: (r, h, seg, thetaStart, thetaLength) => new THREE.CylinderGeometry(r, r, h, seg, 1, true, thetaStart, thetaLength),
   sphere: (r, w = 10, h = 8) => new THREE.SphereGeometry(r, w, h),

@@ -60,13 +60,14 @@ export function Formation({ grid = false }) {
   );
 }
 
-// Casing rendered as the back half of a cylinder so the interior is visible from the front (+Z).
+// Casing rendered as the back half of a cylinder (the half at -Z, theta from 90 to 270 degrees in the geometry's
+// own frame) so the camera in front looks into the trough and sees every tool, plug, and particle against the wall.
 // Cemented: a cement sheath fills the annulus. Openhole: a rugose borehole wall and no cement.
 export function Casing({ openhole = false }) {
   const len = LATERAL.toeX - LATERAL.heelX + 2;
   const cementTex = useMemo(() => { const t = rockTexture('sand'); if (!t) return null; const c = t.clone(); c.needsUpdate = true; c.repeat.set(2, 12); return c; }, []);
   const wall = useMemo(() => {
-    const g = new THREE.CylinderGeometry(LATERAL.holeR, LATERAL.holeR, len, 40, 24, true, Math.PI, Math.PI);
+    const g = new THREE.CylinderGeometry(LATERAL.holeR, LATERAL.holeR, len, 40, 24, true, Math.PI / 2, Math.PI);
     const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
@@ -83,18 +84,18 @@ export function Casing({ openhole = false }) {
         <mesh geometry={wall}><meshStandardMaterial color="#4a5058" roughness={1} side={THREE.DoubleSide} /></mesh>
       ) : (
         <mesh receiveShadow>
-          <cylinderGeometry args={[LATERAL.holeR, LATERAL.holeR, len, 24, 1, true, Math.PI, Math.PI]} />
+          <cylinderGeometry args={[LATERAL.holeR, LATERAL.holeR, len, 24, 1, true, Math.PI / 2, Math.PI]} />
           <meshStandardMaterial color="#b9b5a6" roughness={0.95} metalness={0} side={THREE.DoubleSide} map={cementTex || undefined} />
         </mesh>
       )}
       <mesh receiveShadow>
-        <cylinderGeometry args={[LATERAL.casingR, LATERAL.casingR, len, 32, 1, true, Math.PI, Math.PI]} />
+        <cylinderGeometry args={[LATERAL.casingR, LATERAL.casingR, len, 32, 1, true, Math.PI / 2, Math.PI]} />
         <meshStandardMaterial color="#9aa2aa" metalness={0.9} roughness={0.32} side={THREE.DoubleSide} />
       </mesh>
       {/* couplings every 12 m */}
       {Array.from({ length: Math.floor(len / 4) }).map((_, i) => (
         <mesh key={i} position={[0, -len / 2 + 2 + i * 4, 0]}>
-          <cylinderGeometry args={[LATERAL.casingR + 0.03, LATERAL.casingR + 0.03, 0.25, 24, 1, true, Math.PI, Math.PI]} />
+          <cylinderGeometry args={[LATERAL.casingR + 0.03, LATERAL.casingR + 0.03, 0.25, 24, 1, true, Math.PI / 2, Math.PI]} />
           <meshStandardMaterial color="#6d757d" metalness={0.8} roughness={0.4} side={THREE.DoubleSide} />
         </mesh>
       ))}
@@ -162,48 +163,67 @@ function PerfCluster({ fired }) {
   );
 }
 
-// Frac sleeve sub in the casing: a thicker housing with port windows, the inner sleeve (closed or shifted), a ball seat.
-function SleeveSub({ open, ballSeated, toe, ports = 4, showLabels, index }) {
+// Frac sleeve sub in the casing: a thicker housing with port windows, the inner sleeve, a ball seat. The sleeve
+// shifts toe-ward over about half a second when the stage opens (ball on seat and sheared, or the toe sleeve at its
+// opening pressure); the port windows are uncovered as it moves and a short flash marks the shear. A seated ball
+// shrinks with `dissolve` on dissolvable systems.
+function SleeveSub({ open, ballSeated, seating = false, dissolve = 0, toe, ports = 4, showLabels, index }) {
   const R = LATERAL.casingR;
   const windows = Array.from({ length: ports }, (_, i) => 180 + 20 + i * (140 / Math.max(1, ports - 1)));
+  const sleeve = useRef(); const seat = useRef(); const ball = useRef(); const flash = useRef(); const covers = useRef([]);
+  const shift = useRef(open ? 1 : 0);
+  useFrame((_, dt) => {
+    const target = open ? 1 : 0;
+    const prev = shift.current;
+    shift.current += Math.sign(target - prev) * Math.min(Math.abs(target - prev), dt * 2.2);
+    const k = shift.current, x = 0.9 * k;
+    if (sleeve.current) sleeve.current.position.x = x;
+    if (seat.current) seat.current.position.x = x;
+    if (ball.current) { ball.current.position.x = x - 0.22; const bs = 0.27 * (1 - 0.9 * dissolve); ball.current.scale.setScalar(Math.max(0.001, bs / 0.27)); }
+    covers.current.forEach(m => { if (m) { m.scale.x = Math.max(0.001, 1 - k); m.position.x = -0.275 * k; } });
+    if (flash.current) { const f = Math.sin(Math.min(1, k) * Math.PI) * (prev !== k ? 1 : 0); flash.current.scale.setScalar(0.2 + f * 1.4); flash.current.material.opacity = f * 0.8; }
+  });
+  const showBall = !toe && (ballSeated || seating);
   return (
     <group name={toe ? 'DT-TOESLEEVE' : 'DT-FRACSLEEVE'}>
       <mesh rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[R + 0.09, R + 0.09, 2.2, 24, 1, true, Math.PI, Math.PI]} />
+        <cylinderGeometry args={[R + 0.09, R + 0.09, 2.2, 24, 1, true, Math.PI / 2, Math.PI]} />
         <meshStandardMaterial color="#5f6870" metalness={0.85} roughness={0.35} side={THREE.DoubleSide} />
       </mesh>
       {[-1.15, 1.15].map((x, i) => (
         <mesh key={i} rotation={[0, 0, Math.PI / 2]} position={[x, 0, 0]}>
-          <cylinderGeometry args={[R + 0.12, R + 0.12, 0.2, 24, 1, true, Math.PI, Math.PI]} />
+          <cylinderGeometry args={[R + 0.12, R + 0.12, 0.2, 24, 1, true, Math.PI / 2, Math.PI]} />
           <meshStandardMaterial color="#4b5259" metalness={0.85} roughness={0.4} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      {/* port windows through the housing: dark when open, steel when the inner sleeve still covers them */}
+      {/* port windows through the housing: the dark port, and a steel cover over it that the inner sleeve drags away as it shifts */}
       {windows.map((a, i) => {
         const rad = THREE.MathUtils.degToRad(a - 180);
+        const pos = [0, Math.cos(rad) * (R + 0.095), -Math.abs(Math.sin(rad)) * (R + 0.095)];
         return (
-          <mesh key={i} position={[0, Math.cos(rad) * (R + 0.095), -Math.abs(Math.sin(rad)) * (R + 0.095)]} rotation={[rad, 0, 0]}>
-            <planeGeometry args={[0.55, 0.16]} />
-            <meshStandardMaterial color={open ? '#050505' : '#8b939c'} emissive={open ? '#000' : '#000'} side={THREE.DoubleSide} metalness={open ? 0 : 0.8} roughness={open ? 1 : 0.4} />
-          </mesh>
+          <group key={i} position={pos} rotation={[rad, 0, 0]}>
+            <mesh><planeGeometry args={[0.55, 0.16]} /><meshStandardMaterial color="#050505" side={THREE.DoubleSide} metalness={0} roughness={1} /></mesh>
+            <mesh ref={el => (covers.current[i] = el)} position={[0, 0, 0.003]}><planeGeometry args={[0.55, 0.16]} /><meshStandardMaterial color="#8b939c" side={THREE.DoubleSide} metalness={0.8} roughness={0.4} /></mesh>
+          </group>
         );
       })}
-      {/* inner sleeve: shifts toe-ward when open */}
-      <mesh rotation={[0, 0, Math.PI / 2]} position={[open ? 0.9 : 0, 0, 0]}>
-        <cylinderGeometry args={[R - 0.06, R - 0.06, 1.3, 24, 1, true, Math.PI, Math.PI]} />
+      {/* inner sleeve: shifts toe-ward as the stage opens */}
+      <mesh ref={sleeve} rotation={[0, 0, Math.PI / 2]} position={[open ? 0.9 : 0, 0, 0]}>
+        <cylinderGeometry args={[R - 0.06, R - 0.06, 1.3, 24, 1, true, Math.PI / 2, Math.PI]} />
         <meshStandardMaterial color="#b0b8c0" metalness={0.9} roughness={0.3} side={THREE.DoubleSide} />
       </mesh>
-      {/* ball seat ring and the ball when landed (the toe sleeve has no seat) */}
+      {/* ball seat ring and the ball on it (the toe sleeve has no seat) */}
       {!toe && (
-        <mesh rotation={[0, 0, Math.PI / 2]} position={[open ? 0.9 : 0, 0, 0]}>
+        <mesh ref={seat} rotation={[0, 0, Math.PI / 2]} position={[open ? 0.9 : 0, 0, 0]}>
           <cylinderGeometry args={[R - 0.06, R - 0.2, 0.2, 24, 1, false]} />
           <meshStandardMaterial color="#b08d3c" metalness={0.9} roughness={0.3} side={THREE.DoubleSide} />
         </mesh>
       )}
-      {!toe && ballSeated && (
-        <mesh position={[(open ? 0.9 : 0) - 0.22, 0, 0]}><sphereGeometry args={[0.27, 14, 14]} /><meshStandardMaterial color="#e8e8e8" metalness={0.3} roughness={0.35} /></mesh>
+      {showBall && (
+        <mesh ref={ball} position={[(open ? 0.9 : 0) - 0.22, 0, 0]}><sphereGeometry args={[0.27, 14, 14]} /><meshStandardMaterial color="#e8e8e8" metalness={0.3} roughness={0.35} /></mesh>
       )}
-      {showLabels && <Label position={[0, 1.1, 0]} text={toe ? 'Toe sleeve' : 'Sleeve ' + (index + 1) + (ballSeated ? ' (ball on seat)' : '')} />}
+      <mesh ref={flash} position={[0.45, 0, 0]}><sphereGeometry args={[0.5, 12, 12]} /><meshBasicMaterial color="#ffc040" transparent opacity={0} depthWrite={false} /></mesh>
+      {showLabels && <Label position={[0, 1.1, 0]} text={toe ? 'Toe sleeve' : 'Sleeve ' + (index + 1) + (ballSeated ? ' (ball on seat)' : seating ? ' (ball landing)' : '')} />}
     </group>
   );
 }
@@ -213,12 +233,12 @@ function Packer({ x }) {
   return (
     <group position={[x, 0, 0]} name="DT-OPENHOLEPACKER">
       <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[LATERAL.holeR - 0.02, LATERAL.holeR - 0.02, 1.4, 24, 1, true, Math.PI, Math.PI]} />
+        <cylinderGeometry args={[LATERAL.holeR - 0.02, LATERAL.holeR - 0.02, 1.4, 24, 1, true, Math.PI / 2, Math.PI]} />
         <meshStandardMaterial color="#2b2622" roughness={0.95} side={THREE.DoubleSide} />
       </mesh>
       {[-0.8, 0.8].map((dx, i) => (
         <mesh castShadow key={i} rotation={[0, 0, Math.PI / 2]} position={[dx, 0, 0]}>
-          <cylinderGeometry args={[LATERAL.casingR + 0.08, LATERAL.casingR + 0.08, 0.25, 24, 1, true, Math.PI, Math.PI]} />
+          <cylinderGeometry args={[LATERAL.casingR + 0.08, LATERAL.casingR + 0.08, 0.25, 24, 1, true, Math.PI / 2, Math.PI]} />
           <meshStandardMaterial color="#4b5259" metalness={0.85} roughness={0.4} side={THREE.DoubleSide} />
         </mesh>
       ))}
@@ -227,12 +247,13 @@ function Packer({ x }) {
 }
 
 // Composite frac plug: upper slips, cone, element, cone, lower slips, mandrel, ball on the seat
-function FracPlug({ index, showLabels, milled }) {
+function FracPlug({ index, showLabels, milled, dissolve = 0 }) {
   if (milled) return (
     <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 0.05, 16]} /><meshStandardMaterial color="#4a4a4a" transparent opacity={0.4} /></mesh>
   );
+  const k = 1 - 0.85 * dissolve;      // a dissolvable plug loses its slips and element first, then the mandrel thins away
   return (
-    <group name={'DT-FRACPLUG-' + (index + 1)}>
+    <group name={'DT-FRACPLUG-' + (index + 1)} scale={[1, k, k]}>
       <mesh castShadow rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.3, 0.3, 1.3, 16]} /><meshStandardMaterial color="#2f2f2f" roughness={0.8} /></mesh>
       <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0.02, 0, 0]}><cylinderGeometry args={[0.44, 0.44, 0.3, 16]} /><meshStandardMaterial color="#1a1a1a" roughness={0.95} /></mesh>
       <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0.28, 0, 0]}><cylinderGeometry args={[0.44, 0.33, 0.22, 16]} /><meshStandardMaterial color="#6a4a2e" roughness={0.9} /></mesh>
@@ -252,7 +273,7 @@ function FracPlug({ index, showLabels, milled }) {
 }
 
 // One stage: perforation clusters or sleeve, plug or ball, fractures, proppant points
-export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, settled = false }) {
+export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, settled = false, seating = false, dissolve = 0 }) {
   const color = useMemo(() => fracColor(isCurrent ? netPsi : 400), [isCurrent, netPsi]);
   const px = plugX(stage.index);
   const n = clusters();
@@ -261,7 +282,7 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, 
     <group name={'STAGE-' + (stage.index + 1)}>
       {sleeve ? (
         <group position={[sleeveX(stage.index), 0, 0]}>
-          <SleeveSub open={stage.perforated} ballSeated={stage.plugSet && !stage.plugMilled} toe={stage.index === 0} ports={n} showLabels={showLabels} index={stage.index} />
+          <SleeveSub open={stage.perforated} ballSeated={stage.plugSet && !stage.plugMilled} seating={seating} dissolve={dissolve} toe={stage.index === 0} ports={n} showLabels={showLabels} index={stage.index} />
           {stage.perforated && stage.fracExtent > 0 && Array.from({ length: Math.max(1, Math.min(3, Math.round(n / 2))) }).map((_, c, arr) => (
             <group key={c} position={[(c - (arr.length - 1) / 2) * 0.5, 0, 0]}>
               <Fracture extent={stage.fracExtent * (1 - 0.12 * c)} color={color} seed={stage.index + c} settled={settled} />
@@ -291,7 +312,7 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, 
       {openhole && stage.index === 0 && <Packer x={LATERAL.toeX - 0.9} />}
       {/* frac plug toe-ward of this stage's perfs (plug and perf only) */}
       {!sleeve && stage.plugSet && (
-        <group position={[px, 0, 0]}><FracPlug index={stage.index} showLabels={showLabels} milled={stage.plugMilled} /></group>
+        <group position={[px, 0, 0]}><FracPlug index={stage.index} showLabels={showLabels} milled={stage.plugMilled} dissolve={dissolve} /></group>
       )}
       {showLabels && <Label position={[stageX(stage.index), -1.2, 0]} text={`Stage ${stage.index + 1}${isCurrent ? ' (current)' : ''}`} />}
     </group>
@@ -480,11 +501,38 @@ export function WirelineString({ wl, stage }) {
 
 // Frac ball traveling down the lateral with the fluid (sliding sleeve jobs)
 export function BallInFlight({ wl, stage }) {
+  const ref = useRef();
+  useFrame((_, dt) => { if (ref.current) { ref.current.rotation.z -= dt * 6; ref.current.rotation.x += dt * 1.3; } });   // it rolls and tumbles in the stream
   if (!wl || stage === 0 || (wl.step !== 'launch' && wl.step !== 'pumpdown')) return null;
   const target = sleeveX(stage) - 0.25;
   const x = wl.step === 'launch' ? LATERAL.heelX - 1.5 : LATERAL.heelX + (target - LATERAL.heelX) * wl.progress;
   return (
-    <mesh position={[x, 0, -0.02]} name="DT-FRACSLEEVE-BALL"><sphereGeometry args={[0.27, 14, 14]} /><meshStandardMaterial color="#e8e8e8" metalness={0.3} roughness={0.35} /></mesh>
+    <mesh ref={ref} position={[x, -0.05 + 0.04 * Math.sin(x * 2.3), -0.02]} name="DT-FRACSLEEVE-BALL">
+      <sphereGeometry args={[0.27, 14, 14]} />
+      <meshStandardMaterial color="#e8e8e8" metalness={0.3} roughness={0.35} />
+      <mesh rotation={[0, 0, 0]}><torusGeometry args={[0.27, 0.012, 6, 24]} /><meshStandardMaterial color="#9aa0a6" metalness={0.5} roughness={0.5} /></mesh>
+    </mesh>
+  );
+}
+
+// Toe sleeve pressure-up: the casing is pressured to the toe opening pressure with no way out, so the bore glows
+// from blue to orange with the pressure fraction; the sleeve itself shifts (and flashes) when it opens.
+export function ToePressure({ fraction = 0, active = false }) {
+  const ref = useRef();
+  useFrame(() => {
+    if (!ref.current) return;
+    const k = Math.max(0, Math.min(1, fraction));
+    ref.current.material.color.setHSL(0.6 - 0.52 * k, 0.9, 0.5);
+    ref.current.material.emissive.copy(ref.current.material.color);
+    ref.current.material.emissiveIntensity = active ? 0.6 + 1.2 * k : 0;
+    ref.current.material.opacity = active ? 0.25 + 0.35 * k : 0;
+  });
+  const len = LATERAL.toeX - LATERAL.heelX;
+  return (
+    <mesh ref={ref} rotation={[0, 0, Math.PI / 2]} position={[(LATERAL.toeX + LATERAL.heelX) / 2, 0, 0]}>
+      <cylinderGeometry args={[LATERAL.casingR - 0.03, LATERAL.casingR - 0.03, len, 24, 1, true, Math.PI / 2, Math.PI]} />
+      <meshStandardMaterial color="#3aa7ff" emissive="#3aa7ff" emissiveIntensity={0} transparent opacity={0} side={THREE.DoubleSide} depthWrite={false} />
+    </mesh>
   );
 }
 
@@ -643,16 +691,32 @@ export function FlowbackFlow({ active, choke = 0.35, cleanup = 0, stages, sleeve
   );
 }
 
-// Dissolving plug or ball: shrinks and fades at its position while the phase runs
+// Dissolving plug or ball: the part itself shrinks in place (FracPlug and SleeveSub take `dissolve`); this draws the
+// fines and gas it sheds, a thin stream drifting heel-ward with the fluid.
 export function Dissolving({ ct, stages, sleeve }) {
-  if (ct.atPlug < 0 || !stages[ct.atPlug] || stages[ct.atPlug].plugMilled || ct.milling <= 0) return null;
-  const x = sleeve ? sleeveX(ct.atPlug) - 0.22 : plugX(ct.atPlug);
-  const k = 1 - ct.milling;
+  const ref = useRef();
+  const cnt = 70;
+  const seeds = useMemo(() => Array.from({ length: cnt }, () => ({ u: Math.random(), a: Math.random() * Math.PI * 2, r: 0.05 + Math.random() * 0.3, v: 0.08 + Math.random() * 0.12 })), []);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const active = ct.atPlug >= 0 && stages[ct.atPlug] && !stages[ct.atPlug].plugMilled && ct.milling > 0;
+  const x0 = active ? (sleeve ? sleeveX(ct.atPlug) - 0.22 : plugX(ct.atPlug)) : 0;
+  useFrame((_, dt) => {
+    if (!ref.current) return;
+    for (let i = 0; i < cnt; i++) {
+      const s = seeds[i];
+      if (active) { s.u += dt * s.v; if (s.u > 1) s.u -= 1; }
+      const x = x0 - s.u * 6;
+      dummy.position.set(x, Math.cos(s.a) * s.r * (1 + s.u), -Math.abs(Math.sin(s.a)) * s.r * (1 + s.u) * 0.6);
+      const sc = active ? (1 - s.u) * (0.6 + ct.milling) : 0.0001;
+      dummy.scale.setScalar(sc); dummy.updateMatrix(); ref.current.setMatrixAt(i, dummy.matrix);
+    }
+    ref.current.instanceMatrix.needsUpdate = true;
+  });
   return (
-    <mesh position={[x, 0, 0]} scale={[k, k, k]}>
-      <sphereGeometry args={[0.55, 14, 14]} />
-      <meshStandardMaterial color="#9fd0ff" emissive="#5aa9e6" emissiveIntensity={0.8} transparent opacity={0.35} />
-    </mesh>
+    <instancedMesh ref={ref} args={[null, null, cnt]} frustumCulled={false}>
+      <sphereGeometry args={[0.04, 6, 6]} />
+      <meshStandardMaterial color="#cfe6ff" emissive="#8fc2ff" emissiveIntensity={0.6} transparent opacity={0.8} />
+    </instancedMesh>
   );
 }
 
@@ -726,7 +790,7 @@ export function ProductionString({ lift = 'flow', active = true }) {
 export function HeelMarker() {
   return (
     <group position={[LATERAL.heelX - 0.5, 0, 0]}>
-      <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.45, 0.45, 1.0, 20, 1, true, Math.PI, Math.PI]} /><meshStandardMaterial color="#6d757d" side={THREE.DoubleSide} /></mesh>
+      <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.45, 0.45, 1.0, 20, 1, true, Math.PI / 2, Math.PI]} /><meshStandardMaterial color="#6d757d" side={THREE.DoubleSide} /></mesh>
       <Label position={[0, 1.2, 0]} text={'Heel: to surface'} />
     </group>
   );

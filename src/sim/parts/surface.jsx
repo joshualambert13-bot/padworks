@@ -730,6 +730,34 @@ export function Accumulator({ position = [0, 0, 0], rotation = [0, 0, 0], showLa
   );
 }
 
+// Remote hydraulic stand: one per tree-and-leg pair, each operating up to eight valves (five on the tree, two on
+// the zipper leg). A panel on a stand with a selector and gauge per valve, supply in from the previous stand (daisy
+// chain from the accumulator), control hoses out to its tree and leg junction boxes.
+export function HydraulicStand({ position = [0, 0, 0], rotation = [0, 0, 0], number = 1, showLabels }) {
+  return (
+    <group position={position} rotation={rotation} name={'WH-FRACVALVECONTROL-STAND-' + number}>
+      <BlobShadow size={[1.8, 1.4]} />
+      <Box size={[0.9, 0.06, 0.6]} position={[0, 0.03, 0]} mat={MAT.yellow} castShadow={false} />
+      <Cyl r={0.04} h={1.1} position={[0, 0.6, -0.1]} mat={MAT.darkSteel} />
+      <Box size={[0.8, 0.55, 0.14]} position={[0, 1.35, 0]} rotation={[-0.25, 0, 0]} mat={MAT.paintWhite} />
+      <Merged mat={MAT.paintRed} shadow={false} parts={() => Array.from({ length: 8 }).map((_, k) => ({ g: GEO.box(0.04, 0.12, 0.04), p: [-0.3 + (k % 4) * 0.2, 1.5 - Math.floor(k / 4) * 0.22, 0.09], r: [-0.25 + 0.4, 0, 0] }))} />
+      <Merged mat={MAT.darkSteel} shadow={false} parts={() => Array.from({ length: 8 }).map((_, k) => ({ g: GEO.cyl(0.035, 0.03, 8), p: [-0.2 + (k % 4) * 0.2, 1.5 - Math.floor(k / 4) * 0.22, 0.08], r: [Math.PI / 2 - 0.25, 0, 0] }))} />
+      <Box size={[0.26, 0.07, 0.03]} position={[0.28, 1.14, 0.08]} rotation={[-0.25, 0, 0]} mat={MAT.chassis} castShadow={false} />
+      <Box size={[0.3, 0.2, 0.3]} position={[0, 0.35, -0.1]} mat={MAT.chassis} />
+      {showLabels && <Label position={[0, 1.9, 0]} text={'Hydraulic stand ' + number + ': tree ' + number + ' and leg ' + number} />}
+    </group>
+  );
+}
+// Positions for n stands on an arc in front of the accumulator: the arc opens toward the wells (+Z).
+export function standLayout(n, center = [-2, -22], radius = 5) {
+  const r = Math.max(radius, n * 1.15);
+  const span = Math.min(Math.PI * 0.85, Math.max(Math.PI * 0.35, (n - 1) * 0.42));
+  return Array.from({ length: n }, (_, i) => {
+    const a = n === 1 ? 0 : -span / 2 + (span * i) / (n - 1);
+    return { x: center[0] + Math.sin(a) * r, z: center[1] + Math.cos(a) * r, rot: Math.PI + a * 0.4 };   // panels face the wells, fanned a little
+  });
+}
+
 // ---------------------------------------------------------------- missile and pumps
 // Manifold trailer ("missile"): two low-pressure suction headers along the outer edges with an outlet per pump
 // (butterfly valve and hose stub), and the high-pressure discharge header down the middle built from junction
@@ -989,8 +1017,11 @@ export function SandSilos({ position, showLabels }) {
       <Box size={[14, 0.25, 0.9]} position={[4, 0.95, 2.1]} mat={MAT.darkSteel} name="LG-CONVEYOR" />
       <Box size={[14, 0.04, 0.7]} position={[4, 1.1, 2.1]} mat={MAT.rubber} />
       {Array.from({ length: 8 }).map((_, i) => <Cyl key={i} r={0.06} h={1.0} position={[-2.5 + i * 2.0, 0.5, 2.1]} mat={MAT.darkSteel} />)}
-      <Cyl r={0.45} h={11} rotation={[0, 0, THREE.MathUtils.degToRad(-60)]} position={[13.5, 2.9, 2.1]} mat={MAT.darkSteel} />
-      <Box size={[1.4, 0.8, 1.2]} position={[9.3, 0.4, 2.1]} mat={MAT.darkSteel} />
+      <Cyl r={0.45} h={11} rotation={[0, 0, THREE.MathUtils.degToRad(-70)]} position={[13.5, 2.15, 2.1]} mat={MAT.darkSteel} />
+      <Box size={[1.4, 0.8, 1.2]} position={[8.6, 0.45, 2.1]} mat={MAT.darkSteel} />
+      {/* discharge chute from the auger head down into the blender hopper (the group sits so the head is over the hopper) */}
+      <Cyl r={0.55} h={0.6} position={[18.7, 4.15, 2.1]} mat={MAT.darkSteel} />
+      <Cyl r={0.5} r2={0.3} h={1.0} position={[18.9, 3.4, 2.1]} mat={MAT.steel} open />
       {showLabels && <Label position={[4, 12.5, 2]} text={'Sand silos and conveyor'} />}
     </group>
   );
@@ -1007,16 +1038,20 @@ export function WaterTanks({ position, count = 8, showLabels }) {
           <group key={i} position={[i * 3.5, 0, 0]} name={i === 0 ? 'PP-FRACTANK' : undefined}>
             <BlobShadow size={[4.6, 14.5]} />
             <Box size={[3.0, 2.6, 12.5]} position={[0, 1.55, 0]} mat={mat} />
-            <Cyl r={1.5} h={12.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 2.85, 0]} mat={mat} thetaLength={Math.PI} thetaStart={-Math.PI / 2} open />
+            {/* low crowned roof: the upper half of a cylinder flattened to a 0.45 m crown */}
+            <group position={[0, 2.85, 0]} scale={[1, 0.3, 1]}><Cyl r={1.5} h={12.5} rotation={[Math.PI / 2, 0, 0]} mat={mat} thetaLength={Math.PI} thetaStart={Math.PI / 2} open /></group>
             <Merged mat={MAT.darkSteel} parts={() => [...[-4, 0, 4].map(z => ({ g: GEO.box(3.06, 2.5, 0.08), p: [0, 1.5, z] })), { g: GEO.box(2.9, 0.3, 12.3), p: [0, 0.15, 0] }, { g: GEO.box(2.6, 0.2, 0.2), p: [0, 0.9, 6.35] }, ...[-0.9, -0.3, 0.3, 0.9].map(x => ({ g: GEO.cyl(0.12, 0.5, 10), p: [x, 0.9, 6.5], r: [Math.PI / 2, 0, 0] })), { g: GEO.cyl(0.3, 0.15, 12), p: [0.6, 4.4, 4.0] }, { g: GEO.cyl(0.3, 0.15, 12), p: [0.6, 4.4, -4.0] }]} />
             <Wheel position={[-1.2, 0.45, -5.9]} r={0.45} w={0.3} dual />
             <Wheel position={[1.2, 0.45, -5.9]} r={0.45} w={0.3} dual />
             {/* front bulkhead: manifold, valves, stair to the roof walkway */}
             <Merged mat={MAT.darkSteel} parts={() => [-0.9, -0.3, 0.3, 0.9].flatMap(x => [{ g: GEO.cyl(0.09 * 1.7, 0.09 * 2.2, 14), p: [x, 0.9, 6.8], r: [Math.PI / 2, 0, 0] }])} />
             <Merged mat={MAT.paintRed} parts={() => [-0.9, -0.3, 0.3, 0.9].map(x => ({ g: GEO.torus(0.16, 0.025, 6, 16), p: [x, 1.2, 6.5], r: [Math.PI / 2, 0, 0] }))} />
-            <Stair steps={12} rise={0.33} run={0.28} width={0.7} position={[-1.4, 0.2, 6.9]} rotation={[0, Math.PI / 2, 0]} />
-            <Box size={[0.8, 0.03, 12.0]} position={[-1.05, 4.36, 0]} mat={MAT.grating} />
-            <Handrail length={12.0} position={[-1.45, 4.36, 0]} rotation={[0, Math.PI / 2, 0]} height={1.0} />
+            {/* stairs up the front end from the ground to the roof walkway, which runs the length of the tank at the crown edge */}
+            <Stair steps={10} rise={0.3} run={0.3} width={0.7} position={[1.5, 0.05, 7.3]} rotation={[0, Math.PI, 0]} />
+            <Box size={[0.8, 0.03, 12.6]} position={[-1.05, 3.08, 0]} mat={MAT.grating} castShadow={false} />
+            <Box size={[0.8, 0.03, 1.5]} position={[-1.05, 3.08, 6.95]} mat={MAT.grating} castShadow={false} />
+            <Handrail length={12.6} position={[-1.45, 3.08, 0]} rotation={[0, Math.PI / 2, 0]} height={1.0} />
+            <Handrail length={12.6} position={[-0.65, 3.08, 0]} rotation={[0, Math.PI / 2, 0]} height={1.0} />
           </group>
         );
       })}
@@ -1238,16 +1273,19 @@ export function FlowbackSpread({ position, showLabels, flaring }) {
   );
 }
 
-// Red zone boundary while pumping: a painted line around everything that holds treating pressure (missile,
-// treating line, zipper, trees, flanged spools), drawn as a rectangle on the pad.
-export function RedZone({ visible, x0 = -34, x1 = 10, z0 = -14, z1 = 10 }) {
+// Red zone boundary while pumping: a painted line around what holds treating pressure and nothing else: the
+// missile and pump discharge side (x0 to xm, z0 to zm) and the treating line, zipper, trees, and flanged spools
+// (xm to x1, z0 to z1). Low-pressure units behind the missile stay outside.
+export function RedZone({ visible, x0 = -34, xm = -14, x1 = 10, z0 = -14, zm = 10, z1 = 10 }) {
   const geom = useMemo(() => {
-    const w = 0.35, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, L = x1 - x0, W = z1 - z0;
-    return buildMerged([
-      { g: GEO.box(L, 0.02, w), p: [cx, 0, z0] }, { g: GEO.box(L, 0.02, w), p: [cx, 0, z1] },
-      { g: GEO.box(w, 0.02, W), p: [x0, 0, cz] }, { g: GEO.box(w, 0.02, W), p: [x1, 0, cz] },
-    ]);
-  }, [x0, x1, z0, z1]);
+    const w = 0.35;
+    const pts = [[x0, z0], [x1, z0], [x1, z1], [xm, z1], [xm, zm], [x0, zm]];
+    return buildMerged(pts.map((p, i) => {
+      const q = pts[(i + 1) % pts.length];
+      const L = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      return { g: GEO.box(L + w, 0.02, w), p: [(p[0] + q[0]) / 2, 0, (p[1] + q[1]) / 2], r: [0, -Math.atan2(q[1] - p[1], q[0] - p[0]), 0] };
+    }));
+  }, [x0, xm, x1, z0, zm, z1]);
   if (!visible) return null;
   return (
     <mesh geometry={geom} position={[0, 0.03, 0]}>
@@ -1342,29 +1380,6 @@ export function LightTower({ position }) {
       {[[-0.6, -0.5], [-0.2, -0.5], [-1.0, 0.5], [-0.2, 0.5]].map(([dx, dz], i) => (
         <mesh key={i} position={[dx, 10.2, dz]} rotation={[dz > 0 ? 0.5 : -0.5, 0, 0]}><boxGeometry args={[0.45, 0.35, 0.14]} /><meshStandardMaterial color="#fff6d5" emissive="#ffe9a8" emissiveIntensity={0.8} /></mesh>
       ))}
-    </group>
-  );
-}
-// Parked pickups near the data van: crew cab, bed, wheel wells, glass.
-export function Pickups({ position, count = 6 }) {
-  return (
-    <group position={position} name="LG-PICKUPS">
-      {Array.from({ length: count }).map((_, i) => {
-        const paint = i % 3 === 0 ? MAT.paintWhite : i % 3 === 1 ? MAT.chassis : { color: '#8a8f95', metalness: 0.6, roughness: 0.4 };
-        return (
-          <group key={i} position={[0, 0, i * 3.0]}>
-            <Box size={[5.7, 0.5, 2.0]} position={[0, 0.65, 0]} mat={MAT.chassis} />
-            <Box size={[2.0, 0.7, 2.0]} position={[1.9, 1.25, 0]} mat={paint} />
-            <Box size={[1.9, 0.12, 2.02]} position={[1.9, 1.55, 0]} mat={MAT.chassis} />
-            <Box size={[2.3, 0.75, 2.0]} position={[-0.3, 1.25, 0]} mat={paint} />
-            <Box size={[2.1, 0.75, 1.8]} position={[-0.3, 1.98, 0]} mat={MAT.glass} />
-            <Box size={[2.2, 0.08, 1.85]} position={[-0.3, 2.38, 0]} mat={paint} />
-            <Box size={[2.3, 0.65, 2.0]} position={[-2.0, 1.15, 0]} mat={paint} />
-            <Box size={[0.2, 0.3, 1.8]} position={[-2.9, 0.95, 0]} mat={MAT.chassis} />
-            {[[-1.9, 0.95], [1.9, 0.95], [-1.9, -0.95], [1.9, -0.95]].map(([x, z], k) => <Wheel key={k} position={[x, 0.42, z]} r={0.42} w={0.26} />)}
-          </group>
-        );
-      })}
     </group>
   );
 }

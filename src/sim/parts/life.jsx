@@ -4,7 +4,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Merged, GEO, MAT, Wheel, Box, Cyl, Hose } from './primitives.jsx';
+import { Merged, GEO, MAT, Cyl, Hose } from './primitives.jsx';
 
 // ---------------------------------------------------------------- canvas signs
 const signCache = new Map();
@@ -126,34 +126,6 @@ export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 
   );
 }
 
-// ---------------------------------------------------------------- roving pickup
-// A crew truck that drives the lease road out to the highway and back, wheels turning, brake lights at the turn.
-export function RovingPickup({ road, speed = 6 }) {
-  const ref = useRef(); const wheels = useRef([]);
-  useFrame((state, dt) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime * speed;
-    const span = road.x1 - road.x0;
-    const u = (t % (2 * span)) ; const out = u < span; const x = out ? road.x0 + u : road.x1 - (u - span);
-    ref.current.position.set(x, 0, road.z + (out ? 1.6 : -1.6));
-    ref.current.rotation.y = out ? 0 : Math.PI;
-    wheels.current.forEach(wh => { if (wh) wh.rotation.x += dt * speed / 0.42; });
-  });
-  const paint = MAT.paintWhite;
-  return (
-    <group ref={ref}>
-      <Box size={[5.7, 0.5, 2.0]} position={[0, 0.65, 0]} mat={MAT.chassis} />
-      <Box size={[2.0, 0.7, 2.0]} position={[1.9, 1.25, 0]} mat={paint} />
-      <Box size={[1.9, 0.12, 2.02]} position={[1.9, 1.55, 0]} mat={MAT.chassis} />
-      <Box size={[2.3, 0.75, 2.0]} position={[-0.3, 1.25, 0]} mat={paint} />
-      <Box size={[2.1, 0.75, 1.8]} position={[-0.3, 1.98, 0]} mat={MAT.glass} />
-      <Box size={[2.2, 0.08, 1.85]} position={[-0.3, 2.38, 0]} mat={paint} />
-      <Box size={[2.3, 0.65, 2.0]} position={[-2.0, 1.15, 0]} mat={paint} />
-      <mesh position={[-2.05, 1.35, 0]}><boxGeometry args={[0.3, 0.4, 0.4]} /><meshStandardMaterial color="#ffb020" emissive="#ffb020" emissiveIntensity={1.2} /></mesh>
-      {[[-1.9, 0.95], [1.9, 0.95], [-1.9, -0.95], [1.9, -0.95]].map(([x, z], k) => <group key={k} ref={el => (wheels.current[k] = el)} position={[x, 0.42, z]}><Wheel position={[0, 0, 0]} r={0.42} w={0.26} /></group>)}
-    </group>
-  );
-}
 
 // ---------------------------------------------------------------- exhaust plumes
 const puffCache = { tex: null };

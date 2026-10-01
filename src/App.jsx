@@ -12,7 +12,7 @@ import Preview from './library/Preview.jsx';
 import RequireAuth from './auth/RequireAuth.jsx';
 import UserMenu from './auth/UserMenu.jsx';
 import ChangePassword from './auth/ChangePassword.jsx';
-import { useAuth, canSeeAdmin } from './auth/auth.js';
+import { useAuth, canSeeAdmin, effectiveRole, ROLE_LABEL } from './auth/auth.js';
 import { SITE_TAGLINE } from './config.js';
 
 const navClass = ({ isActive }) =>
@@ -20,9 +20,14 @@ const navClass = ({ isActive }) =>
 
 export default function App() {
   const user = useAuth(s => s.user);
+  const viewAs = useAuth(s => s.viewAs);
+  const setViewAs = useAuth(s => s.setViewAs);
+  const role = effectiveRole(user, viewAs);
+  const masked = !!user && user.role === 'admin' && !!viewAs;
   return (
     <RequireAuth>
     <div className="h-full flex flex-col">
+      {masked && <div className="shrink-0 flex items-center gap-2 px-3 py-1 text-xs bg-warn/15 border-b border-warn/50 text-warn" data-status="view-as">Viewing the site as a {ROLE_LABEL[viewAs].toLowerCase()} would see it. Your admin rights are unchanged.<button className="btn ml-auto text-[11px] px-2 py-0.5" onClick={() => setViewAs(null)} data-action="view-as-off">Back to admin view</button></div>}
       <header className="shrink-0 h-12 flex items-center gap-2 px-3 border-b border-line bg-panel">
         <NavLink to="/" className="flex items-center gap-2 font-semibold tracking-tight text-white mr-2">
           <img src="/brand/mark.svg" alt="" className="h-7 w-7" />
@@ -34,7 +39,7 @@ export default function App() {
           <NavLink to="/simulate" className={navClass}><Activity size={16} /> <span className="hidden sm:inline">Simulator</span></NavLink>
           <NavLink to="/checks" className={navClass}><ShieldCheck size={16} /> <span className="hidden sm:inline">Build check</span></NavLink>
           <NavLink to="/about" className={navClass}><Info size={16} /> <span className="hidden sm:inline">About</span></NavLink>
-          {canSeeAdmin(user) && <NavLink to="/admin" className={navClass} data-nav="admin"><Users size={16} /> <span className="hidden sm:inline">{user.role === 'admin' ? 'Accounts' : 'Progress'}</span></NavLink>}
+          {canSeeAdmin(user, viewAs) && <NavLink to="/admin" className={navClass} data-nav="admin"><Users size={16} /> <span className="hidden sm:inline">{role === 'admin' ? 'Accounts' : 'Progress'}</span></NavLink>}
         </nav>
         <span className="ml-auto badge text-mute hidden xl:inline">Built for training. Not for operational decisions.</span>
         <UserMenu />

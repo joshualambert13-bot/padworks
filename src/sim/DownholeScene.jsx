@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useSim } from './store.js';
+import { useSim, wellParams } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
 import { PadEnvironment, LITE } from './parts/lighting.jsx';
+import { Effects } from './parts/effects.jsx';
+import { ContextLoss } from './parts/stability.jsx';
 
 const UNDERGROUND = { sky: '#5c6a78', fog: '#3a424c', ground: '#23272c' };
-import { Formation, Casing, Stage, FluidFlow, FlowbackFlow, CuttingsBed, PerfFlash, WirelineString, BallInFlight, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX, plugX, sleeveX, LATERAL } from './parts/downhole.jsx';
+import { Formation, Casing, Stage, FluidFlow, FlowbackFlow, CuttingsBed, PerfFlash, WirelineString, BallInFlight, ToePressure, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX, plugX, sleeveX, LATERAL } from './parts/downhole.jsx';
 
 function Ticker({ enabled }) {
   const tick = useSim(s => s.tick);
@@ -45,6 +47,9 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
   const flowingBack = s.phase === 'flowback' && s.valves.wingB.pos > 0.99;
   const pumpingDown = s.phase === 'wireline' && !sleeve && s.wl.step === 'pumpdown' && pumping;
   const stringX = LATERAL.heelX + (plugX(s.stage) - LATERAL.heelX) * s.wl.progress;
+  const dissolvable = s.setup.plugs === 'dissolvable';
+  const toePressuring = sleeve && s.phase === 'wireline' && s.wl.step === 'toe';
+  const toeFraction = toePressuring ? s.surfacePsi / Math.max(1, wellParams(s).toeOpenPsi) : 0;
   const show = useHover(h => h.show), hide = useHover(h => h.hide);
   const pick = pickHandlers('downhole', show, hide);
   return (
@@ -56,12 +61,14 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
       <directionalLight position={[-14, 6, 20]} intensity={0.5} color="#cfe0ff" />
       <hemisphereLight args={['#dfe7f2', '#3a2f22', LITE ? 0.7 : 0.4]} />
       <Ticker enabled={tickHere} />
+      <ContextLoss />
       <FollowStage follow={follow} />
       <group {...pick} key={s.stages.length + '-' + s.setup.clusters + '-' + s.setup.completion + '-' + s.setup.sleeveSystem}>
       <Formation grid={showLabels} />
       <Casing openhole={openhole} />
       <HeelMarker />
-      {s.stages.map(stage => <Stage key={stage.index} stage={stage} isCurrent={stage.index === s.stage} netPsi={s.netPsi} showLabels={showLabels} sleeve={sleeve} openhole={openhole} settled={settled} />)}
+      {s.stages.map(stage => <Stage key={stage.index} stage={stage} isCurrent={stage.index === s.stage} netPsi={s.netPsi} showLabels={showLabels} sleeve={sleeve} openhole={openhole} settled={settled} seating={sleeve && stage.index === s.stage && s.wl.step === 'seat'} dissolve={dissolvable && s.ct.atPlug === stage.index && !stage.plugMilled ? s.ct.milling : 0} />)}
+      {sleeve && <ToePressure fraction={toeFraction} active={toePressuring && pumping} />}
       <FluidFlow rate={s.pumpRate} currentStage={s.stage} active={pumping && ((s.phase === 'frac' && st.perforated) || (s.phase === 'wireline' && sleeve))} ppa={s.ppa} />
       {pumpingDown && <FluidFlow rate={s.pumpRate} currentStage={s.stage} active ppa={0} targetOverride={stringX - 0.3} spray={false} />}
       <FlowbackFlow active={flowingBack} choke={s.fb.choke} cleanup={cleanup} stages={s.stages} sleeve={sleeve} />
@@ -73,6 +80,7 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
       {s.phase === 'production' && <ProductionString lift={s.setup.lift} active />}
       </group>
       <OrbitControls makeDefault enableDamping dampingFactor={0.08} minDistance={2} maxDistance={80} />
+      <Effects ao={{ aoRadius: 0.6, distanceFalloff: 0.8, intensity: 2.0 }} bloom={{ intensity: 0.6, luminanceThreshold: 0.95 }} guard={tickHere} />
     </Canvas>
   );
 }

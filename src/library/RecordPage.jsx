@@ -1,14 +1,46 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams, Navigate, useLocation } from 'react-router-dom';
 import { Bug, ExternalLink, ArrowLeft } from 'lucide-react';
+import { api } from '../auth/auth.js';
 import { byId, childrenOf, sourceById, STATUS_LABEL, TIER_LABEL, systems } from '../lib/records.js';
 import Viewer from './Viewer.jsx';
-import { GITHUB_REPO } from '../config.js';
 
 const TABS = [
   ['overview', 'Purpose'], ['engineering', 'Design'], ['connections', 'Interfaces'], ['safety', 'Hazards'],
   ['specs', 'Numbers'], ['evidence', 'Sources'], ['operations', 'Job sequence'], ['failure_modes', 'Failure modes'],
 ];
+
+// Files a correction to the record with the admins (stored with the account; listed in the admin panel).
+function ReportError({ recordId, tab }) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [state, setState] = useState(null);   // null | 'busy' | 'done' | error text
+  const submit = async (e) => {
+    e.preventDefault(); setState('busy');
+    try { await api('me/reports', { method: 'POST', body: { recordId, page: '/library/equipment/' + recordId + ' (' + tab + ')', message } }); setState('done'); setMessage(''); }
+    catch (err) { setState(err.message); }
+  };
+  return (
+    <div className="space-y-2 text-xs text-mute" data-panel="report-error">
+      <div className="flex items-center gap-2">
+        <button className="btn inline-flex items-center gap-1" onClick={() => { setOpen(o => !o); setState(null); }} data-action="report-error"><Bug size={14} />Report an error in this record</button>
+        <span>Built for training. Not for operational decisions.</span>
+      </div>
+      {open && (
+        <form onSubmit={submit} className="card p-2 space-y-2 max-w-xl">
+          <div>What is wrong on <span className="mono text-white">{recordId}</span> ({tab} tab)? A sentence or two, and the source if you have one. It goes to the administrators with your name.</div>
+          <textarea className="input" rows={3} value={message} onChange={e => setMessage(e.target.value)} placeholder="The pressure rating in the Numbers tab reads 10K; the referenced table says 15K." data-input="report-message" />
+          <div className="flex items-center gap-2">
+            <button className="btn btn-primary" disabled={state === 'busy' || message.trim().length < 5} data-action="send-report">{state === 'busy' ? 'Sending' : 'Send report'}</button>
+            <button type="button" className="btn" onClick={() => setOpen(false)}>Close</button>
+            {state === 'done' && <span className="text-ok" data-status="report-sent">Saved. Thank you.</span>}
+            {state && state !== 'busy' && state !== 'done' && <span className="text-bad">{state}</span>}
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
 
 function Para({ text }) {
   if (!text) return <p className="text-sm text-mute">Not yet drafted.</p>;
@@ -36,7 +68,6 @@ export default function RecordPage() {
   const sameFileAsParent = !!(r.glb && parent && parent.glb === r.glb);
   const highlight = ((r.level === 'component' || r.level === 'part') || sameFileAsParent) && r.mesh_nodes && r.mesh_nodes.length ? r.mesh_nodes : [];
   const status = STATUS_LABEL[r.status];
-  const issueUrl = 'https://github.com/' + GITHUB_REPO + '/issues/new?title=' + encodeURIComponent('[' + r.id + '] correction') + '&body=' + encodeURIComponent('Record: ' + r.id + '\nTab: \nWhat is wrong: \nSource: ');
 
   return (
     <div className="h-full overflow-y-auto">
@@ -184,10 +215,7 @@ export default function RecordPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-mute">
-          <a href={issueUrl} target="_blank" rel="noreferrer" className="btn inline-flex items-center gap-1"><Bug size={14} />Report an error in this record</a>
-          <span>Built for training. Not for operational decisions.</span>
-        </div>
+        <ReportError recordId={r.id} tab={tab} />
       </div>
     </div>
   );

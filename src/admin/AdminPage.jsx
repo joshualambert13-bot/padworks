@@ -3,8 +3,9 @@
 // get the dashboard read-only.
 import { useEffect, useState, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
-import { UserPlus, RefreshCw, Download, KeyRound, Ban, CheckCircle2, Trash2, Eye, Copy, X, Eraser } from 'lucide-react';
-import { api, useAuth, canSeeAdmin, ROLE_LABEL } from '../auth/auth.js';
+import { UserPlus, RefreshCw, Download, KeyRound, Ban, CheckCircle2, Trash2, Eye, Copy, X, Eraser, Bug, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { api, useAuth, canSeeAdmin, effectiveRole, ROLE_LABEL } from '../auth/auth.js';
 import { LESSONS } from '../sim/lessons.js';
 import { fromServer } from '../sim/progress.js';
 import SessionSummary from '../sim/SessionSummary.jsx';
@@ -114,17 +115,60 @@ function ProgressDrawer({ user, onClose, isAdmin, onCleared }) {
   );
 }
 
+// Error reports filed from record pages and the simulator: open ones first; admins resolve or delete them.
+function Reports({ isAdmin }) {
+  const [rows, setRows] = useState(null);
+  const [error, setError] = useState(null);
+  const [showResolved, setShowResolved] = useState(false);
+  const load = useCallback(() => { api('admin/reports').then(d => setRows(d.reports)).catch(e => setError(e.message)); }, []);
+  useEffect(() => { load(); }, [load]);
+  const act = (fn) => fn().then(load).catch(e => setError(e.message));
+  const open = rows ? rows.filter(r => r.status === 'open') : [];
+  const shown = rows ? (showResolved ? rows : open) : [];
+  return (
+    <div className="card p-2 space-y-2" data-panel="reports">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-mute"><Bug size={12} />Error reports<span className="mono ml-1">{open.length} open</span>
+        <label className="ml-auto flex items-center gap-1 normal-case tracking-normal text-[11px]"><input type="checkbox" checked={showResolved} onChange={e => setShowResolved(e.target.checked)} />show resolved</label>
+        <button className="btn text-[11px] px-2 py-0.5" onClick={load}><RefreshCw size={12} /></button>
+      </div>
+      {error && <div className="text-xs text-bad">{error}</div>}
+      {rows && shown.length === 0 && <div className="text-xs text-mute">No {showResolved ? '' : 'open '}reports. "Report an error" on any record page files one here.</div>}
+      {shown.length > 0 && (
+        <table className="w-full text-xs" data-table="reports">
+          <thead className="text-mute text-[10px] uppercase tracking-wide"><tr><th className="text-left font-normal p-1">When</th><th className="text-left font-normal p-1">Who</th><th className="text-left font-normal p-1">Record or page</th><th className="text-left font-normal p-1">What is wrong</th><th className="text-right font-normal p-1"></th></tr></thead>
+          <tbody>
+            {shown.map(r => (
+              <tr key={r.id} className={'border-t border-line align-top ' + (r.status === 'resolved' ? 'opacity-60' : '')} data-report={r.id}>
+                <td className="p-1 text-mute whitespace-nowrap">{fmtDate(r.at)}</td>
+                <td className="p-1 whitespace-nowrap">{r.displayName || r.username || 'deleted account'}</td>
+                <td className="p-1">{r.recordId ? <Link className="text-accent underline mono" to={'/library/equipment/' + r.recordId}>{r.recordId}</Link> : <span className="text-mute">{r.page}</span>}</td>
+                <td className="p-1 whitespace-pre-wrap max-w-[32rem]">{r.message}</td>
+                <td className="p-1 text-right whitespace-nowrap">
+                  {isAdmin && r.status === 'open' && <button className="btn text-[11px] px-2 py-0.5" onClick={() => act(() => api('admin/reports/' + r.id, { method: 'PATCH', body: { status: 'resolved' } }))} title="Mark resolved" data-action={'resolve-' + r.id}><Check size={12} /></button>}
+                  {isAdmin && r.status === 'resolved' && <button className="btn text-[11px] px-2 py-0.5" onClick={() => act(() => api('admin/reports/' + r.id, { method: 'PATCH', body: { status: 'open' } }))} title="Reopen">Reopen</button>}
+                  {isAdmin && <button className="btn text-[11px] px-2 py-0.5 ml-1" onClick={() => act(() => api('admin/reports/' + r.id, { method: 'DELETE' }))} title="Delete" data-action={'delete-report-' + r.id}><Trash2 size={12} /></button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const me = useAuth(s => s.user);
-  const isAdmin = !!me && me.role === 'admin';
+  const viewAs = useAuth(s => s.viewAs);
+  const isAdmin = effectiveRole(me, viewAs) === 'admin';
   const [users, setUsers] = useState(null);
   const [error, setError] = useState(null);
   const [otp, setOtp] = useState(null);
   const [selected, setSelected] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const load = useCallback(() => { api('admin/users').then(d => { setUsers(d.users); setError(null); }).catch(e => setError(e.message)); }, []);
-  useEffect(() => { if (canSeeAdmin(me)) load(); }, [me, load]);
-  if (!canSeeAdmin(me)) return <Navigate to="/simulate" replace />;
+  useEffect(() => { if (canSeeAdmin(me, viewAs)) load(); }, [me, viewAs, load]);
+  if (!canSeeAdmin(me, viewAs)) return <Navigate to="/simulate" replace />;
   const act = async (fn) => { try { await fn(); load(); } catch (e) { setError(e.message); } };
   const reset = (u) => act(async () => { const d = await api('admin/users/' + u.id + '/reset', { method: 'POST' }); setOtp({ kind: 'reset', username: u.username, password: d.oneTimePassword }); });
   const toggle = (u) => act(() => api('admin/users/' + u.id, { method: 'PATCH', body: { disabled: !u.disabled } }));
@@ -180,6 +224,7 @@ export default function AdminPage() {
         )}
       </div>
       {selected && <ProgressDrawer user={users.find(u => u.id === selected.id) || selected} onClose={() => setSelected(null)} isAdmin={isAdmin} onCleared={load} />}
+      <Reports isAdmin={isAdmin} />
       <div className="text-[10px] text-mute">Accounts store a username, a display name, a password hash, lesson results, and job summaries. No email, no tracking. Deleting an account deletes its results.</div>
     </div>
   );

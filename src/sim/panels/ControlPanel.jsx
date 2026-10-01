@@ -51,8 +51,8 @@ function LessonCard({ s }) {
             <li key={i} className={'flex items-start gap-2 text-xs ' + (done ? 'text-mute line-through' : isCurrent ? 'text-white' : 'text-mute')}>
               {done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-cool' : '')} />}
               <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
-              {isCurrent && step.action && <button className="btn btn-primary text-[11px] px-2 py-0.5" onClick={() => s.guide(step.action)}>{step.label || 'Do it'}</button>}
-              {isCurrent && !step.action && valve && s.valves[valve] && <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.commandValve(valve, s.valves[valve].target === 1 ? 0 : 1)}>{s.valves[valve].target === 1 ? 'Close' : 'Open'}</button>}
+              {isCurrent && step.action && <button className="btn btn-primary text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>}
+              {isCurrent && !step.action && valve && s.valves[valve] && <button className="btn text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ valve }); s.commandValve(valve, s.valves[valve].target === 1 ? 0 : 1); }}>{s.valves[valve].target === 1 ? 'Close' : 'Open'}</button>}
             </li>
           );
         })}
@@ -152,10 +152,10 @@ export default function ControlPanel() {
                 {step.done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-accent' : '')} />}
                 <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
                 {isCurrent && step.action && (
-                  <button className="btn btn-primary text-[11px] px-2 py-0.5" disabled={step.gate === false} onClick={() => s.guide(step.action)}>{step.label || 'Do it'}</button>
+                  <button className="btn btn-primary text-[11px] px-2 py-0.5" disabled={step.gate === false} onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>
                 )}
                 {isCurrent && step.valve && !step.action && (
-                  <button className="btn text-[11px] px-2 py-0.5" onClick={() => s.commandValve(step.valve, s.valves[step.valve].target === 1 ? 0 : 1)}>{s.valves[step.valve].target === 1 ? 'Close' : 'Open'}</button>
+                  <button className="btn text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ valve: step.valve }); s.commandValve(step.valve, s.valves[step.valve].target === 1 ? 0 : 1); }}>{s.valves[step.valve].target === 1 ? 'Close' : 'Open'}</button>
                 )}
               </li>
             );

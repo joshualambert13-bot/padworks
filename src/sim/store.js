@@ -314,7 +314,7 @@ export const useSim = create((set, get) => ({
   speed: 1,
   setup: defaultSetup(),
   pad: { wells: 4, mode: 'zipper', bore: BASINS[0].bore },
-  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false },
+  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false, focus: null },
   ...freshJob(defaultSetup(), { wells: 4, mode: 'zipper', bore: BASINS[0].bore }),
   lessonResults: [],
   lastJob: null,
@@ -327,6 +327,8 @@ export const useSim = create((set, get) => ({
   setPumpsOnline: (pumpsOnline) => set({ pumpsOnline, alarms: { ...get().alarms, kickout: pumpsOnline ? false : get().alarms.kickout } }),
   setChoke: (choke) => set(s => ({ fb: { ...s.fb, choke } })),
   setUi: (patch) => set(s => ({ ui: { ...s.ui, ...patch } })),
+  // the next-steps and lesson cards call this before acting so the surface camera moves to the equipment involved
+  focusOn: (target) => set(s => ({ ui: { ...s.ui, focus: { ...target, n: (s.ui.focus ? s.ui.focus.n : 0) + 1 } } })),
   setPad: (patch) => {
     const s = get();
     const pad = { ...s.pad, ...patch };

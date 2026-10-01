@@ -59,6 +59,15 @@ const SCHEMA = [
     at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS job_summaries_user ON job_summaries(user_id, at)`,
+  `CREATE TABLE IF NOT EXISTS reports (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    record_id TEXT NOT NULL DEFAULT '',
+    page TEXT NOT NULL DEFAULT '',
+    message TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
   `CREATE TABLE IF NOT EXISTS login_attempts (
     id SERIAL PRIMARY KEY,
     username TEXT NOT NULL,

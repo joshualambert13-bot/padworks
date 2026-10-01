@@ -10,8 +10,8 @@ import path from 'node:path';
 
 const out = process.argv[2] || 'shots';
 fs.mkdirSync(out, { recursive: true });
-const PORT = 4173;
-const server = spawn('node', ['scripts/dev-server.mjs', String(PORT)], { stdio: 'ignore' });
+const PORT = Number(process.env.PORT || 4173);
+const server = spawn('node', ['scripts/dev-server.mjs', String(PORT), process.env.DIST || 'dist'], { stdio: 'ignore' });   // PORT and DIST let two passes run side by side
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 await wait(3500);
 

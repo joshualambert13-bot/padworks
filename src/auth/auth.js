@@ -18,10 +18,17 @@ export async function api(path, { method = 'GET', body } = {}) {
 }
 
 export const ROLE_LABEL = { admin: 'Admin', instructor: 'Instructor', trainee: 'Trainee' };
-export const canSeeAdmin = (u) => !!u && (u.role === 'admin' || u.role === 'instructor');
+// An admin can look at the site as a trainee or an instructor would see it (a view mask only: the server still
+// knows who they are). Kept in sessionStorage so a reload keeps it and a new tab does not.
+const VIEW_KEY = 'padworks.viewAs';
+const storedView = () => { try { return window.sessionStorage.getItem(VIEW_KEY) || null; } catch { return null; } };
+export const effectiveRole = (u, viewAs) => (u && u.role === 'admin' && viewAs ? viewAs : u ? u.role : null);
+export const canSeeAdmin = (u, viewAs = null) => { const r = effectiveRole(u, viewAs); return r === 'admin' || r === 'instructor'; };
 
 export const useAuth = create((set, get) => ({
   user: undefined,        // undefined: not checked yet; null: signed out
+  viewAs: storedView(),   // 'trainee' | 'instructor' | null (admins only)
+  setViewAs: (role) => { try { if (role) window.sessionStorage.setItem(VIEW_KEY, role); else window.sessionStorage.removeItem(VIEW_KEY); } catch { /* session only */ } set({ viewAs: role || null }); },
   setup: null,            // 'no-accounts' when the database has no users yet
   serviceError: null,     // the accounts service itself is unavailable (no database, no secret, not deployed)
   busy: false,

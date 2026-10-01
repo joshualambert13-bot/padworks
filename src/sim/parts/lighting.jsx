@@ -213,7 +213,7 @@ function DomeMesh({ terrain, radius, sun = true, intensity = 1 }) {
       </mesh>
       {sun && (
         <>
-          <mesh position={sunPos}><sphereGeometry args={[radius * 0.035, 12, 8]} /><meshBasicMaterial color="#fff6dc" fog={false} toneMapped={false} /></mesh>
+          <mesh position={sunPos}><sphereGeometry args={[radius * 0.035, 12, 8]} /><meshBasicMaterial color={new THREE.Color(1.8, 1.7, 1.45)} fog={false} toneMapped={false} /></mesh>
           <mesh position={sunPos}><sphereGeometry args={[radius * 0.11, 12, 8]} /><meshBasicMaterial color="#ffe9b8" transparent opacity={0.28} fog={false} toneMapped={false} depthWrite={false} /></mesh>
         </>
       )}
