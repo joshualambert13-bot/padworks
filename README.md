@@ -4,6 +4,10 @@ Interactive 3D equipment library and stage-cycle simulator for oil and gas well 
 
 Live at https://padworks.vercel.app (GitHub repository joshlambert13-bot/padworks). The local folder may still be named completions-explorer; the folder name has no effect on the build.
 
+Drop 17: library viewer hero pass. The record models no longer render as flat facets: normals are rebuilt with a 32 degree crease so cylinders and fillets shade smoothly while machined edges stay crisp. Each part's material is classed from its export color (cast steel, bright machined steel, brass and bronze bushings, elastomer seals, paint) and lit by the same sky environment as the pad, with key, fill, and rim lights, a studio gradient backdrop, and a ground that catches the model's shadow. The model turns slowly on a turntable until it is touched; hovering a part (in the scene or in the parts list) lights it, the selected part carries a floating label, and section mode draws the cut faces as solid material instead of the hollow inside of a shell.
+
+Drop 16: accounts and admin, plus pad layout corrections. The whole site is behind a sign-in: an admin creates each account (username, display name, role) and hands the trainee a one-time password; the trainee chooses a password at first sign-in. Roles: admin (manage accounts, see everything), instructor (see everyone's progress, no account changes), trainee. Lesson results and job summaries are saved to the trainee's account on the server (no more browser-only results); the admin panel shows per-trainee lesson bests, attempts, time on task, last sign-in, every saved job summary (opened in the same session summary view), a CSV export, password reset, disable, role change, and delete. The backend is one Vercel serverless function (`api/[...path].js`, routed by `server/api.js`) on Neon Postgres, with bcrypt password hashes, signed httpOnly cookie sessions, a sign-in rate limit, and no email or tracking; the headless checks run against the same code on an in-process Postgres (PGlite). Pad: wellheads now sit below grade in cellars (casing head, casing spool with side outlet valves, and tubing head in a square pit with a curb; the tree starts at grade), the blender moved behind the missile so its suction hoses reach the low-pressure headers without crossing the pumps, with hydration, chemical, and silo units beside it and the silo incline landing on the blender hoppers; the frac valve control unit is now the accumulator unit on its own skid outside the red zone, with the tree and zipper hydraulic trunks bundled on the ground to it; the data van no longer overlaps the fuel gas trailers (moved to the entrance side); the water tanks and a light tower no longer overlap; the red zone is drawn as a boundary around the missile, treating line, zipper, and wells with signs at the corners. See "Accounts" below for the one-time Vercel setup.
+
 Drop 15: downhole rendering pass. The section view gets the treatment the surface got: each bed is a textured rock (grainy sandstone, laminated shale, jointed limestone; generated in the browser and tinted by the bed color, with bump in full quality), the cement sheath is grainy, the casing is metallic under a dim underground environment map with soft shadows and a cool fill light, plugs, tool strings, coil, and packers cast shadows on the casing, fracture wings have irregular edges from a noise alpha map and a stronger pressure glow, proppant is drawn as round sand grains with per-grain color, fluid particles glow a little more and stay inside the beds, and the schematic grid shows only with labels. Same Full/Lite switch as the surface. A test hook (window.__padworksSim) lets the headless checks fast-forward the simulation.
 
 Drop 14: vegetation and terrain. Plants are built per basin from a few instanced parts with per-plant color variation: pines as trunk and three cone tiers, hardwoods as trunk, two branches, and a lumpy three-blob canopy, mesquite as a leaning trunk under a wide flat canopy, creosote scrub and sage as low clumps, brush as a bushy mid-size plant, and prairie grass as alpha-tested crossed-quad tufts; forested basins carry up to 1,700 plants in full quality (550 in lite). Instanced rocks, a 2 km outer ground plane, and a horizon ring that fits the basin: mesas and buttes for the desert, a pointed pine or rounded hardwood tree line at the clearing edge, rolling ridges for the plains. The lease road now runs out 320 m with a barbed-wire fence on both sides, a cattle guard and gate posts at the pad entrance, and two gate signs (check in, H2S and no smoking). New camera preset: Pad entrance. Terrain math moved to src/sim/parts/terrain.js.
@@ -37,12 +41,22 @@ Requires Node.js 22 (LTS). Inside this folder:
 ```
 npm install
 npm run build
-npm run preview
+npm run serve
 ```
 
-Open the address printed by `npm run preview` (normally http://localhost:4173). For live editing use `npm run dev` instead of build and preview.
+Open http://localhost:4173. `npm run serve` serves the build and the accounts API with Postgres in process (PGlite, memory only: accounts vanish when it stops). The local admin is `admin` / `padworks-admin`; the first sign-in asks for a new password. For live editing run `npm run api` in one terminal and `npm run dev` in another (the dev server proxies `/api` to the API on port 4174).
 
-On a phone on the same Wi-Fi: run `npm run preview -- --host` and open the network address it prints.
+On a phone on the same Wi-Fi: run `npm run serve` and open http://<your computer's address>:4173.
+
+## Accounts
+
+Production needs three things in the Vercel project, once:
+
+1. A database: Vercel dashboard, the project, Storage tab, Create Database, Neon (free). Connecting it to the project adds `DATABASE_URL` automatically. The tables are created on the first request.
+2. `PADWORKS_SESSION_SECRET`: Settings, Environment Variables, any phrase of 16 characters or more. Signs the session cookies; changing it signs everyone out.
+3. `PADWORKS_ADMIN_USER` and `PADWORKS_ADMIN_PASSWORD`: the first admin account, created when the database has no users. The password is one-time: the first sign-in asks for a new one. After that these two variables can stay or go.
+
+Then Redeploy. Sign in, open Accounts, create accounts, hand out the one-time passwords. What is stored: username, display name, role, password hash, lesson results, job summaries, sign-in failure timestamps (for the rate limit). No email, no cookies beyond the session, no analytics.
 
 ## Scripts
 
@@ -52,8 +66,10 @@ On a phone on the same Wi-Fi: run `npm run preview -- --host` and open the netwo
 | `npm run validate` | Schema, ID, parent, citation, alias, and glossary checks on every record |
 | `npm run integrity` | Checks record `mesh_nodes` against part names inside each GLB, checks budgets, writes `public/build-check.json` (the Build check page) |
 | `npm run build` | Runs validate and integrity, then builds `dist/` and writes `dist/404.html` for path routing |
-| `npm run preview` | Serves `dist/` |
-| `npm run shots` | Headless Chromium screenshot walkthrough into `shots/` (after a build); the walkthrough starts a job from Pad Setup |
+| `npm run serve` | Serves `dist/` plus the accounts API on port 4173 with Postgres in process (local admin `admin` / `padworks-admin`) |
+| `npm run api` | The accounts API alone on port 4174, for `npm run dev` |
+| `npm run preview` | Serves `dist/` only (no API: the sign-in screen cannot proceed) |
+| `npm run shots` | Headless Chromium screenshot walkthrough into `shots/` (after a build); starts the local server, signs in through the API, walks the simulator, library, lessons, and the accounts screens |
 | `npm run glb` | Draco-compresses every GLB in `cad/out/{SYSTEM}/` into `public/glb/{SYSTEM}/` (node names preserved) |
 
 ## Layout
@@ -67,6 +83,8 @@ cad/dims/{SYSTEM}/{ID}.json          dimension sheet per scripted assembly
 public/glb/{SYSTEM}/{ID}.glb         compressed GLB served to the record viewer
 src/sim/                             simulator: store.js (state and response model), scenes, procedural parts, panels
 src/library/                         library, system, record pages, viewer, build check, about
+src/auth/, src/admin/                sign-in, password change, user menu, admin panel (accounts and progress)
+api/[...path].js, server/            the accounts API: one serverless function, router, auth helpers, database access
 scripts/                             validate, integrity, postbuild, shots, seed
 docs/                                writing standard, modeling standard, session template
 ```
@@ -91,7 +109,7 @@ Two paths, both free:
 
 ## Deploy
 
-Vercel (recommended, free Hobby plan): sign in with GitHub, import the repository, accept the detected Vite settings, deploy. `vercel.json` rewrites every path to `index.html` so record links work. Every push to `main` redeploys. Cloudflare Pages and GitHub Pages also work (build `npm run build`, output `dist`; the `404.html` copy handles path routing on GitHub Pages). The step-by-step guide is in the Setup Guide document delivered with Drop 2.
+Vercel (recommended, free Hobby plan): sign in with GitHub, import the repository, accept the detected Vite settings, deploy, then do the one-time setup under "Accounts" above. `vercel.json` rewrites every path except `/api/*` to `index.html` so record links work; `api/[...path].js` becomes the one serverless function. Every push to `main` redeploys. Cloudflare Pages and GitHub Pages also work (build `npm run build`, output `dist`; the `404.html` copy handles path routing on GitHub Pages). The step-by-step guide is in the Setup Guide document delivered with Drop 2.
 
 `GITHUB_REPO` in `src/config.js` points the "Report an error" link on each record at the repository's issues page. The logo lives in `public/brand/` (`mark.svg` plus PNG renders).
 

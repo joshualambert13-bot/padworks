@@ -12,12 +12,17 @@
     "preview": "vite preview",
     "lint": "oxlint",
     "shots": "node scripts/shots.mjs",
-    "glb": "node scripts/compress.mjs"
+    "glb": "node scripts/compress.mjs",
+    "serve": "node scripts/dev-server.mjs 4173",
+    "api": "node scripts/dev-server.mjs 4174"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
     "ajv": "^8.20.0",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.12",
     "lucide-react": "^1.48.0",
     "minisearch": "^7.2.0",
     "react": "^19.2.8",
@@ -27,6 +32,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@gltf-transform/cli": "^4.5.1",
     "@gltf-transform/core": "^4.5.1",
     "@gltf-transform/extensions": "^4.5.1",

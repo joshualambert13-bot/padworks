@@ -29,7 +29,7 @@ export default function About() {
         </div>
         <div>
           <h2 className="font-semibold">Terms</h2>
-          <p className="text-mute">Built for training. No warranty of accuracy. Not for operational decisions. No accounts, no cookies, no personal data collected. Code MIT licensed; content and models CC BY-NC-SA 4.0 unless stated otherwise. Corrections: use the "Report an error" link on any record.</p>
+          <p className="text-mute">Built for training. No warranty of accuracy. Not for operational decisions. Accounts are created by an administrator and hold a username, a display name, a password hash, and training results; the only cookie is the session; no analytics. Code MIT licensed; content and models CC BY-NC-SA 4.0 unless stated otherwise. Corrections: use the "Report an error" link on any record.</p>
         </div>
       </div>
     </div>

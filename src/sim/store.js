@@ -3,7 +3,7 @@
 // hydraulic fracturing simulator and must be labeled as such in the UI.
 import { create } from 'zustand';
 import { LESSONS, lessonById, nextLessonId } from './lessons.js';
-import { loadResults, saveResults } from './progress.js';
+import { fromServer, postLessonResult, postJobSummary } from './progress.js';
 
 // ---------------------------------------------------------------------------------------------
 // Scoring. A job (or a lesson) starts at 100. Points come off for moves against the sequence and for
@@ -298,6 +298,15 @@ const freshJob = (setup, pad) => ({
 });
 // Snapshot of a finished job for the session summary after a reset
 const snapshotJob = (s) => (s.phase === 'setup' ? s.lastJob : { setup: s.setup, pad: s.pad, t: s.t, phase: s.phase, stages: s.stages, score: s.score, log: s.log, events: s.events, lesson: s.lesson, when: Date.now() });
+// A free-play job that went somewhere is saved to the account when it ends (lesson runs save themselves on completion).
+function saveFreeJob(s) {
+  if (s.phase === 'setup' || s.lesson.id || s.score.moves === 0) return;
+  const job = snapshotJob(s);
+  const sc = scoreOf(job.score);
+  const b = BASINS.find(x => x.id === s.setup.basin) || BASINS[0];
+  const ph = phasesFor(s.setup).find(p => p.id === s.phase);
+  postJobSummary({ kind: 'free', title: 'Free play: ' + b.label + ', ' + s.pad.wells + ' well' + (s.pad.wells > 1 ? 's' : '') + ', reached ' + (ph ? ph.short.toLowerCase() : s.phase), total: sc.total, secs: Math.round(s.t), payload: job });
+}
 
 export const useSim = create((set, get) => ({
   // ----- mode and time -----
@@ -307,7 +316,7 @@ export const useSim = create((set, get) => ({
   pad: { wells: 4, mode: 'zipper', bore: BASINS[0].bore },
   ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false },
   ...freshJob(defaultSetup(), { wells: 4, mode: 'zipper', bore: BASINS[0].bore }),
-  lessonResults: loadResults(),
+  lessonResults: [],
   lastJob: null,
 
   // ----- actions -----
@@ -359,7 +368,7 @@ export const useSim = create((set, get) => ({
     const b = basinOf(get());
     get().addLog('Job started: ' + b.label + ', ' + s.pad.wells + ' well' + (s.pad.wells > 1 ? 's' : '') + ', ' + (COMPLETIONS.find(c => c.id === s.setup.completion) || COMPLETIONS[0]).label + ', ' + boreOf(get()).label);
   },
-  backToSetup: () => set(s => ({ ...freshJob(s.setup, s.pad), phase: 'setup', lastJob: snapshotJob(s) })),
+  backToSetup: () => set(s => { saveFreeJob(s); return { ...freshJob(s.setup, s.pad), phase: 'setup', lastJob: snapshotJob(s) }; }),
   commandValve: (id, target) => {
     const s = get();
     const v = s.valves[id];
@@ -412,7 +421,7 @@ export const useSim = create((set, get) => ({
   },
   quitLesson: () => { const L = lessonById(get().lesson.id); set({ lesson: freshLesson() }); if (L) get().addLog('Lesson ' + L.n + ' left; the job continues in free play.'); },
   nextLesson: () => { const id = nextLessonId(get().lesson.id); if (id) get().startLesson(id); else get().reset(); },
-  clearLessonResults: () => { set({ lessonResults: [] }); saveResults([]); },
+  hydrateProgress: (rows) => set({ lessonResults: fromServer(rows) }),
   openSummary: () => set(s => ({ ui: { ...s.ui, summary: true } })),
   closeSummary: () => set(s => ({ ui: { ...s.ui, summary: false } })),
   clearInterlock: () => set(s => ({ alarms: { ...s.alarms, interlock: '' } })),
@@ -595,7 +604,7 @@ export const useSim = create((set, get) => ({
       get().addLog('Advance to stage ' + (s.stage + 2));
     }
   },
-  reset: () => set(s => ({ ...freshJob(s.setup, s.pad), phase: 'setup', lastJob: snapshotJob(s) })),
+  reset: () => set(s => { saveFreeJob(s); return { ...freshJob(s.setup, s.pad), phase: 'setup', lastJob: snapshotJob(s) }; }),
 
   // ----- the tick: called from the render loop with dt in seconds of sim time -----
   tick: (dtRaw) => {
@@ -934,7 +943,7 @@ export const useSim = create((set, get) => ({
           patch.lesson = { ...s.lesson, doneMask: mask, finished: true, result };
           const entry = { id: L.id, n: L.n, title: L.title, score: total, grade: result.grade, secs: result.secs, targetSec: L.targetSec, when: Date.now() };
           patch.lessonResults = [...s.lessonResults, entry];
-          saveResults(patch.lessonResults);
+          postLessonResult(entry, { setup: ns.setup, pad: ns.pad, t: ns.t, phase: ns.phase, stages: ns.stages, score: ns.score, log: ns.log, events: ns.events, lesson: patch.lesson, when: Date.now() });
           get().addLog('Lesson ' + L.n + ' complete: ' + total + ' points, grade ' + result.grade + ', ' + result.secs + ' s (target ' + L.targetSec + ' s).');
         } else if (changed) patch.lesson = { ...s.lesson, doneMask: mask };
       }

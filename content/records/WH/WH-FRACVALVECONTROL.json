@@ -4,13 +4,14 @@
   "group": "valve-control",
   "level": "equipment",
   "parent": "WH",
-  "name": "Frac valve control unit",
+  "name": "Accumulator unit (frac valve control)",
   "aliases": [
+    "frac valve control unit",
     "hydraulic control unit",
     "remote valve control",
-    "accumulator unit"
+    "accumulator skid"
   ],
-  "function": "The hydraulic power unit, accumulator, and remote panel that operate the actuated valves on the tree and zipper manifold from outside the red zone.",
+  "function": "The accumulator bank, hydraulic power unit, and remote panel that operate the actuated valves on the tree and zipper manifold from a skid outside the red zone.",
   "status": "draft",
   "evidence_tier": "E2",
   "reviewers": [],

@@ -5,8 +5,8 @@ import { useSim, padRoles, nextSteps, basinOf, spreadSizing } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
 import { SkyDome, PadEnvironment, LITE } from './parts/lighting.jsx';
 import { Crew, Windsock, Flag, RovingPickup, Sign } from './parts/life.jsx';
-import { Ground, FracTree, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, Pickups, FlangedRun, WELL_COLORS } from './parts/surface.jsx';
-import { PipeRun, Pipe, MAT, Label } from './parts/primitives.jsx';
+import { Ground, FracTree, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, Pickups, FlangedRun, WELL_COLORS, Accumulator, HOSE_BUNDLE_X, ZIPPER_BUNDLE_X } from './parts/surface.jsx';
+import { PipeRun, Pipe, Hose, MAT, Label } from './parts/primitives.jsx';
 
 const WELL_SPACING = 8;   // meters between wellheads along the row
 const MISSILE_X = -30;    // missile centerline; pumps park nose-in on both sides
@@ -17,16 +17,17 @@ function Ticker({ enabled }) {
   return null;
 }
 
-function presets(rowCenter, rowLen, production = false, k = 1) {
+function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = false) {
   return {
-    ...(production ? { tree: { pos: [5.5, 4.2, 6.0], target: [0.3, 2.7, 0] } } : {}),
+    // production: the workover rig's substructure sits on the +X side of the well, so the rig-up view comes from -X
+    ...(production ? { tree: rig ? { pos: [-6.5, 4.5, 5.5], target: [0.3, 2.6, 0] } : { pos: [6.0, 4.0, 6.5], target: [0.3, 1.9, 0] } } : {}),
     pad:   { pos: [30 + rowLen * 0.25, 34 + rowLen * 0.2, 70 + rowLen * 0.35], target: [-18, 0, rowCenter] },
-    ...(production ? {} : { tree: { pos: [12.5 * k, 9.5 * k, 13.5 * k], target: [0, 4.8 * k, 0] } }),
+    ...(production ? {} : { tree: { pos: [11 * k, 7.5 * k, 12 * k], target: [0, 3.2 * k, 0] } }),
     row:   { pos: [30 + rowLen * 0.45, 12 + rowLen * 0.18, rowCenter + 6], target: [-2, 3.5, rowCenter] },
     zipper: { pos: [-17, 7, rowCenter - 15], target: [-8, 2.4, rowCenter - 1] },
     pumps: { pos: [-6, 19, 38], target: [-30, 2, 4] },
-    sand:  { pos: [-44, 18, 44], target: [-62, 4, 8] },
-    tanks: { pos: [-40, 14, 62], target: [-56, 2, 38] },
+    sand:  { pos: [-12, 16, bZ + 26], target: [-40, 3, bZ - 4] },
+    tanks: { pos: [-58, 14, 66], target: [-70, 2, 40] },
     gate: { pos: [78, 7, -12], target: [52, 1, -31] },
     support: { pos: [-2, 16, -60], target: [-22, 2, -34] },
     flowback: { pos: [34, 14, 44 + rowLen], target: [26, 1, 20 + rowLen] },
@@ -36,17 +37,17 @@ function presets(rowCenter, rowLen, production = false, k = 1) {
 
 // Render counters for the headless checks (window.__padworksStats), no cost when nobody reads them.
 function RenderStats() {
-  useFrame((state) => { const r = state.gl.info.render; window.__padworksStats = { calls: r.calls, triangles: r.triangles, geometries: state.gl.info.memory.geometries }; window.__padworksScene = state.scene; });
+  useFrame((state) => { const r = state.gl.info.render; window.__padworksStats = { calls: r.calls, triangles: r.triangles, geometries: state.gl.info.memory.geometries }; window.__padworksScene = state.scene; window.__padworksView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
   return null;
 }
-function CameraPreset({ preset, rowCenter, rowLen, production, k }) {
+function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig }) {
   const { camera, controls } = useThree();
   useEffect(() => {
-    const P = presets(rowCenter, rowLen, production, k);
+    const P = presets(rowCenter, rowLen, production, k, bZ, rig);
     const p = P[preset] || P.pad;
     camera.position.set(...p.pos);
     if (controls) { controls.target.set(...p.target); controls.update(); }
-  }, [preset, camera, controls, rowCenter, rowLen, production, k]);
+  }, [preset, camera, controls, rowCenter, rowLen, production, k, bZ, rig]);
   return null;
 }
 
@@ -92,7 +93,9 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const wlWells = roles.filter(r => r.role === 'wireline');
   const show = useHover(h => h.show), hide = useHover(h => h.hide);
   const pick = pickHandlers('surface', show, hide);
-  const pad = useMemo(() => ({ x0: -84, x1: 44, z0: -44, z1: rowLen + 50 }), [rowLen]);
+  const rear = missileZ + md.len / 2;                                   // low-pressure inlet end of the missile
+  const bZ = rear + 8.2;                                                // blender centerline: its discharge end sits 3 m behind the missile
+  const pad = useMemo(() => ({ x0: -84, x1: 44, z0: -44, z1: Math.max(rowLen + 50, bZ + 22) }), [rowLen, bZ]);
   const zipperFrontZ = rowCenter - (rowLen + 6.0) / 2;
 
   return (
@@ -106,10 +109,10 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <RenderStats />
       <hemisphereLight args={[terrain.sky, terrain.ground, 0.25]} />
       <Ticker enabled={tickHere} />
-      <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} k={0.6 + 0.4 * bore / 0.18} />
+      <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
       <Ground terrain={terrain} pad={pad} seed={basin.id.length} />
       <Containment x0={-3.2} x1={4.2} z0={-3.5} z1={rowLen + 3.5} />
-      <RedZone visible={pumping} />
+      <RedZone visible={pumping} x0={-34} x1={10} z0={-14} z1={rowLen + 10} />
       <group {...pick}>
 
       {/* the row of wells: well 0 is under manual control, the others follow the crews */}
@@ -144,19 +147,23 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
           <Pipe from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[MISSILE_X + p.side * 2.4, 1.2, p.z]} r={0.11} mat={MAT.rubber} unions={false} />
         </group>
       ))}
-      {/* blender discharge to the low-pressure headers at the rear of the missile */}
-      <Blender position={[-52, 0, 0]} showLabels={showLabels} />
-      <PipeRun points={[[-50.5, 1.9, 0.6], [-40, 1.3, 0.6], [MISSILE_X - 1.15, md.lpY, missileZ + md.len / 2 - 0.2]]} r={0.16} mat={MAT.steel} />
-      <PipeRun points={[[-50.5, 1.9, -0.6], [-40, 1.3, -0.6], [MISSILE_X + 1.15, md.lpY, missileZ + md.len / 2 - 0.2]]} r={0.16} mat={MAT.steel} />
-      <Hydration position={[-58, 0, 0]} showLabels={showLabels} />
-      <ChemAdd position={[-58, 0, 16]} showLabels={showLabels} />
-      <SandSilos position={[-70, 0, -22]} showLabels={showLabels} />
+      {/* blender behind the missile, discharge end toward it: two suction hoses from its manifolds to the low-pressure headers; hydration and chemical units beside it, silos and conveyor feeding the hoppers */}
+      <Blender position={[MISSILE_X, 0, bZ]} showLabels={showLabels} />
+      <Hose from={[MISSILE_X + 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X + 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />
+      <Hose from={[MISSILE_X - 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X - 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />
+      <Hydration position={[MISSILE_X + 8, 0, bZ + 0.5]} showLabels={showLabels} />
+      <ChemAdd position={[MISSILE_X + 16, 0, bZ + 1]} showLabels={showLabels} />
+      <SandSilos position={[MISSILE_X - 19.2, 0, bZ - 6.0]} showLabels={showLabels} />
       <SandBoxes position={[-80, 0, -2]} showLabels={showLabels} />
-      {(s.setup.fleet !== 'diesel' && s.setup.fleet !== 'grid') && <FuelTrailers position={[-8, 0, -40]} count={Math.min(8, 3 + Math.round(spread.pumps / 3))} showLabels={showLabels} />}
+      {(s.setup.fleet !== 'diesel' && s.setup.fleet !== 'grid') && <FuelTrailers position={[12, 0, -42.5]} count={Math.min(8, 3 + Math.round(spread.pumps / 3))} showLabels={showLabels} />}
       <Pickups position={[30, 0, -36]} count={7} />
-      {[[-20, -40], [-62, 30], [36, rowLen + 40], [-40, rowLen + 44]].map(([x, z], i) => <LightTower key={i} position={[x, 0, z]} />)}
-      <WaterTanks position={[-66, 0, 34]} showLabels={showLabels} />
+      {[[-20, -40], [-56, 50], [36, rowLen + 40], [-40, rowLen + 44]].map(([x, z], i) => <LightTower key={i} position={[x, 0, z]} />)}
+      <WaterTanks position={[-80, 0, 36]} showLabels={showLabels} />
       <DataVan position={[-14, 0, -30]} showLabels={showLabels} />
+      {/* accumulator unit outside the red zone; the tree trunks bundle along the containment, the zipper leg trunks along the pump side, both run on the ground to the skid */}
+      <Accumulator position={[-2, 0, -22]} showLabels={showLabels} />
+      <PipeRun points={[[HOSE_BUNDLE_X, 0.07, rowLen - 2.3], [HOSE_BUNDLE_X, 0.07, -22.75], [-4.2, 0.07, -22.75]]} r={0.07} mat={MAT.hose} />
+      <PipeRun points={[[ZIPPER_BUNDLE_X, 0.07, rowLen], [ZIPPER_BUNDLE_X, 0.07, -12], [-5.2, 0.07, -22.45], [-4.2, 0.07, -22.45]]} r={0.07} mat={MAT.hose} />
       {/* pad life: crew at their stations, windsock and safety flag by the data van, a truck on the lease road, red zone placards */}
       <Windsock position={[-4, 0, -33]} height={6} />
       <Flag position={[-6, 0, -33]} height={7} color="#ff6a00" />
@@ -166,10 +173,11 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <Crew position={[-77, 0, 8.5]} rotation={Math.PI / 2} pose="stand" vest="#e8e83a" seed={4} />
       {(s.phase === 'wireline' && !sleeve) && <Crew position={[10.5, 0, 6.5]} rotation={-Math.PI / 2} pose="point" seed={5} />}
       {s.phase === 'flowback' && <Crew position={[16, 0, 24 + rowLen]} rotation={Math.PI} pose="kneel" seed={6} />}
-      {s.phase === 'production' && <Crew position={[3.5, 0, 3.2]} rotation={-2.2} pose="stand" seed={7} />}
+      {s.phase === 'production' && <Crew position={[3.6, 0, -3.2]} rotation={2.3} pose="stand" seed={7} />}
       <RovingPickup road={{ x0: pad.x1 + 6, x1: pad.x1 + 150, z: pad.z0 + 12 }} speed={5} />
-      <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[6.5, 1.4, -6.5]} rotation={[0, Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />
-      <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[6.5, 1.4, rowLen + 6.5]} rotation={[0, -Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />
+      <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[10.6, 1.4, -14.6]} rotation={[0, Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />
+      <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[10.6, 1.4, rowLen + 10.6]} rotation={[0, -Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />
+      <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[-34.6, 1.4, -14.6]} rotation={[0, 3 * Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />
       <PowerGen fleet={s.setup.fleet} position={[-52, 0, -34]} showLabels={showLabels} />
 
       {s.lubricatorRigged && <WirelineUnit position={[14, 0, 10]} treeTop={treeTop} showLabels={showLabels} active={s.wl.step !== 'idle' && s.wl.step !== 'done' && s.wl.step !== 'armed'} />}

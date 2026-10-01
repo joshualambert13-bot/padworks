@@ -5,7 +5,7 @@ import { useSim, BASINS, COMPLETIONS, SLEEVE_SYSTEMS, PLUG_TYPES, FLEETS, FLUIDS
 import { LESSONS } from '../lessons.js';
 import { bestFor } from '../progress.js';
 
-// Guided lessons: eight scripted sequences with checkpoints and a score. Results stay in this browser.
+// Guided lessons: eight scripted sequences with checkpoints and a score. Results are saved to the trainee's account.
 function Lessons({ s }) {
   const done = LESSONS.filter(l => bestFor(s.lessonResults, l.id)).length;
   return (
@@ -28,7 +28,7 @@ function Lessons({ s }) {
       </ol>
       <div className="flex items-center gap-1 text-[10px] text-mute">
         {s.lastJob && <button className="btn text-[11px] px-2 py-0.5 flex items-center gap-1" onClick={s.openSummary} data-action="summary"><FileText size={12} />Last job summary <span className="mono">{scoreOf(s.lastJob.score).total} {scoreOf(s.lastJob.score).grade}</span></button>}
-        {s.lessonResults.length > 0 && <button className="ml-auto text-mute underline" onClick={s.clearLessonResults} title="Results are stored only in this browser">Clear results</button>}
+        {s.lessonResults.length > 0 && <span className="ml-auto" title="Lesson results are saved to your account">{s.lessonResults.length} result{s.lessonResults.length === 1 ? '' : 's'} saved</span>}
       </div>
     </div>
   );

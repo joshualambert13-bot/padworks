@@ -1,19 +1,25 @@
-// Lesson results stay in this browser only (localStorage). Nothing is sent anywhere; there is no account
-// and no telemetry. Clearing site data clears the results.
-const KEY = 'padworks.lessons.v1';
+// Progress lives in the trainee's account on the server: lesson results and job summaries are posted as they
+// happen and loaded at sign-in. A failed post is logged and the session carries on; nothing is kept in the
+// browser between visits.
+import { api, useAuth } from '../auth/auth.js';
+import { lessonById } from './lessons.js';
 
-export function loadResults() {
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr.slice(-200) : [];
-  } catch { return []; }
+// Server rows ({ id: lessonId, total, grade, secs, at }) into the shape the panels use.
+export function fromServer(rows) {
+  return (rows || []).map(r => {
+    const L = lessonById(r.id) || { n: Number(String(r.id).slice(1)) || 0, title: r.id, targetSec: 0 };
+    return { id: r.id, n: L.n, title: L.title, score: r.total, grade: r.grade, secs: r.secs, targetSec: L.targetSec, when: r.at };
+  });
 }
-export function saveResults(results) {
-  try { window.localStorage.setItem(KEY, JSON.stringify(results.slice(-200))); } catch { /* storage unavailable: results live for this session only */ }
+function failed(e) {
+  if (e && e.status === 401) useAuth.getState().signedOutByServer();
+  else console.warn('[padworks] progress not saved:', e && e.message);
 }
-export function clearResults() {
-  try { window.localStorage.removeItem(KEY); } catch { /* ignore */ }
+export function postLessonResult(entry, summary) {
+  return api('me/results', { method: 'POST', body: { lessonId: entry.id, total: entry.score, secs: entry.secs, title: 'Lesson ' + entry.n + ': ' + entry.title, summary } }).catch(failed);
+}
+export function postJobSummary({ kind = 'free', title, total, secs, payload }) {
+  return api('me/summaries', { method: 'POST', body: { kind, title, total, secs, payload } }).catch(failed);
 }
 export function bestFor(results, id) {
   let best = null;

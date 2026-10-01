@@ -1,15 +1,17 @@
 // Session summary: the score for the job, every deduction with its time, event recoveries against their
 // targets, per-stage times, lesson results, and the log. Printable (the print stylesheet hides everything
-// else) and exportable as JSON. Nothing leaves the browser.
+// else) and exportable as JSON. With a `job` prop it shows a saved summary (the admin panel uses this).
 import { X, Printer, Download, Trophy } from 'lucide-react';
 import { useSim, scoreOf, gradeOf, BASINS, FRAC_MODES, BORES, COMPLETIONS, FLEETS, LIFTS, EVENTS, DEDUCT, EVENT_TARGETS, phasesFor } from './store.js';
 import { LESSONS } from './lessons.js';
 
 const fmtS = (x) => (x == null ? '-' : Math.round(x) + ' s');
 
-export default function SessionSummary() {
+export default function SessionSummary({ job: jobProp = null, lessonResults: lrProp = null, onClose = null, heading = null }) {
   const s = useSim();
-  const job = s.phase === 'setup' ? s.lastJob : { setup: s.setup, pad: s.pad, t: s.t, phase: s.phase, stages: s.stages, score: s.score, log: s.log, events: s.events, lesson: s.lesson, when: Date.now() };
+  const job = jobProp || (s.phase === 'setup' ? s.lastJob : { setup: s.setup, pad: s.pad, t: s.t, phase: s.phase, stages: s.stages, score: s.score, log: s.log, events: s.events, lesson: s.lesson, when: Date.now() });
+  const lessonResults = lrProp || s.lessonResults;
+  const close = onClose || s.closeSummary;
   if (!job) return null;
   const sc = scoreOf(job.score);
   const basin = BASINS.find(b => b.id === job.setup.basin) || BASINS[0];
@@ -20,22 +22,22 @@ export default function SessionSummary() {
   const lift = LIFTS.find(l => l.id === job.setup.lift) || LIFTS[0];
   const phases = phasesFor(job.setup);
   const stageRows = job.stages.map(st => ({ st, rec: job.score.stages[st.index] || {} }));
-  const sessionLessons = s.lessonResults.slice(-12).reverse();
+  const sessionLessons = lessonResults.slice(-12).reverse();
   const stamp = new Date(job.when || Date.now()).toLocaleString();
   const exportJson = () => {
-    const data = { site: 'Padworks', version: 'drop10', when: stamp, setup: job.setup, pad: job.pad, simSeconds: Math.round(job.t), score: sc, deductions: job.score.deductions, eventRecoveries: job.score.events, phaseSeconds: job.score.phaseSec, stages: stageRows.map(r => ({ stage: r.st.index + 1, ...r.rec, placed: r.st.proppantFill })), lessonResults: s.lessonResults, log: [...job.log].reverse() };
+    const data = { site: 'Padworks', version: 'drop16', when: stamp, setup: job.setup, pad: job.pad, simSeconds: Math.round(job.t), score: sc, deductions: job.score.deductions, eventRecoveries: job.score.events, phaseSeconds: job.score.phaseSec, stages: stageRows.map(r => ({ stage: r.st.index + 1, ...r.rec, placed: r.st.proppantFill })), lessonResults, log: [...job.log].reverse() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'padworks-session.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
   const color = sc.grade === 'A' ? 'text-ok' : sc.grade === 'B' ? 'text-accent' : sc.grade === 'C' ? 'text-warn' : 'text-bad';
   return (
-    <div className="absolute inset-0 z-40 bg-black/70 flex items-start justify-center overflow-y-auto p-3 md:p-6" data-panel="summary" onClick={e => { if (e.target === e.currentTarget) s.closeSummary(); }}>
+    <div className="absolute inset-0 z-40 bg-black/70 flex items-start justify-center overflow-y-auto p-3 md:p-6" data-panel="summary" onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="print-area card w-full max-w-3xl p-4 space-y-4 text-sm bg-panel">
         <div className="flex items-center gap-2 no-print">
-          <div className="text-xs uppercase tracking-wide text-mute">Session summary</div>
+          <div className="text-xs uppercase tracking-wide text-mute">{heading || 'Session summary'}</div>
           <button className="btn ml-auto flex items-center gap-1" onClick={() => window.print()} data-action="print"><Printer size={14} />Print</button>
           <button className="btn flex items-center gap-1" onClick={exportJson}><Download size={14} />JSON</button>
-          <button className="btn" onClick={s.closeSummary} title="Close"><X size={14} /></button>
+          <button className="btn" onClick={close} title="Close" data-action="close-summary"><X size={14} /></button>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2"><Trophy size={28} className={color} /><div><div className={'mono text-3xl leading-none ' + color}>{sc.total} <span className="text-xl">{sc.grade}</span></div><div className="text-[11px] text-mute">out of 100 · {sc.pts} points off</div></div></div>
@@ -95,7 +97,7 @@ export default function SessionSummary() {
             <div className="text-[10px] text-mute mt-1">Phase time: {Object.entries(job.score.phaseSec).map(([k, v]) => (phases.find(p => p.id === k) || { short: k }).short.toLowerCase() + ' ' + Math.round(v) + ' s').join(', ') || 'none yet'}.</div>
           </div>
           <div className="card p-2">
-            <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Lesson results (this browser)</div>
+            <div className="text-[10px] uppercase tracking-wide text-mute mb-1">Lesson results (this account)</div>
             {sessionLessons.length === 0 && <div className="text-xs text-mute">No lessons run yet. Start one from the pad setup panel.</div>}
             {sessionLessons.length > 0 && (
               <table className="w-full text-[11px]">
@@ -103,7 +105,7 @@ export default function SessionSummary() {
                 <tbody>{sessionLessons.map((r, i) => <tr key={i}><td>{r.n}. {r.title}</td><td className={'mono text-right ' + (r.grade === 'A' ? 'text-ok' : r.grade === 'B' ? 'text-accent' : 'text-warn')}>{r.score} {r.grade}</td><td className="mono text-right">{r.secs} s</td><td className="mono text-right text-mute">{r.targetSec} s</td></tr>)}</tbody>
               </table>
             )}
-            <div className="text-[10px] text-mute mt-1">{LESSONS.filter(l => s.lessonResults.some(r => r.id === l.id)).length} of {LESSONS.length} lessons run. Results are stored in this browser only; nothing is sent anywhere.</div>
+            <div className="text-[10px] text-mute mt-1">{LESSONS.filter(l => lessonResults.some(r => r.id === l.id)).length} of {LESSONS.length} lessons run. Results and this summary are saved to the account.</div>
           </div>
         </div>
 

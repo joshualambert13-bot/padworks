@@ -1,6 +1,8 @@
 // Headless screenshot pass over the built site. Run after `npm run build`.
 // Usage: node scripts/shots.mjs [outDir]   (default: shots/)
 // Set CHROMIUM_PATH to a Chromium binary when Playwright's own download is not present.
+// The site is served by scripts/dev-server.mjs (static build plus the accounts API on PGlite), and every
+// browser context signs in as the local admin through the API before it opens a page.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -9,24 +11,37 @@ import path from 'node:path';
 const out = process.argv[2] || 'shots';
 fs.mkdirSync(out, { recursive: true });
 const PORT = 4173;
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
+const server = spawn('node', ['scripts/dev-server.mjs', String(PORT)], { stdio: 'ignore' });
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
-await wait(2500);
+await wait(3500);
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'],
 });
 const errors = [];
+const base = `http://localhost:${PORT}`;
+// Sign the context in as the local admin (first time: take the seeded one-time password and set the pass's own).
+const ADMIN = { username: 'admin', seed: 'padworks-admin', password: 'shots-admin-password' };
+async function signIn(ctx) {
+  const post = (path, data) => ctx.request.post(base + '/api/' + path, { data, headers: { 'content-type': 'application/json' } });
+  let r = await post('auth/login', { username: ADMIN.username, password: ADMIN.password });
+  if (!r.ok()) {
+    r = await post('auth/login', { username: ADMIN.username, password: ADMIN.seed });
+    if (!r.ok()) { errors.push('sign-in failed: ' + (await r.text()).slice(0, 120)); return; }
+    const c = await post('auth/password', { current: ADMIN.seed, next: ADMIN.password });
+    if (!c.ok()) errors.push('password change failed: ' + (await c.text()).slice(0, 120));
+  }
+}
 async function page(w, h, mobile = false) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
+  await signIn(ctx);
   const p = await ctx.newPage();
   p.setDefaultTimeout(90000);   // software rendering in CI is slow; a click can wait several frames
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  p.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text().slice(0, 300)); });
+  p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
   return p;
 }
-const base = `http://localhost:${PORT}`;
 // LITE=1 runs the simulator in lite rendering (hard shadows, no environment map) so the long logic pass stays fast under software GL
 const SIM = '/simulate' + (process.env.LITE ? '?lite=1' : '');
 const shot = (p, name) => p.screenshot({ path: path.join(out, name + '.png') });
@@ -62,7 +77,7 @@ async function waitText(p, text, timeout = 90000) {
 
 // ---------------- Desktop simulator walkthrough
 let p;
-if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10') {
+if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env.ONLY !== 'drop16') {
 p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
@@ -202,7 +217,7 @@ await p.close();
 
 }
 
-if (process.env.ONLY !== 'main') {
+if (process.env.ONLY !== 'main' && process.env.ONLY !== 'drop16') {
 p = await page(1440, 900);
 if (process.env.ONLY !== 'drop10') {
 // ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip
@@ -429,6 +444,63 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   await shot(p, '136-lessons-with-results');
 }
 await p.close();
+}
+
+// ---------------- Drop 16: accounts. Sign-in screen, forced password change, admin panel, trainee view, saved progress.
+if (!process.env.ONLY || process.env.ONLY === 'drop16') {
+{
+  { const warm = await browser.newContext(); await signIn(warm); await warm.close(); }   // makes sure the admin has the pass's password
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });   // a fresh context: no cookie
+  p = await ctx.newPage(); p.setDefaultTimeout(90000);
+  p.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
+  await p.goto(base + SIM); await p.waitForSelector('[data-panel="login"]'); await wait(500);
+  await shot(p, '140-login');
+  await p.fill('[data-input="username"]', 'admin'); await p.fill('[data-input="password"]', 'not-the-password'); await p.click('[data-action="login"]');
+  await p.waitForSelector('[data-status="login-error"]'); await shot(p, '141-login-wrong');
+  await p.fill('[data-input="password"]', ADMIN.password); await p.click('[data-action="login"]');
+  await p.waitForSelector('[data-action="user-menu"]'); await wait(3000); await shot(p, '142-signed-in');
+  // admin: create a trainee, read the one-time password, change a role, disable and re-enable
+  await p.click('[data-nav="admin"]'); await p.waitForSelector('[data-table="users"]'); await wait(500); await shot(p, '143-admin-accounts');
+  await p.fill('[data-input="new-username"]', 'jane.doe'); await p.fill('[data-input="new-display"]', 'Jane Doe'); await p.click('[data-action="create-account"]');
+  await p.waitForSelector('[data-panel="one-time-password"]'); await wait(300); await shot(p, '144-admin-one-time-password');
+  const otp = (await p.textContent('[data-value="otp"]')).trim();
+  if (!/^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$/.test(otp)) errors.push('one-time password format: ' + otp);
+  await p.waitForSelector('[data-user="jane.doe"]');
+  await p.fill('[data-input="new-username"]', 'sam.instructor'); await p.fill('[data-input="new-display"]', 'Sam Instructor'); await p.selectOption('[data-select="new-role"]', 'instructor'); await p.click('[data-action="create-account"]');
+  await p.waitForSelector('[data-user="sam.instructor"]');
+  await p.click('[data-action="toggle-sam.instructor"]'); await p.waitForFunction(() => document.querySelector('[data-user="sam.instructor"]').textContent.includes('Disabled'));
+  await p.click('[data-action="toggle-sam.instructor"]'); await p.waitForFunction(() => !document.querySelector('[data-user="sam.instructor"]').textContent.includes('Disabled'));
+  await p.click('[data-action="user-menu"]'); await wait(300); await shot(p, '145-user-menu');
+  await p.click('[data-action="menu-logout"]'); await p.waitForSelector('[data-panel="login"]');
+  // trainee: one-time password, forced change, lesson 8 to completion, results survive a reload
+  await p.fill('[data-input="username"]', 'jane.doe'); await p.fill('[data-input="password"]', otp); await p.click('[data-action="login"]');
+  await p.waitForSelector('[data-panel="change-password"]'); await wait(300); await shot(p, '146-trainee-first-sign-in');
+  await p.fill('[data-input="current"]', otp); await p.fill('[data-input="next"]', 'trainee-password-1'); await p.fill('[data-input="again"]', 'trainee-password-1'); await p.click('[data-action="change-password"]');
+  await p.waitForSelector('[data-action="lesson-L8"]'); await wait(2500);
+  if (await p.isVisible('[data-nav="admin"]')) errors.push('trainee sees the admin link');
+  await p.click('[data-action="lesson-L8"]'); await wait(800); await p.selectOption('select', '4');
+  await clickWhenEnabled(p, 'Rig up'); await wait(1500);
+  await clickWhenEnabled(p, 'Nipple down', 120000); await wait(1000);
+  await clickWhenEnabled(p, 'Install the tree'); await wait(1500);
+  await waitText(p, 'Lesson complete', 20000); await wait(1500);
+  await shot(p, '147-trainee-lesson-complete');
+  await p.reload(); await p.waitForSelector('[data-action="lesson-L8"]'); await wait(3000);
+  const saved = await p.evaluate(() => window.__padworksSim.getState().lessonResults.length);
+  if (saved < 1) errors.push('lesson result did not come back from the server after reload');
+  await shot(p, '148-trainee-results-after-reload');
+  await p.click('[data-action="user-menu"]'); await p.click('[data-action="menu-logout"]'); await p.waitForSelector('[data-panel="login"]');
+  // admin: progress dashboard for the trainee, saved summary, CSV, password reset
+  await p.fill('[data-input="username"]', 'admin'); await p.fill('[data-input="password"]', ADMIN.password); await p.click('[data-action="login"]');
+  await p.waitForSelector('[data-action="user-menu"]'); await p.goto(base + '/admin'); await p.waitForSelector('[data-table="users"]');
+  await p.click('[data-action="view-jane.doe"]'); await p.waitForSelector('[data-panel="progress"] [data-lesson="L8"]'); await wait(800); await shot(p, '149-admin-trainee-progress');
+  const openBtn = await p.$('[data-action^="open-summary-"]');
+  if (openBtn) { await openBtn.click(); await p.waitForSelector('[data-panel="summary"]'); await wait(800); await shot(p, '150-admin-saved-summary'); await p.click('[data-action="close-summary"]'); } else errors.push('no saved summary for the trainee');
+  const csv = await p.evaluate(async () => { const r = await fetch('/api/admin/export.csv'); return r.ok ? (await r.text()).split('\n').filter(Boolean).length : 0; });
+  if (csv < 3) errors.push('csv export rows: ' + csv);
+  await p.click('[data-action="reset-jane.doe"]'); await p.waitForSelector('[data-panel="one-time-password"]'); await wait(300); await shot(p, '151-admin-reset-password');
+  await p.close();
+}
 }
 
 // ---------------- Phone
