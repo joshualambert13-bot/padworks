@@ -5,6 +5,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Merged, GEO, MAT, Cyl, Hose, Mat } from './primitives.jsx';
+import { flagTexture, flagRatio } from './lighting.jsx';
 
 // ---------------------------------------------------------------- canvas signs
 const signCache = new Map();
@@ -159,20 +160,35 @@ export function Windsock({ position = [0, 0, 0], height = 6 }) {
   );
 }
 // Plain safety flag: a cloth plane whose vertices ripple in the wind
-export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 1.6, h = 1.0 }) {
+export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 1.6, h = 1.0, map = null, alpha = false, seed = 0 }) {
   const ref = useRef();
-  const geom = useMemo(() => new THREE.PlaneGeometry(w, h, 16, 6), [w, h]);
+  const geom = useMemo(() => new THREE.PlaneGeometry(w, h, 20, 8), [w, h]);
   const base = useMemo(() => geom.attributes.position.array.slice(), [geom]);
   useFrame((state) => {
     if (!ref.current) return;
-    const t = state.clock.elapsedTime, pos = geom.attributes.position;
-    for (let i = 0; i < pos.count; i++) { const x = base[i * 3] + w / 2, y = base[i * 3 + 1]; pos.setZ(i, Math.sin(x * 3.2 - t * 5) * 0.08 * (x / w) + Math.sin(y * 4 + t * 3) * 0.02 * (x / w)); }
+    const t = state.clock.elapsedTime + seed, pos = geom.attributes.position, k = 0.9 + 0.5 * (w / 1.6);
+    for (let i = 0; i < pos.count; i++) { const x = base[i * 3] + w / 2, y = base[i * 3 + 1]; pos.setZ(i, (Math.sin(x * 3.2 / k - t * 5) * 0.08 * k + Math.sin(x * 7 / k - t * 7.5) * 0.02) * (x / w) + Math.sin(y * 4 + t * 3) * 0.02 * (x / w)); }
     pos.needsUpdate = true; geom.computeVertexNormals();
   });
   return (
     <group position={position}>
-      <Cyl r={0.04} h={height} position={[0, height / 2, 0]} mat={MAT.alu} />
-      <mesh ref={ref} geometry={geom} position={[w / 2 + 0.05, height - h / 2 - 0.1, 0]}><meshStandardMaterial color={color} roughness={0.85} side={THREE.DoubleSide} /></mesh>
+      <Cyl r={0.05} h={height} position={[0, height / 2, 0]} mat={MAT.alu} />
+      <mesh position={[0, height + 0.06, 0]}><sphereGeometry args={[0.09, 10, 8]} /><Mat mat={MAT.brass} /></mesh>
+      <mesh ref={ref} geometry={geom} position={[w / 2 + 0.05, height - h / 2 - 0.1, 0]} castShadow>
+        <meshStandardMaterial color={map ? '#ffffff' : color} map={map || undefined} roughness={0.85} side={THREE.DoubleSide} transparent={alpha} alphaTest={alpha ? 0.5 : 0} />
+      </mesh>
+    </group>
+  );
+}
+// Flagpoles at the data van (Drop 38): the US flag in the position of honor (its own right), the basin's state flag
+// beside it, both drawn in code (`flagTexture`); poles sized to the cloth, halyard sphere finials.
+export function Flagpoles({ position = [0, 0, 0], state = 'TX' }) {
+  const us = useMemo(() => flagTexture('us'), []), st = useMemo(() => flagTexture(state), [state]);
+  const wUs = 2.4, hUs = wUs / flagRatio('us'), wSt = 2.0, hSt = wSt / flagRatio(state);
+  return (
+    <group position={position} name="LG-FLAGPOLES">
+      <Flag position={[0, 0, 0]} height={9.5} w={wUs} h={hUs} map={us} seed={0} />
+      <Flag position={[3.2, 0, 0]} height={8.5} w={wSt} h={hSt} map={st} alpha={state === 'OH'} seed={1.7} />
     </group>
   );
 }
@@ -192,6 +208,8 @@ function puffTexture() {
   return puffCache.tex;
 }
 // Diesel exhaust from a stack while the engine runs: four sprites rising, spreading, and fading, drifting with the wind.
+// Winter (Drop 39) makes exhaust condense: the scene sets PLUME.boost and every plume grows and whitens by it.
+export const PLUME = { boost: 1 };
 export function ExhaustPlume({ position = [0, 0, 0], active = true, strength = 1, seed = 0 }) {
   const refs = useRef([]);
   const tex = useMemo(() => puffTexture(), []);
@@ -201,9 +219,9 @@ export function ExhaustPlume({ position = [0, 0, 0], active = true, strength = 1
       if (!sp) return;
       const ph = (t + i * 0.55) % 2.2, k = ph / 2.2;
       sp.position.set(0.6 * k + 0.2 * Math.sin(t * 2 + i), 0.2 + ph * 2.0, 0.9 * k);
-      const sc = 0.9 + k * 3.0 * strength;
+      const sc = (0.9 + k * 3.0 * strength) * PLUME.boost;
       sp.scale.set(sc, sc, 1);
-      sp.material.opacity = active ? Math.pow(1 - k, 0.8) * 0.9 * Math.min(1, strength) : 0;
+      sp.material.opacity = active ? Math.pow(1 - k, 0.8) * 0.9 * Math.min(1, strength * PLUME.boost) : 0;
     });
   });
   if (!tex) return null;

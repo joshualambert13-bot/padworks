@@ -1,5 +1,5 @@
 // Procedural building blocks shared by the surface and downhole scenes.
-import { useMemo } from 'react';
+import { useMemo, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -42,7 +42,11 @@ export function buildMerged(parts) {
 }
 export function useMerged(factory, deps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => buildMerged(factory()), deps);
+  const geom = useMemo(() => buildMerged(factory()), deps);
+  const prev = useRef(null);
+  if (prev.current && prev.current !== geom) prev.current.dispose();   // a rebuilt run frees the old geometry
+  prev.current = geom;
+  return geom;
 }
 export function Merged({ parts, deps = [], mat = MAT.steel, name, position = [0, 0, 0], rotation = [0, 0, 0], doubleSide = false, shadow = true, vertexColors = false }) {
   const geom = useMerged(() => parts(), deps);
@@ -182,14 +186,37 @@ export function Pipe({ from, to, r = 0.05, mat = MAT.redIron, unions = true, nam
   );
 }
 
-// Polyline of pipes through a list of points
-export function PipeRun({ points, r = 0.05, mat = MAT.redIron, name }) {
+// Polyline of pipes through a list of points: the segments in one merged mesh, the elbows and the hammer unions in
+// another (Drop 41; a run used to be a mesh per segment, per elbow, and per union).
+const Y_UP = new THREE.Vector3(0, 1, 0);
+export function PipeRun({ points, r = 0.05, mat = MAT.redIron, name, unions = true }) {
+  const key = JSON.stringify([points, r, unions]);   // callers pass inline point arrays; memo on content, not identity
+  const parts = useMemo(() => {
+    const pipes = [], fittings = [];
+    for (let i = 1; i < points.length; i++) {
+      const a = new THREE.Vector3(...points[i - 1]), b = new THREE.Vector3(...points[i]);
+      const dir = new THREE.Vector3().subVectors(b, a), len = dir.length(); if (len < 1e-4) continue;
+      const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+      const q = new THREE.Quaternion().setFromUnitVectors(Y_UP, dir.clone().normalize()), e = new THREE.Euler().setFromQuaternion(q);
+      pipes.push({ g: new THREE.CylinderGeometry(r, r, len, 12), p: mid.toArray(), r: [e.x, e.y, e.z] });
+      if (unions && len > 0.6) {
+        for (const sgn of [1, -1]) {
+          const at = mid.clone().addScaledVector(dir.clone().normalize(), sgn * (len / 2 - r * 1.6));
+          for (const part of nutParts(r)) {
+            const m = new THREE.Matrix4().compose(new THREE.Vector3(...(part.p || [0, 0, 0])), new THREE.Quaternion().setFromEuler(new THREE.Euler(...(part.r || [0, 0, 0]))), new THREE.Vector3(...(part.s || [1, 1, 1])));
+            const g = part.g.clone().applyMatrix4(m);   // part in the pipe's frame, then the pipe's rotation and position
+            fittings.push({ g, p: at.toArray(), r: [e.x, e.y, e.z] });
+          }
+        }
+      }
+      if (i < points.length - 1) fittings.push({ g: new THREE.SphereGeometry(r * 1.5, 12, 12), p: points[i] });
+    }
+    return { pipes, fittings };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <group name={name}>
-      {points.slice(1).map((p, i) => <Pipe key={i} from={points[i]} to={p} r={r} mat={mat} />)}
-      {points.slice(1, -1).map((p, i) => (
-        <mesh key={'j' + i} position={p}><sphereGeometry args={[r * 1.5, 12, 12]} /><meshStandardMaterial {...MAT.darkSteel} /></mesh>
-      ))}
+      {parts.pipes.length > 0 && <Merged mat={mat} deps={[parts]} parts={() => parts.pipes} />}
+      {parts.fittings.length > 0 && <Merged mat={MAT.darkSteel} deps={[parts]} parts={() => parts.fittings} shadow={false} />}
     </group>
   );
 }
@@ -400,5 +427,62 @@ export function Label({ text, position = [0, 0, 0], size = 0.022 }) {
     <sprite position={position} scale={[size * aspect, size, 1]} renderOrder={10}>
       <spriteMaterial map={tex} sizeAttenuation={false} depthTest={false} depthWrite={false} transparent />
     </sprite>
+  );
+}
+
+
+// ---------------------------------------------------------------- unit instancing (Drop 41)
+// Many pad units are identical (13 pumps, 8 frac tanks, 7 pickups, 10 light towers): each used to be its own
+// React subtree of meshes, so 13 pumps cost 13 times the draw calls. `Instanced` renders the unit ONCE as a hidden
+// template, then walks the template, groups its meshes by material and record name, bakes each group into one
+// geometry in the template's frame, and draws every group as one InstancedMesh with a matrix per unit. Picking
+// still works because each InstancedMesh carries the group's record name. Anything that moves, lights up, or
+// differs per unit (fans, lamps, plumes, numbers) is rendered per unit by a separate light component. `version`
+// rebuilds the instances when the template's look changes (lamps lit at night, say).
+const matKey = (m) => [m.type, m.color && m.color.getHexString(), m.emissive && m.emissive.getHexString(), m.emissiveIntensity, m.roughness, m.metalness, m.map && m.map.uuid, m.bumpMap && m.bumpMap.uuid, m.roughnessMap && m.roughnessMap.uuid, m.vertexColors, m.transparent, m.opacity, m.side, m.clearcoat, m.toneMapped].join('|');
+function nearestName(o, stop) { let x = o; while (x && x !== stop) { if (x.name) return x.name; x = x.parent; } return ''; }
+export function Instanced({ transforms, version = 0, children, name }) {
+  const tpl = useRef(), holder = useRef();
+  const built = useRef([]);
+  useLayoutEffect(() => {
+    const t = tpl.current, h = holder.current; if (!t || !h) return;
+    t.visible = true; t.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(t.matrixWorld).invert();
+    const groups = new Map();
+    t.traverse(m => {
+      if (!m.isMesh || m.isInstancedMesh || !m.geometry || !m.material || m.isSprite) return;
+      if (m.userData.noInstance) return;
+      const key = matKey(m.material) + '#' + nearestName(m, t) + '#' + (m.castShadow ? 1 : 0);
+      if (!groups.has(key)) groups.set(key, { material: m.material, name: nearestName(m, t), cast: m.castShadow, geos: [] });
+      const g = m.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld));
+      groups.get(key).geos.push(g);
+    });
+    t.visible = false;
+    const made = [];
+    const n = transforms.length;
+    const mats = transforms.map(tr => new THREE.Matrix4().compose(new THREE.Vector3(...tr.position), new THREE.Quaternion().setFromEuler(new THREE.Euler(...(tr.rotation || [0, 0, 0]))), new THREE.Vector3(1, 1, 1)));
+    for (const grp of groups.values()) {
+      let geos = grp.geos;
+      const anyIndexed = geos.some(g => g.index), allIndexed = geos.every(g => g.index);
+      if (anyIndexed && !allIndexed) geos = geos.map(g => g.index ? g.toNonIndexed() : g);
+      const hasColor = geos.some(g => g.attributes.color);
+      if (hasColor) geos = geos.map(g => { if (!g.attributes.color) { const c = new Float32Array(g.attributes.position.count * 3).fill(1); g.setAttribute('color', new THREE.BufferAttribute(c, 3)); } return g; });
+      for (const g of geos) { for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) g.deleteAttribute(k); if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); if (!g.attributes.normal) g.computeVertexNormals(); }
+      const merged = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
+      if (!merged) continue;
+      const im = new THREE.InstancedMesh(merged, grp.material, n);
+      for (let i = 0; i < n; i++) im.setMatrixAt(i, mats[i]);
+      im.instanceMatrix.needsUpdate = true;
+      im.castShadow = grp.cast; im.receiveShadow = true; im.name = grp.name; im.frustumCulled = false;
+      h.add(im); made.push(im);
+    }
+    built.current = made;
+    return () => { made.forEach(im => { h.remove(im); im.geometry.dispose(); }); built.current = []; };
+  }, [transforms, version]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <>
+      <group ref={tpl} visible={false} position={[0, -500, 0]} name={name ? name + '-TEMPLATE' : undefined}>{children}</group>
+      <group ref={holder} name={name} />
+    </>
   );
 }

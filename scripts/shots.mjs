@@ -114,6 +114,25 @@ await shot(p, '06-sim-frac-split');
 await p.getByRole('button', { name: 'Surface' }).click(); await wait(1500);
 await p.selectOption('select[title="Camera preset"]', 'pumps'); await wait(2000);
 await shot(p, '07-sim-frac-pumps');
+// Drop 42: a share link of this job opens in a second tab at the same phase and stage
+try {
+  const token = await p.evaluate(() => window.__padworksSim.getState().shareToken());
+  const want = await p.evaluate(() => { const g = window.__padworksSim.getState(); return { phase: g.phase, stage: g.stage, basin: g.setup.basin }; });
+  console.log('share link: token', token.length, 'chars', new Date().toISOString());
+  // same context as p: a fresh context has a cold shader cache, and under software GL its first frames take minutes
+  const q = await p.context().newPage(); q.setDefaultTimeout(90000);
+  q.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  q.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
+  console.log('share link: page ready', new Date().toISOString());
+  await q.goto(base + '/simulate?s=' + token + (process.env.LITE ? '&lite=1' : ''), { timeout: 120000, waitUntil: 'domcontentloaded' }); console.log('share link: loaded', new Date().toISOString());
+  await q.waitForFunction(() => window.__padworksSim && window.__padworksSim.getState().phase !== 'setup', null, { timeout: 120000, polling: 1000 }); console.log('share link: phase set', new Date().toISOString());
+  await wait(4000);
+  const st = await q.evaluate(() => { const g = window.__padworksSim.getState(); return { phase: g.phase, stage: g.stage, basin: g.setup.basin }; });
+  if (st.phase !== want.phase || st.stage !== want.stage || st.basin !== want.basin) errors.push('share link mismatch: ' + JSON.stringify(st) + ' vs ' + JSON.stringify(want));
+  console.log('share link', JSON.stringify(st), new Date().toISOString());
+  await shot(q, '07b-share-link');
+  await q.close();
+} catch (e) { errors.push('share link: ' + e.message.slice(0, 160)); }
 // screenout: high concentration at low rate
 await setRange(p, 0, 30); await setRange(p, 1, 3.5);
 await waitText(p, 'Screenout', 60000); await wait(1500);
@@ -144,6 +163,10 @@ await shot(p, '12b-sim-flowback-dusk');
 await p.getByRole('button', { name: 'Dusk' }).click(); await wait(4500);
 await shot(p, '12c-sim-flowback-night');
 await p.getByRole('button', { name: 'Night' }).click(); await wait(1500);
+// Drop 39: winter (snow shader patch, overcast, flurries), then back to summer
+await p.getByRole('button', { name: 'Summer' }).click(); await wait(4500);
+await shot(p, '12d-sim-flowback-winter');
+await p.getByRole('button', { name: 'Winter' }).click(); await wait(1500);
 {
   const snd = await p.evaluate(() => { const E = window.__padworksSound; if (!E) return null; const V = E.V; return { state: E.ctx.state, on: E.on, choke: +V.choke.gain.value.toFixed(3), pump: +V.pump.gain.value.toFixed(3) }; });
   if (!snd || snd.state !== 'running' || !snd.on) errors.push('sound not running at flowback: ' + JSON.stringify(snd));

@@ -34,34 +34,34 @@ const freshLesson = () => ({ id: null, doneMask: [], startedAt: 0, finished: fal
 // Pad setup vocabulary. Every value here is an illustrative starting point for a training pad,
 // not a design value. The basin table sets typical starting values that the user can override.
 export const BASINS = [
-  { id: 'permian-delaware', label: 'Permian: Delaware Basin', region: 'West Texas and southeast New Mexico', blurb: 'Flat desert floor of caliche and creosote scrub with mesas on the horizon. Deep, high-pressure oil and gas targets; 15K trees are common.',
+  { id: 'permian-delaware', snow: 0.35, sand: 'boxes', state: 'TX', water: 'pit', label: 'Permian: Delaware Basin', region: 'West Texas and southeast New Mexico', blurb: 'Flat desert floor of caliche and creosote scrub with mesas on the horizon. Deep, high-pressure oil and gas targets; 15K trees are common.',
     tvdFt: 10500, fracGradient: 0.85, bore: '7-15K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: 'mixed', fleet: 'efrac-turbine', completion: 'pnp', lift: 'esp',
     terrain: { ground: '#b8a27c', pad: '#d2c8ad', relief: 0.6, veg: 'scrub', density: 0.3, vegColor: '#5f6b3c', sky: '#bcd0e6', fog: '#d9d4c4' } },
-  { id: 'permian-midland', label: 'Permian: Midland Basin', region: 'West Texas', blurb: 'Flat to gently rolling mesquite country on red-tan soil. Stacked oil targets at moderate depth; 10K and 15K trees both in use.',
+  { id: 'permian-midland', snow: 0.35, sand: 'boxes', state: 'TX', water: 'pit', label: 'Permian: Midland Basin', region: 'West Texas', blurb: 'Flat to gently rolling mesquite country on red-tan soil. Stacked oil targets at moderate depth; 10K and 15K trees both in use.',
     tvdFt: 8500, fracGradient: 0.75, bore: '7-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: '100mesh', fleet: 'dualfuel', completion: 'pnp', lift: 'rodpump',
     terrain: { ground: '#b48d66', pad: '#cdbfa3', relief: 0.3, veg: 'mesquite', density: 0.25, vegColor: '#566b35', sky: '#b9cfe8', fog: '#dbd3c3' } },
-  { id: 'eagle-ford', label: 'Eagle Ford', region: 'South Texas', blurb: 'Rolling brush country of mesquite and huisache on olive-brown soil, humid haze. Oil, condensate, and gas windows along the trend.',
+  { id: 'eagle-ford', snow: 0.15, sand: 'boxes', state: 'TX', water: 'pit', label: 'Eagle Ford', region: 'South Texas', blurb: 'Rolling brush country of mesquite and huisache on olive-brown soil, humid haze. Oil, condensate, and gas windows along the trend.',
     tvdFt: 9500, fracGradient: 0.85, bore: '5-15K', lateralFt: 8500, stageSpacingFt: 220, clusters: 5, proppantLbFt: 1800, fluidBblFt: 35, fluid: 'slickwater', proppant: '40-70', fleet: 'dualfuel', completion: 'pnp', lift: 'gaslift',
     terrain: { ground: '#8b8a5a', pad: '#c7bc9c', relief: 0.9, veg: 'brush', density: 0.6, vegColor: '#4c6b34', sky: '#a9c4e0', fog: '#cfd8d6' } },
-  { id: 'bakken', label: 'Bakken and Three Forks (Williston)', region: 'North Dakota and Montana', blurb: 'Rolling prairie of green-gold grass under a big sky, few trees. Openhole sliding sleeve completions were common here before plug and perf took over.',
+  { id: 'bakken', snow: 1.0, sand: 'silos', state: 'ND', water: 'heated', label: 'Bakken and Three Forks (Williston)', region: 'North Dakota and Montana', blurb: 'Rolling prairie of green-gold grass under a big sky, few trees. Openhole sliding sleeve completions were common here before plug and perf took over.',
     tvdFt: 10500, fracGradient: 0.75, bore: '5-15K', lateralFt: 10000, stageSpacingFt: 250, clusters: 4, proppantLbFt: 1200, fluidBblFt: 25, fluid: 'hybrid', proppant: '40-70', fleet: 'diesel', completion: 'sleeve', lift: 'esp',
     terrain: { ground: '#8f9a58', pad: '#bdb59a', relief: 1.4, veg: 'grass', density: 0.05, vegColor: '#4e6b3a', sky: '#9fc3ea', fog: '#cfe0f0' } },
-  { id: 'haynesville', label: 'Haynesville', region: 'Northwest Louisiana and East Texas', blurb: 'Pine forest on red clay, humid. Deep, hot, high-pressure dry gas: 15K trees and iron are the rule and treating pressures run high.',
+  { id: 'haynesville', snow: 0.15, sand: 'silos', state: 'LA', water: 'pit', label: 'Haynesville', region: 'Northwest Louisiana and East Texas', blurb: 'Pine forest on red clay, humid. Deep, hot, high-pressure dry gas: 15K trees and iron are the rule and treating pressures run high.',
     tvdFt: 12000, fracGradient: 0.95, bore: '7-15K', lateralFt: 8000, stageSpacingFt: 180, clusters: 6, proppantLbFt: 2500, fluidBblFt: 45, fluid: 'hvfr', proppant: '100mesh', fleet: 'efrac-turbine', completion: 'pnp', lift: 'flow',
     terrain: { ground: '#5f6d3a', pad: '#b8a58a', relief: 0.8, veg: 'pine', density: 0.9, vegColor: '#2f5a2e', sky: '#a9bfd6', fog: '#c6d2d8' } },
-  { id: 'marcellus', label: 'Marcellus (Appalachia)', region: 'Pennsylvania and West Virginia', blurb: 'Hardwood-forested hills; small pads cut into hillsides with crushed stone surfaces. Shallower dry gas with long laterals.',
+  { id: 'marcellus', snow: 0.85, sand: 'silos', state: 'PA', water: 'ast', label: 'Marcellus (Appalachia)', region: 'Pennsylvania and West Virginia', blurb: 'Hardwood-forested hills; small pads cut into hillsides with crushed stone surfaces. Shallower dry gas with long laterals.',
     tvdFt: 7000, fracGradient: 0.85, bore: '5-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2200, fluidBblFt: 45, fluid: 'slickwater', proppant: '100mesh', fleet: 'efrac-genset', completion: 'pnp', lift: 'plunger',
     terrain: { ground: '#5c6e3f', pad: '#a7a08e', relief: 3.0, veg: 'hardwood', density: 0.85, vegColor: '#3e6b34', sky: '#a3bdd8', fog: '#c0ccd6' } },
-  { id: 'dj', label: 'DJ Basin (Niobrara)', region: 'Northeast Colorado', blurb: 'High plains of short buff grass, wide horizons, clear air. Moderate depth and pressure; pads sit close to towns, so electric fleets are favored for noise.',
+  { id: 'dj', snow: 0.8, sand: 'boxes', state: 'CO', water: 'ast', label: 'DJ Basin (Niobrara)', region: 'Northeast Colorado', blurb: 'High plains of short buff grass, wide horizons, clear air. Moderate depth and pressure; pads sit close to towns, so electric fleets are favored for noise.',
     tvdFt: 7500, fracGradient: 0.75, bore: '5-10K', lateralFt: 10000, stageSpacingFt: 200, clusters: 5, proppantLbFt: 1500, fluidBblFt: 30, fluid: 'slickwater', proppant: '40-70', fleet: 'grid', completion: 'pnp', lift: 'plunger',
     terrain: { ground: '#a89f6f', pad: '#c4b99a', relief: 0.7, veg: 'grass', density: 0.02, vegColor: '#6b7a44', sky: '#9fc0ea', fog: '#d6dde8' } },
-  { id: 'anadarko', label: 'Anadarko (SCOOP and STACK)', region: 'Central Oklahoma', blurb: 'Rolling plains on red soil with scattered oaks and cedars. Deep, high-pressure targets in the SCOOP; shallower stacked targets in the STACK.',
+  { id: 'anadarko', snow: 0.5, sand: 'silos', state: 'OK', water: 'ast', label: 'Anadarko (SCOOP and STACK)', region: 'Central Oklahoma', blurb: 'Rolling plains on red soil with scattered oaks and cedars. Deep, high-pressure targets in the SCOOP; shallower stacked targets in the STACK.',
     tvdFt: 11000, fracGradient: 0.85, bore: '5-15K', lateralFt: 10000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 1800, fluidBblFt: 38, fluid: 'slickwater', proppant: 'mixed', fleet: 'dualfuel', completion: 'pnp', lift: 'gaslift',
     terrain: { ground: '#9c7c56', pad: '#c3b394', relief: 1.0, veg: 'scrub', density: 0.2, vegColor: '#587a3a', sky: '#b4cbe6', fog: '#d8d0c4' } },
-  { id: 'powder-river', label: 'Powder River Basin', region: 'Northeast Wyoming', blurb: 'Sage steppe on buff soil with broken hills. Moderate depth oil targets; long hauls for sand and water.',
+  { id: 'powder-river', snow: 1.0, sand: 'silos', state: 'WY', water: 'heated', label: 'Powder River Basin', region: 'Northeast Wyoming', blurb: 'Sage steppe on buff soil with broken hills. Moderate depth oil targets; long hauls for sand and water.',
     tvdFt: 9000, fracGradient: 0.7, bore: '5-10K', lateralFt: 9500, stageSpacingFt: 220, clusters: 5, proppantLbFt: 1400, fluidBblFt: 30, fluid: 'hybrid', proppant: '40-70', fleet: 'diesel', completion: 'pnp', lift: 'rodpump',
     terrain: { ground: '#a3a077', pad: '#c2b99b', relief: 1.8, veg: 'sage', density: 0.45, vegColor: '#7a8a6a', sky: '#a9c6ea', fog: '#d5dbe4' } },
-  { id: 'utica', label: 'Utica (Appalachia)', region: 'Eastern Ohio', blurb: 'Rolling farmland and woodlots. Deep dry gas and condensate with high pressure in the deeper window.',
+  { id: 'utica', snow: 0.85, sand: 'silos', state: 'OH', water: 'ast', label: 'Utica (Appalachia)', region: 'Eastern Ohio', blurb: 'Rolling farmland and woodlots. Deep dry gas and condensate with high pressure in the deeper window.',
     tvdFt: 9000, fracGradient: 0.9, bore: '5-15K', lateralFt: 11000, stageSpacingFt: 200, clusters: 6, proppantLbFt: 2000, fluidBblFt: 40, fluid: 'slickwater', proppant: '100mesh', fleet: 'efrac-genset', completion: 'pnp', lift: 'flow',
     terrain: { ground: '#64733f', pad: '#a7a08e', relief: 2.2, veg: 'hardwood', density: 0.6, vegColor: '#3f6a36', sky: '#a8c0d8', fog: '#c3cdd5' } },
 ];
@@ -287,7 +287,7 @@ function defaultSetup() {
   const b = BASINS[0];
   return { basin: b.id, tvdFt: b.tvdFt, fracGradient: b.fracGradient, completion: b.completion, sleeveSystem: 'cemented', plugs: 'composite',
     lateralFt: b.lateralFt, stageSpacingFt: b.stageSpacingFt, clusters: b.clusters, stagesShown: 5,
-    fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, lift: b.lift || 'flow' };
+    fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, lift: b.lift || 'flow', sand: b.sand || 'silos' };
 }
 
 const freshJob = (setup, pad) => ({
@@ -319,7 +319,7 @@ export const useSim = create((set, get) => ({
   speed: 1,
   setup: defaultSetup(),
   pad: { wells: 4, mode: 'zipper', bore: BASINS[0].bore },
-  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false, focus: null, tod: 'day' },
+  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false, focus: null, tod: 'day', season: 'summer' },
   ...freshJob(defaultSetup(), { wells: 4, mode: 'zipper', bore: BASINS[0].bore }),
   lessonResults: [],
   lastJob: null,
@@ -365,7 +365,7 @@ export const useSim = create((set, get) => ({
   setBasin: (id) => {
     const b = BASINS.find(x => x.id === id) || BASINS[0];
     get().setSetup({ basin: b.id, tvdFt: b.tvdFt, fracGradient: b.fracGradient, completion: b.completion, lateralFt: b.lateralFt, stageSpacingFt: b.stageSpacingFt,
-      clusters: b.clusters, fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, sleeveSystem: b.id === 'bakken' ? 'openhole' : 'cemented', lift: b.lift || 'flow' });
+      clusters: b.clusters, fleet: b.fleet, proppant: b.proppant, proppantLbFt: b.proppantLbFt, fluid: b.fluid, fluidBblFt: b.fluidBblFt, sleeveSystem: b.id === 'bakken' ? 'openhole' : 'cemented', lift: b.lift || 'flow', sand: b.sand || 'silos' });
     get().setPad({ bore: b.bore });
   },
   startJob: () => {
@@ -429,6 +429,32 @@ export const useSim = create((set, get) => ({
   quitLesson: () => { const L = lessonById(get().lesson.id); set({ lesson: freshLesson() }); if (L) get().addLog('Lesson ' + L.n + ' left; the job continues in free play.'); },
   nextLesson: () => { const id = nextLessonId(get().lesson.id); if (id) get().startLesson(id); else get().reset(); },
   hydrateProgress: (rows) => set({ lessonResults: fromServer(rows) }),
+  // Shareable job links (Drop 42): the setup, pad, phase, stage, and view settings as one URL-safe token.
+  shareToken: () => {
+    const s = get();
+    const obj = { v: 1, setup: s.setup, pad: s.pad, phase: s.phase, stage: s.stage, ui: { tod: s.ui.tod, season: s.ui.season, preset: s.ui.preset, view: s.ui.view } };
+    const json = JSON.stringify(obj);
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  },
+  applyShareToken: (token) => {
+    try {
+      const b64 = token.replace(/-/g, '+').replace(/_/g, '/');
+      const obj = JSON.parse(decodeURIComponent(escape(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)))));
+      if (!obj || obj.v !== 1) return false;
+      get().reset();
+      if (obj.setup) get().setSetup({ ...get().setup, ...obj.setup });
+      if (obj.pad) get().setPad({ ...get().pad, ...obj.pad });
+      if (obj.ui) set(st => ({ ui: { ...st.ui, ...obj.ui, focus: null, summary: false } }));
+      if (obj.phase && obj.phase !== 'setup') {
+        get().setPhase(obj.phase);
+        const target = Math.max(0, Math.min((get().stages.length || 1) - 1, obj.stage || 0));
+        for (let i = 0; i < target; i++) get().nextStage();
+        get().addLog('Opened from a shared link: ' + obj.phase + ', stage ' + (target + 1));
+      }
+      return true;
+    } catch (e) { console.error('share link:', e); return false; }
+  },
   openSummary: () => set(s => ({ ui: { ...s.ui, summary: true } })),
   closeSummary: () => set(s => ({ ui: { ...s.ui, summary: false } })),
   clearInterlock: () => set(s => ({ alarms: { ...s.alarms, interlock: '' } })),

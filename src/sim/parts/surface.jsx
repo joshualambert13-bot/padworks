@@ -4,7 +4,7 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged, RBox, Mat, Cable, HydraulicCylinder, metal } from './primitives.jsx';
+import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged, RBox, Mat, Cable, HydraulicCylinder, metal, Instanced } from './primitives.jsx';
 import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture, wrapTexture } from './lighting.jsx';
 import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume } from './life.jsx';
 
@@ -632,6 +632,8 @@ export function PlungerController({ partner = false }) {
 }
 
 // Wireline pressure control stack on the tree: adapter, wireline valve, tool trap, lubricator sections, grease head.
+export const LUB_HEIGHT = 2.0 + 4 * 2.4 + 0.7;            // grease head top above the stack base
+export const lubricatorTopY = (d, bore) => d.topY - bore * 1.5 + LUB_HEIGHT;   // world height of the grease head top on a tree
 export function Lubricator({ baseY, wlStep, showLabels }) {
   const r = 0.16;
   const sections = 4, secH = 2.4;
@@ -653,6 +655,9 @@ export function Lubricator({ baseY, wlStep, showLabels }) {
       ))}
       <Cyl r={0.19} h={0.7} position={[0, 2.0 + sections * secH + 0.35, 0]} mat={MAT.darkSteel} name="WL-PCE-GREASEHEAD" />
       <Cyl r={0.05} h={0.35} rotation={[0, 0, Math.PI / 2]} position={[0.25, 2.0 + sections * secH + 0.5, 0]} mat={MAT.blue} />
+      {/* lifting bail on top of the grease head: the crane hook holds the stack by it */}
+      <Cyl r={0.05} h={0.2} position={[0, LUB_HEIGHT + 0.1, 0]} mat={MAT.darkSteel} />
+      <mesh position={[0, LUB_HEIGHT + 0.32, 0]} rotation={[0, Math.PI / 2, 0]} castShadow><torusGeometry args={[0.14, 0.03, 8, 18]} /><Mat mat={MAT.darkSteel} /></mesh>
       {/* tool string parked in the lubricator when not in the well */}
       {toolVisible && (
         <group position={[0, 2.0 + sections * secH - 4.0, 0]} name="WL-TOOLSTRING">
@@ -891,10 +896,13 @@ export function Missile({ position = [-30, 0, 2], showLabels, perSide = 4, prvLi
   );
 }
 
-export function FracPump({ position, rotation = [0, 0, 0], online = false, rate = 0, name, electric = false, number = 0 }) {
+// `template`: render only the static body (no fan, lamp, plume, or number) for `Instanced`; `FracPumpLive` draws
+// those per unit on top of the instanced bodies (Drop 41).
+export function FracPump({ position, rotation = [0, 0, 0], online = false, rate = 0, name, electric = false, number = 0, template = false }) {
   const ref = useRef();
   const fan = useRef();
   useFrame((state, dt) => {
+    if (template) return;
     if (ref.current) { const amp = online ? 0.004 + rate / 100 * 0.01 : 0; ref.current.position.y = Math.sin(state.clock.elapsedTime * 40) * amp; }
     if (fan.current && online) fan.current.rotation.x += dt * 12;
   });
@@ -951,9 +959,9 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
             {/* radiator face and louvered side panels */}
             <Merged mat={MAT.dimSteel} deps={[electric]} parts={() => [{ g: GEO.box(0.04, 1.6, 1.9), p: [-5.6, D + 1.0, 0] }, ...[-1, 1].flatMap(sz => [0.55, 0.75, 0.95, 1.15, 1.35, 1.55].map(y => ({ g: GEO.box(1.3, 0.03, 0.03), p: [-4.3, D + y, sz * 1.06], r: [sz * 0.55, 0, 0] })))]} />
             <Merged mat={MAT.alu} deps={[electric]} parts={() => [-0.6, -0.2, 0.2, 0.6].map(z => ({ g: GEO.box(0.03, 1.5, 0.05), p: [-5.62, D + 1.0, z] }))} />
-            <group ref={fan} position={[-5.3, D + 1.0, 0]}>
+            {!template && <group ref={fan} position={[-5.3, D + 1.0, 0]}>
               <Merged mat={MAT.alu} shadow={false} parts={() => [0, 60, 120].map(a => ({ g: GEO.box(0.04, 1.3, 0.16), r: [THREE.MathUtils.degToRad(a), 0, 0] }))} />
-            </group>
+            </group>}
           </>
         )}
         <RBox r={0.08} size={[1.5, 1.1, 1.5]} position={[-1.2, D + 0.85, 0]} mat={MAT.darkSteel} name={name + '-TRANSMISSION'} />
@@ -976,9 +984,9 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
         <Pipe from={[5.0, D + 1.95, 1.2]} to={[6.6, D + 1.0, 1.2]} r={0.07} mat={MAT.redIron} />
         <Hose from={[3.4, D + 0.3, -1.2]} to={[6.6, 0.35, -1.2]} r={0.14} sag={0.35} segments={10} />
         {/* pump number on the cab side, hazard strip across the rear, exhaust plume while the engine runs */}
-        {number > 0 && <Sign lines={['PUMP ' + number]} position={[electric ? -5.3 : -3.5, D + 1.3, 1.16]} width={0.9} height={0.4} bg="#1a1a1a" fg="#ffffff" />}
+        {number > 0 && !template && <Sign lines={['PUMP ' + number]} position={[electric ? -5.3 : -3.5, D + 1.3, 1.16]} width={0.9} height={0.4} bg="#1a1a1a" fg="#ffffff" />}
         <HazardStrip position={[6.72, D - 0.2, 0]} rotation={[0, Math.PI / 2, 0]} length={2.4} height={0.14} />
-        {!electric && <ExhaustPlume position={[-4.3, D + 3.5, 0.7]} active={online} strength={0.6 + rate / 150} seed={(number || 1) * 1.7} />}
+        {!electric && !template && <ExhaustPlume position={[-4.3, D + 3.5, 0.7]} active={online} strength={0.6 + rate / 150} seed={(number || 1) * 1.7} />}
         {/* hose reel on the gooseneck deck: wrapped hose on the drum (the frame and flanges ride in the merged meshes below); fire extinguisher by the panel */}
         <Merged mat={MAT.hose} shadow={false} parts={() => [{ g: GEO.cyl(0.26, 0.56, 20), p: [-6.2, D + 0.55, 0.55], r: [Math.PI / 2, 0, 0] }, { g: GEO.torus(0.3, 0.03, 6, 20), p: [-6.2, D + 0.55, 0.67] }, { g: GEO.torus(0.3, 0.03, 6, 20), p: [-6.2, D + 0.55, 0.43] }]} />
         <Merged mat={MAT.paintRed} shadow={false} parts={() => [{ g: GEO.cyl(0.075, 0.5, 10), p: [-1.1, D + 0.3, 1.18] }]} />
@@ -986,15 +994,37 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
         <Merged mat={MAT.grating} shadow={false} parts={() => [{ g: GEO.box(9.5, 0.03, 0.6), p: [-0.5, D + 0.02, 1.0] }]} />
         <Handrail length={9.0} position={[-0.5, D, 1.28]} height={1.0} />
         <Merged mat={MAT.chassis} shadow={false} parts={() => [{ g: GEO.box(0.5, 0.7, 0.12), p: [-0.4, D + 1.0, 1.32] }, { g: GEO.box(0.06, 0.55, 0.06), p: [-6.2, D + 0.28, 0.95] }, { g: GEO.box(0.06, 0.55, 0.06), p: [-6.2, D + 0.28, 0.15] }, { g: GEO.box(0.5, 0.05, 1.0), p: [-6.2, D + 0.025, 0.55] }]} />
-        <mesh position={[-0.4, D + 1.35, 1.36]}>
+        {!template && <mesh position={[-0.4, D + 1.35, 1.36]}>
           <sphereGeometry args={[0.07, 8, 8]} />
           <meshStandardMaterial color={online ? '#35e08f' : '#555'} emissive={online ? '#35e08f' : '#000'} emissiveIntensity={1.5} />
-        </mesh>
+        </mesh>}
       </group>
     </Trailer>
   );
 }
 
+
+// Per-unit live parts over an instanced pump body: the radiator fan, the status lamp, the exhaust plume, the number.
+export function FracPumpLive({ position, rotation = [0, 0, 0], online = false, rate = 0, name, electric = false, number = 0 }) {
+  const fan = useRef();
+  useFrame((state, dt) => { if (fan.current && online) fan.current.rotation.x += dt * 12; });
+  const D = 1.18;
+  return (
+    <group position={position} rotation={rotation} name={name}>
+      {!electric && (
+        <group ref={fan} position={[-5.3, D + 1.0, 0]}>
+          <Merged mat={MAT.alu} shadow={false} parts={() => [0, 60, 120].map(a => ({ g: GEO.box(0.04, 1.3, 0.16), r: [THREE.MathUtils.degToRad(a), 0, 0] }))} />
+        </group>
+      )}
+      {number > 0 && <Sign lines={['PUMP ' + number]} position={[electric ? -5.3 : -3.5, D + 1.3, 1.16]} width={0.9} height={0.4} bg="#1a1a1a" fg="#ffffff" />}
+      {!electric && <ExhaustPlume position={[-4.3, D + 3.5, 0.7]} active={online} strength={0.6 + rate / 150} seed={(number || 1) * 1.7} />}
+      <mesh position={[-0.4, D + 1.35, 1.36]}>
+        <sphereGeometry args={[0.07, 8, 8]} />
+        <meshStandardMaterial color={online ? '#35e08f' : '#555'} emissive={online ? '#35e08f' : '#000'} emissiveIntensity={1.5} />
+      </mesh>
+    </group>
+  );
+}
 export function Blender({ position, showLabels }) {
   const ref = useRef();
   useFrame((_, dt) => { if (ref.current) ref.current.rotation.x += dt * 2.5; });
@@ -1091,6 +1121,52 @@ export function ChemAdd({ position, showLabels }) {
   );
 }
 
+// Collecting belt at z 2.1 from x -3 to 11, drive box, incline auger, and the discharge chute into the blender hopper.
+// Shared by the silo system and the box station (Drop 35); whichever sits at the sand position feeds the same hopper.
+export function SandConveyor() {
+  return (
+    <group name="LG-CONVEYOR">
+      <Box size={[14, 0.25, 0.9]} position={[4, 0.95, 2.1]} mat={MAT.darkSteel} />
+      <Box size={[14, 0.04, 0.7]} position={[4, 1.1, 2.1]} mat={MAT.rubber} />
+      {Array.from({ length: 8 }).map((_, i) => <Cyl key={i} r={0.06} h={1.0} position={[-2.5 + i * 2.0, 0.5, 2.1]} mat={MAT.darkSteel} />)}
+      <Cyl r={0.45} h={11} rotation={[0, 0, THREE.MathUtils.degToRad(-70)]} position={[13.5, 2.15, 2.1]} mat={MAT.darkSteel} />
+      <Box size={[1.4, 0.8, 1.2]} position={[8.6, 0.45, 2.1]} mat={MAT.darkSteel} />
+      {/* discharge chute from the auger head down into the blender hopper (the group sits so the head is over the hopper) */}
+      <Cyl r={0.55} h={0.6} position={[18.7, 4.15, 2.1]} mat={MAT.darkSteel} />
+      <Cyl r={0.5} r2={0.3} h={1.0} position={[18.9, 3.4, 2.1]} mat={MAT.steel} open />
+    </group>
+  );
+}
+// Sand box unloading station (Drop 35): two cradles over the collecting belt, each a steel frame with a box on it
+// and a discharge hopper under the box's gate onto the belt. The handler sets full boxes down here from the stack.
+// Cradle boxes lie along x (the belt), 6 m long and 2.5 m wide, so a box carried in on the forks lands square.
+export const CRADLE_X = [3.0, 9.5], CRADLE_Z = 2.1;
+export function SandBoxStation({ position, showLabels }) {
+  return (
+    <group position={position} name="LG-SANDBOXSTATION">
+      {CRADLE_X.map((x, i) => (
+        <group key={i} position={[x, 0, CRADLE_Z]}>
+          <Merged mat={MAT.darkSteel} deps={[]} parts={() => [
+            ...[[-2.85, -1.1], [2.85, -1.1], [-2.85, 1.1], [2.85, 1.1]].map(([px, pz]) => ({ g: GEO.box(0.16, 2.2, 0.16), p: [px, 1.1, pz] })),
+            ...[-1.1, 1.1].map(pz => ({ g: GEO.box(5.9, 0.12, 0.2), p: [0, 2.2, pz] })),
+            ...[-2.85, 2.85].map(px => ({ g: GEO.box(0.2, 0.12, 2.4), p: [px, 2.2, 0] })),
+            { g: GEO.box(5.9, 0.12, 0.2), p: [0, 0.9, -1.1] }, { g: GEO.box(5.9, 0.12, 0.2), p: [0, 0.9, 1.1] },
+          ]} />
+          <Cyl r={0.9} r2={0.28} h={1.0} position={[0, 1.7, 0]} mat={MAT.steel} open />
+          <Cyl r={0.35} h={0.5} position={[0.5, 1.95, 0]} rotation={[0, 0, Math.PI / 2]} mat={MAT.paintRed} />
+          <group position={[0, 3.46, 0]} rotation={[0, Math.PI / 2, 0]} name={i === 0 ? 'LG-SANDBOX-ONCRADLE' : undefined}>
+            <Box size={[2.5, 2.4, 6.0]} mat={MAT.paintRed} />
+            <Merged mat={MAT.chassis} deps={[]} parts={() => [...[-2.6, 0, 2.6].map(z => ({ g: GEO.box(2.56, 2.46, 0.1), p: [0, 0, z] })), ...[-1.28, 1.28].map(xx => ({ g: GEO.box(0.08, 2.46, 6.06), p: [xx, 0, 0] }))]} />
+          </group>
+        </group>
+      ))}
+      <Handrail length={13} position={[-3, 0, CRADLE_Z + 1.9]} height={1.0} />
+      <SandConveyor />
+      {showLabels && <Label position={[6, 6.5, 2]} text={'Sand box station and conveyor'} />}
+    </group>
+  );
+}
+
 export function SandSilos({ position, showLabels }) {
   return (
     <group position={position} name="LG-SANDSILOS">
@@ -1112,14 +1188,7 @@ export function SandSilos({ position, showLabels }) {
         </group>
       ))}
       {/* transfer conveyors from the silo bottoms to a collecting belt between the rows and up the incline to the blender hopper */}
-      <Box size={[14, 0.25, 0.9]} position={[4, 0.95, 2.1]} mat={MAT.darkSteel} name="LG-CONVEYOR" />
-      <Box size={[14, 0.04, 0.7]} position={[4, 1.1, 2.1]} mat={MAT.rubber} />
-      {Array.from({ length: 8 }).map((_, i) => <Cyl key={i} r={0.06} h={1.0} position={[-2.5 + i * 2.0, 0.5, 2.1]} mat={MAT.darkSteel} />)}
-      <Cyl r={0.45} h={11} rotation={[0, 0, THREE.MathUtils.degToRad(-70)]} position={[13.5, 2.15, 2.1]} mat={MAT.darkSteel} />
-      <Box size={[1.4, 0.8, 1.2]} position={[8.6, 0.45, 2.1]} mat={MAT.darkSteel} />
-      {/* discharge chute from the auger head down into the blender hopper (the group sits so the head is over the hopper) */}
-      <Cyl r={0.55} h={0.6} position={[18.7, 4.15, 2.1]} mat={MAT.darkSteel} />
-      <Cyl r={0.5} r2={0.3} h={1.0} position={[18.9, 3.4, 2.1]} mat={MAT.steel} open />
+      <SandConveyor />
       {showLabels && <Label position={[4, 12.5, 2]} text={'Sand silos and conveyor'} />}
     </group>
   );
@@ -1128,12 +1197,16 @@ export function SandSilos({ position, showLabels }) {
 // 500 bbl frac tanks: rectangular body with a rounded top, stairs and a walkway at the front, a manifold of
 // valves and unions along the front bulkhead, wheels at the rear so a winch truck can move them.
 export function WaterTanks({ position, count = 8, showLabels }) {
+  // a cream and a white tank form the template pair; the pair is instanced along the row (Drop 41)
+  const pairs = Math.ceil(count / 2);
+  const transforms = useMemo(() => Array.from({ length: pairs }, (_, i) => ({ position: [i * 7.0, 0, 0] })), [pairs]);
   return (
     <group position={position} name="PP-FRACTANKS">
-      {Array.from({ length: count }).map((_, i) => {
+      <Instanced transforms={transforms} name="PP-FRACTANKS">
+      {[0, 1].map((i) => {
         const mat = i % 2 ? MAT.tankWhite : MAT.tankCream;
         return (
-          <group key={i} position={[i * 3.5, 0, 0]} name={i === 0 ? 'PP-FRACTANK' : undefined}>
+          <group key={i} position={[i * 3.5, 0, 0]} name="PP-FRACTANK">
             <BlobShadow size={[4.6, 14.5]} />
             <RBox r={0.1} size={[3.0, 2.6, 12.5]} position={[0, 1.55, 0]} mat={mat} />
             {/* low crowned roof: the upper half of a cylinder flattened to a 0.45 m crown */}
@@ -1153,6 +1226,7 @@ export function WaterTanks({ position, count = 8, showLabels }) {
           </group>
         );
       })}
+      </Instanced>
       {showLabels && <Label position={[count * 1.7, 5, 0]} text={'Frac tanks (500 bbl)'} />}
     </group>
   );
@@ -1194,7 +1268,7 @@ function cableOutOf(wl) {
   if (st === 'pooh') return 1 - p;
   return 0;
 }
-export function WirelineUnit({ position, treeTop, showLabels, active, wl = null }) {
+export function WirelineUnit({ position, treeTop, lubTop = null, showLabels, active, wl = null }) {
   const drum = useRef(), wound = useRef(), carriage = useRef();
   const travel = useRef(0), prevOut = useRef(0);
   useFrame((state, dt) => {
@@ -1207,26 +1281,31 @@ export function WirelineUnit({ position, treeTop, showLabels, active, wl = null 
     if (wound.current) wound.current.scale.set(r, 1, r);
     if (carriage.current) { const ph = (travel.current / 3) % 2; carriage.current.position.z = 0.65 * (ph < 1 ? ph * 2 - 1 : 3 - ph * 2); }
   });
-  const top = [treeTop[0], treeTop[1] + 12.5, treeTop[2]];
+  // grease head top on the tree (the lubricator stack's top); the crane holds the stack by a bail just above it
+  const top = [treeTop[0], lubTop != null ? lubTop : treeTop[1] + 12.0, treeTop[2]];
   const D = 1.18;
   const wrap = useMemo(() => wrapTexture(36), []);
-  // crane geometry: base at the pad, boom from the turret to a tip right above the tree top
-  const CR = [-6, 0, 3];                                   // crane beside the trailer rear, which faces the well
+  // crane geometry: outriggers set on the pad in line with the well, the turret slewed toward it, the boom tip plumb
+  // over the lubricator, the hook block on the hoist line two meters below the tip, hooked into the lifting bail
+  const CR = [-6.5, 0, -2.5];
+  const treeXZ = [top[0] - position[0], top[2] - position[2]];
+  const hookY = top[1] + 0.8;                               // hook block center: its hook arc sits in the bail ring
   const boomFrom = [CR[0] + 0, 2.6, CR[2] + 0];
-  const boomTo = [treeTop[0] - position[0], top[1] + 1.5, treeTop[2] - position[2]];
+  const boomTo = [treeXZ[0], hookY + 0.25 + 2.0, treeXZ[1]];
   const bv = new THREE.Vector3(boomTo[0] - boomFrom[0], boomTo[1] - boomFrom[1], boomTo[2] - boomFrom[2]);
   const boomLen = bv.length();
-  const boomQ = useMemo(() => { const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), bv.clone().normalize())); return [e.x, e.y, e.z]; }, [boomTo[0], boomTo[1], boomTo[2]]); // eslint-disable-line react-hooks/exhaustive-deps
-  const along = (t, drop = 0) => [boomFrom[0] + bv.x * t, boomFrom[1] + bv.y * t - drop, boomFrom[2] + bv.z * t];
+  const horiz = Math.hypot(bv.x, bv.z);
+  const yaw = Math.atan2(-bv.z, bv.x);                     // turret slew: local +x points along the boom's plan direction
+  const boomQ = useMemo(() => { const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(horiz, bv.y, 0).normalize())); return [e.x, e.y, e.z]; }, [horiz, bv.y]); // eslint-disable-line react-hooks/exhaustive-deps
+  const along = (t, drop = 0) => [horiz * t, 2.6 + bv.y * t - drop, 0];   // in the turret's frame
   // the line: drum top, over the measuring head sheave at the trailer rear (the rear faces the well), up to the top
-  // sheave hanging from the hook block, and straight down into the grease head. The top sheave sits a quarter
+  // sheave hanging off the hook block, and straight down into the grease head. The top sheave sits a quarter
   // meter toward the truck so its far tangent is plumb over the tree.
   const drumTop = [-3.8, D + 1.1 + WL_FULL, 0];
   const headSheave = [-5.9, D + 2.25, 0];
-  const treeXZ = [top[0] - position[0], top[2] - position[2]];
   const hx = headSheave[0] - treeXZ[0], hz = headSheave[2] - treeXZ[1]; const hl = Math.hypot(hx, hz) || 1; const h = [hx / hl, hz / hl];
-  const topSheave = [treeXZ[0] + h[0] * 0.25, top[1] + 0.8, treeXZ[1] + h[1] * 0.25];
-  const greaseHead = [treeXZ[0], top[1] - 0.2, treeXZ[1]];
+  const topSheave = [treeXZ[0] + h[0] * 0.25, top[1] + 0.55, treeXZ[1] + h[1] * 0.25];
+  const greaseHead = [treeXZ[0], top[1] - 0.3, treeXZ[1]];
   const cablePts = useMemo(() => [drumTop, [headSheave[0] + 0.1, headSheave[1] + 0.2, 0], [headSheave[0] - 0.2, headSheave[1] + 0.1, 0], [topSheave[0] + h[0] * 0.18, topSheave[1] + 0.18, topSheave[2] + h[1] * 0.18], [topSheave[0], topSheave[1] + 0.25, topSheave[2]], [treeXZ[0], topSheave[1], treeXZ[1]], greaseHead], [topSheave[0], topSheave[1], topSheave[2]]); // eslint-disable-line react-hooks/exhaustive-deps
   const sheaveYaw = Math.atan2(-h[1], h[0]);
   return (
@@ -1281,6 +1360,8 @@ export function WirelineUnit({ position, treeTop, showLabels, active, wl = null 
           </group>
         ))}
         <Cyl r={0.7} h={1.0} position={[0, 1.9, 0]} mat={MAT.yellow} />
+        {/* turret: slewed so the counterweight is behind the boom and the cab beside it */}
+        <group rotation={[0, yaw, 0]}>
         <RBox r={0.06} size={[1.1, 0.8, 1.5]} position={[-1.5, 2.3, 0]} mat={MAT.darkSteel} />
         <RBox r={0.08} size={[1.6, 1.2, 1.2]} position={[-1.0, 2.6, 0.9]} mat={MAT.yellow} />
         <Box size={[0.9, 0.5, 0.04]} position={[-1.0, 2.8, 1.51]} mat={MAT.glass} />
@@ -1296,12 +1377,16 @@ export function WirelineUnit({ position, treeTop, showLabels, active, wl = null 
         </group>
         <HydraulicCylinder from={[0.7, 2.0, 0]} to={along(0.36, 0.42)} r={0.13} barrel={0.5} />
         <HosePair from={[-0.6, 2.45, 0.1]} to={[0.1, 2.75, -0.2]} sag={0.15} />
-        <HosePair from={[-1.5, 1.4, 0.4]} to={[-0.5, 1.95, 0.5]} sag={0.12} />
-        <Pipe from={boomTo} to={[boomTo[0], boomTo[1] - 1.1, boomTo[2]]} r={0.015} mat={MAT.rubber} unions={false} />
-        <group position={[boomTo[0], boomTo[1] - 1.35, boomTo[2]]}>
-          <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.rbox(0.32, 0.5, 0.2, 0.03, 1) }, { g: GEO.torus(0.14, 0.035, 8, 16, Math.PI), p: [0, -0.4, 0], r: [0, 0, Math.PI] }]} />
         </group>
+        <HosePair from={[-1.5, 1.4, 0.4]} to={[-0.5, 1.95, 0.5]} sag={0.12} />
       </group>
+      {/* hoist line from the boom tip sheave to the hook block; the hook sits in the lubricator's lifting bail and a
+          short strap off the block carries the wireline's top sheave (all in the unit's frame, like boomTo) */}
+      <Pipe from={boomTo} to={[boomTo[0], hookY + 0.25, boomTo[2]]} r={0.015} mat={MAT.rubber} unions={false} />
+      <group position={[boomTo[0], hookY, boomTo[2]]} name="WL-CRANE-HOOK">
+        <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.rbox(0.32, 0.5, 0.2, 0.03, 1) }, { g: GEO.torus(0.14, 0.035, 8, 16, Math.PI), p: [0, -0.4, 0], r: [0, 0, Math.PI] }]} />
+      </group>
+      <Pipe from={[boomTo[0] + h[0] * 0.12, hookY - 0.2, boomTo[2] + h[1] * 0.12]} to={[topSheave[0], topSheave[1] + 0.5, topSheave[2]]} r={0.012} mat={MAT.rubber} unions={false} />
       {/* hydraulic supply from the control cab to the crane turret */}
       <HosePair from={[-2.5, D + 0.3, -1.2]} to={[CR[0] + 1.6, 0.95, CR[2] - 0.8]} />
       {/* top sheave hanging from the hook block, and the line itself */}
@@ -1554,36 +1639,53 @@ export function SandBoxes({ position, rows = 2, perRow = 6, showLabels }) {
           <Box size={[perRow * 2.9 + 0.4, 0.06, 0.6]} position={[(perRow - 1) * 1.45, 0.55, 0]} mat={MAT.rubber} />
         </group>
       ))}
-      {Array.from({ length: rows * perRow * 2 }).map((_, i) => {
-        const r = Math.floor(i / (perRow * 2)), k = i % (perRow * 2), col = Math.floor(k / 2), lvl = k % 2;
+      <Instanced transforms={useMemo(() => Array.from({ length: rows * perRow }, (_, i) => ({ position: [(i % perRow) * 2.9, 0, Math.floor(i / perRow) * 7.0] })), [rows, perRow])} name="LG-SANDBOXES">
+      {[0, 1].map((lvl) => {
         const mat = lvl ? MAT.paintRed : { color: '#7a1f18', metalness: 0.5, roughness: 0.6 };
         return (
-          <group key={i} position={[col * 2.9, 0.5 + 1.2 + lvl * 2.5, r * 7.0]} name={i === 0 ? 'LG-SANDBOX' : undefined}>
+          <group key={lvl} position={[0, 0.5 + 1.2 + lvl * 2.5, 0]} name="LG-SANDBOX">
             <Box size={[2.5, 2.4, 6.0]} mat={mat} />
             <Merged mat={MAT.chassis} parts={() => [...[-2.6, 0, 2.6].map(z => ({ g: GEO.box(2.56, 2.46, 0.1), p: [0, 0, z] })), ...[-1.28, 1.28].map(x => ({ g: GEO.box(0.08, 2.46, 6.06), p: [x, 0, 0] })), { g: GEO.box(2.2, 0.15, 1.2), p: [0, 1.25, -1.6] }, { g: GEO.cyl(0.4, 0.5, 12, 0.9), p: [0, -1.35, 0] }]} />
           </group>
         );
       })}
-      {/* container handler shuttling along the front of the rows: a full box out, empty back (Drop 28) */}
-      <ShuttleForklift x0={-1.5} x1={(perRow - 1) * 2.9 + 4} z={-6.2} />
+      </Instanced>
       {showLabels && <Label position={[perRow * 1.4, 7.0, 3]} text={'Sand boxes (stacked containers)'} />}
     </group>
   );
 }
-// Container handler driving back and forth in front of the sand box rows, forks toward the boxes, carrying a box
-// one way and running empty the other; wheels turn, mast tilts, and the turn at each end is a quick swing.
-export function ShuttleForklift({ x0, x1, z, speed = 2.2 }) {
+// Container handler (Drop 35): follows `path` (a polyline of [x, z] in world meters) from the box stack to the
+// cradle with a full box on the forks, sets it down, turns around and drives back empty, picks up and turns again.
+// Forks lead the travel direction on both legs; the heading blends through corners; wheels turn, the mast rocks.
+export function ShuttleForklift({ path, speed = 2.2, dwell = 3.0 }) {
   const ref = useRef(), load = useRef(), wheels = useRef([]), mast = useRef();
+  const route = useMemo(() => {
+    const segs = []; let L = 0;
+    for (let i = 0; i < path.length - 1; i++) { const dx = path[i + 1][0] - path[i][0], dz = path[i + 1][1] - path[i][1]; const len = Math.hypot(dx, dz); segs.push({ x: path[i][0], z: path[i][1], dx: dx / len, dz: dz / len, s0: L, len }); L += len; }
+    return { segs, L };
+  }, [path]);
+  const at = (d) => {   // position and heading at distance d along the route, heading blended 1 m either side of a corner
+    const S = route.segs; let i = S.findIndex(g => d <= g.s0 + g.len); if (i < 0) i = S.length - 1;
+    const g = S[i], u = d - g.s0;
+    let dx = g.dx, dz = g.dz;
+    if (u < 1 && i > 0) { const k = 0.5 + u * 0.5; dx = S[i - 1].dx * (1 - k) + g.dx * k; dz = S[i - 1].dz * (1 - k) + g.dz * k; }
+    else if (u > g.len - 1 && i < S.length - 1) { const k = (g.len - u) * 0.5; dx = S[i + 1].dx * (1 - k) + g.dx * k; dz = S[i + 1].dz * (1 - k) + g.dz * k; }
+    return { x: g.x + g.dx * u, z: g.z + g.dz * u, yaw: Math.atan2(-dz, dx) };
+  };
   useFrame((state, dt) => {
-    const span = x1 - x0, t = state.clock.elapsedTime * speed;
-    const cyc = t % (2 * span + 6), out = cyc < span, turning = cyc >= span && cyc < span + 3 ? (cyc - span) / 3 : cyc >= 2 * span + 3 ? (cyc - 2 * span - 3) / 3 : null;
-    const x = out ? x0 + cyc : cyc < span + 3 ? x1 : cyc < 2 * span + 3 ? x1 - (cyc - span - 3) : x0;
-    if (!ref.current) return;
-    ref.current.position.set(x, 0, z);
-    ref.current.rotation.y = turning !== null ? (out || cyc < span + 3 ? -Math.PI / 2 - turning * Math.PI : Math.PI / 2 - turning * Math.PI) : (cyc < span + 3 ? -Math.PI / 2 : Math.PI / 2);
-    if (load.current) load.current.visible = cyc < span + 1.5 || cyc > 2 * span + 4.5;
-    if (turning === null) wheels.current.forEach(w => { if (w) w.rotation.z -= dt * speed / 0.5; });
-    if (mast.current) mast.current.rotation.z = -0.04 + 0.03 * Math.sin(t * 0.7);
+    if (!ref.current || !route.L) return;
+    const tOut = route.L / speed, period = 2 * tOut + 2 * dwell;
+    const t = state.clock.elapsedTime % period;
+    let P, driving = true, carry;
+    if (t < tOut) { P = at(t * speed); carry = true; }
+    else if (t < tOut + dwell) { const k = (t - tOut) / dwell; const e = at(route.L); P = { ...e, yaw: e.yaw + Math.PI * Math.min(1, Math.max(0, (k - 0.35) / 0.65)) }; driving = false; carry = k < 0.3; }
+    else if (t < 2 * tOut + dwell) { const d = route.L - (t - tOut - dwell) * speed; const q = at(d); P = { ...q, yaw: q.yaw + Math.PI }; carry = false; }
+    else { const k = (t - 2 * tOut - dwell) / dwell; const e = at(0); P = { ...e, yaw: e.yaw + Math.PI - Math.PI * Math.min(1, Math.max(0, (k - 0.35) / 0.65)) }; driving = false; carry = k > 0.7; }
+    ref.current.position.set(P.x, 0, P.z);
+    ref.current.rotation.y = P.yaw;
+    if (load.current) load.current.visible = carry;
+    if (driving) wheels.current.forEach(w => { if (w) w.rotation.z -= dt * speed / 0.5; });
+    if (mast.current) mast.current.rotation.z = -0.04 + 0.03 * Math.sin(state.clock.elapsedTime * 1.5);
   });
   return (
     <group ref={ref} name="LG-SANDBOX-HANDLER">
@@ -1615,47 +1717,177 @@ export function ShuttleForklift({ x0, x1, z, speed = 2.2 }) {
 // diesel transfer pump trailer at the row end, and a lay-flat discharge hose on the ground to the hydration
 // unit's suction, rising to the stub at the end. `tanks` is the WaterTanks position, `count` its tank count,
 // `to` the hydration suction stub in world space.
-export function WaterTransfer({ tanks, count = 8, to, showLabels }) {
+// Water source by basin (Drop 40): `source` is `tanks` (500 bbl frac tanks with a suction header), `heated` (the
+// same tanks plus a frac heater on the discharge run; its stack steams in winter), `ast` (two above-ground storage
+// tanks with a base manifold), or `pit` (a lined, bermed pit off the pad's west edge with a floating pump skid and a
+// bank pump). Every source ends in the same transfer pump and a lay-flat line on the ground to the hydration unit.
+export function TransferPump({ position, showLabels }) {
+  return (
+    <group position={position} name="LG-WATERTRANSFER-PUMP">
+      <BlobShadow size={[6.5, 3.5]} />
+      <Merged mat={MAT.chassis} deps={[]} parts={() => [{ g: GEO.box(4.6, 0.25, 2.0), p: [0, 0.55, 0] }, { g: GEO.box(1.0, 0.2, 0.6), p: [-2.6, 0.45, 0] }, { g: GEO.cyl(0.05, 0.4, 6), p: [-3.05, 0.25, 0] }]} />
+      <Merged mat={MAT.tire} deps={[]} parts={() => [-0.8, 0.8].map(zz => ({ g: GEO.cyl(0.42, 0.3, 20), p: [0.6, 0.42, zz], r: [Math.PI / 2, 0, 0] }))} />
+      <RBox r={0.08} size={[2.2, 1.5, 1.7]} position={[-0.9, 1.45, 0]} mat={MAT.paintWhite} />
+      <Merged mat={MAT.dimSteel} deps={[]} shadow={false} parts={() => [-1, 1].flatMap(sz => [0.95, 1.15, 1.35, 1.55, 1.75].map(y => ({ g: GEO.box(1.4, 0.03, 0.03), p: [-0.9, y, sz * 0.86], r: [sz * 0.55, 0, 0] })))} />
+      <Cyl r={0.08} h={1.0} position={[-1.5, 2.6, 0.5]} mat={MAT.darkSteel} />
+      <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.cyl(0.42, 0.5, 20), p: [1.2, 1.1, 0], r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(0.26, 0.9, 14), p: [1.2, 1.1, 0.6], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.2, 0.7, 14), p: [1.2, 1.5, 0] }]} />
+      <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.24, 0.1, 14), p: [1.2, 1.1, -0.3], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.24, 0.1, 14), p: [1.2, 1.9, 0] }]} />
+      <HazardStrip position={[2.31, 0.5, 0]} rotation={[0, Math.PI / 2, 0]} length={1.9} height={0.12} />
+      {showLabels && <Label position={[0, 3.3, 0]} text={'Water transfer pump'} />}
+    </group>
+  );
+}
+// Frac heater: trailer with a burner box, a tall stack, a coil housing, inlet and outlet stubs. Steams when `steam`.
+export function FracHeater({ position, rotation = [0, 0, 0], steam = false, showLabels }) {
   const D = 1.18;
-  const hz = tanks[2] + 7.4;                                   // header line just in front of the tank manifolds
-  const x0 = tanks[0] - 1.0, x1 = tanks[0] + (count - 1) * 3.5 + 1.6;
-  const pumpPos = [x1 + 4.5, 0, hz + 1.0];
+  return (
+    <group position={position} rotation={rotation} name="LG-FRACHEATER">
+      <Trailer length={11} width={2.6} axles={2}>
+        <RBox r={0.1} size={[6.0, 2.4, 2.4]} position={[0.5, D + 1.2, 0]} mat={MAT.tankCream} />
+        <RBox r={0.08} size={[2.4, 1.8, 2.2]} position={[-3.4, D + 0.9, 0]} mat={MAT.darkSteel} />
+        <Merged mat={MAT.dimSteel} deps={[]} shadow={false} parts={() => [0.6, 0.9, 1.2, 1.5].map(y => ({ g: GEO.box(2.0, 0.03, 0.03), p: [-3.4, D + y, 1.11], r: [0.5, 0, 0] }))} />
+        <Cyl r={0.38} h={4.6} position={[3.0, D + 2.4 + 2.3, 0]} mat={MAT.darkSteel} />
+        <Cyl r={0.46} h={0.3} position={[3.0, D + 2.4 + 4.6, 0]} mat={MAT.darkSteel} />
+        <Cyl r={0.12} h={0.7} rotation={[Math.PI / 2, 0, 0]} position={[-1.2, D + 0.6, 1.4]} mat={MAT.steel} />
+        <Cyl r={0.12} h={0.7} rotation={[Math.PI / 2, 0, 0]} position={[2.0, D + 0.6, 1.4]} mat={MAT.steel} />
+        <Handrail length={5.6} position={[0.5, D + 2.4, 1.15]} height={0.9} />
+        <Ladder height={2.3} position={[-0.6, D, 1.32]} />
+        <HazardStrip position={[5.5, D - 0.3, 0]} rotation={[0, Math.PI / 2, 0]} length={2.4} height={0.14} />
+      </Trailer>
+      <ExhaustPlume position={[3.0, D + 2.4 + 4.75, 0]} active={steam} strength={1.4} seed={3} />
+      {showLabels && <Label position={[0.5, D + 7.5, 0]} text={'Frac heater'} />}
+    </group>
+  );
+}
+// Above-ground storage tank: a wide steel ring tank with a stair to the rim and a base manifold with two valves.
+export function StorageTank({ position, r = 8, h = 3.6, showLabels, name }) {
+  return (
+    <group position={position} name={name}>
+      <Cyl r={r} h={h} position={[0, h / 2, 0]} mat={MAT.tankWhite} />
+      <Merged mat={MAT.dimSteel} deps={[r, h]} shadow={false} parts={() => [...Array.from({ length: 24 }, (_, i) => { const a = i / 24 * Math.PI * 2; return { g: GEO.box(0.06, h, 0.1), p: [Math.cos(a) * (r + 0.02), h / 2, Math.sin(a) * (r + 0.02)], r: [0, -a, 0] }; }), { g: GEO.torus(r + 0.02, 0.06, 6, 48), p: [0, h, 0], r: [Math.PI / 2, 0, 0] }, { g: GEO.torus(r + 0.02, 0.06, 6, 48), p: [0, h / 2, 0], r: [Math.PI / 2, 0, 0] }]} />
+      <Handrail length={r * 1.2} position={[0, h, r - 0.3]} height={1.0} />
+      <Stair steps={12} rise={h / 12} run={0.3} position={[r + 0.3, 0, -1.5]} rotation={[0, Math.PI / 2, 0]} />
+      <Merged mat={MAT.steel} deps={[r]} parts={() => [{ g: GEO.cyl(0.16, 1.6, 12), p: [0, 0.5, r + 0.8], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.24, 0.12, 12), p: [0, 0.5, r + 0.3], r: [Math.PI / 2, 0, 0] }]} />
+      <Merged mat={MAT.paintRed} deps={[r]} parts={() => [{ g: GEO.box(0.4, 0.55, 0.45), p: [0, 0.5, r + 1.1] }, { g: GEO.cyl(0.22, 0.05, 12), p: [0, 0.95, r + 1.1] }]} />
+      {showLabels && <Label position={[0, h + 1.5, 0]} text={'Above-ground storage tank'} />}
+    </group>
+  );
+}
+// Lined, bermed water pit with a floating pump skid: four berm prisms with the liner on their inner slopes and a
+// floor, a water plane (frozen when `frozen`), a pontoon skid with an engine and pump and a suction into the water.
+export function WaterPit({ position, size = [44, 30], frozen = false, showLabels }) {
+  const [L, Wd] = size, bh = 1.8;
+  // berm as mitred quads: outer slope from the outer base rectangle up to the crest, a flat crest ring, the liner
+  // down the inner slope to the floor; all from four rectangles (outer base, crest outer, crest inner, floor)
+  const geo = useMemo(() => {
+    const rect = (hx, hz, y) => [[-hx, y, -hz], [hx, y, -hz], [hx, y, hz], [-hx, y, hz]];
+    const quads = (lo, hi) => {   // 4 side quads between two rectangles (same winding), outward normals
+      const pos = [], nrm = [], uv = [];
+      for (let i = 0; i < 4; i++) {
+        const a = lo[i], b = lo[(i + 1) % 4], c = hi[(i + 1) % 4], d = hi[i];
+        const tri = [a, b, c, a, c, d];
+        const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+        const n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]]; const nl = Math.hypot(...n) || 1;
+        for (const v of tri) { pos.push(...v); nrm.push(n[0] / nl, n[1] / nl, n[2] / nl); uv.push(v[0] / 6, v[2] / 6); }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      return g;
+    };
+    const outerBase = rect(L / 2 + 3.0, Wd / 2 + 3.0, 0), crestOut = rect(L / 2 + 1.2, Wd / 2 + 1.2, bh), crestIn = rect(L / 2 - 1.2, Wd / 2 - 1.2, bh), floor = rect(L / 2 - 3.6, Wd / 2 - 3.6, 0.04);
+    const outer = quads(outerBase, crestOut);
+    const liner = quads(floor, crestIn); liner.scale(1, 1, 1);
+    const ring = new THREE.Shape(); ring.moveTo(-(L / 2 + 1.2), -(Wd / 2 + 1.2)); ring.lineTo(L / 2 + 1.2, -(Wd / 2 + 1.2)); ring.lineTo(L / 2 + 1.2, Wd / 2 + 1.2); ring.lineTo(-(L / 2 + 1.2), Wd / 2 + 1.2); ring.closePath();
+    const hole = new THREE.Path(); hole.moveTo(-(L / 2 - 1.2), -(Wd / 2 - 1.2)); hole.lineTo(-(L / 2 - 1.2), Wd / 2 - 1.2); hole.lineTo(L / 2 - 1.2, Wd / 2 - 1.2); hole.lineTo(L / 2 - 1.2, -(Wd / 2 - 1.2)); hole.closePath();
+    ring.holes.push(hole);
+    const crest = new THREE.ShapeGeometry(ring); crest.rotateX(-Math.PI / 2); crest.translate(0, bh, 0);
+    return { outer, liner, crest };
+  }, [L, Wd]);
+  const wy = frozen ? 1.25 : 1.2;
+  const k = wy / bh, wx = (L / 2 - 3.6) + 2.4 * k, wz = (Wd / 2 - 3.6) + 2.4 * k;   // water meets the liner slope at its own level
+  return (
+    <group position={position} name="LG-WATERPIT">
+      <mesh geometry={geo.outer} receiveShadow castShadow><meshStandardMaterial color="#8a7b63" roughness={1} side={THREE.DoubleSide} /></mesh>
+      <mesh geometry={geo.crest} receiveShadow><meshStandardMaterial color="#8a7b63" roughness={1} side={THREE.DoubleSide} /></mesh>
+      <mesh geometry={geo.liner} receiveShadow><meshStandardMaterial color="#161616" roughness={0.55} metalness={0.05} side={THREE.DoubleSide} /></mesh>
+      <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[L - 7.2, Wd - 7.2]} /><meshStandardMaterial color="#141414" roughness={0.6} metalness={0.05} /></mesh>
+      {/* water, or ice */}
+      <mesh position={[0, wy, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow name="LG-WATERPIT-WATER">
+        <planeGeometry args={[wx * 2, wz * 2]} />
+        {frozen ? <meshStandardMaterial color="#cfd9e3" roughness={0.55} metalness={0.05} /> : <meshStandardMaterial color="#2a6b78" roughness={0.12} metalness={0.05} transparent opacity={0.88} />}
+      </mesh>
+      {/* floating pump skid: pontoons, deck, engine and pump, suction into the water */}
+      <group position={[-L * 0.2, wy, Wd * 0.1]} name="LG-WATERPIT-SKID">
+        <Merged mat={MAT.paintWhite} deps={[]} parts={() => [-1.1, 1.1].map(z => ({ g: GEO.cyl(0.35, 4.0, 12), p: [0, -0.1, z], r: [0, 0, Math.PI / 2] }))} />
+        <Box size={[3.6, 0.12, 2.8]} position={[0, 0.3, 0]} mat={MAT.grating} />
+        <Handrail length={3.4} position={[0, 0.36, 1.3]} height={0.9} />
+        <Handrail length={3.4} position={[0, 0.36, -1.3]} height={0.9} />
+        <RBox r={0.06} size={[1.4, 1.0, 1.0]} position={[-0.8, 0.86, 0]} mat={MAT.paintRed} />
+        <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.cyl(0.32, 0.4, 16), p: [0.8, 0.7, 0], r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(0.14, 1.6, 10), p: [0.8, -0.5, 0] }, { g: GEO.cyl(0.08, 0.8, 8), p: [-0.8, 1.76, 0] }]} />
+        <ExhaustPlume position={[-0.8, 2.2, 0]} active strength={0.5} seed={7} />
+      </group>
+      {showLabels && <Label position={[0, 4.5, 0]} text={'Lined water pit with floating pump'} />}
+    </group>
+  );
+}
+export function WaterTransfer({ tanks, count = 8, to, showLabels, source = 'tanks', winter = false }) {
+  // source geometry: where the pump sits and the lane the lay-flat follows (hz)
+  const pit = source === 'pit', ast = source === 'ast', heated = source === 'heated';
+  const hz = pit ? tanks[2] + 2 : ast ? tanks[2] + 10.5 : tanks[2] + 7.4;
+  const x0 = tanks[0] - 1.0, x1 = ast ? tanks[0] + 18 : tanks[0] + (count - 1) * 3.5 + 1.6;
+  const pumpPos = pit ? [tanks[0] + 26, 0, hz + 1.0] : [x1 + 4.5, 0, hz + 1.0];
+  const heaterPos = [pumpPos[0] + 9.5, 0, hz + 2.6];
   const headerPts = useMemo(() => [[x0, 0.5, hz], [x1 + 0.5, 0.5, hz]], [x0, x1, hz]);
   const ground = useMemo(() => {
-    const out = [[pumpPos[0] + 3.2, 0.3, pumpPos[2] + 0.6], [pumpPos[0] + 8, 0.3, pumpPos[2] + 0.4]];
+    const start = heated ? [heaterPos[0] + 2.0, 0.3, heaterPos[2] - 1.9] : [pumpPos[0] + 3.2, 0.3, pumpPos[2] + 0.6];
+    const out = [start, [start[0] + 5, 0.3, pumpPos[2] + 0.4]];
     const bend = [to[0] + 2.2, 0.3, hz - 2.5];
     out.push([bend[0] - 6, 0.3, hz - 1.0], bend, [to[0] + 2.2, 0.3, to[2] + 0.3]);
     return out;
-  }, [to, hz]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [to, hz, heated]); // eslint-disable-line react-hooks/exhaustive-deps
   const last = ground[ground.length - 1];
   return (
     <group name="LG-WATERTRANSFER">
-      {/* suction header and its stands, one hose from each tank's first manifold valve */}
-      <PipeRun points={headerPts} r={0.15} mat={MAT.steel} />
-      <PipeStands points={headerPts} r={0.15} every={4} />
-      {Array.from({ length: count }).map((_, i) => <Hose key={i} from={[tanks[0] + i * 3.5 - 0.9, 0.9, tanks[2] + 6.9]} to={[tanks[0] + i * 3.5 - 0.9, 0.55, hz]} r={0.09} sag={0.12} segments={6} />)}
-      {/* transfer pump trailer: engine box, centrifugal pump, suction from the header, discharge to the lay-flat */}
-      <group position={pumpPos} name="LG-WATERTRANSFER-PUMP">
-        <BlobShadow size={[6.5, 3.5]} />
-        <Merged mat={MAT.chassis} deps={[]} parts={() => [{ g: GEO.box(4.6, 0.25, 2.0), p: [0, 0.55, 0] }, { g: GEO.box(1.0, 0.2, 0.6), p: [-2.6, 0.45, 0] }, { g: GEO.cyl(0.05, 0.4, 6), p: [-3.05, 0.25, 0] }]} />
-        <Merged mat={MAT.tire} deps={[]} parts={() => [-0.8, 0.8].map(zz => ({ g: GEO.cyl(0.42, 0.3, 20), p: [0.6, 0.42, zz], r: [Math.PI / 2, 0, 0] }))} />
-        <RBox r={0.08} size={[2.2, 1.5, 1.7]} position={[-0.9, 1.45, 0]} mat={MAT.paintWhite} />
-        <Merged mat={MAT.dimSteel} deps={[]} shadow={false} parts={() => [-1, 1].flatMap(sz => [0.95, 1.15, 1.35, 1.55, 1.75].map(y => ({ g: GEO.box(1.4, 0.03, 0.03), p: [-0.9, y, sz * 0.86], r: [sz * 0.55, 0, 0] })))} />
-        <Cyl r={0.08} h={1.0} position={[-1.5, 2.6, 0.5]} mat={MAT.darkSteel} />
-        <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.cyl(0.42, 0.5, 20), p: [1.2, 1.1, 0], r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(0.26, 0.9, 14), p: [1.2, 1.1, 0.6], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.2, 0.7, 14), p: [1.2, 1.5, 0] }]} />
-        <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.24, 0.1, 14), p: [1.2, 1.1, -0.3], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.24, 0.1, 14), p: [1.2, 1.9, 0] }]} />
-        <HazardStrip position={[2.31, 0.5, 0]} rotation={[0, Math.PI / 2, 0]} length={1.9} height={0.12} />
-        {showLabels && <Label position={[0, 3.3, 0]} text={'Water transfer pump'} />}
-      </group>
-      <Hose from={[x1 + 0.5, 0.5, hz]} to={[pumpPos[0] + 1.2, 1.1, pumpPos[2] - 0.35]} r={0.15} sag={0.1} segments={8} />
+      {(source === 'tanks' || heated) && (
+        <>
+          {/* suction header and its stands, one hose from each tank's first manifold valve */}
+          <PipeRun points={headerPts} r={0.15} mat={MAT.steel} />
+          <PipeStands points={headerPts} r={0.15} every={4} />
+          {Array.from({ length: count }).map((_, i) => <Hose key={i} from={[tanks[0] + i * 3.5 - 0.9, 0.9, tanks[2] + 6.9]} to={[tanks[0] + i * 3.5 - 0.9, 0.55, hz]} r={0.09} sag={0.12} segments={6} />)}
+          <Hose from={[x1 + 0.5, 0.5, hz]} to={[pumpPos[0] + 1.2, 1.1, pumpPos[2] - 0.35]} r={0.15} sag={0.1} segments={8} />
+        </>
+      )}
+      {ast && (
+        <>
+          {/* manifold header along the tank fronts from both base valves */}
+          <PipeRun points={headerPts} r={0.15} mat={MAT.steel} />
+          <PipeStands points={headerPts} r={0.15} every={4} />
+          {[0, 1].map(i => <Hose key={i} from={[tanks[0] + i * 18, 0.5, tanks[2] + 9.1]} to={[tanks[0] + i * 18, 0.55, hz]} r={0.12} sag={0.08} segments={5} />)}
+          <Hose from={[x1 + 0.5, 0.5, hz]} to={[pumpPos[0] + 1.2, 1.1, pumpPos[2] - 0.35]} r={0.15} sag={0.1} segments={8} />
+        </>
+      )}
+      {pit && (
+        /* suction hose from the floating skid, over the east berm crest, down to the bank pump */
+        <>
+          <Hose from={[tanks[0] - 7.0, 1.9, tanks[2] + 3.0]} to={[tanks[0] + 23.6, 2.0, tanks[2] + 2.4]} r={0.15} sag={0.35} segments={12} />
+          <Hose from={[tanks[0] + 23.6, 2.0, tanks[2] + 2.4]} to={[pumpPos[0] + 1.2, 1.1, pumpPos[2] - 0.35]} r={0.15} sag={0.15} segments={6} />
+        </>
+      )}
+      <TransferPump position={pumpPos} showLabels={showLabels} />
+      {heated && (
+        <>
+          <FracHeater position={heaterPos} steam={winter} showLabels={showLabels} />
+          <Hose from={[pumpPos[0] + 1.2, 1.9, pumpPos[2]]} to={[heaterPos[0] - 1.2, 1.78, heaterPos[2] - 1.75]} r={0.15} sag={0.2} segments={8} />
+        </>
+      )}
       {/* lay-flat discharge hose: a flattened tube on the ground, then a round riser to the suction stub */}
       <group scale={[1, 0.45, 1]}>
         <Cable points={ground.map(p => [p[0], p[1] / 0.45, p[2]])} r={0.17} mat={{ color: '#1f3a8a', metalness: 0.05, roughness: 0.75 }} stripe={3} contrast={0.15} segmentsPerLeg={6} />
       </group>
-      <Hose from={[pumpPos[0] + 1.2, 1.9, pumpPos[2]]} to={ground[0]} r={0.15} sag={0.05} segments={6} />
+      {!heated && <Hose from={[pumpPos[0] + 1.2, 1.9, pumpPos[2]]} to={ground[0]} r={0.15} sag={0.05} segments={6} />}
       <Hose from={last} to={to} r={0.15} sag={0.15} segments={8} />
       <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.19, 0.3, 14), p: [to[0] + 0.15, to[1], to[2]], r: [0, 0, Math.PI / 2] }]} />
-      {showLabels && <Label position={[(x0 + x1) / 2, 2.2, hz]} text={'Water transfer: tank header to the hydration unit'} />}
+      {showLabels && <Label position={[(x0 + x1) / 2, 2.2, hz]} text={pit ? 'Water transfer: pit to the hydration unit' : ast ? 'Water transfer: storage tanks to the hydration unit' : 'Water transfer: tank header to the hydration unit'} />}
     </group>
   );
 }
@@ -1665,9 +1897,10 @@ export function FuelTrailers({ position, count = 6, showLabels }) {
   const D = 1.18;
   return (
     <group position={position} name="PP-FUELGAS">
-      {Array.from({ length: count }).map((_, i) => (
-        <Trailer key={i} length={13} width={2.6} position={[0, 0, i * 3.6]} rotation={[0, 0, 0]}>
-          <Cyl r={1.2} h={10.5} rotation={[0, 0, Math.PI / 2]} position={[0.5, D + 1.25, 0]} mat={MAT.paintWhite} name={i === 0 ? 'PP-FUELGAS-TRAILER' : undefined} />
+      <Instanced transforms={useMemo(() => Array.from({ length: count }, (_, i) => ({ position: [0, 0, i * 3.6] })), [count])} name="PP-FUELGAS">
+      {[0].map((i) => (
+        <Trailer key={i} length={13} width={2.6} position={[0, 0, 0]} rotation={[0, 0, 0]}>
+          <Cyl r={1.2} h={10.5} rotation={[0, 0, Math.PI / 2]} position={[0.5, D + 1.25, 0]} mat={MAT.paintWhite} name="PP-FUELGAS-TRAILER" />
           {[-4.5, 5.5].map((x, k) => <mesh key={k} position={[x, D + 1.25, 0]} rotation={[0, 0, k ? Math.PI / 2 : -Math.PI / 2]}><sphereGeometry args={[1.2, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><Mat mat={MAT.paintWhite} /></mesh>)}
           {[-2.5, 3.5].map((x, k) => <Box key={'s' + k} size={[0.4, 1.3, 2.4]} position={[x, D + 0.6, 0]} mat={MAT.chassis} />)}
           <Box size={[1.4, 1.5, 1.8]} position={[-6.0, D + 0.75, 0]} mat={MAT.chassis} />
@@ -1675,14 +1908,15 @@ export function FuelTrailers({ position, count = 6, showLabels }) {
           <Cyl r={0.1} h={0.6} rotation={[0, 0, Math.PI / 2]} position={[-6.9, D + 0.4, 0.5]} mat={MAT.brass} />
         </Trailer>
       ))}
+      </Instanced>
       {showLabels && <Label position={[0, 4.8, count * 1.8]} text={'Fuel gas trailers (CNG or LNG)'} />}
     </group>
   );
 }
 // Light tower: trailer with an engine box, telescoping mast, four lamp heads.
-export function LightTower({ position, lit = false }) {
+export function LightTower({ position, rotation = [0, 0, 0], lit = false }) {
   return (
-    <group position={position} name="LG-LIGHTTOWER">
+    <group position={position} rotation={rotation} name="LG-LIGHTTOWER">
       <Box size={[2.6, 0.2, 1.4]} position={[0, 0.5, 0]} mat={MAT.chassis} />
       <RBox r={0.08} size={[2.2, 1.0, 1.2]} position={[0.1, 1.1, 0]} mat={MAT.paintWhite} />
       <Box size={[1.0, 0.25, 0.6]} position={[-1.6, 0.45, 0]} mat={MAT.chassis} />

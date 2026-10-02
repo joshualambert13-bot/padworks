@@ -1,9 +1,9 @@
 // Light vehicles. A generic three-quarter-ton crew-cab pickup with the proportions of a modern North American
 // work truck (6.4 m long, 2.0 m wide, 2.0 m tall, four doors, 2 m bed, tow mirrors), white, with no badge, grille
 // signature, or livery: the shape is the type, not a make. Rounded sheet metal, glass, black trim, chrome bumpers.
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Merged, MAT, GEO, metal } from './primitives.jsx';
+import { Merged, MAT, GEO, metal , Instanced } from './primitives.jsx';
 import { BlobShadow } from './lighting.jsx';
 
 const CHROME = metal('#d9dde2', 1.0, 0.15);
@@ -63,9 +63,10 @@ export function PickupTruck({ paint = MAT.paintWhite, wheelRefs = null, shadow =
 
 // Trucks parked in a row, nose to the same side.
 export function ParkedPickups({ position, count = 6 }) {
+  const transforms = useMemo(() => Array.from({ length: count }, (_, i) => ({ position: [0, 0, i * 3.2] })), [count]);
   return (
     <group position={position} name="LG-PICKUPS">
-      {Array.from({ length: count }).map((_, i) => <group key={i} position={[0, 0, i * 3.2]}><PickupTruck /></group>)}
+      <Instanced transforms={transforms} name="LG-PICKUPS"><PickupTruck /></Instanced>
     </group>
   );
 }

@@ -150,6 +150,10 @@ export default function SetupPanel() {
         </select>
         <div className="text-[11px] text-mute">{prop.blurb}</div>
         <Range label="Proppant intensity" value={s.setup.proppantLbFt} unit="lb/ft" min={300} max={4000} step={50} onChange={v => s.setSetup({ proppantLbFt: v })} name="proppantLbFt" />
+        <select className="btn w-full" value={s.setup.sand || 'silos'} onChange={e => s.setSetup({ sand: e.target.value })} title="Sand delivery" data-select="sand">
+          <option value="silos">Sand delivery: silos, pneumatic fill, belt to the blender</option>
+          <option value="boxes">Sand delivery: boxes, handler to a cradle station, belt to the blender</option>
+        </select>
         <select className="btn w-full" value={s.setup.fluid} onChange={e => s.setSetup({ fluid: e.target.value })} title="Fluid system" data-select="fluid">
           {FLUIDS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
         </select>

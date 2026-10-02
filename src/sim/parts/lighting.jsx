@@ -310,6 +310,158 @@ export function strataTexture() {
   });
 }
 // Cumulus patch: white with a soft alpha from fractal noise, fading at the edges of the tile.
+// ---------------------------------------------------------------- winter (Drop 39)
+// Snow is a shader patch, not geometry: every MeshStandardMaterial (and MeshPhysicalMaterial, which inherits it)
+// blends its diffuse toward snow white where the shaded normal faces up, by a shared uniform `SNOW`. The patch is
+// installed once on the prototype, so materials made anywhere in the app carry it; the uniform object is shared,
+// so changing `SNOW.value` reaches every program without a recompile. The surface scene sets the value in its
+// onBeforeRender and resets it afterward, so the downhole section and the library viewer stay bare.
+export const SNOW = { value: 0 };
+let snowPatched = false;
+export function installSnowPatch() {
+  if (snowPatched) return; snowPatched = true;
+  const proto = THREE.MeshStandardMaterial.prototype;
+  proto.onBeforeCompile = function (shader) {
+    shader.uniforms.uSnow = SNOW;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform float uSnow;')
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+  if (uSnow > 0.001) {
+    vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+    float snowK = uSnow * smoothstep(0.42, 0.78, dot(normal, upV));
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.94, 0.97), snowK);
+    roughnessFactor = mix(roughnessFactor, 0.92, snowK);
+    metalnessFactor = mix(metalnessFactor, 0.0, snowK);
+  }`);
+  };
+  proto.customProgramCacheKey = function () { return 'snow'; };
+}
+// Season palette on top of the time of day: winter is overcast, the sun weak and white, the haze close and pale.
+export function seasonSky(terrain, season, tod) {
+  if (season !== 'winter') return terrain;
+  if (tod === 'night') return { ...terrain, sky: mix(terrain.sky, '#1a2030', 0.7), fog: mix(terrain.fog, '#2a3040', 0.7), ground: mix(terrain.ground, '#9aa3ad', 0.5), pad: mix(terrain.pad, '#9aa3ad', 0.5) };
+  if (tod === 'dusk') return { ...terrain, sky: mix(terrain.sky, '#8a8fa0', 0.7), fog: mix(terrain.fog, '#c9b8b0', 0.7), ground: mix(terrain.ground, '#d8dce2', 0.5), pad: mix(terrain.pad, '#d8dce2', 0.5) };
+  return { ...terrain, sky: mix(terrain.sky, '#aeb6c2', 0.85), fog: mix(terrain.fog, '#d9dee6', 0.85), ground: mix(terrain.ground, '#e4e8ee', 0.55), pad: mix(terrain.pad, '#e4e8ee', 0.55) };
+}
+export function seasonSun(S, season) {
+  if (season !== 'winter') return S;
+  return { ...S, color: '#e6ecf5', intensity: S.intensity * 0.55, disk: S.disk.map(v => v * 0.6), glowA: S.glowA * 0.5, ambient: S.ambient + 0.1, hemi: S.hemi + 0.12, liteHemi: S.liteHemi + 0.2, exposure: S.exposure * 0.97 };
+}
+// Flurries: a box of points around the camera that fall and drift; positions wrap within the box, so a fixed set
+// of 1,600 points covers wherever the camera goes. One draw call, screen-size points.
+export function Flurries({ count = 1600, box = 70, height = 30, wind = [1.4, 0, 0.5], density = 1 }) {
+  const ref = useRef();
+  const geom = useMemo(() => {
+    const n = count, pos = new Float32Array(n * 3), spd = new Float32Array(n);
+    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - 0.5) * box; pos[i * 3 + 1] = Math.random() * height; pos[i * 3 + 2] = (Math.random() - 0.5) * box; spd[i] = 1.2 + Math.random() * 1.6; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.userData.spd = spd; return g;
+  }, [count, box, height]);
+  useFrame((state, dt) => {
+    const p = ref.current; if (!p) return;
+    const cam = state.camera.position; p.position.set(cam.x, Math.max(0, cam.y - height * 0.5), cam.z);
+    const a = geom.attributes.position, spd = geom.userData.spd, h = height, half = box / 2, t = state.clock.elapsedTime;
+    for (let i = 0; i < a.count; i++) {
+      let x = a.getX(i) + (wind[0] + Math.sin(t * 0.8 + i) * 0.4) * dt, y = a.getY(i) - spd[i] * dt, z = a.getZ(i) + (wind[2] + Math.cos(t * 0.6 + i * 0.7) * 0.3) * dt;
+      if (y < 0) y += h; if (x > half) x -= box; if (x < -half) x += box; if (z > half) z -= box; if (z < -half) z += box;
+      a.setXYZ(i, x, y, z);
+    }
+    a.needsUpdate = true;
+  });
+  return (
+    <points ref={ref} geometry={geom} frustumCulled={false} renderOrder={3}>
+      <pointsMaterial size={2.6} sizeAttenuation={false} color="#f4f7fb" transparent opacity={0.85 * density} depthWrite={false} fog />
+    </points>
+  );
+}
+// ---------------------------------------------------------------- flags (Drop 38)
+// Flags drawn in code: the US flag exactly (13 stripes, 50 stars in nine rows), and each basin's state flag with its
+// correct field, colors, and layout; complex seals (the pelican, the eagle, the coat of arms, the Osage shield, the
+// bison) are simplified silhouettes drawn with canvas paths. Texture is 2:1 or 3:2 per the flag's own ratio.
+const star = (ctx, cx, cy, r, color) => { ctx.fillStyle = color; ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.382 : r; ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); };
+const text = (ctx, t, x, y, size, color, weight = 'bold') => { ctx.fillStyle = color; ctx.font = weight + ' ' + size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, x, y); };
+const FLAG_RATIO = { us: 1.9, TX: 1.5, ND: 1.5, LA: 1.5, PA: 1.5, CO: 1.5, OK: 1.5, WY: 1.43, OH: 1.625, NM: 1.5 };
+export const flagRatio = (kind) => FLAG_RATIO[kind] || 1.5;
+export function flagTexture(kind) {
+  const key = 'flag-' + kind;
+  if (texCache.has(key)) return texCache.get(key);
+  if (typeof document === 'undefined') return null;
+  const H = 320, W = Math.round(H * flagRatio(kind));
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const fill = (color, x = 0, y = 0, w = W, h = H) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
+  if (kind === 'us') {
+    for (let i = 0; i < 13; i++) fill(i % 2 ? '#ffffff' : '#b22234', 0, i * H / 13, W, H / 13 + 1);
+    const ch = H * 7 / 13, cw = H * 0.76; fill('#3c3b6e', 0, 0, cw, ch);
+    for (let r = 0; r < 9; r++) { const n = r % 2 ? 5 : 6; for (let k = 0; k < n; k++) star(ctx, cw * (r % 2 ? (k + 1) / 6 : (k + 0.5) / 6), ch * (r + 0.5) / 9, H * 0.0308, '#ffffff'); }
+  } else if (kind === 'TX') {
+    fill('#002868', 0, 0, W / 3, H); fill('#ffffff', W / 3, 0, W, H / 2); fill('#bf0a30', W / 3, H / 2, W, H / 2);
+    star(ctx, W / 6, H / 2, H * 0.19, '#ffffff');
+  } else if (kind === 'NM') {
+    fill('#ffd700'); ctx.strokeStyle = '#bf0a30'; ctx.lineWidth = H * 0.03; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(W / 2, H / 2, H * 0.11, 0, Math.PI * 2); ctx.stroke();
+    [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => { [-0.09, -0.03, 0.03, 0.09].forEach((o, i) => { const L = H * (i === 1 || i === 2 ? 0.26 : 0.2); ctx.beginPath(); ctx.moveTo(W / 2 + dx * H * 0.15 + (dy ? o * H : 0), H / 2 + dy * H * 0.15 + (dx ? o * H : 0)); ctx.lineTo(W / 2 + dx * (H * 0.15 + L) + (dy ? o * H : 0), H / 2 + dy * (H * 0.15 + L) + (dx ? o * H : 0)); ctx.stroke(); }); });
+  } else if (kind === 'CO') {
+    fill('#002868', 0, 0, W, H / 3); fill('#ffffff', 0, H / 3, W, H / 3); fill('#002868', 0, 2 * H / 3, W, H / 3);
+    ctx.strokeStyle = '#bf0a30'; ctx.lineWidth = H * 0.17; ctx.beginPath(); ctx.arc(W * 0.33, H / 2, H * 0.25, 0.42, Math.PI * 2 - 0.42); ctx.stroke();
+    ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(W * 0.33, H / 2, H * 0.165, 0, Math.PI * 2); ctx.fill();
+  } else if (kind === 'OK') {
+    fill('#6ca0dc');
+    ctx.fillStyle = '#d2b48c'; ctx.beginPath(); ctx.arc(W / 2, H * 0.44, H * 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = 3; ctx.stroke();
+    for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 7, x = W / 2 + Math.cos(a) * H * 0.13, y = H * 0.44 + Math.sin(a) * H * 0.13; fill('#6ca0dc', x - 5, y - 2, 10, 4); fill('#6ca0dc', x - 2, y - 5, 4, 10); }
+    ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = H * 0.025; ctx.beginPath(); ctx.moveTo(W * 0.3, H * 0.62); ctx.lineTo(W * 0.7, H * 0.26); ctx.stroke();
+    ctx.strokeStyle = '#2e7d32'; ctx.lineWidth = H * 0.02; ctx.beginPath(); ctx.moveTo(W * 0.3, H * 0.26); ctx.lineTo(W * 0.7, H * 0.62); ctx.stroke();
+    for (let i = 0; i < 6; i++) { const t = 0.15 + i * 0.14, x = W * (0.3 + 0.4 * t), y = H * (0.26 + 0.36 * t); ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.ellipse(x - 8, y + 6, 10, 5, 0.7, 0, Math.PI * 2); ctx.fill(); }
+    text(ctx, 'OKLAHOMA', W / 2, H * 0.82, H * 0.13, '#ffffff');
+  } else if (kind === 'WY') {
+    fill('#bf0a30'); fill('#ffffff', W * 0.04, H * 0.06, W * 0.92, H * 0.88); fill('#002868', W * 0.065, H * 0.1, W * 0.87, H * 0.8);
+    ctx.fillStyle = '#ffffff'; ctx.beginPath();
+    const bx = W * 0.5, by = H * 0.56, u = H * 0.0045;
+    [[-60, 10], [-62, -5], [-50, -22], [-30, -34], [-5, -42], [15, -46], [32, -44], [46, -36], [56, -26], [62, -14], [60, 0], [56, 14], [50, 20], [44, 34], [40, 48], [30, 48], [30, 32], [16, 26], [0, 28], [-12, 28], [-14, 48], [-26, 48], [-24, 30], [-36, 26], [-44, 34], [-46, 48], [-56, 48], [-54, 28], [-60, 20]].forEach(([x, y], i) => i ? ctx.lineTo(bx + x * u, by + y * u) : ctx.moveTo(bx + x * u, by + y * u));
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#002868'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx + 8 * u, by - 8 * u, H * 0.07, 0, Math.PI * 2); ctx.stroke();
+  } else if (kind === 'OH') {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W * 0.78, H / 2); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.clip();
+    for (let i = 0; i < 5; i++) fill(i % 2 ? '#ffffff' : '#bf0a30', 0, i * H / 5, W, H / 5 + 1);
+    ctx.fillStyle = '#002868'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W * 0.5, 0); ctx.lineTo(W * 0.3, H / 2); ctx.lineTo(W * 0.5, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(W * 0.27, H / 2, H * 0.125, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#bf0a30'; ctx.beginPath(); ctx.arc(W * 0.27, H / 2, H * 0.07, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < 13; i++) { const a = i / 13 * Math.PI * 2; star(ctx, W * 0.27 + Math.cos(a) * H * 0.28, H / 2 + Math.sin(a) * H * 0.3, H * 0.03, '#ffffff'); }
+    [[0.06, 0.12], [0.1, 0.3], [0.1, 0.7], [0.06, 0.88]].forEach(([x, y]) => star(ctx, W * x, H * y, H * 0.03, '#ffffff'));
+  } else if (kind === 'LA') {
+    fill('#0a2a6b');
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.ellipse(W / 2, H * 0.44, H * 0.17, H * 0.1, 0, 0, Math.PI * 2); ctx.fill();            // body
+    ctx.beginPath(); ctx.ellipse(W / 2 - H * 0.02, H * 0.3, H * 0.045, H * 0.12, 0.3, 0, Math.PI * 2); ctx.fill(); // neck
+    ctx.beginPath(); ctx.ellipse(W / 2 + H * 0.03, H * 0.2, H * 0.05, H * 0.035, 0, 0, Math.PI * 2); ctx.fill();  // head
+    ctx.beginPath(); ctx.moveTo(W / 2 + H * 0.06, H * 0.2); ctx.lineTo(W / 2 + H * 0.17, H * 0.26); ctx.lineTo(W / 2 + H * 0.06, H * 0.235); ctx.closePath(); ctx.fill(); // bill
+    [[-0.07, 0], [0, 0.02], [0.07, 0]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.ellipse(W / 2 + dx * H, H * (0.5 + dy), H * 0.03, H * 0.022, 0, 0, Math.PI * 2); ctx.fill(); }); // chicks
+    [[-0.1, 0.1], [0.1, 0.1]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.ellipse(W / 2 + dx * H, H * (0.42 + dy), H * 0.11, H * 0.04, dx > 0 ? -0.7 : 0.7, 0, Math.PI * 2); ctx.fill(); }); // wings
+    fill('#ffffff', W * 0.25, H * 0.68, W * 0.5, H * 0.1); text(ctx, 'UNION JUSTICE CONFIDENCE', W / 2, H * 0.73, H * 0.055, '#0a2a6b');
+  } else if (kind === 'ND') {
+    fill('#002868');
+    ctx.fillStyle = '#d4a017'; ctx.beginPath(); ctx.ellipse(W / 2, H * 0.42, H * 0.2, H * 0.12, 0, 0, Math.PI * 2); ctx.fill();   // spread wings
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(W / 2, H * 0.47, H * 0.06, H * 0.12, 0, 0, Math.PI * 2); ctx.fill();  // body
+    ctx.beginPath(); ctx.arc(W / 2, H * 0.3, H * 0.04, 0, Math.PI * 2); ctx.fill();                                              // head
+    for (let i = 0; i < 6; i++) fill(i % 2 ? '#bf0a30' : '#ffffff', W / 2 - H * 0.06 + i * H * 0.02, H * 0.44, H * 0.02, H * 0.14);  // shield stripes
+    ctx.fillStyle = '#d4a017'; for (let i = 0; i < 13; i++) star(ctx, W / 2 + (i - 6) * H * 0.035, H * 0.17 + Math.abs(i - 6) * H * 0.012, H * 0.012, '#d4a017');
+    fill('#bf0a30', W * 0.28, H * 0.68, W * 0.44, H * 0.1); text(ctx, 'NORTH DAKOTA', W / 2, H * 0.73, H * 0.06, '#ffffff');
+  } else if (kind === 'PA') {
+    fill('#002868');
+    [[-0.19, 1], [0.19, -1]].forEach(([dx, sgn]) => { ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.ellipse(W / 2 + dx * H, H * 0.5, H * 0.07, H * 0.14, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(W / 2 + dx * H - sgn * H * 0.03, H * 0.3, H * 0.035, H * 0.06, sgn * 0.4, 0, Math.PI * 2); ctx.fill(); }); // horses
+    fill('#1e5aa8', W / 2 - H * 0.1, H * 0.3, H * 0.2, H * 0.3); fill('#d4a017', W / 2 - H * 0.1, H * 0.4, H * 0.2, H * 0.08);   // shield with the gold band
+    ctx.fillStyle = '#d4a017'; ctx.beginPath(); ctx.ellipse(W / 2, H * 0.21, H * 0.09, H * 0.045, 0, 0, Math.PI * 2); ctx.fill();   // eagle
+    fill('#ffffff', W * 0.22, H * 0.7, W * 0.56, H * 0.09); text(ctx, 'VIRTUE LIBERTY AND INDEPENDENCE', W / 2, H * 0.745, H * 0.045, '#002868');
+  } else {
+    fill('#888888'); text(ctx, kind, W / 2, H / 2, H * 0.3, '#ffffff');
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  texCache.set(key, tex);
+  return tex;
+}
 export function cloudTexture() {
   const key = 'cloud';
   if (texCache.has(key)) return texCache.get(key);

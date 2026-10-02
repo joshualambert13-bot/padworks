@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState } from 'react';
-import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX } from 'lucide-react';
+import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX, Snowflake, Leaf, Link2, Check } from 'lucide-react';
 import { soundOn, toggleSound, onSoundChange, armSoundOnGesture, disableSound } from './sound.js';
 import { LITE, setLite, nextTod } from './parts/lighting.jsx';
 import { useFx, fxOn, FX_LIMIT_MS } from './parts/effects.jsx';
@@ -48,6 +48,18 @@ export default function Simulator() {
   const todUi = TOD_UI[tod] || TOD_UI.day;
   // sound (Drop 32): on only after a click; a remembered preference re-arms on the first gesture; off when leaving the simulator
   const [sound, setSound] = useState(soundOn());
+  // shareable links (Drop 42): ?s=<token> on /simulate rebuilds the job; the Share button copies the current one
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('s');
+    if (token) { useSim.getState().applyShareToken(token); window.history.replaceState({}, '', window.location.pathname); }
+  }, []);
+  const share = () => {
+    const url = window.location.origin + window.location.pathname + '?s=' + useSim.getState().shareToken();
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => window.prompt('Copy this link', url));
+    else window.prompt('Copy this link', url);
+  };
   useEffect(() => { const off = onSoundChange(setSound); const disarm = armSoundOnGesture(); return () => { off(); disarm(); disableSound(false); }; }, []);
   const setPreset = (preset) => setUi({ preset });
   const setMobileTab = (mobileTab) => setUi({ mobileTab });
@@ -89,6 +101,8 @@ export default function Simulator() {
         )}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
         {view === 'surface' && <button className="btn flex items-center gap-1" title={todUi.title} onClick={() => setUi({ tod: nextTod(tod) })}><todUi.Icon size={14} />{todUi.label}</button>}
+        {view === 'surface' && <button className="btn flex items-center gap-1" title={ui.season === 'winter' ? 'Winter: snow by basin (deep in the north, frost in the Permian), overcast, flurries, condensing exhaust. Click for summer.' : 'Summer. Click for winter conditions.'} onClick={() => setUi({ season: ui.season === 'winter' ? 'summer' : 'winter' })}>{ui.season === 'winter' ? <Snowflake size={14} /> : <Leaf size={14} />}{ui.season === 'winter' ? 'Winter' : 'Summer'}</button>}
+        <button className="btn flex items-center gap-1" title="Copy a link that opens this job as it is now: setup, phase, stage, time of day, season, and camera preset." onClick={share} data-action="share">{copied ? <Check size={14} /> : <Link2 size={14} />}{copied ? 'Copied' : 'Share'}</button>
         <button className={'btn flex items-center gap-1 ' + (sound ? '' : 'text-mute')} title={sound ? 'Sound on: pumps, wireline, coil, flowback, alarms, valve actuation. Click to mute.' : 'Sound off. Click for pad sound (synthesized; no downloads).'} onClick={toggleSound}>{sound ? <Volume2 size={14} /> : <VolumeX size={14} />}{sound ? 'Sound' : 'Muted'}</button>
         <button className="btn flex items-center gap-1" title={LITE ? 'Lite rendering: hard shadows, no sky reflections. Click for full quality (reloads the page).' : 'Full rendering: sky reflections, soft shadows, ground detail. Click for lite mode on a slow machine (reloads the page).'} onClick={() => setLite(!LITE)}><Sparkles size={14} />{LITE ? 'Lite' : 'Full'}</button>
         {!LITE && <button className={'btn flex items-center gap-1 ' + (fxLive ? '' : 'text-mute')} title={fxLive ? 'Effects on: ambient occlusion and bloom. Click to turn them off.' : fx.auto ? 'Effects turned off automatically: this machine averaged ' + fx.frameMs + ' ms per frame with them on (limit ' + FX_LIMIT_MS + ' ms). Click to try again.' : 'Effects off. Click for ambient occlusion and bloom.'} onClick={() => fx.setWanted(!fxLive)} data-action="effects"><Wand2 size={14} />{fxLive ? 'Effects' : 'Effects off'}</button>}
