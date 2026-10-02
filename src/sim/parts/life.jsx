@@ -4,7 +4,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Merged, GEO, MAT, Cyl, Hose } from './primitives.jsx';
+import { Merged, GEO, MAT, Cyl, Hose, Mat } from './primitives.jsx';
 
 // ---------------------------------------------------------------- canvas signs
 const signCache = new Map();
@@ -44,7 +44,7 @@ export function Sign({ lines, position = [0, 0, 0], rotation = [0, 0, 0], width 
   const tex = useMemo(() => signTexture(lines, { bg: bg || (danger ? '#f4f4f4' : '#f2f2f2'), fg: fg || '#111', accent: danger ? '#c8102e' : null, w: 256, h: Math.round(256 * height / width) }), [lines, danger, width, height, bg, fg]);
   return (
     <group position={position} rotation={rotation}>
-      {post > 0 && <mesh position={[0, -post / 2, -0.03]}><cylinderGeometry args={[0.025, 0.025, post, 6]} /><meshStandardMaterial {...MAT.darkSteel} /></mesh>}
+      {post > 0 && <mesh position={[0, -post / 2, -0.03]}><cylinderGeometry args={[0.025, 0.025, post, 6]} /><Mat mat={MAT.darkSteel} /></mesh>}
       <mesh castShadow><boxGeometry args={[width, height, 0.02]} /><meshStandardMaterial color="#3a3f45" metalness={0.5} roughness={0.6} /></mesh>
       {tex && <mesh position={[0, 0, 0.012]}><planeGeometry args={[width, height]} /><meshStandardMaterial map={tex} roughness={0.7} metalness={0} /></mesh>}
     </group>
@@ -87,6 +87,57 @@ export function Crew({ position = [0, 0, 0], rotation = 0, pose = 'stand', vest 
         {/* head, hard hat with brim, gloves */}
         <Merged mat={SKIN} deps={[pose]} parts={() => [{ g: GEO.sphere(0.11, 10, 8), p: [0, torsoY + 0.47, 0] }, { g: GEO.sphere(0.05, 6, 5), p: [-0.25 + (pose === 'point' ? 0.05 : 0), torsoY + (pose === 'point' ? 0.55 : -0.25), pose === 'point' ? -0.5 : 0.05] }, { g: GEO.sphere(0.05, 6, 5), p: [0.27, torsoY - 0.25, 0.05] }]} />
         <Merged mat={{ color: hat, metalness: 0.1, roughness: 0.4 }} deps={[hat, pose]} parts={() => [{ g: GEO.sphere(0.125, 10, 6), p: [0, torsoY + 0.5, 0], s: [1, 0.85, 1] }, { g: GEO.cyl(0.17, 0.02, 12), p: [0, torsoY + 0.47, 0.02] }]} />
+      </group>
+    </group>
+  );
+}
+
+// A crew member walking a closed path (Drop 28): legs and arms swing from hip and shoulder pivots, the body bobs,
+// the figure faces the way it is going. Same coveralls, vest, and hat as the standing crew.
+export function Walker({ path, speed = 1.1, vest = '#ff7a1a', hat = '#f2f2f2', seed = 0 }) {
+  const ref = useRef(), body = useRef(), legL = useRef(), legR = useRef(), armL = useRef(), armR = useRef();
+  const loop = useMemo(() => {
+    const pts = path.map(p => new THREE.Vector3(p[0], 0, p[1])); pts.push(pts[0].clone());
+    const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
+    return { pts, cum, total: cum[cum.length - 1] };
+  }, [path]);
+  useFrame((state) => {
+    const t = state.clock.elapsedTime * speed + seed * 11;
+    const d = ((t % loop.total) + loop.total) % loop.total;
+    let i = 1; while (i < loop.cum.length - 1 && loop.cum[i] < d) i++;
+    const a = loop.pts[i - 1], b = loop.pts[i], k = (d - loop.cum[i - 1]) / Math.max(1e-6, loop.cum[i] - loop.cum[i - 1]);
+    if (ref.current) { ref.current.position.set(a.x + (b.x - a.x) * k, 0, a.z + (b.z - a.z) * k); ref.current.rotation.y = Math.atan2(-(b.x - a.x), -(b.z - a.z)); }
+    const ph = state.clock.elapsedTime * 6.5 * speed + seed;
+    if (legL.current) legL.current.rotation.x = 0.55 * Math.sin(ph);
+    if (legR.current) legR.current.rotation.x = -0.55 * Math.sin(ph);
+    if (armL.current) armL.current.rotation.x = -0.4 * Math.sin(ph);
+    if (armR.current) armR.current.rotation.x = 0.4 * Math.sin(ph);
+    if (body.current) body.current.position.y = 0.025 * Math.abs(Math.sin(ph));
+  });
+  const legH = 0.85, torsoY = legH + 0.36;
+  const COVERALL = { color: '#2b3f66', metalness: 0.05, roughness: 0.85 };
+  const leg = (r, x) => (
+    <group ref={r} position={[x, legH, 0]}>
+      <Merged mat={COVERALL} deps={[]} parts={() => [{ g: GEO.cyl(0.09, legH, 8), p: [0, -legH / 2, 0] }]} />
+      <Merged mat={MAT.black} deps={[]} parts={() => [{ g: GEO.box(0.13, 0.12, 0.26), p: [0, -legH + 0.06, -0.03] }]} />
+    </group>
+  );
+  const arm = (r, x, sign) => (
+    <group ref={r} position={[x, torsoY + 0.3, 0]}>
+      <Merged mat={COVERALL} deps={[]} parts={() => [{ g: GEO.cyl(0.055, 0.6, 6), p: [0, -0.3, 0], r: [0, 0, sign * 0.2] }]} />
+      <Merged mat={SKIN} deps={[]} parts={() => [{ g: GEO.sphere(0.05, 6, 5), p: [sign * -0.06, -0.62, 0] }]} />
+    </group>
+  );
+  return (
+    <group ref={ref} name="LG-CREW-WALKER">
+      <group ref={body}>
+        {leg(legL, -0.11)}{leg(legR, 0.11)}
+        <Merged mat={COVERALL} deps={[]} parts={() => [{ g: GEO.cyl(0.17, 0.62, 10, 0.2), p: [0, torsoY, 0] }]} />
+        <Merged mat={{ color: vest, metalness: 0, roughness: 0.7 }} deps={[vest]} parts={() => [{ g: GEO.cyl(0.2, 0.42, 10, 0.22), p: [0, torsoY + 0.02, 0] }]} />
+        <Merged mat={{ color: '#d9d9d9', metalness: 0.2, roughness: 0.4 }} deps={[]} parts={() => [{ g: GEO.cyl(0.215, 0.05, 10), p: [0, torsoY + 0.14, 0] }, { g: GEO.cyl(0.225, 0.05, 10), p: [0, torsoY - 0.1, 0] }]} />
+        {arm(armL, -0.25, -1)}{arm(armR, 0.25, 1)}
+        <Merged mat={SKIN} deps={[]} parts={() => [{ g: GEO.sphere(0.11, 10, 8), p: [0, torsoY + 0.47, 0] }]} />
+        <Merged mat={{ color: hat, metalness: 0.1, roughness: 0.4 }} deps={[hat]} parts={() => [{ g: GEO.sphere(0.125, 10, 6), p: [0, torsoY + 0.5, 0], s: [1, 0.85, 1] }, { g: GEO.cyl(0.17, 0.02, 12), p: [0, torsoY + 0.47, 0] }]} />
       </group>
     </group>
   );
@@ -176,7 +227,10 @@ export function Gauge({ position = [0, 0, 0], rotation = [0, 0, 0], r = 0.09 }) 
   );
 }
 // Hydraulic hose pair from an actuator to a junction box: two hoses that sag between the points, one draw call each.
-export function HosePair({ from, to, r = 0.02, sag = 0.5, spread = 0.06 }) {
+// Without `sag` the hoses hang by their span: 16 percent of the straight-line distance, 0.1 m at least (Drop 24).
+export function HosePair({ from, to, r = 0.02, sag, spread = 0.06 }) {
+  const dist = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
+  sag = sag ?? Math.max(0.1, 0.16 * dist);
   return (
     <group>
       <Hose from={[from[0] - spread, from[1], from[2]]} to={[to[0] - spread, to[1], to[2]]} r={r} sag={sag} segments={10} mat={MAT.hose} />

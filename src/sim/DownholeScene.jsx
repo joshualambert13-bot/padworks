@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useSim, wellParams } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
-import { PadEnvironment, LITE } from './parts/lighting.jsx';
+import { SceneEnvironment, LITE } from './parts/lighting.jsx';
 import { Effects } from './parts/effects.jsx';
 import { ContextLoss } from './parts/stability.jsx';
 
@@ -12,7 +12,7 @@ import { Formation, Casing, Stage, FluidFlow, FlowbackFlow, CuttingsBed, PerfFla
 
 function Ticker({ enabled }) {
   const tick = useSim(s => s.tick);
-  useFrame((state, dt) => { if (enabled) tick(dt); window.__padworksDownView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
+  useFrame((state, dt) => { if (enabled) tick(dt); window.__padworksDownScene = state.scene; window.__padworksDownView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
   return null;
 }
 
@@ -55,7 +55,7 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
   return (
     <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [4, 5, 16], fov: 45, near: 0.1, far: 300 }} gl={{ antialias: true, toneMappingExposure: 1.1 }}>
       <color attach="background" args={['#0b0f14']} />
-      {!LITE && <PadEnvironment terrain={UNDERGROUND} intensity={0.55} />}
+      <SceneEnvironment terrain={UNDERGROUND} intensity={0.55} />
       <ambientLight intensity={LITE ? 0.8 : 0.35} />
       <directionalLight position={[10, 20, 30]} intensity={2.2} color="#fff1dc" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-24} shadow-camera-right={24} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-camera-near={5} shadow-camera-far={80} shadow-bias={-0.0003} shadow-normalBias={0.02} />
       <directionalLight position={[-14, 6, 20]} intensity={0.5} color="#cfe0ff" />

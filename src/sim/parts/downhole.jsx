@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSim } from '../store.js';
 import { Label } from './primitives.jsx';
-import { rockTexture, dotTexture, fractureAlpha, LITE } from './lighting.jsx';
+import { rockTexture, fractureAlpha, turbulenceTexture, LITE } from './lighting.jsx';
 
 export const LATERAL = { heelX: -16, toeX: 16, casingR: 0.5, holeR: 0.68 };
 const count = () => useSim.getState().stages.length;
@@ -18,30 +18,56 @@ export const plugX = (i) => LATERAL.toeX - i * stageLen() - 0.45;               
 export const sleeveX = (i) => stageX(i);                                                    // frac sleeve sub at the stage center
 
 const LAYERS = [
-  { y: 4.6, h: 1.4, color: '#8c7a5e', kind: 'sand' },
-  { y: 3.3, h: 1.2, color: '#5e5040', kind: 'shale' },
-  { y: 2.1, h: 1.2, color: '#9a8a66', kind: 'sand' },
-  { y: 1.05, h: 0.9, color: '#6f7a84', kind: 'lime' },
-  { y: 0, h: 1.2, color: '#3f4a55', kind: 'shale' },   // target: a darker shale band around the lateral
-  { y: -1.05, h: 0.9, color: '#6f7a84', kind: 'lime' },
-  { y: -2.1, h: 1.2, color: '#8a7a5a', kind: 'sand' },
-  { y: -3.3, h: 1.2, color: '#55483a', kind: 'shale' },
-  { y: -4.6, h: 1.4, color: '#5a4e40', kind: 'sand' },
+  { y: 4.8, h: 1.4, color: '#8c7a5e', kind: 'sand' },
+  { y: 3.5, h: 1.2, color: '#5e5040', kind: 'shale' },
+  { y: 2.3, h: 1.2, color: '#9a8a66', kind: 'sand' },
+  { y: 1.25, h: 0.9, color: '#6f7a84', kind: 'lime' },
+  { y: 0, h: 1.6, color: '#3f4a55', kind: 'shale', bore: true },   // target: a darker shale band around the lateral; the bore is cut out of its section face
+  { y: -1.25, h: 0.9, color: '#6f7a84', kind: 'lime' },
+  { y: -2.3, h: 1.2, color: '#8a7a5a', kind: 'sand' },
+  { y: -3.5, h: 1.2, color: '#55483a', kind: 'shale' },
+  { y: -4.8, h: 1.4, color: '#5a4e40', kind: 'sand' },
 ];
+
+// The target band with the borehole cut out of it (Drop 30): a rectangle in the section plane with a half-round notch
+// of the hole radius, extruded along the lateral, so the rock meets the cement sheath and the section face sits at
+// z = 0 like every other bed. UVs are a planar projection along the lateral so the rock texture reads as it does on
+// the box beds. Local x is world -z (into the rock), local y is world y, the extrusion runs along world x.
+function boreBandGeometry(h, depth = 9, len = 44, R = LATERAL.holeR + 0.015) {
+  const sh = new THREE.Shape();
+  sh.moveTo(0, -h / 2); sh.lineTo(depth, -h / 2); sh.lineTo(depth, h / 2); sh.lineTo(0, h / 2); sh.lineTo(0, R);
+  sh.absarc(0, 0, R, Math.PI / 2, -Math.PI / 2, true);
+  sh.lineTo(0, -h / 2);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: len, bevelEnabled: false, curveSegments: 28, steps: 1 });
+  const pos = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getZ(i) / len * 10, pos.getY(i) / h + 0.5);
+  uv.needsUpdate = true;
+  g.rotateY(Math.PI / 2); g.translate(-len / 2, 0, 0);
+  return g;
+}
 
 // Layered formation: each bed is a textured box (rock texture tinted by the bed color, bump for grain), the section
 // face carries bedding lines and a few natural fractures. The schematic grid shows only with labels.
+// The target band carries the borehole as a notch in its section face (`boreBandGeometry`), so the cutaway casing
+// and cement sit in rock and the camera looks into the trough. Bedding lines and natural fractures stay out of the bore.
 export function Formation({ grid = false }) {
-  const bedding = useMemo(() => Array.from({ length: 26 }, (_, i) => ({ y: -5.2 + i * 0.4 + ((i * 7) % 3) * 0.05, x: ((i * 13) % 7) - 3, w: 30 + ((i * 5) % 9) })), []);
+  const bedding = useMemo(() => Array.from({ length: 26 }, (_, i) => ({ y: -5.2 + i * 0.4 + ((i * 7) % 3) * 0.05, x: ((i * 13) % 7) - 3, w: 30 + ((i * 5) % 9) })).filter(b => Math.abs(b.y) > 0.88), []);
   const tex = useMemo(() => ({ sand: rockTexture('sand'), shale: rockTexture('shale'), lime: rockTexture('lime') }), []);
-  const maps = useMemo(() => LAYERS.map(l => { const t = tex[l.kind]; if (!t) return null; const c = t.clone(); c.needsUpdate = true; c.repeat.set(10, Math.max(1, Math.round(l.h / 1.2))); return c; }), [tex]);
+  const maps = useMemo(() => LAYERS.map(l => { const t = tex[l.kind]; if (!t) return null; const c = t.clone(); c.needsUpdate = true; if (!l.bore) c.repeat.set(10, Math.max(1, Math.round(l.h / 1.2))); return c; }), [tex]);
+  const boreGeom = useMemo(() => boreBandGeometry(LAYERS.find(l => l.bore).h), []);
   return (
     <group name="FORMATION">
       {LAYERS.map((l, i) => (
-        <mesh key={i} position={[0, l.y, -4.5]} receiveShadow>
-          <boxGeometry args={[44, l.h, 9]} />
-          <meshStandardMaterial color={l.color} roughness={1} metalness={0} map={maps[i] || undefined} bumpMap={LITE ? undefined : maps[i] || undefined} bumpScale={0.08} />
-        </mesh>
+        l.bore ? (
+          <mesh key={i} geometry={boreGeom} position={[0, l.y, 0]} receiveShadow>
+            <meshStandardMaterial color={l.color} roughness={1} metalness={0} map={maps[i] || undefined} bumpMap={LITE ? undefined : maps[i] || undefined} bumpScale={0.14} />
+          </mesh>
+        ) : (
+          <mesh key={i} position={[0, l.y, -4.5]} receiveShadow>
+            <boxGeometry args={[44, l.h, 9]} />
+            <meshStandardMaterial color={l.color} roughness={1} metalness={0} map={maps[i] || undefined} bumpMap={LITE ? undefined : maps[i] || undefined} bumpScale={0.14} />
+          </mesh>
+        )
       ))}
       {bedding.map((b, i) => (
         <mesh key={i} position={[b.x, b.y, 0.01]}>
@@ -50,8 +76,8 @@ export function Formation({ grid = false }) {
         </mesh>
       ))}
       {[-11, -3, 6, 13].map((x, i) => (
-        <mesh key={'nf' + i} position={[x, 0.2, 0.012]} rotation={[0, 0, THREE.MathUtils.degToRad(70 + i * 9)]}>
-          <planeGeometry args={[0.035, 3.2]} />
+        <mesh key={'nf' + i} position={[x, i % 2 ? 2.3 : -2.4, 0.012]} rotation={[0, 0, THREE.MathUtils.degToRad(70 + i * 9)]}>
+          <planeGeometry args={[0.035, 2.6]} />
           <meshBasicMaterial color="#141820" transparent opacity={0.6} />
         </mesh>
       ))}
@@ -92,6 +118,14 @@ export function Casing({ openhole = false }) {
         <cylinderGeometry args={[LATERAL.casingR, LATERAL.casingR, len, 32, 1, true, Math.PI / 2, Math.PI]} />
         <meshStandardMaterial color="#9aa2aa" metalness={0.9} roughness={0.32} side={THREE.DoubleSide} />
       </mesh>
+      {/* section faces on the cut plane (Drop 30): the casing wall and, when cemented, the cement annulus show as
+          strips along both cut edges, so the section reads as solid steel and cement rather than two thin shells */}
+      {[-1, 1].map(sgn => (
+        <group key={sgn}>
+          <mesh position={[sgn * (LATERAL.casingR - 0.012), 0, 0.0015]}><planeGeometry args={[0.024, len]} /><meshStandardMaterial color="#596068" metalness={0.6} roughness={0.5} /></mesh>
+          {!openhole && <mesh position={[sgn * (LATERAL.casingR + (LATERAL.holeR - LATERAL.casingR) / 2), 0, 0.001]}><planeGeometry args={[LATERAL.holeR - LATERAL.casingR, len]} /><meshStandardMaterial color="#a9a597" roughness={1} /></mesh>}
+        </group>
+      ))}
       {/* couplings every 12 m */}
       {Array.from({ length: Math.floor(len / 4) }).map((_, i) => (
         <mesh key={i} position={[0, -len / 2 + 2 + i * 4, 0]}>
@@ -133,27 +167,47 @@ function Fracture({ extent, color, seed, settled = false }) {
   );
 }
 
-// Perforation cluster: shots at 60 degree phasing over a short interval, each a tunnel with a crushed zone and a hole in the casing.
+// Perforation cluster: twelve shots at 60 degree phasing along a short interval (two turns of the gun's spiral), as
+// a cutaway shows them (Drop 30). The section plane is z = 0 and the near half is removed, so the two shots per turn
+// that lie in the plane (straight up and straight down) are drawn in half section: the far half of the tunnel tube,
+// which sits inside the rock behind the face, drawn without a depth test (renderOrder 1, after the opaque rock) so it
+// shows through the face as a trough the way a sectioned tunnel does; it still writes depth, so tools and fluid in
+// front of it are not affected. The crushed zone around the mouth is a dark round decal on the face. The two shots
+// per turn that point into the far half show only as holes on the inside of the casing; their tunnels are inside
+// solid rock. The two that point into the removed half are not drawn.
 function PerfCluster({ fired }) {
   if (!fired) return null;
-  const shots = [40, 100, 160, 220, 280, 340];
+  const R = LATERAL.casingR;
+  const shots = [];
+  for (let i = 0; i < 12; i++) { const a = (60 * i) % 360; if (a <= 180) shots.push([a, i]); }
   return (
     <group>
-      {shots.map((a, i) => {
+      {shots.map(([a, i]) => {
         const rad = THREE.MathUtils.degToRad(a);
-        const dx = (i - 2.5) * 0.09;
+        const dx = (i - 5.5) * 0.09;
+        const dir = [0, Math.cos(rad), -Math.sin(rad)];
+        const inPlane = a === 0 || a === 180;
+        const at = (r, z = 0) => [dx, dir[1] * r, dir[2] * r + z];
+        const holeRot = [-rad - Math.PI / 2, 0, 0];
+        if (!inPlane) return (
+          <mesh key={i} position={at(R - 0.004)} rotation={holeRot}>
+            <circleGeometry args={[0.04, 12]} />
+            <meshBasicMaterial color="#050505" side={THREE.DoubleSide} />
+          </mesh>
+        );
+        const theta = a === 180 ? -Math.PI / 2 : Math.PI / 2;   // the half at z <= 0 after the shot's own rotation
         return (
-          <group key={a} position={[dx, 0, 0]}>
-            <mesh rotation={[rad, 0, 0]} position={[0, Math.cos(rad) * 0.95, -Math.sin(rad) * 0.95]}>
-              <cylinderGeometry args={[0.025, 0.07, 1.1, 6]} />
-              <meshStandardMaterial color="#0e0e0e" roughness={1} />
+          <group key={i}>
+            <mesh rotation={[-rad, 0, 0]} position={at(R + 0.5)} renderOrder={1}>
+              <cylinderGeometry args={[0.014, 0.045, 1.0, 8, 1, true, theta, Math.PI]} />
+              <meshStandardMaterial color="#1a1714" roughness={1} side={THREE.BackSide} depthTest={false} />
             </mesh>
-            <mesh rotation={[rad, 0, 0]} position={[0, Math.cos(rad) * 0.62, -Math.sin(rad) * 0.62]}>
-              <cylinderGeometry args={[0.09, 0.13, 0.25, 8]} />
-              <meshStandardMaterial color="#2a2622" roughness={1} />
+            <mesh position={at(LATERAL.holeR + 0.1, 0.003)}>
+              <circleGeometry args={[0.1, 16]} />
+              <meshBasicMaterial color="#2a2622" transparent opacity={0.85} />
             </mesh>
-            <mesh position={[0, Math.cos(rad) * LATERAL.casingR, -Math.sin(rad) * LATERAL.casingR]} rotation={[rad, 0, 0]}>
-              <circleGeometry args={[0.05, 10]} />
+            <mesh position={at(R)} rotation={holeRot}>
+              <circleGeometry args={[0.04, 12, a === 180 ? Math.PI : 0, Math.PI]} />
               <meshBasicMaterial color="#050505" side={THREE.DoubleSide} />
             </mesh>
           </group>
@@ -320,31 +374,54 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, 
 }
 
 // Proppant points inside the fracture ellipse, count grows with fill
+// Proppant as instanced grains (Drop 29): low-poly spheres with per-grain color, packed into the fracture wing as a
+// disk that grows with the fracture; `fill` is how much of the pack has been placed. One draw call per wing.
+const GRAIN = new THREE.IcosahedronGeometry(0.03, 0);
+const PROPPANT_MAX = 240;
 function Proppant({ extent, fill }) {
-  const max = 240;
-  const geom = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    const pos = new Float32Array(max * 3);
-    const col = new Float32Array(max * 3);
-    for (let i = 0; i < max; i++) {
-      const r = Math.sqrt(Math.random()), a = Math.random() * Math.PI * 2;
-      pos[i * 3] = (Math.random() - 0.5) * 0.08;
-      pos[i * 3 + 1] = Math.sin(a) * r * 0.5;
-      pos[i * 3 + 2] = Math.cos(a) * r;
-      const v = 0.8 + Math.random() * 0.3;
-      col[i * 3] = v; col[i * 3 + 1] = v * (0.9 + Math.random() * 0.1); col[i * 3 + 2] = v * 0.7;
+  const ref = useRef();
+  const seeds = useMemo(() => Array.from({ length: PROPPANT_MAX }, () => ({ r: 0.12 + 0.88 * Math.sqrt(Math.random()), a: Math.random() * Math.PI * 2, x: (Math.random() - 0.5) * 0.08, s: 0.7 + Math.random() * 0.6, c: 0.8 + Math.random() * 0.3, q: new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random() * 3, Math.random() * 3, 0)) })), []);
+  const colors = useMemo(() => { const arr = new Float32Array(PROPPANT_MAX * 3); seeds.forEach((g, i) => { arr[i * 3] = g.c; arr[i * 3 + 1] = g.c * (0.9 + (g.s - 0.7) * 0.1); arr[i * 3 + 2] = g.c * 0.68; }); return arr; }, [seeds]);
+  const n = Math.max(0, Math.min(PROPPANT_MAX, Math.floor(PROPPANT_MAX * fill)));
+  useFrame(() => {
+    const m = ref.current; if (!m) return;
+    const sc = 7 * extent;
+    if (m.userData.extent === extent && m.userData.n === n) return;
+    m.userData.extent = extent; m.userData.n = n;
+    const d = new THREE.Object3D();
+    for (let i = 0; i < PROPPANT_MAX; i++) {
+      const g = seeds[i];
+      d.position.set(g.x, Math.sin(g.a) * g.r * 0.5 * sc, Math.cos(g.a) * g.r * sc);
+      d.quaternion.copy(g.q); d.scale.setScalar(g.s); d.updateMatrix(); m.setMatrixAt(i, d.matrix);
     }
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    return g;
-  }, []);
-  const n = Math.floor(max * fill);
-  geom.setDrawRange(0, n);
-  const dot = useMemo(() => dotTexture(), []);
+    m.count = n; m.instanceMatrix.needsUpdate = true;
+  });
   return (
-    <points geometry={geom} scale={[1, 7 * extent, 7 * extent]}>
-      <pointsMaterial vertexColors size={0.13} sizeAttenuation map={dot || undefined} alphaTest={0.4} transparent depthWrite={false} />
-    </points>
+    <instancedMesh ref={ref} args={[GRAIN, undefined, PROPPANT_MAX]} frustumCulled={false} count={n}>
+      <instancedBufferAttribute attach="instanceColor" args={[colors, 3]} />
+      <meshStandardMaterial roughness={0.75} metalness={0} />
+    </instancedMesh>
+  );
+}
+
+// Fluid in the bore (Drop 29): a translucent column filling the casing from the heel to where the fluid is going,
+// with turbulence scrolling along it at the pump rate, under the particles that show the velocity. The column is
+// the back half of a cylinder like the casing, scaled to length so a moving target does not rebuild geometry.
+export function FluidColumn({ fromX, toX, active, rate, color, radius = LATERAL.casingR * 0.92 }) {
+  const ref = useRef();
+  const tex = useMemo(() => { const t = turbulenceTexture(); if (!t) return null; const c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(1, 6); return c; }, []);
+  useFrame((_, dt) => {
+    if (!ref.current) return;
+    const len = Math.max(0.01, toX - fromX);
+    ref.current.scale.set(1, len, 1); ref.current.position.set((fromX + toX) / 2, 0, 0);
+    if (tex) { tex.repeat.set(1, len / 2.5); tex.offset.y += (active ? 0.02 + rate / 100 * 0.6 : 0) * dt; }
+    ref.current.visible = active && len > 0.05;
+  });
+  return (
+    <mesh ref={ref} rotation={[0, 0, -Math.PI / 2]} renderOrder={2}>
+      <cylinderGeometry args={[radius, radius, 1, 24, 1, true, Math.PI / 2, Math.PI]} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.18} transparent opacity={0.38} map={tex || undefined} side={THREE.DoubleSide} depthWrite={false} roughness={0.25} metalness={0} />
+    </mesh>
   );
 }
 
@@ -377,7 +454,8 @@ export function FluidFlow({ rate, currentStage, active, ppa, targetOverride = nu
       }
       dummy.position.set(x, y, z);
       const sc = active ? 1 : 0.0001;
-      dummy.scale.set(sc, sc, sc);
+      const streak = spray && s.spray && s.u > 0.85 ? 1 : 1 + speed * 9;      // in the pipe the particles stretch with velocity
+      dummy.scale.set(sc * streak, sc * 0.8, sc * 0.8);
       dummy.updateMatrix();
       ref.current.setMatrixAt(i, dummy.matrix);
     }
@@ -385,10 +463,13 @@ export function FluidFlow({ rate, currentStage, active, ppa, targetOverride = nu
   });
   const color = ppa > 0.1 ? '#c9b47a' : '#3aa7ff';
   return (
-    <instancedMesh ref={ref} args={[null, null, cnt]} frustumCulled={false}>
-      <sphereGeometry args={[0.055, 6, 6]} />
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.9} roughness={0.3} metalness={0} />
-    </instancedMesh>
+    <group>
+      <FluidColumn fromX={LATERAL.heelX} toX={targetX} active={active} rate={rate} color={ppa > 0.1 ? '#8a7a4a' : '#2a7fd0'} />
+      <instancedMesh ref={ref} args={[null, null, cnt]} frustumCulled={false}>
+        <sphereGeometry args={[0.045, 6, 6]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.9} roughness={0.3} metalness={0} />
+      </instancedMesh>
+    </group>
   );
 }
 

@@ -136,6 +136,10 @@ await p.getByRole('button', { name: 'Flowback' }).first().click(); await wait(10
 await p.getByRole('button', { name: 'Surface' }).click(); await wait(1000);
 await p.selectOption('select[title="Camera preset"]', 'pad'); await wait(3000);
 await shot(p, '12-sim-flowback-pad');
+// Drop 30: dusk preset (low western sun, light towers lit), then back to day
+await p.getByRole('button', { name: 'Day' }).click(); await wait(3500);
+await shot(p, '12b-sim-flowback-dusk');
+await p.getByRole('button', { name: 'Dusk' }).click(); await wait(1500);
 await p.close();
 
 // ---------------- Library pages
@@ -243,7 +247,7 @@ await p.selectOption('select', '4');
 await p.getByRole('button', { name: 'Next: Toe sleeve' }).click(); await wait(800);
 await p.getByRole('button', { name: 'Pumps on, 15 bpm' }).click(); await wait(500);
 await p.getByRole('button', { name: 'Pressure up' }).first().click();
-await waitText(p, 'Toe sleeve opened', 60000); await wait(500);
+await waitText(p, 'Toe sleeve opened', 150000); await wait(500);
 await p.getByRole('button', { name: 'Downhole' }).click(); await wait(2500);
 await shot(p, '77-sleeve-toe-open-downhole');
 await clickWhenEnabled(p, /Swap to frac/); await wait(500);
@@ -384,7 +388,7 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   // lesson 3: kickout recovery
   await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
   await p.click('[data-action="lesson-L3"]'); await wait(800); await p.selectOption('select', '4');
-  await waitText(p, 'Job stopped: Pumps kicked out', 30000); await wait(400);
+  await waitText(p, 'Job stopped: Pumps kicked out', 120000); await wait(400);   // 12 s idle under SwiftShader, up to 40 s with the pumps view and a loaded machine
   await shot(p, '127-lesson3-kickout');
   await clickWhenEnabled(p, 'Rate to 0'); await wait(2500);
   {
@@ -436,7 +440,7 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   await p.click('[data-action="lesson-L5"]'); await wait(800); await p.selectOption('select', '4');
   await clickWhenEnabled(p, 'Next: Toe sleeve'); await wait(4000);
   await clickWhenEnabled(p, 'Pumps on, 15 bpm'); await wait(500);
-  await clickWhenEnabled(p, 'Pressure up'); await waitText(p, 'Toe sleeve opened', 60000); await wait(500);
+  await clickWhenEnabled(p, 'Pressure up'); await waitText(p, 'Toe sleeve opened', 150000); await wait(500);
   await p.getByRole('button', { name: 'Downhole' }).click(); await wait(2000);
   await shot(p, '135-lesson5-toe-open');
   // the setup panel now shows the best results

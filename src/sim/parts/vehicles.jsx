@@ -3,10 +3,10 @@
 // signature, or livery: the shape is the type, not a make. Rounded sheet metal, glass, black trim, chrome bumpers.
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Merged, MAT, GEO } from './primitives.jsx';
+import { Merged, MAT, GEO, metal } from './primitives.jsx';
 import { BlobShadow } from './lighting.jsx';
 
-const CHROME = { color: '#d9dde2', metalness: 1.0, roughness: 0.15 };
+const CHROME = metal('#d9dde2', 1.0, 0.15);
 const TRIM = { color: '#15171a', metalness: 0.2, roughness: 0.7 };
 const LAMP = { color: '#fff7df', metalness: 0.1, roughness: 0.2 };
 
@@ -29,7 +29,7 @@ export function PickupTruck({ paint = MAT.paintWhite, wheelRefs = null, shadow =
       {/* glass: windshield, side glass, rear window */}
       <Merged mat={MAT.glass} shadow={false} parts={() => [
         { g: GEO.box(0.06, 0.62, W - 0.5), p: [1.36, FLOOR + 1.6, 0], r: [0, 0, -0.42] },
-        { g: GEO.box(1.8, 0.5, 0.04), p: [0.4, FLOOR + 1.58, W / 2 - 0.12] }, { g: GEO.box(1.8, 0.5, 0.04), p: [0.4, FLOOR + 1.58, -W / 2 + 0.12] },
+        { g: GEO.box(1.8, 0.5, 0.02), p: [0.4, FLOOR + 1.58, W / 2 - 0.095] }, { g: GEO.box(1.8, 0.5, 0.02), p: [0.4, FLOOR + 1.58, -W / 2 + 0.095] },   // just proud of the door skin
         { g: GEO.box(0.04, 0.5, W - 0.6), p: [-0.58, FLOOR + 1.58, 0] },
       ]} />
       {/* trim: bed floor, grille, bumper fascia, door handles, mirrors, running boards, wheel wells */}
@@ -53,7 +53,7 @@ export function PickupTruck({ paint = MAT.paintWhite, wheelRefs = null, shadow =
       <Merged mat={MAT.chassis} shadow={false} parts={() => [{ g: GEO.cyl(0.07, W - 0.3, 8), p: [2.0, FLOOR, 0], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.09, W - 0.3, 8), p: [-1.95, FLOOR, 0], r: [Math.PI / 2, 0, 0] }, { g: GEO.box(4.6, 0.12, 0.7), p: [0, FLOOR + 0.1, 0] }]} />
       {[[2.0, W / 2 - 0.1], [2.0, -W / 2 + 0.1], [-1.95, W / 2 - 0.1], [-1.95, -W / 2 + 0.1]].map(([x, z], k) => (
         <group key={k} ref={el => { refs.current[k] = el; if (wheelRefs) wheelRefs.current[k] = el; }} position={[x, FLOOR, z]}>
-          <Merged mat={MAT.tire} parts={() => [{ g: GEO.cyl(0.42, 0.3, 16), r: [Math.PI / 2, 0, 0] }]} />
+          <Merged mat={MAT.tire} parts={() => [{ g: GEO.cyl(0.42, 0.3, 20), r: [Math.PI / 2, 0, 0] }]} />
           <Merged mat={MAT.alu} shadow={false} parts={() => [{ g: GEO.cyl(0.26, 0.32, 12), r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.09, 0.4, 8), r: [Math.PI / 2, 0, 0] }]} />
         </group>
       ))}

@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { wearTexture, BlobShadow } from './lighting.jsx';
+import { wearTexture, grimeTexture, streakTexture, brushedTexture, treadTexture, cableTexture, BlobShadow, LITE } from './lighting.jsx';
+import { useFrame } from '@react-three/fiber';
 
 // ---------------------------------------------------------------- merged static geometry
 // Repeated furniture (wheels, rails, ladders, stairs, fittings) is merged into one BufferGeometry per
@@ -19,11 +20,19 @@ const G = {
 };
 export const GEO = G;
 export function buildMerged(parts) {
-  const geoms = parts.map(({ g, p = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1] }) => {
+  const colored = parts.some(x => x.c);   // a part color `c` becomes a vertex color (the material then needs vertexColors)
+  const col = new THREE.Color();
+  const geoms = parts.map(({ g, p = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1], c: tint }) => {
     const c = g;   // factories hand over fresh indexed geometries; merge keeps the indices
     const m = new THREE.Matrix4().compose(new THREE.Vector3(...p), new THREE.Quaternion().setFromEuler(new THREE.Euler(...r)), new THREE.Vector3(...s));
     c.applyMatrix4(m);
     if (c.attributes.uv2) c.deleteAttribute('uv2');
+    if (colored) {
+      col.set(tint || '#ffffff');
+      const n = c.attributes.position.count, arr = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+      c.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    }
     return c;
   });
   const merged = mergeGeometries(geoms, false);
@@ -35,47 +44,84 @@ export function useMerged(factory, deps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => buildMerged(factory()), deps);
 }
-export function Merged({ parts, deps = [], mat = MAT.steel, name, position = [0, 0, 0], rotation = [0, 0, 0], doubleSide = false, shadow = true }) {
+export function Merged({ parts, deps = [], mat = MAT.steel, name, position = [0, 0, 0], rotation = [0, 0, 0], doubleSide = false, shadow = true, vertexColors = false }) {
   const geom = useMerged(() => parts(), deps);
-  return <mesh geometry={geom} position={position} rotation={rotation} name={name} castShadow={shadow} receiveShadow><meshStandardMaterial {...mat} side={doubleSide ? THREE.DoubleSide : THREE.FrontSide} /></mesh>;
+  const m = vertexColors ? { ...mat, vertexColors: true } : mat;
+  return <mesh geometry={geom} position={position} rotation={rotation} name={name} castShadow={shadow} receiveShadow><Mat mat={m} side={doubleSide ? THREE.DoubleSide : THREE.FrontSide} /></mesh>;
 }
 
 // Materials respond to the sky environment map (Drop 12): bare metal is metallic and fairly smooth, paint is
 // dielectric with a shared wear map that varies its roughness, rubber and tires are rough and dark.
+// Drop 23: paint carries a dirt map, a light bump from the wear map, and a clearcoat (Full only: the clearcoat
+// turns the material into MeshPhysicalMaterial, see Mat); bare metal gets a brushed roughness map; tanks and
+// silos use a streak map so dust and rust run down from the seams.
 const wear = typeof document !== 'undefined' ? wearTexture() : null;
-const paint = (color, roughness = 0.55, metalness = 0.12) => ({ color, metalness, roughness, roughnessMap: wear || undefined });
+const grime = typeof document !== 'undefined' ? grimeTexture() : null;
+const streak = typeof document !== 'undefined' ? streakTexture() : null;
+const brushed = typeof document !== 'undefined' ? brushedTexture() : null;
+const tread = typeof document !== 'undefined' ? treadTexture() : null;
+// Bare metal in Lite: without an environment map a metalness of 0.9 has nothing to reflect and renders black, so
+// Lite caps metalness at 0.35 (direct and hemisphere light then shade it like a dull gray) and lifts the roughness.
+export const metal = (color, metalness, roughness, extra = {}) => ({ color, metalness: LITE ? Math.min(metalness, 0.35) : metalness, roughness: LITE ? Math.max(roughness, 0.4) : roughness, ...extra });
+const paint = (color, roughness = 0.55, metalness = 0.12, map = grime) => ({ color, metalness, roughness, roughnessMap: wear || undefined, map: map || undefined, bumpMap: LITE ? undefined : wear || undefined, bumpScale: 0.006, clearcoat: 0.4, clearcoatRoughness: 0.35 });
+const tankPaint = (color) => paint(color, 0.6, 0.1, streak);
 export const MAT = {
-  steel:   { color: '#9aa2ab', metalness: 0.9, roughness: 0.32 },
-  darkSteel: { color: '#4d565f', metalness: 0.8, roughness: 0.45 },
+  steel:   metal('#9aa2ab', 0.9, 0.32, { roughnessMap: brushed || undefined }),
+  darkSteel: metal('#4d565f', 0.8, 0.45, { roughnessMap: brushed || undefined, map: grime || undefined }),
+  tankWhite: tankPaint('#e4e8ec'),
+  tankCream: tankPaint('#d9cfae'),
+  tankBlue:  tankPaint('#2a5d9f'),
+  tankGreen: tankPaint('#2e8b57'),
   redIron: paint('#9e2a22', 0.5, 0.2),
   yellow:  paint('#d9a400', 0.55),
   white:   paint('#d7dde5', 0.55),
   blue:    paint('#2a5d9f', 0.5),
   green:   paint('#2e8b57', 0.5),
   rubber:  { color: '#1d1f22', metalness: 0.0, roughness: 0.92 },
-  brass:   { color: '#b8944a', metalness: 0.95, roughness: 0.3 },
-  tire:    { color: '#141618', metalness: 0.0, roughness: 0.95 },
+  brass:   metal('#b8944a', 0.95, 0.3),
+  tire:    { color: '#1a1c1e', metalness: 0.0, roughness: 0.95, map: tread || undefined, bumpMap: LITE ? undefined : tread || undefined, bumpScale: 0.02 },
+  tape:    { color: '#f2f2f2', metalness: 0.2, roughness: 0.25 },
   ground:  { color: '#4b4235', metalness: 0.0, roughness: 1.0 },
   sand:    { color: '#c9b47a', metalness: 0.0, roughness: 1.0 },
-  dimSteel: { color: '#2c3137', metalness: 0.7, roughness: 0.6 },
+  dimSteel: metal('#2c3137', 0.7, 0.6),
   paintRed: paint('#8f1f1f', 0.5, 0.15),
   paintWhite: paint('#e4e8ec', 0.5),
   cream:   paint('#d9cfae', 0.55),
-  alu:     { color: '#c3c8cd', metalness: 0.95, roughness: 0.28 },
+  alu:     metal('#c3c8cd', 0.95, 0.28, { roughnessMap: brushed || undefined }),
   chassis: paint('#2a2d31', 0.7, 0.3),
-  grating: { color: '#3a3f45', metalness: 0.7, roughness: 0.7 },
-  glass:   { color: '#20304a', metalness: 0.9, roughness: 0.06 },
+  grating: metal('#3a3f45', 0.7, 0.7),
+  glass:   metal('#20304a', 0.9, 0.06),
   hose:    { color: '#24262a', metalness: 0.05, roughness: 0.85 },
   orange:  paint('#d9642a', 0.55),
   rust:    { color: '#6e4a2c', metalness: 0.35, roughness: 0.85 },
   black:   paint('#0e0f11', 0.75, 0.3),
 };
 
+// Material element for a MAT entry. A clearcoat asks for MeshPhysicalMaterial (the second specular lobe is what
+// makes paint read as paint); in Lite the clearcoat keys are dropped and the cheaper standard material is used.
+const CLEARCOAT_KEYS = ['clearcoat', 'clearcoatRoughness'];
+export function stdProps(mat) { const o = { ...mat }; CLEARCOAT_KEYS.forEach(k => delete o[k]); return o; }
+export function Mat({ mat = MAT.steel, side }) {
+  if (!LITE && mat.clearcoat != null) return <meshPhysicalMaterial {...mat} side={side} />;
+  return <meshStandardMaterial {...stdProps(mat)} side={side} />;
+}
+
 export function Box({ size = [1, 1, 1], position = [0, 0, 0], rotation = [0, 0, 0], mat = MAT.steel, name, castShadow = true, children, ...rest }) {
   return (
     <mesh position={position} rotation={rotation} name={name} castShadow={castShadow} receiveShadow {...rest}>
       <boxGeometry args={size} />
-      <meshStandardMaterial {...mat} />
+      <Mat mat={mat} />
+      {children}
+    </mesh>
+  );
+}
+// Box with rounded edges: sheet-metal bodies, cabs, cabinets, castings. `r` is the edge radius (clamped to the
+// smallest half-dimension); `seg` 2 gives a smooth fillet at 300 triangles, 1 a chamfer-like fillet at 108.
+export function RBox({ size = [1, 1, 1], r = 0.08, seg = 2, position = [0, 0, 0], rotation = [0, 0, 0], mat = MAT.steel, name, castShadow = true, children, ...rest }) {
+  const geom = useMemo(() => G.rbox(size[0], size[1], size[2], r, seg), [size[0], size[1], size[2], r, seg]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <mesh geometry={geom} position={position} rotation={rotation} name={name} castShadow={castShadow} receiveShadow {...rest}>
+      <Mat mat={mat} />
       {children}
     </mesh>
   );
@@ -91,13 +137,19 @@ export function Cyl({ r = 0.5, r2, h = 1, position = [0, 0, 0], rotation = [0, 0
   return (
     <mesh position={position} rotation={rotation} name={name} castShadow receiveShadow {...rest}>
       <cylinderGeometry args={args} />
-      <meshStandardMaterial {...mat} side={open ? THREE.DoubleSide : THREE.FrontSide} />
+      <Mat mat={mat} side={open ? THREE.DoubleSide : THREE.FrontSide} />
     </mesh>
   );
 }
 
-// Hammer-union nut: a short thick ring with three lugs around it (the wing nut of a figure-type union). One draw call.
-const nutParts = (r) => [{ g: G.cyl(r * 1.7, r * 2.2, 14) }, ...[0, 120, 240].map(a => ({ g: G.box(r * 1.2, r * 1.4, r * 0.7), p: [Math.cos(THREE.MathUtils.degToRad(a)) * r * 1.9, 0, -Math.sin(THREE.MathUtils.degToRad(a)) * r * 1.9], r: [0, THREE.MathUtils.degToRad(a), 0] }))];
+// Hammer-union: the wing nut (a short thick ring with three lugs) over the male sub collar, with the female sub's
+// shoulder beside it, so every joint on the iron reads as a union rather than a ring on a pipe. One draw call.
+const nutParts = (r) => [
+  { g: G.cyl(r * 1.7, r * 2.0, 14) },
+  ...[0, 120, 240].map(a => ({ g: G.box(r * 1.2, r * 1.3, r * 0.7), p: [Math.cos(THREE.MathUtils.degToRad(a)) * r * 1.9, 0, -Math.sin(THREE.MathUtils.degToRad(a)) * r * 1.9], r: [0, THREE.MathUtils.degToRad(a), 0] })),
+  { g: G.cyl(r * 1.45, r * 0.6, 14), p: [0, -r * 1.3, 0] },        // female sub shoulder
+  { g: G.cyl(r * 1.3, r * 0.8, 14), p: [0, r * 1.4, 0] },          // male sub collar
+];
 export function UnionNut({ position = [0, 0, 0], rotation = [0, 0, 0], r = 0.05 }) {
   return <Merged parts={() => nutParts(r)} deps={[r]} mat={MAT.darkSteel} position={position} rotation={rotation} shadow={false} />;
 }
@@ -117,7 +169,7 @@ export function Pipe({ from, to, r = 0.05, mat = MAT.redIron, unions = true, nam
     <group position={position} rotation={rotation} name={name}>
       <mesh castShadow>
         <cylinderGeometry args={[r, r, length, 12]} />
-        <meshStandardMaterial {...mat} />
+        <Mat mat={mat} />
       </mesh>
       {unions && length > 0.6 && (
         <>
@@ -141,6 +193,69 @@ export function PipeRun({ points, r = 0.05, mat = MAT.redIron, name }) {
   );
 }
 
+// Pipe stands under the near-level, off-the-ground legs of a pipe run: a base plate, a post, and a saddle under
+// the pipe, every `every` meters, merged into one draw call (Drop 24). Legs below 0.35 m stay on the ground.
+export function PipeStands({ points, r = 0.1, every = 3.0, mat = MAT.chassis, name }) {
+  const specs = useMemo(() => {
+    const out = [];
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1], b = points[i];
+      const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]; const len = Math.hypot(...d) || 1;
+      if (Math.abs(d[1]) / len > 0.3 || len < every * 0.8) continue;
+      const n = Math.max(1, Math.floor(len / every));
+      for (let k = 0; k < n; k++) {
+        const t = (k + 0.5) / n;
+        const p = [a[0] + d[0] * t, a[1] + d[1] * t, a[2] + d[2] * t];
+        const h = p[1] - r - 0.04; if (h < 0.35) continue;
+        out.push({ x: p[0], z: p[2], h, yaw: Math.atan2(d[0], d[2]) });
+      }
+    }
+    return out;
+  }, [points, r, every]);   // eslint-disable-line react-hooks/exhaustive-deps
+  if (!specs.length) return null;
+  return <Merged mat={mat} deps={[specs]} name={name} parts={() => specs.flatMap(({ x, z, h, yaw }) => [
+    { g: G.box(0.5, 0.04, 0.5), p: [x, 0.02, z], r: [0, yaw, 0] },
+    { g: G.box(0.1, h - 0.04, 0.1), p: [x, 0.04 + (h - 0.04) / 2, z] },
+    { g: G.box(0.46, 0.08, 0.28), p: [x, h, z], r: [0, yaw, 0] },
+  ])} />;
+}
+
+// A line that moves: a tube along a polyline with a stripe map scrolled by `travel` (a ref holding meters of line
+// paid out) so the cable or tubing visibly runs over its sheaves (Drop 26). One draw call.
+export function Cable({ points, r = 0.012, mat = MAT.rubber, travel = null, stripe = 0.4, contrast = 1, segmentsPerLeg = 12 }) {
+  const key = JSON.stringify(points) + r;
+  const { geom, length } = useMemo(() => {
+    const path = new THREE.CurvePath();
+    for (let i = 1; i < points.length; i++) path.add(new THREE.LineCurve3(new THREE.Vector3(...points[i - 1]), new THREE.Vector3(...points[i])));
+    const g = new THREE.TubeGeometry(path, segmentsPerLeg * (points.length - 1), r, 8, false);
+    return { geom: g, length: path.getLength() };
+  }, [key, segmentsPerLeg]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const tex = useMemo(() => { const base = cableTexture(); if (!base) return null; const t = base.clone(); t.needsUpdate = true; t.repeat.set(length / (stripe * 4), 1); return t; }, [length, stripe]);
+  useFrame(() => { if (tex && travel) tex.offset.x = -travel.current / (stripe * 4); });
+  const color = new THREE.Color(mat.color).lerp(new THREE.Color('#ffffff'), 0.25 * contrast);   // the stripe map darkens half the length, so lift the base a little
+  return <mesh geometry={geom} castShadow={false}><meshStandardMaterial {...stdProps(mat)} color={color} map={tex || undefined} /></mesh>;
+}
+
+// Hydraulic cylinder between two points: barrel from `from`, chrome rod to `to`, clevis eyes at both ends. One draw call
+// each for the barrel and the rod; `stroke` 0..1 is how much rod shows (the barrel is 55 percent of the span).
+export function HydraulicCylinder({ from, to, r = 0.12, barrel = 0.55, mat = MAT.chassis }) {
+  const key = JSON.stringify([from, to, r, barrel]);
+  const { position, rotation, length } = useMemo(() => {
+    const a = new THREE.Vector3(...from), b = new THREE.Vector3(...to);
+    const dir = new THREE.Vector3().subVectors(b, a); const length = dir.length();
+    const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    const e = new THREE.Euler().setFromQuaternion(quat);
+    return { position: [a.x, a.y, a.z], rotation: [e.x, e.y, e.z], length };
+  }, [key]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const bl = length * barrel;
+  return (
+    <group position={position} rotation={rotation}>
+      <Merged mat={mat} deps={[key]} parts={() => [{ g: G.cyl(r, bl, 14), p: [0, bl / 2, 0] }, { g: G.cyl(r * 1.15, r * 0.6, 14), p: [0, bl - r * 0.3, 0] }, { g: G.cyl(r * 0.9, r * 1.2, 10), p: [0, -r * 0.3, 0] }, { g: G.box(r * 1.6, r * 1.2, r * 2.2), p: [0, -r * 0.9, 0] }]} />
+      <Merged mat={MAT.alu} deps={[key]} shadow={false} parts={() => [{ g: G.cyl(r * 0.55, length - bl + r, 10), p: [0, bl + (length - bl - r) / 2, 0] }, { g: G.box(r * 1.4, r * 1.2, r * 2.0), p: [0, length - r * 0.3, 0] }]} />
+    </group>
+  );
+}
+
 // Flexible hose or cable: a tube along a curve that sags between its ends.
 export function Hose({ from, to, r = 0.06, sag = 0.4, mat = MAT.hose, segments = 16, name }) {
   const geom = useMemo(() => {
@@ -153,7 +268,7 @@ export function Hose({ from, to, r = 0.06, sag = 0.4, mat = MAT.hose, segments =
 }
 
 // Wheel with a rim and hub; `dual` draws a second tire alongside. Two draw calls (tires, rims).
-const tireParts = (r, w, dual) => [{ g: G.cyl(r, dual ? w * 2.1 : w, 14) }];
+const tireParts = (r, w, dual) => [{ g: G.cyl(r, dual ? w * 2.1 : w, 20) }];
 const rimParts = (r, w, dual) => [{ g: G.cyl(r * 0.6, (dual ? w * 2.1 : w) + 0.02, 10) }, { g: G.cyl(r * 0.22, (dual ? w * 2.1 : w) + 0.1, 8) }];
 export function Wheel({ position, r = 0.5, w = 0.3, dual = false, mat = MAT.tire }) {
   return (
@@ -234,12 +349,22 @@ export function Trailer({ length = 12, width = 2.6, position = [0, 0, 0], rotati
         ...axleX.map(x => ({ g: G.cyl(0.07, aw - 0.6, 8), p: [x, 0.52, 0], r: [Math.PI / 2, 0, 0] })),
         ...[-1, 1].map(side => ({ g: G.box(axles * 1.35 + 0.6, 0.06, 0.55), p: [(axleX[0] + axleX[axleX.length - 1]) / 2, 1.12, side * (width / 2 - 0.25)] })),
         { g: G.box(0.1, 0.12, width * 0.8), p: [-f * (length / 2 - 0.05), 0.55, 0] },
+        // under-deck furniture (Drop 25): mud flaps behind the rear axle, air tank and tool box ahead of the axles
+        ...[-1, 1].map(side => ({ g: G.box(0.03, 0.5, 0.5), p: [axleX[0] - f * 0.78, 0.3, side * (width / 2 - 0.4)] })),
+        { g: G.cyl(0.15, 1.0, 12), p: [f * length * 0.04, deckY - 0.52, 0.2], r: [0, 0, Math.PI / 2] },
+        { g: G.rbox(0.9, 0.5, 0.42, 0.04, 1), p: [f * length * 0.12, deckY - 0.55, width / 2 - 0.26] },
+        { g: G.box(0.02, 0.1, 0.3), p: [f * length * 0.12 - 0.46, deckY - 0.5, width / 2 - 0.26] },
       ]} />
-      <Merged mat={MAT.tire} deps={[length, axles, f, width]} parts={() => axleX.flatMap(x => wheelZ.map(z => ({ g: G.cyl(R, W * 2.1, 14), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] })))} />
+      <Merged mat={MAT.tire} deps={[length, axles, f, width]} parts={() => axleX.flatMap(x => wheelZ.map(z => ({ g: G.cyl(R, W * 2.1, 20), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] })))} />
       <Merged mat={MAT.alu} deps={[length, axles, f, width]} shadow={false} parts={() => axleX.flatMap(x => wheelZ.flatMap(z => [{ g: G.cyl(R * 0.6, W * 2.1 + 0.02, 10), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] }, { g: G.cyl(R * 0.22, W * 2.1 + 0.1, 8), p: [x, 0.52, z], r: [Math.PI / 2, 0, 0] }]))} />
       <Box size={[length, 0.08, width]} position={[0, deckY - 0.04, 0]} mat={MAT.grating} />
       <BlobShadow size={[length + 1.5, width + 2.0]} />
-      {[-1, 1].map(side => <mesh key={'l' + side} position={[-f * (length / 2 + 0.02), deckY - 0.2, side * (width / 2 - 0.1)]}><boxGeometry args={[0.03, 0.08, 0.14]} /><meshStandardMaterial color="#ff2a2a" emissive="#ff2a2a" emissiveIntensity={0.6} /></mesh>)}
+      {/* markings (Drop 25), one vertex-colored mesh: red and white conspicuity tape along both sides, amber markers along the deck edge, red markers at the rear */}
+      <Merged mat={MAT.tape} vertexColors deps={[length, width, f]} shadow={false} parts={() => [
+        ...[-1, 1].flatMap(side => Array.from({ length: Math.floor((length - 2) / 0.6) }).map((_, i) => ({ g: G.box(0.3, 0.05, 0.01), p: [-length / 2 + 1.15 + i * 0.6, deckY - 0.12, side * (width / 2 + 0.035)], c: i % 2 ? '#f2f2f2' : '#c81e1e' }))),
+        ...[-1, 1].flatMap(side => Array.from({ length: Math.max(2, Math.round(length / 3)) }).map((_, i, arr) => ({ g: G.box(0.1, 0.05, 0.03), p: [-length / 2 + 0.6 + i * (length - 1.2) / (arr.length - 1), deckY - 0.02, side * (width / 2 + 0.03)], c: '#ffb020' }))),
+        ...[-1, 1].map(side => ({ g: G.box(0.03, 0.08, 0.14), p: [-f * (length / 2 + 0.02), deckY - 0.2, side * (width / 2 - 0.1)], c: '#ff2a2a' })),
+      ]} />
       {children}
     </group>
   );

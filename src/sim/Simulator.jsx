@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles } from 'lucide-react';
+import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset } from 'lucide-react';
 import { LITE, setLite } from './parts/lighting.jsx';
 import { useFx, fxOn, FX_LIMIT_MS } from './parts/effects.jsx';
 import { Wand2 } from 'lucide-react';
@@ -42,6 +42,8 @@ export default function Simulator() {
   const view = ui.view, showLabels = ui.showLabels, preset = ui.preset, mobileTab = ui.mobileTab;
   const setView = (view) => setUi({ view });
   const setShowLabels = (showLabels) => setUi({ showLabels });
+  const tod = ui.tod || 'day';
+  const dusk = tod === 'dusk';
   const setPreset = (preset) => setUi({ preset });
   const setMobileTab = (mobileTab) => setUi({ mobileTab });
   const phase = useSim(s => s.phase);
@@ -81,6 +83,7 @@ export default function Simulator() {
           </select>
         )}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
+        {view === 'surface' && <button className="btn flex items-center gap-1" title={dusk ? 'Dusk: low sun in the west, light towers lit. Click for midday.' : 'Midday sun. Click for dusk: low warm sun, light towers lit.'} onClick={() => setUi({ tod: dusk ? 'day' : 'dusk' })}>{dusk ? <Sunset size={14} /> : <Sun size={14} />}{dusk ? 'Dusk' : 'Day'}</button>}
         <button className="btn flex items-center gap-1" title={LITE ? 'Lite rendering: hard shadows, no sky reflections. Click for full quality (reloads the page).' : 'Full rendering: sky reflections, soft shadows, ground detail. Click for lite mode on a slow machine (reloads the page).'} onClick={() => setLite(!LITE)}><Sparkles size={14} />{LITE ? 'Lite' : 'Full'}</button>
         {!LITE && <button className={'btn flex items-center gap-1 ' + (fxLive ? '' : 'text-mute')} title={fxLive ? 'Effects on: ambient occlusion and bloom. Click to turn them off.' : fx.auto ? 'Effects turned off automatically: this machine averaged ' + fx.frameMs + ' ms per frame with them on (limit ' + FX_LIMIT_MS + ' ms). Click to try again.' : 'Effects off. Click for ambient occlusion and bloom.'} onClick={() => fx.setWanted(!fxLive)} data-action="effects"><Wand2 size={14} />{fxLive ? 'Effects' : 'Effects off'}</button>}
       </div>

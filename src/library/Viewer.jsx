@@ -10,7 +10,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { Focus, EyeOff, Blend, Scissors, Expand, RotateCcw } from 'lucide-react';
-import { PadEnvironment, LITE } from '../sim/parts/lighting.jsx';
+import { SceneEnvironment, LITE } from '../sim/parts/lighting.jsx';
 import { Effects } from '../sim/parts/effects.jsx';
 import { ContextLoss } from '../sim/parts/stability.jsx';
 import { Label } from '../sim/parts/primitives.jsx';
@@ -236,8 +236,8 @@ export default function Viewer({ url, highlight = [], nodeLabels = {}, ghost = [
       <div className="relative bg-ink" onPointerDown={() => setTouched(true)} onWheel={() => setTouched(true)}>
         <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [2, 1.2, 2], fov: 40 }} gl={{ antialias: true, localClippingEnabled: true, toneMappingExposure: 1.15 }} onCreated={({ gl }) => { gl.localClippingEnabled = true; }}>
           <color attach="background" args={['#0b0f14']} />
-          {!LITE && <PadEnvironment terrain={VIEWER_SKY} intensity={0.8} />}
-          {LITE && <hemisphereLight args={['#c9d6e8', '#2a2419', 0.6]} />}
+          <SceneEnvironment terrain={VIEWER_SKY} intensity={0.8} lite />
+          {LITE && <hemisphereLight args={['#c9d6e8', '#2a2419', 0.3]} />}
           <ambientLight intensity={0.12} />
           <directionalLight position={[3 * R, 5 * R, 2 * R]} intensity={2.2} color="#fff3e0" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.02} shadow-camera-left={-2.5 * R} shadow-camera-right={2.5 * R} shadow-camera-top={2.5 * R} shadow-camera-bottom={-2.5 * R} shadow-camera-near={0.1 * R} shadow-camera-far={14 * R} />
           <directionalLight position={[-3 * R, 2 * R, -2 * R]} intensity={0.35} color="#cfe0ff" />

@@ -4,8 +4,8 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Box, Cyl, Pipe, PipeRun, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged } from './primitives.jsx';
-import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture } from './lighting.jsx';
+import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged, RBox, Mat, Cable, HydraulicCylinder, metal } from './primitives.jsx';
+import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture, wrapTexture } from './lighting.jsx';
 import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume } from './life.jsx';
 
 // Pulsing ring drawn around the valve the next-steps guidance is pointing at.
@@ -56,15 +56,69 @@ function valveStudMatrices(items) {
   }
   return out.map(o => o.matrixWorld.clone());
 }
+// Studs and their nuts from a list of stud matrices (unit cylinder scaled to the stud: x and z the radius, y the
+// length). Each stud gets a hex nut at both ends, 1.9 stud radii across and 1.5 radii thick, in dark steel.
+// Two instanced meshes however many studs there are (Drop 24).
+const UNIT_HEX = new THREE.CylinderGeometry(1, 1, 1, 6);
+const NUT_MAT = metal('#2f3338', 0.75, 0.5);
+function nutMatrices(studs) {
+  const out = [];
+  const sc = new THREE.Vector3(), q = new THREE.Quaternion(), pos = new THREE.Vector3();
+  for (const m of studs) {
+    m.decompose(pos, q, sc);
+    const k = Math.min(0.45, (sc.x * 1.5) / sc.y);                      // nut thickness as a fraction of the stud length
+    for (const side of [1, -1]) {
+      const t = new THREE.Matrix4().makeTranslation(0, side * (0.5 - k / 2), 0);
+      const sN = new THREE.Matrix4().makeScale(1.9, k, 1.9);
+      out.push(m.clone().multiply(t).multiply(sN));
+    }
+  }
+  return out;
+}
+function BoltMesh({ matrices, mat = MAT.steel, nuts = true }) {
+  const nutM = useMemo(() => (nuts ? nutMatrices(matrices) : []), [matrices, nuts]);
+  return (
+    <group>
+      <instancedMesh args={[UNIT_STUD, undefined, matrices.length]} castShadow={false} ref={(im) => { if (im) { matrices.forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; } }}>
+        <meshStandardMaterial {...mat} />
+      </instancedMesh>
+      {nuts && nutM.length > 0 && (
+        <instancedMesh args={[UNIT_HEX, undefined, nutM.length]} castShadow={false} ref={(im) => { if (im) { nutM.forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; } }}>
+          <meshStandardMaterial {...NUT_MAT} />
+        </instancedMesh>
+      )}
+    </group>
+  );
+}
 export function StudField({ items, mat = MAT.steel }) {
   const key = JSON.stringify(items);
   const matrices = useMemo(() => valveStudMatrices(items), [key]);   // eslint-disable-line react-hooks/exhaustive-deps
-  return (
-    <instancedMesh key={key} args={[UNIT_STUD, undefined, matrices.length]} castShadow={false} ref={(im) => { if (im) { matrices.forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; } }}>
-      <meshStandardMaterial {...mat} />
-    </instancedMesh>
-  );
+  return <BoltMesh key={key} matrices={matrices} mat={mat} />;
 }
+// Bolt rings on arbitrary flange pairs: { p: center, dir: flange axis, n: studs, bc: bolt circle radius, sr: stud
+// radius, sh: stud length }. Used on the treating spools and the zipper risers.
+function ringMatrices(rings) {
+  const out = [];
+  const up = new THREE.Vector3(0, 1, 0);
+  for (const r of rings) {
+    const dir = new THREE.Vector3(...r.dir).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(up, dir);
+    const n = r.n || 8;
+    for (let i = 0; i < n; i++) {
+      const a = (i + 0.5) / n * Math.PI * 2;
+      const local = new THREE.Vector3(Math.cos(a) * r.bc, 0, Math.sin(a) * r.bc).applyQuaternion(q);
+      out.push(new THREE.Matrix4().compose(new THREE.Vector3(...r.p).add(local), q, new THREE.Vector3(r.sr, r.sh, r.sr)));
+    }
+  }
+  return out;
+}
+export function BoltRings({ rings, mat = MAT.steel }) {
+  const key = JSON.stringify(rings);
+  const matrices = useMemo(() => ringMatrices(rings), [key]);   // eslint-disable-line react-hooks/exhaustive-deps
+  return <BoltMesh key={key} matrices={matrices} mat={mat} />;
+}
+// Where the control hoses leave a hydraulic actuator: the fitting block on the far end plate (local -z).
+export const actuatorHoseZ = (bore) => -(bore * 2.4 * 0.775 + bore * 3.55 + bore * 0.55);
 export function GateValveBlock({ open = 1, kind = 'manual', axis = 'vertical', bore = 0.18, name, position = [0, 0, 0], label, dim = false, pulse = false, tint = null, studs = true }) {
   const body = bore * 2.4;     // block across the bore
   const len = bore * 3.1;      // block along the bore (between hubs)
@@ -82,6 +136,7 @@ export function GateValveBlock({ open = 1, kind = 'manual', axis = 'vertical', b
         { g: GEO.cyl(body * 0.46, (ftf - len) / 2), p: [0, len / 2 + (ftf - len) / 4, 0] },
         { g: GEO.cyl(body * 0.46, (ftf - len) / 2), p: [0, -len / 2 - (ftf - len) / 4, 0] },
         { g: GEO.cyl(body * 0.33, bore * 0.5), p: [0, 0, -(zb + bore * 0.65)], r: [Math.PI / 2, 0, 0] },
+        { g: GEO.box(body * 0.42, body * 0.26, 0.012), p: [body * 0.5 - body * 0.21, len * 0.12, body * 0.775 + 0.006] },   // nameplate pad on the back face
         ...(kind === 'manual' ? [] : [
           { g: GEO.cyl(body * 0.36, bore * 2.6), p: [0, 0, -(zb + bore * 0.95 + bore * 1.3)], r: [Math.PI / 2, 0, 0] },
           { g: GEO.cyl(body * 0.2, bore * 1.1), p: [0, 0, zb + bore * 0.55], r: [Math.PI / 2, 0, 0] },
@@ -92,7 +147,9 @@ export function GateValveBlock({ open = 1, kind = 'manual', axis = 'vertical', b
         { g: GEO.cyl(flangeR, bore * 0.65), p: [0, ftf / 2 - bore * 0.325, 0] },
         { g: GEO.cyl(flangeR, bore * 0.65), p: [0, -ftf / 2 + bore * 0.325, 0] },
         { g: GEO.cyl(body * 0.52, bore * 0.4), p: [0, 0, -(zb + bore * 0.2)], r: [Math.PI / 2, 0, 0] },
-        ...(kind === 'manual' ? [] : [
+        { g: GEO.box(body * 0.4, body * 0.24, 0.006), p: [body * 0.5 - body * 0.21, len * 0.12, body * 0.775 + 0.015] },     // the plate itself
+        ...(kind === 'manual' ? [{ g: GEO.cyl(body * 0.24, bore * 0.22, 6), p: [0, 0, -(zb + bore * 0.95)], r: [Math.PI / 2, 0, 0] }] : [   // packing gland nut
+          { g: GEO.box(bore * 0.8, bore * 0.4, bore * 0.3), p: [0, 0, -(zb + bore * 3.55 + bore * 0.15)] },                     // hose fitting block on the far plate
           { g: GEO.box(body * 0.95, body * 0.95, bore * 0.18), p: [0, 0, -(zb + bore * 0.95)] },
           { g: GEO.box(body * 0.95, body * 0.95, bore * 0.18), p: [0, 0, -(zb + bore * 0.95 + bore * 2.6)] },
           ...[[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([a, b]) => ({ g: GEO.cyl(bore * 0.07, bore * 2.9, 6), p: [a * body * 0.42, b * body * 0.42, -(zb + bore * 0.95 + bore * 1.3)], r: [Math.PI / 2, 0, 0] })),
@@ -100,15 +157,21 @@ export function GateValveBlock({ open = 1, kind = 'manual', axis = 'vertical', b
         ]),
       ]} />
       {studs && <StudField items={[{ position: [0, 0, 0], axis: 'vertical', bore }]} />}
+      {/* grease and sealant injection fittings on the bonnet flange; hose elbows on the actuator fitting block */}
+      <Merged mat={MAT.brass} deps={[bore, kind]} shadow={false} parts={() => [
+        { g: GEO.cyl(bore * 0.055, bore * 0.3, 6), p: [body * 0.36, -body * 0.3, -(zb + bore * 0.45)], r: [Math.PI / 2, 0, 0] },
+        { g: GEO.cyl(bore * 0.055, bore * 0.3, 6), p: [-body * 0.36, -body * 0.3, -(zb + bore * 0.45)], r: [Math.PI / 2, 0, 0] },
+        ...(kind === 'manual' ? [] : [-0.06, 0.06].map(x => ({ g: GEO.cyl(bore * 0.07, bore * 0.4, 8), p: [x, 0, -(zb + bore * 3.55 + bore * 0.35)], r: [Math.PI / 2, 0, 0] }))),
+      ]} />
       {/* stem travels with the gate; handwheel rides on it */}
       <Cyl r={bore * 0.17} h={bore * 0.9} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -(zb + bore * 0.9 + stemTravel)]} mat={MAT.brass} name={name ? name + '-STEM' : undefined} />
       {kind === 'manual' ? (
         <group position={[0, 0, -(zb + bore * 1.5 + stemTravel)]} name={name ? name + '-HANDWHEEL' : undefined}>
-          <Merged mat={MAT.rubber} deps={[bore]} shadow={false} parts={() => [{ g: GEO.torus(bore * 1.35, bore * 0.11, 8, 28) }, { g: GEO.box(bore * 2.7, bore * 0.14, bore * 0.14) }, { g: GEO.box(bore * 2.7, bore * 0.14, bore * 0.14), r: [0, 0, Math.PI / 2] }]} />
+          <Merged mat={MAT.rubber} deps={[bore]} shadow={false} parts={() => [{ g: GEO.torus(bore * 1.35, bore * 0.11, 8, 28) }, { g: GEO.box(bore * 2.7, bore * 0.14, bore * 0.14) }, { g: GEO.box(bore * 2.7, bore * 0.14, bore * 0.14), r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(bore * 0.32, bore * 0.3, 10), r: [Math.PI / 2, 0, 0] }]} />
         </group>
       ) : (
-        <group name={name ? name + '-ACTUATOR' : undefined}>
-          <Cyl r={0.015} h={bore * 0.5} position={[body * 0.36, body * 0.2, -(zb + bore * 1.4)]} mat={MAT.rubber} />
+        <group name={name ? name + '-ACTUATOR' : undefined} position={[0, 0, -(zb + bore * 0.95 + bore * 1.3)]}>
+          <Merged mat={MAT.darkSteel} deps={[bore]} shadow={false} parts={() => [{ g: GEO.cyl(body * 0.37, bore * 0.3, 20), p: [0, 0, bore * 1.15], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(body * 0.37, bore * 0.3, 20), p: [0, 0, -bore * 1.15], r: [Math.PI / 2, 0, 0] }]} />
         </group>
       )}
       {/* position indicator lamp */}
@@ -224,7 +287,7 @@ export function FracTree({ valves, showLabels, lubricator = false, wlStep = 'idl
       <StudField items={[{ position: [-bore * 1.2 - bore * 0.45 - bore * 3.15 + bore * 0.325, d.inletY, 0], axis: 'horizontal', bore, rings: ['top'] }]} />
       {/* hydraulic control: a hose pair from every actuator to the junction box on its stand, then the trunk over the berm to the ground bundle that runs to the accumulator unit */}
       {[[0, d.umvY], [-d.wingOuterX, d.crossY], [d.wingOuterX, d.crossY], [0, d.crownY], [0, d.swabY]].map(([x, y], k) => (
-        <HosePair key={k} from={[x, y, -(bore * 2.4 * 0.775 + bore * 3.55)]} to={[-1.7 + k * 0.08, 1.05, -2.3]} sag={0.35} />
+        <HosePair key={k} from={[x, y, actuatorHoseZ(bore)]} to={[-1.7 + k * 0.08, 1.05, -2.3]} />
       ))}
       <Box size={[0.5, 0.35, 0.25]} position={[-1.55, 1.0, -2.3]} mat={MAT.chassis} />
       <Cyl r={0.03} h={0.85} position={[-1.55, 0.42, -2.3]} mat={MAT.darkSteel} />
@@ -443,8 +506,8 @@ export function WorkoverRig({ active = false, showLabels, position = [0, 0, 0] }
       </group>
       <Cyl r={0.02} h={12} position={[0, 15, 0.35]} mat={MAT.rubber} />
       <Box size={[2.0, 1.4, 1.6]} position={[4.6, 3.2, 1.4]} mat={MAT.darkSteel} name="RG-WORKOVERRIG-DRAWWORKS" />
-      <Box size={[2.4, 2.2, 2.4]} position={[4.5, 3.6, -1.6]} mat={MAT.white} name="RG-WORKOVERRIG-DOGHOUSE" />
-      <Trailer length={12} width={2.8} position={[9.5, 0, 0]}><Box size={[2.8, 2.2, 2.4]} position={[-4.2, 2.2, 0]} mat={MAT.white} /></Trailer>
+      <RBox r={0.12} size={[2.4, 2.2, 2.4]} position={[4.5, 3.6, -1.6]} mat={MAT.white} name="RG-WORKOVERRIG-DOGHOUSE" />
+      <Trailer length={12} width={2.8} position={[9.5, 0, 0]}><RBox r={0.12} size={[2.8, 2.2, 2.4]} position={[-4.2, 2.2, 0]} mat={MAT.white} /></Trailer>
       {/* pipe rack with tubing joints */}
       <group position={[8.0, 0, 5.5]} name="RG-WORKOVERRIG-PIPERACK">
         <Box size={[0.3, 1.2, 4.0]} position={[-4, 0.6, 0]} mat={MAT.yellow} />
@@ -495,7 +558,7 @@ export function PumpingUnit({ topY = 3.0, partner = false, showLabels }) {
         <Box size={[beamLen, 0.5, 0.35]} position={[0, 0.25, 0]} mat={MAT.redIron} />
         <mesh position={[beamLen / 2 - 0.3, -0.7, 0]} rotation={[Math.PI / 2, 0, 0]} name={nm('AL-BEAMUNIT-HORSEHEAD')}>
           <cylinderGeometry args={[headR, headR, 0.4, 24, 1, false, -0.5, 1.7]} />
-          <meshStandardMaterial {...MAT.redIron} side={THREE.DoubleSide} />
+          <Mat mat={MAT.redIron} side={THREE.DoubleSide} />
         </mesh>
         <Box size={[0.5, 0.25, 1.6]} position={[-beamLen / 2 + 0.4, -0.05, 0]} mat={MAT.darkSteel} name={nm('AL-BEAMUNIT-EQUALIZER')} />
       </group>
@@ -528,7 +591,7 @@ export function EspSurface({ partner = false, showLabels }) {
   return (
     <group name={nm('AL-ESP-SURFACE')}>
       <Box size={[3.0, 0.2, 2.0]} position={[-4.5, 0.1, 3.0]} mat={MAT.dimSteel} />
-      <Box size={[1.2, 2.0, 0.8]} position={[-5.2, 1.2, 3.0]} mat={MAT.blue} name={nm('AL-ESP-VSD')} />
+      <RBox r={0.08} size={[1.2, 2.0, 0.8]} position={[-5.2, 1.2, 3.0]} mat={MAT.blue} name={nm('AL-ESP-VSD')} />
       <Box size={[1.2, 1.4, 1.2]} position={[-3.7, 0.9, 3.0]} mat={MAT.steel} name={nm('AL-ESP-TRANSFORMER')} />
       {[-0.35, 0, 0.35].map((dz, i) => <Box key={i} size={[1.3, 1.2, 0.05]} position={[-3.7, 0.9, 3.0 + dz]} mat={MAT.darkSteel} />)}
       <Box size={[0.4, 0.5, 0.3]} position={[-1.6, 1.6, 1.4]} mat={MAT.steel} name={nm('AL-ESP-JUNCTIONBOX')} />
@@ -656,8 +719,13 @@ export function ZipperManifold({ valves, showLabels, position = [ZIPPER_X, 0, 0]
             </group>
             {/* gauge on the tee, hydraulic hose pairs from both actuators (they point -X) to a junction at the base, trunk to the control unit */}
             <Gauge position={[-d.bz * 1.3, d.headerY + d.bz * 1.1 + 0.2, d.bz * 1.0]} rotation={[0, Math.PI / 2, 0]} r={0.07} />
-            <HosePair from={[-(d.bz * 2.4 * 0.775 + d.bz * 3.55), d.isoY, 0]} to={[-1.4, 0.3, 0.25]} sag={0.3} />
-            <HosePair from={[-(d.bz * 2.4 * 0.775 + d.bz * 3.55), d.workY, 0]} to={[-1.4, 0.3, -0.25]} sag={0.45} />
+            <HosePair from={[actuatorHoseZ(d.bz), d.isoY, 0]} to={[-1.4, 0.3, 0.25]} />
+            <HosePair from={[actuatorHoseZ(d.bz), d.workY, 0]} to={[-1.4, 0.3, -0.25]} />
+            <BoltRings rings={[
+              { p: [0, d.workY + d.ftf / 2 + d.bz * 0.25, 0], dir: [0, 1, 0], n: 8, bc: d.bz * 1.1, sr: d.bz * 0.075, sh: d.bz * 1.0 },
+              { p: [0, d.topY - d.bz * 1.2 - d.bz * 0.25, 0], dir: [0, 1, 0], n: 8, bc: d.bz * 1.1, sr: d.bz * 0.075, sh: d.bz * 1.0 },
+              { p: [d.outletX - d.bz * 0.25, d.topY, 0], dir: [1, 0, 0], n: 8, bc: d.bz * 1.1, sr: d.bz * 0.075, sh: d.bz * 1.0 },
+            ]} />
             <Box size={[0.3, 0.3, 0.7]} position={[-1.45, 0.25, 0]} mat={MAT.chassis} />
             {/* riser spool from the working valve up to the top elbow at tree inlet height, with a flange at each end */}
             <Cyl r={d.bz * 0.62} h={Math.max(0.2, d.topY - d.bz * 1.2 - (d.workY + d.ftf / 2))} position={[0, (d.topY - d.bz * 1.2 + d.workY + d.ftf / 2) / 2, 0]} mat={MAT.steel} />
@@ -841,38 +909,65 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
         {electric ? (
           <>
             <Cyl r={0.82} h={2.9} rotation={[0, 0, Math.PI / 2]} position={[-2.8, D + 0.95, 0]} mat={MAT.darkSteel} name={name + '-MOTOR'} />
-            <Box size={[2.2, 2.3, 2.2]} position={[-5.3, D + 1.15, 0]} mat={MAT.blue} name={name + '-VFD'} />
+            <RBox r={0.12} size={[2.2, 2.3, 2.2]} position={[-5.3, D + 1.15, 0]} mat={MAT.blue} name={name + '-VFD'} />
             {/* motor cooling rings and blower, VFD roof and louvers */}
-            <Merged mat={MAT.steel} deps={[electric]} parts={() => [-1.0, 0, 1.0].map(x => ({ g: GEO.cyl(0.86, 0.12, 20), p: [-2.8 + x, D + 0.95, 0], r: [0, 0, Math.PI / 2] }))} />
+            <Merged mat={MAT.steel} deps={[electric]} parts={() => [
+              ...[-1.0, 0, 1.0].map(x => ({ g: GEO.cyl(0.86, 0.12, 20), p: [-2.8 + x, D + 0.95, 0], r: [0, 0, Math.PI / 2] })),
+              // cabinet door handles and hinges on both sides
+              ...[-1, 1].flatMap(sz => [
+                { g: GEO.box(0.03, 0.22, 0.03), p: [-5.42, D + 1.2, sz * 1.13] }, { g: GEO.box(0.03, 0.22, 0.03), p: [-5.18, D + 1.2, sz * 1.13] },
+                ...[0.5, 1.2, 1.9].flatMap(y => [{ g: GEO.cyl(0.015, 0.12, 6), p: [-6.32, D + y, sz * 1.12] }, { g: GEO.cyl(0.015, 0.12, 6), p: [-4.28, D + y, sz * 1.12] }]),
+              ]),
+            ]} />
             <Merged mat={MAT.darkSteel} deps={[electric]} parts={() => [{ g: GEO.box(0.9, 0.5, 0.7), p: [-3.9, D + 1.95, 0] }]} />
             <Merged mat={MAT.paintWhite} deps={[electric]} parts={() => [{ g: GEO.box(2.1, 0.06, 2.1), p: [-5.3, D + 2.33, 0] }]} />
-            <Merged mat={MAT.dimSteel} deps={[electric]} parts={() => [-0.6, 0.6].map(z => ({ g: GEO.box(0.02, 1.6, 0.9), p: [-4.18, D + 1.1, z] }))} />
+            {/* VFD louvers on the motor side, cabinet door seams on both sides, louver slats on the back: one dark mesh */}
+            <Merged mat={MAT.dimSteel} deps={[electric]} parts={() => [
+              ...[-0.6, 0.6].map(z => ({ g: GEO.box(0.02, 1.6, 0.9), p: [-4.18, D + 1.1, z] })),
+              ...[-1, 1].flatMap(sz => [
+                { g: GEO.box(2.0, 0.015, 0.012), p: [-5.3, D + 2.15, sz * 1.106] }, { g: GEO.box(2.0, 0.015, 0.012), p: [-5.3, D + 0.25, sz * 1.106] },
+                { g: GEO.box(0.015, 1.9, 0.012), p: [-6.3, D + 1.2, sz * 1.106] }, { g: GEO.box(0.015, 1.9, 0.012), p: [-4.3, D + 1.2, sz * 1.106] }, { g: GEO.box(0.015, 1.9, 0.012), p: [-5.3, D + 1.2, sz * 1.106] },
+              ]),
+              ...[0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8].map(y => ({ g: GEO.box(0.03, 0.03, 1.6), p: [-6.42, D + y, 0], r: [0, 0, 0.5] })),
+            ]} />
             <Hose from={[-6.4, D + 0.3, 0.6]} to={[-6.9, 0.2, 0.6]} r={0.06} sag={0.1} segments={6} />
             <Hose from={[-6.4, D + 0.3, -0.4]} to={[-6.9, 0.2, -0.4]} r={0.06} sag={0.1} segments={6} />
           </>
         ) : (
           <>
-            <Box size={[3.6, 1.7, 2.1]} position={[-3.5, D + 0.95, 0]} mat={MAT.paintWhite} name={name + '-ENGINE'} />
+            <RBox r={0.12} size={[3.6, 1.7, 2.1]} position={[-3.5, D + 0.95, 0]} mat={MAT.paintWhite} name={name + '-ENGINE'} />
             {/* hood top, radiator frame, battery box, exhaust and air cleaner, radiator face and slats, fan */}
-            <Merged mat={MAT.chassis} deps={[electric]} parts={() => [{ g: GEO.box(3.4, 0.08, 2.3), p: [-3.5, D + 1.84, 0] }, { g: GEO.box(0.25, 1.9, 2.25), p: [-5.45, D + 1.0, 0] }, { g: GEO.box(1.2, 0.9, 0.5), p: [-1.6, D + 1.0, 1.05] }]} />
+            <Merged mat={MAT.chassis} deps={[electric]} parts={() => [
+              { g: GEO.box(3.4, 0.08, 2.3), p: [-3.5, D + 1.84, 0] }, { g: GEO.box(0.25, 1.9, 2.25), p: [-5.45, D + 1.0, 0] }, { g: GEO.box(1.2, 0.9, 0.5), p: [-1.6, D + 1.0, 1.05] },
+              // panel seams and a door outline on each side of the enclosure
+              ...[-1, 1].flatMap(sz => [
+                { g: GEO.box(3.5, 0.012, 0.012), p: [-3.5, D + 1.78, sz * 1.056] },
+                { g: GEO.box(0.012, 1.55, 0.012), p: [-3.5, D + 0.95, sz * 1.056] }, { g: GEO.box(0.012, 1.55, 0.012), p: [-2.3, D + 0.95, sz * 1.056] },
+                { g: GEO.box(1.2, 0.012, 0.012), p: [-2.9, D + 0.2, sz * 1.056] },
+              ]),
+            ]} />
             <Merged mat={MAT.darkSteel} deps={[electric]} parts={() => [{ g: GEO.cyl(0.16, 1.6), p: [-4.3, D + 2.6, 0.7] }, { g: GEO.cyl(0.16, 0.08, 12, 0.26), p: [-4.3, D + 3.42, 0.7] }, { g: GEO.cyl(0.24, 0.9), p: [-2.4, D + 2.15, -0.6], r: [0, 0, Math.PI / 2] }]} />
-            <Merged mat={MAT.steel} deps={[electric]} parts={() => [{ g: GEO.cyl(0.28, 0.9), p: [-4.3, D + 2.2, 0.7] }]} />
-            <Merged mat={MAT.dimSteel} deps={[electric]} parts={() => [{ g: GEO.box(0.04, 1.6, 1.9), p: [-5.6, D + 1.0, 0] }]} />
+            <Merged mat={MAT.steel} deps={[electric]} parts={() => [{ g: GEO.cyl(0.28, 0.9), p: [-4.3, D + 2.2, 0.7] }, ...[-1, 1].map(sz => ({ g: GEO.box(0.03, 0.18, 0.03), p: [-2.42, D + 1.0, sz * 1.08] }))]} />
+            {/* radiator face and louvered side panels */}
+            <Merged mat={MAT.dimSteel} deps={[electric]} parts={() => [{ g: GEO.box(0.04, 1.6, 1.9), p: [-5.6, D + 1.0, 0] }, ...[-1, 1].flatMap(sz => [0.55, 0.75, 0.95, 1.15, 1.35, 1.55].map(y => ({ g: GEO.box(1.3, 0.03, 0.03), p: [-4.3, D + y, sz * 1.06], r: [sz * 0.55, 0, 0] })))]} />
             <Merged mat={MAT.alu} deps={[electric]} parts={() => [-0.6, -0.2, 0.2, 0.6].map(z => ({ g: GEO.box(0.03, 1.5, 0.05), p: [-5.62, D + 1.0, z] }))} />
             <group ref={fan} position={[-5.3, D + 1.0, 0]}>
               <Merged mat={MAT.alu} shadow={false} parts={() => [0, 60, 120].map(a => ({ g: GEO.box(0.04, 1.3, 0.16), r: [THREE.MathUtils.degToRad(a), 0, 0] }))} />
             </group>
           </>
         )}
-        <Box size={[1.5, 1.1, 1.5]} position={[-1.2, D + 0.85, 0]} mat={MAT.darkSteel} name={name + '-TRANSMISSION'} />
-        <Box size={[2.4, 1.6, 2.1]} position={[1.6, D + 1.05, 0]} mat={MAT.darkSteel} name={name + '-POWEREND'} />
-        <Box size={[1.1, 1.3, 2.3]} position={[3.4, D + 1.05, 0]} mat={MAT.darkSteel} name={name + '-FLUIDEND'} />
+        <RBox r={0.08} size={[1.5, 1.1, 1.5]} position={[-1.2, D + 0.85, 0]} mat={MAT.darkSteel} name={name + '-TRANSMISSION'} />
+        <RBox r={0.12} size={[2.4, 1.6, 2.1]} position={[1.6, D + 1.05, 0]} mat={MAT.darkSteel} name={name + '-POWEREND'} />
+        <RBox r={0.08} size={[1.1, 1.3, 2.3]} position={[3.4, D + 1.05, 0]} mat={MAT.darkSteel} name={name + '-FLUIDEND'} />
         {/* driveline, lube reservoir, power end covers, plunger housings and valve caps, suction and discharge manifolds */}
         <Merged mat={MAT.steel} parts={() => [
           { g: GEO.cyl(0.12, 1.0), p: [0.0, D + 0.85, 0], r: [0, 0, Math.PI / 2] },
           ...[-1, 1].flatMap(side => [0.9, 1.6, 2.3].map(x => ({ g: GEO.cyl(0.22, 0.05), p: [x, D + 1.05, side * 1.06], r: [Math.PI / 2, 0, 0] }))),
           ...[-0.8, -0.4, 0, 0.4, 0.8].flatMap(z => [{ g: GEO.cyl(0.2, 0.12), p: [4.45, D + 1.05, z], r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(0.15, 0.35), p: [3.4, D + 1.85, z] }, { g: GEO.cyl(0.15, 0.35), p: [3.4, D + 0.25, z] }]),
           { g: GEO.cyl(0.2, 2.4), p: [3.4, D + 0.3, 0], r: [Math.PI / 2, 0, 0] },
+          // hose reel flanges, axle, and crank; extinguisher valve and bracket
+          { g: GEO.cyl(0.36, 0.03, 20), p: [-6.2, D + 0.55, 0.85], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.36, 0.03, 20), p: [-6.2, D + 0.55, 0.25], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.03, 0.9, 8), p: [-6.2, D + 0.55, 0.55], r: [Math.PI / 2, 0, 0] }, { g: GEO.box(0.04, 0.04, 0.2), p: [-5.9, D + 0.55, 0.97] },
+          { g: GEO.cyl(0.03, 0.08, 6), p: [-1.1, D + 0.59, 1.18] }, { g: GEO.box(0.02, 0.5, 0.2), p: [-1.19, D + 0.3, 1.18] },
         ]} />
         <Merged mat={MAT.brass} parts={() => [-0.8, -0.4, 0, 0.4, 0.8].map(z => ({ g: GEO.cyl(0.16, 0.55), p: [4.15, D + 1.05, z], r: [0, 0, Math.PI / 2] }))} />
         <Merged mat={MAT.darkSteel} parts={() => [{ g: GEO.box(1.4, 0.35, 1.2), p: [1.6, D + 2.0, 0] }, { g: GEO.cyl(0.12, 2.4), p: [3.4, D + 1.95, 0], r: [Math.PI / 2, 0, 0] }]} />
@@ -884,10 +979,13 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
         {number > 0 && <Sign lines={['PUMP ' + number]} position={[electric ? -5.3 : -3.5, D + 1.3, 1.16]} width={0.9} height={0.4} bg="#1a1a1a" fg="#ffffff" />}
         <HazardStrip position={[6.72, D - 0.2, 0]} rotation={[0, Math.PI / 2, 0]} length={2.4} height={0.14} />
         {!electric && <ExhaustPlume position={[-4.3, D + 3.5, 0.7]} active={online} strength={0.6 + rate / 150} seed={(number || 1) * 1.7} />}
+        {/* hose reel on the gooseneck deck: wrapped hose on the drum (the frame and flanges ride in the merged meshes below); fire extinguisher by the panel */}
+        <Merged mat={MAT.hose} shadow={false} parts={() => [{ g: GEO.cyl(0.26, 0.56, 20), p: [-6.2, D + 0.55, 0.55], r: [Math.PI / 2, 0, 0] }, { g: GEO.torus(0.3, 0.03, 6, 20), p: [-6.2, D + 0.55, 0.67] }, { g: GEO.torus(0.3, 0.03, 6, 20), p: [-6.2, D + 0.55, 0.43] }]} />
+        <Merged mat={MAT.paintRed} shadow={false} parts={() => [{ g: GEO.cyl(0.075, 0.5, 10), p: [-1.1, D + 0.3, 1.18] }]} />
         {/* deck furniture: walkway grating, handrail on the operator side, control panel, status lamp */}
         <Merged mat={MAT.grating} shadow={false} parts={() => [{ g: GEO.box(9.5, 0.03, 0.6), p: [-0.5, D + 0.02, 1.0] }]} />
         <Handrail length={9.0} position={[-0.5, D, 1.28]} height={1.0} />
-        <Merged mat={MAT.chassis} shadow={false} parts={() => [{ g: GEO.box(0.5, 0.7, 0.12), p: [-0.4, D + 1.0, 1.32] }]} />
+        <Merged mat={MAT.chassis} shadow={false} parts={() => [{ g: GEO.box(0.5, 0.7, 0.12), p: [-0.4, D + 1.0, 1.32] }, { g: GEO.box(0.06, 0.55, 0.06), p: [-6.2, D + 0.28, 0.95] }, { g: GEO.box(0.06, 0.55, 0.06), p: [-6.2, D + 0.28, 0.15] }, { g: GEO.box(0.5, 0.05, 1.0), p: [-6.2, D + 0.025, 0.55] }]} />
         <mesh position={[-0.4, D + 1.35, 1.36]}>
           <sphereGeometry args={[0.07, 8, 8]} />
           <meshStandardMaterial color={online ? '#35e08f' : '#555'} emissive={online ? '#35e08f' : '#000'} emissiveIntensity={1.5} />
@@ -904,8 +1002,8 @@ export function Blender({ position, showLabels }) {
   return (
     <Trailer length={13.4} width={2.8} position={position} rotation={[0, Math.PI / 2, 0]} name="PP-BLENDER" front={-1}>
       {/* engine and hydraulic power at the gooseneck, control cabin above it */}
-      <Box size={[3.0, 1.6, 2.2]} position={[-4.6, D + 0.9, 0]} mat={MAT.paintWhite} />
-      <Box size={[2.2, 1.4, 2.4]} position={[-4.4, D + 2.4, 0]} mat={MAT.paintWhite} />
+      <RBox r={0.12} size={[3.0, 1.6, 2.2]} position={[-4.6, D + 0.9, 0]} mat={MAT.paintWhite} />
+      <RBox r={0.08} size={[2.2, 1.4, 2.4]} position={[-4.4, D + 2.4, 0]} mat={MAT.paintWhite} />
       <Box size={[2.0, 0.6, 2.42]} position={[-4.4, D + 2.6, 0]} mat={MAT.glass} />
       <Cyl r={0.14} h={1.4} position={[-5.7, D + 2.4, 0.8]} mat={MAT.darkSteel} />
       {/* mixing tub with the sand hopper on top and the hydraulic mixer drive */}
@@ -944,9 +1042,9 @@ export function Hydration({ position, showLabels }) {
   return (
     <Trailer length={13.4} width={2.8} position={position} rotation={[0, Math.PI / 2, 0]} name="PP-HYDRATION" front={-1}>
       {/* engine and hydraulics at the gooseneck; the hydration tank runs most of the deck with baffled compartments */}
-      <Box size={[2.4, 1.6, 2.2]} position={[-5.0, D + 0.9, 0]} mat={MAT.paintWhite} />
+      <RBox r={0.12} size={[2.4, 1.6, 2.2]} position={[-5.0, D + 0.9, 0]} mat={MAT.paintWhite} />
       <Cyl r={0.14} h={1.2} position={[-5.6, D + 2.3, 0.7]} mat={MAT.darkSteel} />
-      <Box size={[9.4, 2.3, 2.5]} position={[1.0, D + 1.15, 0]} mat={MAT.green} />
+      <RBox r={0.12} size={[9.4, 2.3, 2.5]} position={[1.0, D + 1.15, 0]} mat={MAT.tankGreen} />
       {[-2.2, 0.2, 2.6].map((x, i) => <Box key={i} size={[0.06, 2.4, 2.56]} position={[x, D + 1.15, 0]} mat={MAT.darkSteel} />)}
       {/* paddle mixer drives on top of each compartment, access hatches, level gauges */}
       {[-3.3, -1.0, 1.4, 3.8].map((x, i) => (
@@ -975,13 +1073,13 @@ export function ChemAdd({ position, showLabels }) {
   return (
     <Trailer length={11.5} width={2.6} position={position} rotation={[0, Math.PI / 2, 0]} name="PP-CHEMADD" front={-1}>
       {/* enclosed cabin with the chemical pumps and totalizers, tote tanks in a containment tray behind it */}
-      <Box size={[3.6, 2.3, 2.5]} position={[-3.6, D + 1.15, 0]} mat={MAT.paintWhite} />
+      <RBox r={0.12} size={[3.6, 2.3, 2.5]} position={[-3.6, D + 1.15, 0]} mat={MAT.paintWhite} />
       <Box size={[1.2, 0.9, 0.04]} position={[-3.6, D + 1.4, 1.27]} mat={MAT.glass} />
       <Box size={[0.8, 1.8, 0.04]} position={[-2.2, D + 0.9, 1.27]} mat={MAT.chassis} />
       <Box size={[6.4, 0.25, 2.5]} position={[2.0, D + 0.12, 0]} mat={MAT.chassis} />
       {[[-0.6, 0.65], [-0.6, -0.65], [0.8, 0.65], [0.8, -0.65], [2.2, 0.65], [2.2, -0.65], [3.6, 0.65], [3.6, -0.65]].map(([x, z], i) => (
         <group key={i} position={[x, D + 0.25, z]}>
-          <Box size={[1.15, 1.15, 1.15]} position={[0, 0.6, 0]} mat={i % 3 === 0 ? MAT.paintWhite : i % 3 === 1 ? MAT.yellow : MAT.cream} />
+          <RBox r={0.08} size={[1.15, 1.15, 1.15]} position={[0, 0.6, 0]} mat={i % 3 === 0 ? MAT.paintWhite : i % 3 === 1 ? MAT.yellow : MAT.cream} />
           <Box size={[1.2, 0.08, 1.2]} position={[0, 1.2, 0]} mat={MAT.chassis} />
           <Cyl r={0.12} h={0.1} position={[0, 1.28, 0]} mat={MAT.darkSteel} />
         </group>
@@ -999,7 +1097,7 @@ export function SandSilos({ position, showLabels }) {
       {[0, 1, 2, 3, 4, 5].map(i => (
         <group key={i} position={[(i % 3) * 4.0, 0, Math.floor(i / 3) * 4.2]}>
           {/* cone bottom on four legs with bracing, cylindrical body with stiffener rings, dust collector and fill line on top */}
-          <Cyl r={1.6} h={8.4} position={[0, 2.4 + 4.2, 0]} mat={MAT.paintWhite} name={i === 0 ? 'LG-SANDSILO' : undefined} />
+          <Cyl r={1.6} h={8.4} position={[0, 2.4 + 4.2, 0]} mat={MAT.tankWhite} name={i === 0 ? 'LG-SANDSILO' : undefined} />
           <BlobShadow size={[5.2, 5.2]} />
           <Merged mat={MAT.steel} parts={() => [3.5, 5.5, 7.5, 9.5].map(y => ({ g: GEO.cyl(1.66, 0.12, 24), p: [0, y, 0] }))} />
           <Merged mat={MAT.darkSteel} parts={() => [
@@ -1033,11 +1131,11 @@ export function WaterTanks({ position, count = 8, showLabels }) {
   return (
     <group position={position} name="PP-FRACTANKS">
       {Array.from({ length: count }).map((_, i) => {
-        const mat = i % 2 ? MAT.paintWhite : MAT.cream;
+        const mat = i % 2 ? MAT.tankWhite : MAT.tankCream;
         return (
           <group key={i} position={[i * 3.5, 0, 0]} name={i === 0 ? 'PP-FRACTANK' : undefined}>
             <BlobShadow size={[4.6, 14.5]} />
-            <Box size={[3.0, 2.6, 12.5]} position={[0, 1.55, 0]} mat={mat} />
+            <RBox r={0.1} size={[3.0, 2.6, 12.5]} position={[0, 1.55, 0]} mat={mat} />
             {/* low crowned roof: the upper half of a cylinder flattened to a 0.45 m crown */}
             <group position={[0, 2.85, 0]} scale={[1, 0.3, 1]}><Cyl r={1.5} h={12.5} rotation={[Math.PI / 2, 0, 0]} mat={mat} thetaLength={Math.PI} thetaStart={Math.PI / 2} open /></group>
             <Merged mat={MAT.darkSteel} parts={() => [...[-4, 0, 4].map(z => ({ g: GEO.box(3.06, 2.5, 0.08), p: [0, 1.5, z] })), { g: GEO.box(2.9, 0.3, 12.3), p: [0, 0.15, 0] }, { g: GEO.box(2.6, 0.2, 0.2), p: [0, 0.9, 6.35] }, ...[-0.9, -0.3, 0.3, 0.9].map(x => ({ g: GEO.cyl(0.12, 0.5, 10), p: [x, 0.9, 6.5], r: [Math.PI / 2, 0, 0] })), { g: GEO.cyl(0.3, 0.15, 12), p: [0.6, 4.4, 4.0] }, { g: GEO.cyl(0.3, 0.15, 12), p: [0.6, 4.4, -4.0] }]} />
@@ -1065,13 +1163,13 @@ export function DataVan({ position, showLabels }) {
   return (
     <Trailer length={13.4} width={2.8} position={position} rotation={[0, 0, 0]} name="PP-DATAVAN">
       {/* office body with a window band on the pad side, two roof air conditioners, entry stair, generator, antenna mast */}
-      <Box size={[12.4, 2.7, 2.7]} position={[-0.2, D + 1.35, 0]} mat={MAT.paintWhite} />
+      <RBox r={0.12} size={[12.4, 2.7, 2.7]} position={[-0.2, D + 1.35, 0]} mat={MAT.paintWhite} />
       <Box size={[12.5, 0.12, 2.8]} position={[-0.2, D + 2.72, 0]} mat={MAT.chassis} />
       <Box size={[10.5, 0.8, 0.05]} position={[-0.6, D + 1.7, 1.36]} mat={MAT.glass} />
       {[-4.0, -1.5, 1.0, 3.5].map((x, i) => <Box key={i} size={[0.06, 0.9, 0.06]} position={[x, D + 1.7, 1.37]} mat={MAT.chassis} />)}
       <Box size={[0.9, 2.1, 0.06]} position={[5.2, D + 1.1, 1.37]} mat={MAT.chassis} />
       <Stair steps={4} rise={0.3} run={0.32} width={0.9} position={[6.4, 0, 1.0]} rotation={[0, Math.PI, 0]} />
-      {[-3.0, 2.5].map((x, i) => <Box key={i} size={[1.3, 0.5, 1.0]} position={[x, D + 3.0, 0]} mat={MAT.paintWhite} />)}
+      {[-3.0, 2.5].map((x, i) => <RBox r={0.05} key={i} size={[1.3, 0.5, 1.0]} position={[x, D + 3.0, 0]} mat={MAT.paintWhite} />)}
       <Box size={[1.6, 1.4, 1.2]} position={[-6.6, D + 0.7, 0]} mat={MAT.chassis} />
       <Cyl r={0.05} h={4.0} position={[-4.5, D + 4.7, 0]} mat={MAT.darkSteel} />
       <Box size={[0.5, 0.05, 0.5]} position={[-4.5, D + 6.7, 0]} mat={MAT.darkSteel} />
@@ -1080,94 +1178,227 @@ export function DataVan({ position, showLabels }) {
   );
 }
 
-// Wireline truck with a crane holding the lubricator; cable runs from the drum over the top sheave to the tree.
-export function WirelineUnit({ position, treeTop, showLabels, active }) {
-  const drum = useRef();
-  useFrame((_, dt) => { if (drum.current && active) drum.current.rotation.z += dt * 2; });
+// ---------------------------------------------------------------- wireline unit and crane (Drop 26)
+// The drum spins about its own axis (a group rotated about z, the cylinders inside it turned to lie along z), the
+// wound cable thins as the string runs in and thickens as it comes out, the level wind traverses with the line,
+// and the line itself runs from the drum over the measuring head at the trailer rear, up to the top sheave under
+// the crane's hook block, and down into the grease head. `wl` is the store's wireline state; with only `active`
+// the drum pays out and takes up slowly (partner wells). 40 m of visible line stands for a full run.
+const WL_CORE = 0.5, WL_FULL = 0.95;
+function cableOutOf(wl) {
+  if (!wl) return null;
+  const st = wl.step, p = wl.progress;
+  if (st === 'pumpdown' || st === 'stuck') return p;
+  if (st === 'freeing') return 0.9 + 0.02 * Math.sin(p * Math.PI * 6);
+  if (st === 'setplug' || st === 'armed' || st === 'perforate') return 1;
+  if (st === 'pooh') return 1 - p;
+  return 0;
+}
+export function WirelineUnit({ position, treeTop, showLabels, active, wl = null }) {
+  const drum = useRef(), wound = useRef(), carriage = useRef();
+  const travel = useRef(0), prevOut = useRef(0);
+  useFrame((state, dt) => {
+    let out = cableOutOf(wl);
+    if (out === null) out = active ? 0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 0.25) : 0;
+    const d = out - prevOut.current; prevOut.current = out;
+    travel.current += d * 40;
+    const r = WL_CORE + (WL_FULL - WL_CORE) * (1 - Math.min(1, Math.max(0, out)));
+    if (drum.current) drum.current.rotation.z -= d * 40 / r;
+    if (wound.current) wound.current.scale.set(r, 1, r);
+    if (carriage.current) { const ph = (travel.current / 3) % 2; carriage.current.position.z = 0.65 * (ph < 1 ? ph * 2 - 1 : 3 - ph * 2); }
+  });
   const top = [treeTop[0], treeTop[1] + 12.5, treeTop[2]];
   const D = 1.18;
-  const boomFrom = [0, 2.6, 0];
-  const boomTo = [treeTop[0] - position[0] - 6, top[1] + 1.5, treeTop[2] - position[2] - 3];
-  const boomLen = Math.hypot(boomTo[0] - boomFrom[0], boomTo[1] - boomFrom[1], boomTo[2] - boomFrom[2]);
+  const wrap = useMemo(() => wrapTexture(36), []);
+  // crane geometry: base at the pad, boom from the turret to a tip right above the tree top
+  const CR = [-6, 0, 3];                                   // crane beside the trailer rear, which faces the well
+  const boomFrom = [CR[0] + 0, 2.6, CR[2] + 0];
+  const boomTo = [treeTop[0] - position[0], top[1] + 1.5, treeTop[2] - position[2]];
+  const bv = new THREE.Vector3(boomTo[0] - boomFrom[0], boomTo[1] - boomFrom[1], boomTo[2] - boomFrom[2]);
+  const boomLen = bv.length();
+  const boomQ = useMemo(() => { const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), bv.clone().normalize())); return [e.x, e.y, e.z]; }, [boomTo[0], boomTo[1], boomTo[2]]); // eslint-disable-line react-hooks/exhaustive-deps
+  const along = (t, drop = 0) => [boomFrom[0] + bv.x * t, boomFrom[1] + bv.y * t - drop, boomFrom[2] + bv.z * t];
+  // the line: drum top, over the measuring head sheave at the trailer rear (the rear faces the well), up to the top
+  // sheave hanging from the hook block, and straight down into the grease head. The top sheave sits a quarter
+  // meter toward the truck so its far tangent is plumb over the tree.
+  const drumTop = [-3.8, D + 1.1 + WL_FULL, 0];
+  const headSheave = [-5.9, D + 2.25, 0];
+  const treeXZ = [top[0] - position[0], top[2] - position[2]];
+  const hx = headSheave[0] - treeXZ[0], hz = headSheave[2] - treeXZ[1]; const hl = Math.hypot(hx, hz) || 1; const h = [hx / hl, hz / hl];
+  const topSheave = [treeXZ[0] + h[0] * 0.25, top[1] + 0.8, treeXZ[1] + h[1] * 0.25];
+  const greaseHead = [treeXZ[0], top[1] - 0.2, treeXZ[1]];
+  const cablePts = useMemo(() => [drumTop, [headSheave[0] + 0.1, headSheave[1] + 0.2, 0], [headSheave[0] - 0.2, headSheave[1] + 0.1, 0], [topSheave[0] + h[0] * 0.18, topSheave[1] + 0.18, topSheave[2] + h[1] * 0.18], [topSheave[0], topSheave[1] + 0.25, topSheave[2]], [treeXZ[0], topSheave[1], treeXZ[1]], greaseHead], [topSheave[0], topSheave[1], topSheave[2]]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sheaveYaw = Math.atan2(-h[1], h[0]);
   return (
     <group position={position} name="WL-UNIT">
-      <Trailer length={11} width={2.6} position={[0, 0, 0]} rotation={[0, 0, 0]}>
-        {/* cab, operator control cabin with windows, drum with level wind, measuring head */}
-        <Box size={[2.6, 2.2, 2.4]} position={[-3.6, D + 1.1, 0]} mat={MAT.paintWhite} name="WL-UNIT-CAB" />
-        <Box size={[4.2, 2.4, 2.4]} position={[0.4, D + 1.2, 0]} mat={MAT.paintWhite} name="WL-UNIT-CONTROLCAB" />
+      <Trailer length={11} width={2.6} position={[0, 0, 0]} rotation={[0, Math.PI, 0]}>
+        {/* cab, operator control cabin with windows, roof air conditioner (the trailer is turned so its rear faces the well) */}
+        <RBox r={0.12} size={[2.6, 2.2, 2.4]} position={[-3.6, D + 1.1, 0]} mat={MAT.paintWhite} name="WL-UNIT-CAB" />
+        <RBox r={0.12} size={[4.2, 2.4, 2.4]} position={[0.4, D + 1.2, 0]} mat={MAT.paintWhite} name="WL-UNIT-CONTROLCAB" />
         <Box size={[3.6, 0.7, 0.04]} position={[0.4, D + 1.7, 1.21]} mat={MAT.glass} />
         <Box size={[0.04, 0.9, 1.8]} position={[2.51, D + 1.6, 0]} mat={MAT.glass} />
-        <Box size={[1.3, 0.5, 1.0]} position={[0.4, D + 2.6, 0]} mat={MAT.paintWhite} />
+        <RBox r={0.05} size={[1.3, 0.5, 1.0]} position={[0.4, D + 2.6, 0]} mat={MAT.paintWhite} />
+        {/* drum: core, flanges with lightening holes, wound cable (scaled with the line out), on an A-frame stand with
+            bearing caps and a hydraulic drive motor on the far flange; level wind on a diamond shaft in front */}
         <group position={[3.8, D + 1.1, 0]} name="WL-UNIT-DRUM">
-          <mesh ref={drum} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.95, 0.95, 1.6, 20]} /><meshStandardMaterial {...MAT.darkSteel} /></mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.78, 0.78, 1.62, 20]} /><meshStandardMaterial color="#222" roughness={0.9} /></mesh>
-          {[-0.95, 0.95].map((z, i) => <Box key={i} size={[0.5, 2.1, 0.12]} position={[0, -0.1, z]} mat={MAT.chassis} />)}
+          <group ref={drum}>
+            <Merged mat={MAT.steel} deps={[]} parts={() => [
+              { g: GEO.cyl(WL_CORE, 1.6, 20), r: [Math.PI / 2, 0, 0] },
+              ...[-0.83, 0.83].map(z => ({ g: GEO.cyl(1.0, 0.06, 28), p: [0, 0, z], r: [Math.PI / 2, 0, 0] })),
+              { g: GEO.cyl(0.12, 2.0, 10), r: [Math.PI / 2, 0, 0] },
+            ]} />
+            <Merged mat={MAT.chassis} deps={[]} shadow={false} parts={() => [-0.87, 0.87].flatMap(z => Array.from({ length: 6 }).map((_, k) => ({ g: GEO.cyl(0.13, 0.03, 12), p: [Math.cos(k * Math.PI / 3) * 0.72, Math.sin(k * Math.PI / 3) * 0.72, z], r: [Math.PI / 2, 0, 0] })))} />
+            <mesh ref={wound} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow><cylinderGeometry args={[1, 1, 1.56, 24]} /><meshStandardMaterial color="#3a3d42" metalness={LITE ? 0.3 : 0.6} roughness={0.55} map={wrap || undefined} bumpMap={LITE ? undefined : wrap || undefined} bumpScale={0.03} /></mesh>
+          </group>
+          <Merged mat={MAT.chassis} deps={[]} parts={() => [
+            ...[-0.98, 0.98].flatMap(z => [{ g: GEO.box(0.5, 2.1, 0.12), p: [0, -0.1, z] }, { g: GEO.box(1.4, 0.12, 0.14), p: [0, -1.1, z] }]),
+            ...[-1.0, 1.0].map(z => ({ g: GEO.cyl(0.2, 0.16, 12), p: [0, 0, z * 1.06], r: [Math.PI / 2, 0, 0] })),
+            { g: GEO.box(0.6, 0.45, 0.35), p: [0, -0.55, 1.2] },                                   // drive gearbox under the motor
+          ]} />
+          <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.cyl(0.19, 0.5, 14), p: [0, 0, 1.4], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.09, 0.3, 10), p: [0.5, -0.4, 1.2], r: [0, 0, Math.PI / 2] }]} />
           <Cyl r={0.04} h={2.0} rotation={[Math.PI / 2, 0, 0]} position={[0.9, 0.9, 0]} mat={MAT.steel} />
+          <group ref={carriage} position={[0.9, 0.9, 0]}>
+            <Merged mat={MAT.darkSteel} deps={[]} shadow={false} parts={() => [{ g: GEO.box(0.22, 0.2, 0.26) }, { g: GEO.cyl(0.05, 0.3, 8), p: [0.17, 0.18, 0.1] }, { g: GEO.cyl(0.05, 0.3, 8), p: [0.17, 0.18, -0.1] }]} />
+          </group>
+          <HosePair from={[0.3, -0.2, 1.65]} to={[-1.4, -1.0, 1.25]} />
+        </group>
+        {/* measuring head at the trailer rear: sheave on a post, counter box, cable guide rollers */}
+        <group position={[-headSheave[0], headSheave[1] - D, 0]} name="WL-UNIT-MEASURINGHEAD">
+          <Merged mat={MAT.chassis} deps={[]} parts={() => [{ g: GEO.box(0.16, 1.2, 0.16), p: [0, -0.6, 0.2] }, { g: GEO.box(0.3, 0.26, 0.2), p: [-0.35, 0.05, 0.2] }, { g: GEO.cyl(0.04, 0.5, 8), p: [0, 0, 0], r: [Math.PI / 2, 0, 0] }]} />
+          <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.torus(0.2, 0.035, 8, 24) }, { g: GEO.cyl(0.08, 0.1, 12), r: [Math.PI / 2, 0, 0] }]} />
         </group>
         <Handrail length={4.0} position={[3.0, D, 1.25]} height={1.0} />
       </Trailer>
-      {/* crane: outriggers, turret, telescoping boom, hook block on the lubricator */}
-      <group name="WL-CRANE" position={[6, 0, 3]}>
-        <Box size={[3.6, 1.0, 3.0]} position={[0, 0.9, 0]} mat={MAT.yellow} />
-        {[[-2.4, 1.5], [2.4, 1.5], [-2.4, -1.5], [2.4, -1.5]].map(([x, z], i) => <group key={i}><Box size={[0.25, 0.25, 1.6]} position={[x, 0.9, z * 0.6]} mat={MAT.yellow} /><Cyl r={0.08} h={0.9} position={[x, 0.45, z]} mat={MAT.darkSteel} /><Cyl r={0.3} h={0.08} position={[x, 0.04, z]} mat={MAT.darkSteel} /></group>)}
+      {/* crane: outrigger box with jack cylinders and pads, turret with counterweight and operator cab, three
+          rectangular telescoping boom sections, lift cylinder with chrome rod, boom-tip sheave block, hook block */}
+      <group name="WL-CRANE" position={CR}>
+        <RBox r={0.08} size={[3.6, 1.0, 3.0]} position={[0, 0.9, 0]} mat={MAT.yellow} />
+        {[[-2.4, 1.5], [2.4, 1.5], [-2.4, -1.5], [2.4, -1.5]].map(([x, z], i) => (
+          <group key={i}>
+            <Box size={[0.25, 0.25, 1.6]} position={[x, 0.9, z * 0.6]} mat={MAT.yellow} />
+            <HydraulicCylinder from={[x, 1.05, z]} to={[x, 0.1, z]} r={0.08} barrel={0.5} />
+            <Cyl r={0.3} h={0.08} position={[x, 0.04, z]} mat={MAT.darkSteel} />
+          </group>
+        ))}
         <Cyl r={0.7} h={1.0} position={[0, 1.9, 0]} mat={MAT.yellow} />
-        <Box size={[1.6, 1.2, 1.2]} position={[-1.0, 2.6, 0.9]} mat={MAT.yellow} />
-        <Pipe from={boomFrom} to={[boomFrom[0] + (boomTo[0] - boomFrom[0]) * 0.4, boomFrom[1] + (boomTo[1] - boomFrom[1]) * 0.4, boomFrom[2] + (boomTo[2] - boomFrom[2]) * 0.4]} r={0.32} mat={MAT.yellow} unions={false} />
-        <Pipe from={[boomFrom[0] + (boomTo[0] - boomFrom[0]) * 0.38, boomFrom[1] + (boomTo[1] - boomFrom[1]) * 0.38, boomFrom[2] + (boomTo[2] - boomFrom[2]) * 0.38]} to={[boomFrom[0] + (boomTo[0] - boomFrom[0]) * 0.72, boomFrom[1] + (boomTo[1] - boomFrom[1]) * 0.72, boomFrom[2] + (boomTo[2] - boomFrom[2]) * 0.72]} r={0.26} mat={MAT.yellow} unions={false} />
-        <Pipe from={[boomFrom[0] + (boomTo[0] - boomFrom[0]) * 0.7, boomFrom[1] + (boomTo[1] - boomFrom[1]) * 0.7, boomFrom[2] + (boomTo[2] - boomFrom[2]) * 0.7]} to={boomTo} r={0.2} mat={MAT.yellow} unions={false} />
-        <Pipe from={[0.6, 2.3, 0]} to={[boomFrom[0] + (boomTo[0] - boomFrom[0]) * 0.35, boomFrom[1] + (boomTo[1] - boomFrom[1]) * 0.35 - 0.6, boomFrom[2] + (boomTo[2] - boomFrom[2]) * 0.35]} r={0.12} mat={MAT.darkSteel} unions={false} />
-        <Pipe from={boomTo} to={[boomTo[0], boomTo[1] - 1.2, boomTo[2]]} r={0.015} mat={MAT.rubber} unions={false} />
-        <Box size={[0.3, 0.5, 0.2]} position={[boomTo[0], boomTo[1] - 1.4, boomTo[2]]} mat={MAT.darkSteel} />
+        <RBox r={0.06} size={[1.1, 0.8, 1.5]} position={[-1.5, 2.3, 0]} mat={MAT.darkSteel} />
+        <RBox r={0.08} size={[1.6, 1.2, 1.2]} position={[-1.0, 2.6, 0.9]} mat={MAT.yellow} />
+        <Box size={[0.9, 0.5, 0.04]} position={[-1.0, 2.8, 1.51]} mat={MAT.glass} />
+        <group position={[0, 2.6, 0]} rotation={boomQ}>
+          <Merged mat={MAT.yellow} deps={[boomLen]} parts={() => [
+            { g: GEO.rbox(0.56, boomLen * 0.42, 0.62, 0.06, 1), p: [0, boomLen * 0.21, 0] },
+            { g: GEO.rbox(0.46, boomLen * 0.36, 0.5, 0.05, 1), p: [0, boomLen * 0.38 + boomLen * 0.18, 0] },
+            { g: GEO.rbox(0.36, boomLen * 0.32, 0.4, 0.04, 1), p: [0, boomLen * 0.68 + boomLen * 0.16, 0] },
+            { g: GEO.box(0.7, 0.5, 0.8), p: [0, 0.1, 0] },                                             // boom foot
+          ]} />
+          <Merged mat={MAT.chassis} deps={[boomLen]} shadow={false} parts={() => [{ g: GEO.box(0.5, 0.06, 0.56), p: [0, boomLen * 0.42, 0] }, { g: GEO.box(0.4, 0.06, 0.44), p: [0, boomLen * 0.72, 0] }]} />
+          <Merged mat={MAT.steel} deps={[boomLen]} shadow={false} parts={() => [{ g: GEO.torus(0.22, 0.04, 8, 20), p: [0, boomLen + 0.1, 0], r: [0, Math.PI / 2, 0] }, { g: GEO.box(0.2, 0.5, 0.1), p: [0, boomLen, 0] }]} />
+        </group>
+        <HydraulicCylinder from={[0.7, 2.0, 0]} to={along(0.36, 0.42)} r={0.13} barrel={0.5} />
+        <HosePair from={[-0.6, 2.45, 0.1]} to={[0.1, 2.75, -0.2]} sag={0.15} />
+        <HosePair from={[-1.5, 1.4, 0.4]} to={[-0.5, 1.95, 0.5]} sag={0.12} />
+        <Pipe from={boomTo} to={[boomTo[0], boomTo[1] - 1.1, boomTo[2]]} r={0.015} mat={MAT.rubber} unions={false} />
+        <group position={[boomTo[0], boomTo[1] - 1.35, boomTo[2]]}>
+          <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.rbox(0.32, 0.5, 0.2, 0.03, 1) }, { g: GEO.torus(0.14, 0.035, 8, 16, Math.PI), p: [0, -0.4, 0], r: [0, 0, Math.PI] }]} />
+        </group>
       </group>
-      {/* cable from drum to top sheave to grease head */}
-      <Hose from={[3.8, D + 2.05, 0]} to={[top[0] - position[0], top[1] + 0.8, top[2] - position[2]]} r={0.012} sag={0.6} mat={MAT.rubber} />
+      {/* hydraulic supply from the control cab to the crane turret */}
+      <HosePair from={[-2.5, D + 0.3, -1.2]} to={[CR[0] + 1.6, 0.95, CR[2] - 0.8]} />
+      {/* top sheave hanging from the hook block, and the line itself */}
+      <group position={topSheave} rotation={[0, sheaveYaw, 0]} name="WL-UNIT-TOPSHEAVE">
+        <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.torus(0.25, 0.04, 8, 24) }, { g: GEO.cyl(0.08, 0.14, 12), r: [Math.PI / 2, 0, 0] }, { g: GEO.box(0.08, 0.5, 0.06), p: [0, 0.3, 0.1] }, { g: GEO.box(0.08, 0.5, 0.06), p: [0, 0.3, -0.1] }]} />
+      </group>
+      <Cable points={cablePts} r={0.012} mat={MAT.rubber} travel={travel} stripe={0.5} />
       {showLabels && <Label position={[0, 5.2, 0]} text={'Wireline unit and crane'} />}
     </group>
   );
 }
 
-// Coiled tubing unit: reel trailer, injector head over the tree on a mast, power pack and cabin.
-export function CTUnit({ position, treeTop, showLabels, active }) {
-  const reel = useRef();
-  useFrame((_, dt) => { if (reel.current && active) reel.current.rotation.z -= dt * 0.8; });
+// ---------------------------------------------------------------- coiled tubing unit (Drop 26)
+// Reel spinning about its axis with spoked flanges, a wound-tubing layer that thins as pipe goes in the hole, a
+// level wind traversing the reel face, the drive motor and its hoses, the tubing running over the gooseneck into
+// the injector as a moving line, and the hose bundle from the cabin to the injector. 60 m of visible tubing
+// stands for the lateral.
+const CT_CORE = 1.3, CT_FULL = 2.2;
+export function CTUnit({ position, treeTop, showLabels, active, ct = null }) {
+  const reel = useRef(), wound = useRef(), carriage = useRef();
+  const travel = useRef(0), prevOut = useRef(0);
+  useFrame((state, dt) => {
+    let out = ct ? ct.progress : null;
+    if (out === null) out = active ? (state.clock.elapsedTime * 0.02) % 1 : 0;
+    const d = out - prevOut.current; prevOut.current = out;
+    travel.current += d * 60;
+    const r = CT_CORE + (CT_FULL - CT_CORE) * (1 - Math.min(1, Math.max(0, out)));
+    if (reel.current) reel.current.rotation.z += d * 60 / r;
+    if (wound.current) wound.current.scale.set(r, 1, r);
+    if (carriage.current) { const ph = (travel.current / 8) % 2; carriage.current.position.z = 0.9 * (ph < 1 ? ph * 2 - 1 : 3 - ph * 2); }
+  });
   const inj = [treeTop[0], treeTop[1] + 4.5, treeTop[2]];
   const D = 1.18;
+  const wrap = useMemo(() => wrapTexture(22), []);
+  const ix = inj[0] - position[0], iz = inj[2] - position[2];
+  const tubingPts = useMemo(() => {
+    const A = [1.5, D + 1.9 + CT_FULL + 0.05, 0], C = [ix + 1.1, inj[1] + 2.95, iz], E = [ix, inj[1] + 1.4, iz];
+    const B = [(A[0] + C[0]) / 2, Math.max(A[1], C[1]) + 1.3, (A[2] + C[2]) / 2];
+    const Dp = [ix + 0.35, inj[1] + 2.75, iz];
+    return [A, B, C, Dp, E];
+  }, [ix, iz, inj[1]]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <group position={position} name="CT-UNIT">
       <Trailer length={13} width={2.8}>
-        {/* reel with flanges and the level wind, on a cradle; power pack at the gooseneck; cabin on the deck */}
         <group position={[1.5, D + 1.9, 0]} name="CT-REEL">
-          <mesh ref={reel} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[2.4, 2.4, 2.2, 28]} /><meshStandardMaterial {...MAT.darkSteel} /></mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[2.15, 2.15, 2.22, 28]} /><meshStandardMaterial color="#5b6168" metalness={0.9} roughness={0.3} /></mesh>
-          {[-1.15, 1.15].map((z, i) => <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, z]}><cylinderGeometry args={[2.45, 2.45, 0.1, 28]} /><meshStandardMaterial {...MAT.paintRed} /></mesh>)}
-          {[-1.4, 1.4].map((z, i) => <Box key={'c' + i} size={[3.4, 0.3, 0.2]} position={[0, -1.9, z]} mat={MAT.chassis} />)}
-          {[-1.4, 1.4].map((z, i) => [[-1.2, 0.6], [1.2, 0.6]].map(([dx, dy], k) => <Box key={'s' + i + k} size={[0.25, 2.6, 0.2]} position={[dx, -0.9, z]} rotation={[0, 0, dx < 0 ? -0.35 : 0.35]} mat={MAT.chassis} />))}
+          <group ref={reel}>
+            <Merged mat={MAT.paintRed} deps={[]} parts={() => [-1.15, 1.15].map(z => ({ g: GEO.cyl(2.45, 0.1, 32), p: [0, 0, z], r: [Math.PI / 2, 0, 0] }))} />
+            <Merged mat={MAT.chassis} deps={[]} shadow={false} parts={() => [-1.22, 1.22].flatMap(z => Array.from({ length: 8 }).map((_, k) => ({ g: GEO.box(0.14, 2.0, 0.04), p: [Math.cos(k * Math.PI / 4) * 1.3, Math.sin(k * Math.PI / 4) * 1.3, z], r: [0, 0, k * Math.PI / 4 + Math.PI / 2] })))} />
+            <Merged mat={MAT.steel} deps={[]} parts={() => [{ g: GEO.cyl(CT_CORE, 2.2, 28), r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.36, 2.8, 16), r: [Math.PI / 2, 0, 0] }]} />
+            <mesh ref={wound} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow><cylinderGeometry args={[1, 1, 2.16, 28]} /><meshStandardMaterial color="#6a7078" metalness={LITE ? 0.35 : 0.85} roughness={LITE ? 0.45 : 0.35} map={wrap || undefined} bumpMap={LITE ? undefined : wrap || undefined} bumpScale={0.04} /></mesh>
+          </group>
+          {/* cradle, bearing caps, drive motor with chain guard, hoses to the power pack */}
+          <Merged mat={MAT.chassis} deps={[]} parts={() => [
+            ...[-1.4, 1.4].map(z => ({ g: GEO.box(3.4, 0.3, 0.2), p: [0, -1.9, z] })),
+            ...[-1.4, 1.4].flatMap(z => [[-1.2, -0.35], [1.2, 0.35]].map(([dx, a]) => ({ g: GEO.box(0.25, 2.6, 0.2), p: [dx, -0.9, z], r: [0, 0, a] }))),
+            ...[-1.45, 1.45].map(z => ({ g: GEO.cyl(0.3, 0.2, 14), p: [0, 0, z], r: [Math.PI / 2, 0, 0] })),
+            { g: GEO.box(0.9, 1.1, 0.25), p: [0.35, -0.5, 1.62] },
+          ]} />
+          <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.cyl(0.28, 0.6, 16), p: [0.7, -1.0, 1.75], r: [Math.PI / 2, 0, 0] }]} />
+          <HosePair from={[0.7, -1.0, 2.05]} to={[-5.0, -0.6, 1.3]} />
+          {/* level wind: diamond shaft on posts, carriage with guide rollers traversing the reel face */}
           <Cyl r={0.05} h={2.4} rotation={[Math.PI / 2, 0, 0]} position={[2.9, 0.4, 0]} mat={MAT.steel} />
+          <Merged mat={MAT.chassis} deps={[]} shadow={false} parts={() => [-1.25, 1.25].map(z => ({ g: GEO.box(0.12, 2.5, 0.12), p: [2.9, -0.85, z] }))} />
+          <group ref={carriage} position={[2.9, 0.4, 0]}>
+            <Merged mat={MAT.darkSteel} deps={[]} shadow={false} parts={() => [{ g: GEO.box(0.3, 0.34, 0.34) }, { g: GEO.cyl(0.07, 0.4, 8), p: [0.22, 0.25, 0.14] }, { g: GEO.cyl(0.07, 0.4, 8), p: [0.22, 0.25, -0.14] }]} />
+          </group>
         </group>
-        <Box size={[3.2, 2.3, 2.5]} position={[-4.4, D + 1.15, 0]} mat={MAT.paintWhite} name="CT-POWERPACK" />
+        {/* power pack with louvers and exhaust; hoses from it to the reel drive */}
+        <RBox r={0.12} size={[3.2, 2.3, 2.5]} position={[-4.4, D + 1.15, 0]} mat={MAT.paintWhite} name="CT-POWERPACK" />
+        <Merged mat={MAT.dimSteel} deps={[]} shadow={false} parts={() => [-1, 1].flatMap(sz => [0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7].map(y => ({ g: GEO.box(1.6, 0.03, 0.03), p: [-4.4, D + y, sz * 1.26], r: [sz * 0.55, 0, 0] })))} />
         <Cyl r={0.14} h={1.2} position={[-5.4, D + 2.9, 0.8]} mat={MAT.darkSteel} />
         <Handrail length={4.5} position={[3.5, D, 1.3]} height={1.0} />
       </Trailer>
       <group position={[-2, 0, 6]} name="CT-CONTROLCABIN">
-        <Box size={[3.4, 2.6, 2.6]} position={[0, 1.5, 0]} mat={MAT.paintWhite} />
+        <RBox r={0.12} size={[3.4, 2.6, 2.6]} position={[0, 1.5, 0]} mat={MAT.paintWhite} />
         <Box size={[2.6, 0.9, 0.04]} position={[0, 1.9, -1.31]} mat={MAT.glass} />
         <Box size={[3.5, 0.1, 2.7]} position={[0, 2.85, 0]} mat={MAT.chassis} />
         <Stair steps={3} rise={0.3} run={0.3} width={0.8} position={[1.9, 0, 0]} />
       </group>
       {/* injector head with the chain drive housings and gooseneck, stripper, quad BOP, on a mast from the ground */}
-      <group position={[inj[0] - position[0], inj[1], inj[2] - position[2]]} name="CT-INJECTOR">
+      <group position={[ix, inj[1], iz]} name="CT-INJECTOR">
         <Box size={[1.2, 2.4, 1.0]} mat={MAT.darkSteel} name="CT-INJECTORHEAD" />
         {[-0.35, 0.35].map((x, i) => <Box key={i} size={[0.3, 2.0, 1.06]} position={[x, 0, 0]} mat={MAT.chassis} />)}
         {[-0.5, 0.5].map((z, i) => <Cyl key={'m' + i} r={0.18} h={0.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.8, z * 1.3]} mat={MAT.blue} />)}
-        <mesh position={[0, 1.9, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[1.1, 0.12, 8, 24, Math.PI]} /><meshStandardMaterial {...MAT.steel} /></mesh>
+        <mesh position={[0, 1.9, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[1.1, 0.12, 8, 24, Math.PI]} /><Mat mat={MAT.steel} /></mesh>
         {Array.from({ length: 7 }).map((_, i) => { const a = Math.PI * i / 6; return <Cyl key={'r' + i} r={0.06} h={0.3} rotation={[0, 0, a]} position={[Math.cos(a) * 1.1, 1.9 + Math.sin(a) * 1.1, 0]} mat={MAT.darkSteel} />; })}
         <Cyl r={0.22} h={0.9} position={[0, -1.6, 0]} mat={MAT.steel} name="CT-STRIPPER" />
         <Box size={[0.9, 1.4, 0.7]} position={[0, -2.8, 0]} mat={MAT.darkSteel} name="CT-QUADBOP" />
         {[-0.55, 0.55].map((x, i) => <Cyl key={'b' + i} r={0.12} h={0.5} rotation={[0, 0, Math.PI / 2]} position={[x * 1.35, -2.8, 0]} mat={MAT.darkSteel} />)}
+        {/* hydraulic fittings on the drive motors and the stripper */}
+        <Merged mat={MAT.brass} deps={[]} shadow={false} parts={() => [[-0.5, 0.8], [0.5, 0.8], [0, -1.6]].flatMap(([z, y]) => [-0.08, 0.08].map(dx => ({ g: GEO.cyl(0.03, 0.2, 6), p: [dx + 0.55, y, z * 1.3 + (y < 0 ? 0.25 : 0)], r: [0, 0, Math.PI / 2] })))} />
       </group>
-      {[-1, 1].map(side => <Pipe key={side} from={[inj[0] - position[0] + side * 1.6, 0.2, inj[2] - position[2] + 1.6]} to={[inj[0] - position[0] + side * 0.4, inj[1] + 1.2, inj[2] - position[2] + 0.5]} r={0.12} mat={MAT.yellow} unions={false} />)}
-      {/* tubing from the reel over the gooseneck into the injector */}
-      <Hose from={[1.5, D + 4.3, 0]} to={[inj[0] - position[0], inj[1] + 2.3, inj[2] - position[2]]} r={0.035} sag={-0.8} mat={MAT.steel} />
+      {[-1, 1].map(side => <Pipe key={side} from={[ix + side * 1.6, 0.2, iz + 1.6]} to={[ix + side * 0.4, inj[1] + 1.2, iz + 0.5]} r={0.12} mat={MAT.yellow} unions={false} />)}
+      {/* hose bundle from the cabin roof to the injector drive motors and stripper, hanging by its span */}
+      {[-0.18, -0.06, 0.06, 0.18].map((o, k) => <Hose key={k} from={[-2 + o, 2.9, 6 - 1.2]} to={[ix + 0.7, inj[1] + 0.9 + k * 0.1, iz + 0.3 + o]} r={0.022} sag={Math.max(0.6, 0.18 * Math.hypot(ix + 2.7, iz - 4.8))} segments={14} />)}
+      {/* tubing from the reel over the gooseneck into the injector, running with the job */}
+      <Cable points={tubingPts} r={0.035} mat={metal('#7a8088', 0.85, 0.35)} travel={travel} stripe={1.2} contrast={0.4} segmentsPerLeg={10} />
       {showLabels && <Label position={[0, 6.5, 0]} text={'Coiled tubing unit'} />}
     </group>
   );
@@ -1188,7 +1419,7 @@ export function FlowbackSpread({ position, showLabels, flaring }) {
             <group position={[0.7, 0.95, z]}>
               <Box size={[0.55, 0.5, 0.5]} mat={MAT.darkSteel} />
               <Cyl r={0.08} h={0.5} position={[0, 0.45, 0]} mat={MAT.steel} />
-              <mesh position={[0, 0.75, 0]}><torusGeometry args={[0.2, 0.025, 6, 20]} /><meshStandardMaterial {...MAT.rubber} /></mesh>
+              <mesh position={[0, 0.75, 0]}><torusGeometry args={[0.2, 0.025, 6, 20]} /><Mat mat={MAT.rubber} /></mesh>
               <Cyl r={0.12} h={0.05} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.2, 0.3]} mat={MAT.paintWhite} />
             </group>
           </group>
@@ -1225,8 +1456,8 @@ export function FlowbackSpread({ position, showLabels, flaring }) {
       <group position={[14, 0, 0]} name="FB-SEPARATOR">
         <Box size={[6.6, 0.25, 2.6]} position={[0, 0.12, 0]} mat={MAT.yellow} />
         <Cyl r={1.1} h={6} rotation={[0, 0, Math.PI / 2]} position={[0, 1.9, 0]} mat={MAT.paintWhite} />
-        <mesh position={[3.0, 1.9, 0]} rotation={[0, 0, -Math.PI / 2]}><sphereGeometry args={[1.1, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial {...MAT.paintWhite} /></mesh>
-        <mesh position={[-3.0, 1.9, 0]} rotation={[0, 0, Math.PI / 2]}><sphereGeometry args={[1.1, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial {...MAT.paintWhite} /></mesh>
+        <mesh position={[3.0, 1.9, 0]} rotation={[0, 0, -Math.PI / 2]}><sphereGeometry args={[1.1, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><Mat mat={MAT.paintWhite} /></mesh>
+        <mesh position={[-3.0, 1.9, 0]} rotation={[0, 0, Math.PI / 2]}><sphereGeometry args={[1.1, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><Mat mat={MAT.paintWhite} /></mesh>
         {[-2.0, 2.0].map((x, i) => <Box key={i} size={[0.5, 0.9, 2.4]} position={[x, 0.65, 0]} mat={MAT.chassis} />)}
         <Pipe from={[-1.5, 3.05, 0]} to={[1.5, 3.05, 0]} r={0.08} mat={MAT.steel} />
         <Box size={[0.5, 0.35, 0.35]} position={[0, 3.05, 0]} mat={MAT.darkSteel} />
@@ -1333,18 +1564,102 @@ export function SandBoxes({ position, rows = 2, perRow = 6, showLabels }) {
           </group>
         );
       })}
-      {/* forklift at the row end */}
-      <group position={[-3.6, 0, 3.5]} rotation={[0, Math.PI / 2, 0]}>
-        <Box size={[3.0, 1.2, 1.9]} position={[0, 1.1, 0]} mat={MAT.paintRed} />
-        <Box size={[1.4, 1.3, 1.6]} position={[-0.3, 2.3, 0]} mat={MAT.chassis} />
-        <Box size={[0.2, 3.6, 1.4]} position={[1.8, 2.0, 0]} mat={MAT.darkSteel} />
-        {[-0.5, 0.5].map((z, k) => <Box key={k} size={[1.6, 0.08, 0.15]} position={[2.7, 0.35, z]} mat={MAT.darkSteel} />)}
-        {[[-1.0, 0.95], [1.0, 0.95], [-1.0, -0.95], [1.0, -0.95]].map(([x, z], k) => <Wheel key={k} position={[x, 0.5, z]} r={0.5} w={0.35} />)}
-      </group>
+      {/* container handler shuttling along the front of the rows: a full box out, empty back (Drop 28) */}
+      <ShuttleForklift x0={-1.5} x1={(perRow - 1) * 2.9 + 4} z={-6.2} />
       {showLabels && <Label position={[perRow * 1.4, 7.0, 3]} text={'Sand boxes (stacked containers)'} />}
     </group>
   );
 }
+// Container handler driving back and forth in front of the sand box rows, forks toward the boxes, carrying a box
+// one way and running empty the other; wheels turn, mast tilts, and the turn at each end is a quick swing.
+export function ShuttleForklift({ x0, x1, z, speed = 2.2 }) {
+  const ref = useRef(), load = useRef(), wheels = useRef([]), mast = useRef();
+  useFrame((state, dt) => {
+    const span = x1 - x0, t = state.clock.elapsedTime * speed;
+    const cyc = t % (2 * span + 6), out = cyc < span, turning = cyc >= span && cyc < span + 3 ? (cyc - span) / 3 : cyc >= 2 * span + 3 ? (cyc - 2 * span - 3) / 3 : null;
+    const x = out ? x0 + cyc : cyc < span + 3 ? x1 : cyc < 2 * span + 3 ? x1 - (cyc - span - 3) : x0;
+    if (!ref.current) return;
+    ref.current.position.set(x, 0, z);
+    ref.current.rotation.y = turning !== null ? (out || cyc < span + 3 ? -Math.PI / 2 - turning * Math.PI : Math.PI / 2 - turning * Math.PI) : (cyc < span + 3 ? -Math.PI / 2 : Math.PI / 2);
+    if (load.current) load.current.visible = cyc < span + 1.5 || cyc > 2 * span + 4.5;
+    if (turning === null) wheels.current.forEach(w => { if (w) w.rotation.z -= dt * speed / 0.5; });
+    if (mast.current) mast.current.rotation.z = -0.04 + 0.03 * Math.sin(t * 0.7);
+  });
+  return (
+    <group ref={ref} name="LG-SANDBOX-HANDLER">
+      <BlobShadow size={[5.5, 3.2]} />
+      <RBox r={0.08} size={[3.0, 1.2, 1.9]} position={[0, 1.1, 0]} mat={MAT.paintRed} />
+      <RBox r={0.06} size={[1.4, 1.3, 1.6]} position={[-0.3, 2.3, 0]} mat={MAT.chassis} />
+      <Box size={[1.1, 0.5, 0.04]} position={[-0.3, 2.5, 0.81]} mat={MAT.glass} />
+      <Merged mat={MAT.chassis} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.06, 0.9, 8), p: [-1.2, 2.2, 0.6] }, { g: GEO.box(0.5, 0.06, 0.3), p: [-1.45, 1.75, 0] }]} />
+      <group ref={mast} position={[1.8, 0.4, 0]}>
+        <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.box(0.2, 3.6, 0.12), p: [0, 1.6, 0.6] }, { g: GEO.box(0.2, 3.6, 0.12), p: [0, 1.6, -0.6] }, { g: GEO.box(0.22, 0.12, 1.4), p: [0, 3.3, 0] }, { g: GEO.box(0.22, 0.12, 1.4), p: [0, 1.2, 0] }, { g: GEO.box(0.12, 0.8, 1.5), p: [0.15, 0.8, 0] }]} />
+        <Merged mat={MAT.darkSteel} deps={[]} shadow={false} parts={() => [-0.5, 0.5].map(zz => ({ g: GEO.box(1.7, 0.08, 0.15), p: [1.0, 0.4, zz] }))} />
+        <HydraulicCylinder from={[-0.35, 0.3, 0.3]} to={[-0.1, 2.4, 0.3]} r={0.06} barrel={0.55} />
+        <group ref={load} position={[1.45, 1.62, 0]}>
+          <RBox r={0.04} size={[2.5, 2.4, 6.0]} mat={MAT.paintRed} />
+          <Merged mat={MAT.chassis} deps={[]} parts={() => [...[-2.6, 0, 2.6].map(zz => ({ g: GEO.box(2.56, 2.46, 0.1), p: [0, 0, zz] })), ...[-1.28, 1.28].map(xx => ({ g: GEO.box(0.08, 2.46, 6.06), p: [xx, 0, 0] }))]} />
+        </group>
+      </group>
+      {[[-1.0, 0.95], [1.0, 0.95], [-1.0, -0.95], [1.0, -0.95]].map(([x, zz], k) => (
+        <group key={k} ref={el => { wheels.current[k] = el; }} position={[x, 0.5, zz]}>
+          <Merged mat={MAT.tire} deps={[]} parts={() => [{ g: GEO.cyl(0.5, 0.35, 20), r: [Math.PI / 2, 0, 0] }]} />
+          <Merged mat={MAT.alu} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.3, 0.37, 12), r: [Math.PI / 2, 0, 0] }]} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// Water transfer (Drop 28): a header along the tank fronts fed by a short hose from each tank's manifold, a
+// diesel transfer pump trailer at the row end, and a lay-flat discharge hose on the ground to the hydration
+// unit's suction, rising to the stub at the end. `tanks` is the WaterTanks position, `count` its tank count,
+// `to` the hydration suction stub in world space.
+export function WaterTransfer({ tanks, count = 8, to, showLabels }) {
+  const D = 1.18;
+  const hz = tanks[2] + 7.4;                                   // header line just in front of the tank manifolds
+  const x0 = tanks[0] - 1.0, x1 = tanks[0] + (count - 1) * 3.5 + 1.6;
+  const pumpPos = [x1 + 4.5, 0, hz + 1.0];
+  const headerPts = useMemo(() => [[x0, 0.5, hz], [x1 + 0.5, 0.5, hz]], [x0, x1, hz]);
+  const ground = useMemo(() => {
+    const out = [[pumpPos[0] + 3.2, 0.3, pumpPos[2] + 0.6], [pumpPos[0] + 8, 0.3, pumpPos[2] + 0.4]];
+    const bend = [to[0] + 2.2, 0.3, hz - 2.5];
+    out.push([bend[0] - 6, 0.3, hz - 1.0], bend, [to[0] + 2.2, 0.3, to[2] + 0.3]);
+    return out;
+  }, [to, hz]); // eslint-disable-line react-hooks/exhaustive-deps
+  const last = ground[ground.length - 1];
+  return (
+    <group name="LG-WATERTRANSFER">
+      {/* suction header and its stands, one hose from each tank's first manifold valve */}
+      <PipeRun points={headerPts} r={0.15} mat={MAT.steel} />
+      <PipeStands points={headerPts} r={0.15} every={4} />
+      {Array.from({ length: count }).map((_, i) => <Hose key={i} from={[tanks[0] + i * 3.5 - 0.9, 0.9, tanks[2] + 6.9]} to={[tanks[0] + i * 3.5 - 0.9, 0.55, hz]} r={0.09} sag={0.12} segments={6} />)}
+      {/* transfer pump trailer: engine box, centrifugal pump, suction from the header, discharge to the lay-flat */}
+      <group position={pumpPos} name="LG-WATERTRANSFER-PUMP">
+        <BlobShadow size={[6.5, 3.5]} />
+        <Merged mat={MAT.chassis} deps={[]} parts={() => [{ g: GEO.box(4.6, 0.25, 2.0), p: [0, 0.55, 0] }, { g: GEO.box(1.0, 0.2, 0.6), p: [-2.6, 0.45, 0] }, { g: GEO.cyl(0.05, 0.4, 6), p: [-3.05, 0.25, 0] }]} />
+        <Merged mat={MAT.tire} deps={[]} parts={() => [-0.8, 0.8].map(zz => ({ g: GEO.cyl(0.42, 0.3, 20), p: [0.6, 0.42, zz], r: [Math.PI / 2, 0, 0] }))} />
+        <RBox r={0.08} size={[2.2, 1.5, 1.7]} position={[-0.9, 1.45, 0]} mat={MAT.paintWhite} />
+        <Merged mat={MAT.dimSteel} deps={[]} shadow={false} parts={() => [-1, 1].flatMap(sz => [0.95, 1.15, 1.35, 1.55, 1.75].map(y => ({ g: GEO.box(1.4, 0.03, 0.03), p: [-0.9, y, sz * 0.86], r: [sz * 0.55, 0, 0] })))} />
+        <Cyl r={0.08} h={1.0} position={[-1.5, 2.6, 0.5]} mat={MAT.darkSteel} />
+        <Merged mat={MAT.darkSteel} deps={[]} parts={() => [{ g: GEO.cyl(0.42, 0.5, 20), p: [1.2, 1.1, 0], r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(0.26, 0.9, 14), p: [1.2, 1.1, 0.6], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.2, 0.7, 14), p: [1.2, 1.5, 0] }]} />
+        <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.24, 0.1, 14), p: [1.2, 1.1, -0.3], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.24, 0.1, 14), p: [1.2, 1.9, 0] }]} />
+        <HazardStrip position={[2.31, 0.5, 0]} rotation={[0, Math.PI / 2, 0]} length={1.9} height={0.12} />
+        {showLabels && <Label position={[0, 3.3, 0]} text={'Water transfer pump'} />}
+      </group>
+      <Hose from={[x1 + 0.5, 0.5, hz]} to={[pumpPos[0] + 1.2, 1.1, pumpPos[2] - 0.35]} r={0.15} sag={0.1} segments={8} />
+      {/* lay-flat discharge hose: a flattened tube on the ground, then a round riser to the suction stub */}
+      <group scale={[1, 0.45, 1]}>
+        <Cable points={ground.map(p => [p[0], p[1] / 0.45, p[2]])} r={0.17} mat={{ color: '#1f3a8a', metalness: 0.05, roughness: 0.75 }} stripe={3} contrast={0.15} segmentsPerLeg={6} />
+      </group>
+      <Hose from={[pumpPos[0] + 1.2, 1.9, pumpPos[2]]} to={ground[0]} r={0.15} sag={0.05} segments={6} />
+      <Hose from={last} to={to} r={0.15} sag={0.15} segments={8} />
+      <Merged mat={MAT.steel} deps={[]} shadow={false} parts={() => [{ g: GEO.cyl(0.19, 0.3, 14), p: [to[0] + 0.15, to[1], to[2]], r: [0, 0, Math.PI / 2] }]} />
+      {showLabels && <Label position={[(x0 + x1) / 2, 2.2, hz]} text={'Water transfer: tank header to the hydration unit'} />}
+    </group>
+  );
+}
+
 // Fuel gas trailers (CNG or LNG) parked in a row along the pad edge for gas-burning fleets.
 export function FuelTrailers({ position, count = 6, showLabels }) {
   const D = 1.18;
@@ -1353,7 +1668,7 @@ export function FuelTrailers({ position, count = 6, showLabels }) {
       {Array.from({ length: count }).map((_, i) => (
         <Trailer key={i} length={13} width={2.6} position={[0, 0, i * 3.6]} rotation={[0, 0, 0]}>
           <Cyl r={1.2} h={10.5} rotation={[0, 0, Math.PI / 2]} position={[0.5, D + 1.25, 0]} mat={MAT.paintWhite} name={i === 0 ? 'PP-FUELGAS-TRAILER' : undefined} />
-          {[-4.5, 5.5].map((x, k) => <mesh key={k} position={[x, D + 1.25, 0]} rotation={[0, 0, k ? Math.PI / 2 : -Math.PI / 2]}><sphereGeometry args={[1.2, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial {...MAT.paintWhite} /></mesh>)}
+          {[-4.5, 5.5].map((x, k) => <mesh key={k} position={[x, D + 1.25, 0]} rotation={[0, 0, k ? Math.PI / 2 : -Math.PI / 2]}><sphereGeometry args={[1.2, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><Mat mat={MAT.paintWhite} /></mesh>)}
           {[-2.5, 3.5].map((x, k) => <Box key={'s' + k} size={[0.4, 1.3, 2.4]} position={[x, D + 0.6, 0]} mat={MAT.chassis} />)}
           <Box size={[1.4, 1.5, 1.8]} position={[-6.0, D + 0.75, 0]} mat={MAT.chassis} />
           <Cyl r={0.06} h={2.0} rotation={[Math.PI / 2, 0, 0]} position={[-5.4, D + 0.4, 0]} mat={MAT.steel} />
@@ -1365,11 +1680,11 @@ export function FuelTrailers({ position, count = 6, showLabels }) {
   );
 }
 // Light tower: trailer with an engine box, telescoping mast, four lamp heads.
-export function LightTower({ position }) {
+export function LightTower({ position, lit = false }) {
   return (
     <group position={position} name="LG-LIGHTTOWER">
       <Box size={[2.6, 0.2, 1.4]} position={[0, 0.5, 0]} mat={MAT.chassis} />
-      <Box size={[2.2, 1.0, 1.2]} position={[0.1, 1.1, 0]} mat={MAT.paintWhite} />
+      <RBox r={0.08} size={[2.2, 1.0, 1.2]} position={[0.1, 1.1, 0]} mat={MAT.paintWhite} />
       <Box size={[1.0, 0.25, 0.6]} position={[-1.6, 0.45, 0]} mat={MAT.chassis} />
       <Cyl r={0.04} h={0.4} position={[-2.1, 0.25, 0]} mat={MAT.darkSteel} />
       {[-0.55, 0.55].map((z, i) => <Wheel key={i} position={[0.6, 0.4, z]} r={0.35} w={0.2} />)}
@@ -1378,7 +1693,7 @@ export function LightTower({ position }) {
       <Cyl r={0.05} h={3.0} position={[-0.6, 8.9, 0]} mat={MAT.steel} />
       <Box size={[1.3, 0.08, 0.08]} position={[-0.6, 10.3, 0]} mat={MAT.darkSteel} />
       {[[-0.6, -0.5], [-0.2, -0.5], [-1.0, 0.5], [-0.2, 0.5]].map(([dx, dz], i) => (
-        <mesh key={i} position={[dx, 10.2, dz]} rotation={[dz > 0 ? 0.5 : -0.5, 0, 0]}><boxGeometry args={[0.45, 0.35, 0.14]} /><meshStandardMaterial color="#fff6d5" emissive="#ffe9a8" emissiveIntensity={0.8} /></mesh>
+        <mesh key={i} position={[dx, 10.2, dz]} rotation={[dz > 0 ? 0.5 : -0.5, 0, 0]}><boxGeometry args={[0.45, 0.35, 0.14]} /><meshStandardMaterial color="#fff6d5" emissive="#ffe9a8" emissiveIntensity={lit ? 4.5 : 0.8} toneMapped={!lit} /></mesh>
       ))}
     </group>
   );
@@ -1404,6 +1719,11 @@ export function FlangedRun({ points, r = 0.1, name, color = null }) {
         const rot = Math.abs(d[1]) / len > 0.7 ? [0, 0, 0] : Math.abs(d[0]) / len > 0.7 ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0];
         return len > 1.2 ? <group key={'f' + i}><Cyl r={r * 2.1} h={r * 0.7} position={q} rotation={rot} mat={MAT.darkSteel} /></group> : null;
       })}
+      {/* studs and nuts on every flange pair: the mid-segment flanges and the straight joints */}
+      <BoltRings rings={[
+        ...points.slice(1).flatMap((p, i) => { const a = points[i]; const d = [p[0] - a[0], p[1] - a[1], p[2] - a[2]]; const len = Math.hypot(...d) || 1; return len > 1.2 ? [{ p: [a[0] + d[0] * 0.5, a[1] + d[1] * 0.5, a[2] + d[2] * 0.5], dir: d, n: 8, bc: r * 1.65, sr: r * 0.12, sh: r * 1.3 }] : []; }),
+        ...points.slice(1, -1).flatMap((p, i) => { const a = points[i], b = points[i + 2]; const d1 = [p[0] - a[0], p[1] - a[1], p[2] - a[2]], d2 = [b[0] - p[0], b[1] - p[1], b[2] - p[2]]; const l1 = Math.hypot(...d1) || 1, l2 = Math.hypot(...d2) || 1; return (d1[0] * d2[0] + d1[1] * d2[1] + d1[2] * d2[2]) / (l1 * l2) > 0.98 ? [{ p, dir: d1, n: 8, bc: r * 1.65, sr: r * 0.12, sh: r * 1.8 }] : []; }),
+      ]} />
     </group>
   );
 }
@@ -1418,20 +1738,20 @@ export function PowerGen({ fleet = 'diesel', position = [-40, 0, -34], showLabel
       {fleet === 'efrac-turbine' && [0, 1].map(i => (
         <Trailer key={i} length={15} width={3.0} position={[0, 0, i * 5.2]} rotation={[0, 0, 0]}>
           {/* turbine enclosure with louvered panels, inlet filter house, exhaust stack with silencer, generator end */}
-          <Box size={[8.6, 2.9, 2.6]} position={[1.5, D + 1.45, 0]} mat={MAT.paintWhite} name={i === 0 ? 'PP-POWERGEN-TURBINE' : undefined} />
+          <RBox r={0.12} size={[8.6, 2.9, 2.6]} position={[1.5, D + 1.45, 0]} mat={MAT.paintWhite} name={i === 0 ? 'PP-POWERGEN-TURBINE' : undefined} />
           {[-1.5, 0.5, 2.5, 4.5].map((x, k) => <Box key={k} size={[1.4, 1.6, 0.04]} position={[x, D + 1.3, 1.32]} mat={MAT.dimSteel} />)}
           <Box size={[3.2, 3.6, 2.8]} position={[-4.8, D + 1.8, 0]} mat={MAT.steel} />
           {[-0.9, 0, 0.9].map((z, k) => <Box key={'f' + k} size={[3.0, 3.2, 0.04]} position={[-4.8, D + 1.8, z > 0 ? 1.42 : -1.42]} mat={MAT.dimSteel} />)}
           <Cyl r={0.75} h={1.4} position={[-1.2, D + 3.6, 0]} mat={MAT.darkSteel} />
           <Cyl r={0.55} h={3.4} position={[-1.2, D + 5.8, 0]} mat={MAT.darkSteel} />
-          <Box size={[2.6, 1.8, 2.2]} position={[6.4, D + 0.9, 0]} mat={MAT.blue} />
+          <RBox r={0.12} size={[2.6, 1.8, 2.2]} position={[6.4, D + 0.9, 0]} mat={MAT.blue} />
           <Handrail length={8.0} position={[1.5, D + 2.9, 0]} height={0.9} />
           <Ladder height={2.9} position={[6.0, D, 1.2]} rotation={[0, 0, 0]} />
         </Trailer>
       ))}
       {fleet === 'efrac-turbine' && (
         <Trailer length={12} width={2.8} position={[0, 0, 10.6]}>
-          <Box size={[10, 2.6, 2.5]} position={[0, D + 1.3, 0]} mat={MAT.blue} name="PP-POWERGEN-SWITCHGEAR" />
+          <RBox r={0.12} size={[10, 2.6, 2.5]} position={[0, D + 1.3, 0]} mat={MAT.blue} name="PP-POWERGEN-SWITCHGEAR" />
           {[-3.5, -1.2, 1.1, 3.4].map((x, k) => <Box key={k} size={[1.8, 2.2, 0.05]} position={[x, D + 1.2, 1.27]} mat={MAT.chassis} />)}
           {[-2.0, 2.0].map((x, k) => <Cyl key={'b' + k} r={0.12} h={1.0} position={[x, D + 3.0, 0]} mat={MAT.cream} />)}
           <Box size={[10.2, 0.1, 2.6]} position={[0, D + 2.62, 0]} mat={MAT.chassis} />
@@ -1440,13 +1760,13 @@ export function PowerGen({ fleet = 'diesel', position = [-40, 0, -34], showLabel
       {fleet === 'efrac-genset' && [0, 1, 2, 3].map(i => (
         <Trailer key={i} length={13} width={2.8} position={[0, 0, i * 4.4]} rotation={[0, 0, 0]}>
           {/* reciprocating genset: engine enclosure with louvers, radiator at the end, exhaust with silencer, generator and breaker cabinet */}
-          <Box size={[7, 2.6, 2.4]} position={[0.5, D + 1.3, 0]} mat={MAT.paintWhite} name={i === 0 ? 'PP-POWERGEN-GENSET' : undefined} />
+          <RBox r={0.12} size={[7, 2.6, 2.4]} position={[0.5, D + 1.3, 0]} mat={MAT.paintWhite} name={i === 0 ? 'PP-POWERGEN-GENSET' : undefined} />
           {[-1.5, 0.5, 2.5].map((x, k) => <Box key={k} size={[1.5, 1.4, 0.04]} position={[x, D + 1.2, 1.22]} mat={MAT.dimSteel} />)}
           <Box size={[2.4, 2.8, 2.4]} position={[-4.6, D + 1.4, 0]} mat={MAT.darkSteel} />
           <Box size={[0.05, 2.4, 2.0]} position={[-5.83, D + 1.4, 0]} mat={MAT.dimSteel} />
           <Cyl r={0.25} h={2.0} position={[3.0, D + 3.4, 0.7]} mat={MAT.darkSteel} />
           <Cyl r={0.4} h={1.2} position={[3.0, D + 2.9, 0.7]} mat={MAT.steel} />
-          <Box size={[2.0, 1.8, 2.0]} position={[5.2, D + 0.9, 0]} mat={MAT.blue} />
+          <RBox r={0.12} size={[2.0, 1.8, 2.0]} position={[5.2, D + 0.9, 0]} mat={MAT.blue} />
         </Trailer>
       ))}
       {fleet === 'grid' && (
@@ -1457,7 +1777,7 @@ export function PowerGen({ fleet = 'diesel', position = [-40, 0, -34], showLabel
           {[-1.4, -0.7, 0, 0.7, 1.4].map((x, i) => <Box key={i} size={[0.2, 2.2, 3.0]} position={[x, 1.7, 0]} mat={MAT.darkSteel} />)}
           {[0, 1, 2].map(i => <group key={i}><Cyl r={0.12} h={1.6} position={[-1 + i, 3.9, 0]} mat={MAT.cream} />{[0.3, 0.6, 0.9, 1.2].map((y, k) => <Cyl key={k} r={0.18} h={0.06} position={[-1 + i, 3.1 + y, 0]} mat={MAT.cream} />)}</group>)}
           <Cyl r={0.3} h={0.5} position={[1.2, 3.35, 0.8]} mat={MAT.steel} />
-          <Box size={[2.6, 2.4, 2.0]} position={[5, 1.5, 0]} mat={MAT.blue} />
+          <RBox r={0.12} size={[2.6, 2.4, 2.0]} position={[5, 1.5, 0]} mat={MAT.blue} />
           {[-1.5, 1.5].map((z, i) => <group key={i} position={[5, 0, z]}><Cyl r={0.08} h={3.6} position={[0, 1.8, 0]} mat={MAT.steel} /><Cyl r={0.2} h={0.5} position={[0, 3.8, 0]} mat={MAT.cream} /></group>)}
           {[0, 1, 2].map(i => <Cyl key={i} r={0.14} h={11} position={[-8 - i * 22, 5.5, -2]} mat={MAT.rust} />)}
           {[0, 1, 2].map(i => <Box key={i} size={[0.2, 0.2, 3.0]} position={[-8 - i * 22, 10.4, -2]} mat={MAT.rust} />)}
@@ -1486,7 +1806,7 @@ export function PowerGen({ fleet = 'diesel', position = [-40, 0, -34], showLabel
         <Trailer length={12} width={2.6}>
           {/* diesel fuel tanker: barrel with domed ends, hose reel and pump cabinet at the rear */}
           <Cyl r={1.15} h={9.6} rotation={[0, 0, Math.PI / 2]} position={[0.3, D + 1.2, 0]} mat={MAT.paintWhite} name="PP-POWERGEN-FUELTRAILER" />
-          {[-4.5, 5.1].map((x, k) => <mesh key={k} position={[x, D + 1.2, 0]} rotation={[0, 0, k ? Math.PI / 2 : -Math.PI / 2]}><sphereGeometry args={[1.15, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial {...MAT.paintWhite} /></mesh>)}
+          {[-4.5, 5.1].map((x, k) => <mesh key={k} position={[x, D + 1.2, 0]} rotation={[0, 0, k ? Math.PI / 2 : -Math.PI / 2]}><sphereGeometry args={[1.15, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2]} /><Mat mat={MAT.paintWhite} /></mesh>)}
           {[-2.5, 3.0].map((x, k) => <Box key={'s' + k} size={[0.4, 1.2, 2.3]} position={[x, D + 0.6, 0]} mat={MAT.chassis} />)}
           <Box size={[1.2, 1.2, 2.0]} position={[-5.4, D + 0.6, 0]} mat={MAT.chassis} />
           <Cyl r={0.45} h={0.3} rotation={[Math.PI / 2, 0, 0]} position={[-5.4, D + 0.7, 1.15]} mat={MAT.darkSteel} />

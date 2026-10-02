@@ -5,7 +5,7 @@
 import { useMemo, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { terrainHeight } from './terrain.js';
-import { LITE } from './lighting.jsx';
+import { LITE, strataTexture } from './lighting.jsx';
 import { Sign } from './life.jsx';
 import { MAT } from './primitives.jsx';
 
@@ -167,10 +167,37 @@ export function Horizon({ terrain, pad, seed = 1 }) {
     }
     return out;
   }, [kind, terrain.relief, terrain.ground, terrain.vegColor, pad, seed]);
-  const mesaGeom = useMemo(() => new THREE.CylinderGeometry(0.42, 0.5, 1, 9), []);
-  const ridgeGeom = useMemo(() => new THREE.SphereGeometry(0.5, 9, 6), []);
+  // mesa: talus slope, stepped cliff, flat cap, with noise around the rim; ridge: a lumpy dome. Both carry the
+  // strata texture and smooth normals, so the horizon reads as rock rather than as a prism (Drop 23).
+  const mesaGeom = useMemo(() => {
+    const g = new THREE.CylinderGeometry(0.42, 0.56, 1, 36, 10);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const r0 = Math.hypot(x, z); if (r0 < 1e-4) continue;
+      const h = y + 0.5, a = Math.atan2(z, x);
+      const profile = h < 0.4 ? 0.56 - 0.1 * (h / 0.4) ** 1.6 : h < 0.9 ? 0.46 - 0.02 * (h - 0.4) / 0.5 - (Math.sin(h * 22) > 0.6 ? 0.012 : 0) : 0.44 - 0.02 * (h - 0.9) / 0.1;
+      const n = 1 + 0.09 * (Math.sin(a * 3 + h * 2) * 0.5 + Math.sin(a * 7 + 1.3) * 0.3 + Math.sin(a * 13 + h * 9) * 0.2);
+      const r = profile * n;
+      pos.setX(i, x / r0 * r); pos.setZ(i, z / r0 * r);
+    }
+    g.computeVertexNormals();
+    return g;
+  }, []);
+  const ridgeGeom = useMemo(() => {
+    const g = new THREE.SphereGeometry(0.5, 28, 14);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const a = Math.atan2(z, x), k = 1 + 0.12 * (Math.sin(a * 4 + y * 6) * 0.5 + Math.sin(a * 9 + 2) * 0.3 + Math.sin(y * 20 + a * 2) * 0.2);
+      pos.setX(i, x * k); pos.setZ(i, z * k); pos.setY(i, y * (1 + 0.06 * Math.sin(a * 5)));
+    }
+    g.computeVertexNormals();
+    return g;
+  }, []);
+  const strata = useMemo(() => strataTexture(), []);
   const treeGeom = useMemo(() => terrain.veg === 'pine' ? new THREE.ConeGeometry(0.5, 1, 6) : new THREE.SphereGeometry(0.5, 7, 5), [terrain.veg]);
-  return <Instanced geom={kind === 'treeline' ? treeGeom : kind === 'mesa' ? mesaGeom : ridgeGeom} mat={{ color: '#ffffff', roughness: 1, metalness: 0, flatShading: kind === 'mesa' }} items={items} shadow={false} />;
+  return <Instanced geom={kind === 'treeline' ? treeGeom : kind === 'mesa' ? mesaGeom : ridgeGeom} mat={{ color: '#ffffff', roughness: 1, metalness: 0, map: kind === 'treeline' ? undefined : strata || undefined }} items={items} shadow={false} />;
 }
 
 // ---------------------------------------------------------------- fence, cattle guard, gate sign
