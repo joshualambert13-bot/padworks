@@ -81,6 +81,8 @@ if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env
 p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
+// Drop 32: sound on for the whole walkthrough (synthesized Web Audio; errors in the voice mapping surface as console errors)
+await p.getByRole('button', { name: 'Muted' }).click(); await wait(800);
 await startJob(p);
 await p.selectOption('select', '4'); // speed 4x (first select is the speed control)
 await shot(p, '01-sim-rigup');
@@ -136,10 +138,19 @@ await p.getByRole('button', { name: 'Flowback' }).first().click(); await wait(10
 await p.getByRole('button', { name: 'Surface' }).click(); await wait(1000);
 await p.selectOption('select[title="Camera preset"]', 'pad'); await wait(3000);
 await shot(p, '12-sim-flowback-pad');
-// Drop 30: dusk preset (low western sun, light towers lit), then back to day
+// Drop 30/31: time of day cycles day -> dusk -> night -> day (dusk: low western sun; night: moon, tower spot lights)
 await p.getByRole('button', { name: 'Day' }).click(); await wait(3500);
 await shot(p, '12b-sim-flowback-dusk');
-await p.getByRole('button', { name: 'Dusk' }).click(); await wait(1500);
+await p.getByRole('button', { name: 'Dusk' }).click(); await wait(4500);
+await shot(p, '12c-sim-flowback-night');
+await p.getByRole('button', { name: 'Night' }).click(); await wait(1500);
+{
+  const snd = await p.evaluate(() => { const E = window.__padworksSound; if (!E) return null; const V = E.V; return { state: E.ctx.state, on: E.on, choke: +V.choke.gain.value.toFixed(3), pump: +V.pump.gain.value.toFixed(3) }; });
+  if (!snd || snd.state !== 'running' || !snd.on) errors.push('sound not running at flowback: ' + JSON.stringify(snd));
+  else if (snd.choke < 0.02) errors.push('flowback choke hiss silent: ' + JSON.stringify(snd));
+  console.log('sound at flowback', JSON.stringify(snd));
+  await p.getByRole('button', { name: 'Sound' }).click(); await wait(600);
+}
 await p.close();
 
 // ---------------- Library pages

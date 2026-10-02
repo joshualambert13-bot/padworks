@@ -91,6 +91,7 @@ export const MAT = {
   chassis: paint('#2a2d31', 0.7, 0.3),
   grating: metal('#3a3f45', 0.7, 0.7),
   glass:   metal('#20304a', 0.9, 0.06),
+  glassLit: { color: '#ffe6a8', emissive: '#ffd98a', emissiveIntensity: 0.9, metalness: 0.1, roughness: 0.3 },   // lit windows after dark (Drop 31)
   hose:    { color: '#24262a', metalness: 0.05, roughness: 0.85 },
   orange:  paint('#d9642a', 0.55),
   rust:    { color: '#6e4a2c', metalness: 0.35, roughness: 0.85 },

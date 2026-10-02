@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import { LESSONS, lessonById, nextLessonId } from './lessons.js';
 import { fromServer, postLessonResult, postJobSummary } from './progress.js';
+import { fracHeight, viscosityFactor, BARRIER_TOP, TARGET_HALF } from './geology.js';
 
 // ---------------------------------------------------------------------------------------------
 // Scoring. A job (or a lesson) starts at 100. Points come off for moves against the sequence and for
@@ -14,6 +15,7 @@ export const DEDUCT = {
   kickout: { pts: 10, label: 'Pumps kicked out at maximum treating pressure' },
   overpressure: { pts: 8, label: 'Pumped against a closed valve (overpressure or relief valve lift)' },
   screenout: { pts: 12, label: 'Screenout: too much sand for the rate and fluid' },
+  outOfZone: { pts: 5, label: 'Fracture grew out of zone: net pressure above the upper barrier contrast' },
 };
 // Time-to-recover targets for injected events, in seconds of simulation time
 export const EVENT_TARGETS = { misfire: 60, stuck: 45, valveFault: 30, sandOut: 40, prvLift: 45, screenout: 60 };
@@ -270,6 +272,9 @@ function initialStages(count) {
     plugSet: false,       // plug set toe-ward of this stage's perforations, or ball on this stage's seat
     fracExtent: 0,        // 0 to 1, fracture half-length as a fraction of the display maximum
     proppantFill: 0,      // 0 to 1 of the stage design proppant
+    fracTop: TARGET_HALF, // height reached above the lateral, display meters (Drop 33); a maximum, it never shrinks
+    fracBot: TARGET_HALF, // height reached below the lateral
+    outOfZone: false,     // fracture reached the sand above the upper barrier
     fracComplete: false,
     plugMilled: false,    // plug or seat milled, or dissolved
     clustersFired: 0,     // clusters shot, or sleeve ports open
@@ -686,7 +691,12 @@ export const useSim = create((set, get) => ({
         const targetNet = 250 + 550 * ext + 300 * fill + (screening ? 2500 : 0);
         netPsi += (targetNet - netPsi) * Math.min(1, dt * (screening ? 0.6 : 0.25));
         const wasComplete = st.fracComplete;
-        stages = stages.map((x, i) => i === s.stage ? { ...x, fracExtent: ext, proppantFill: fill, stageSlurryBbl: stageBbl, stageProppantLb: stageLb, fracComplete: ext >= 1 && fill >= 0.6 } : x);
+        // Height growth (Drop 33): the fracture reaches as high as net pressure has ever pushed it this stage
+        const hgt = fracHeight(netPsi, viscosityFactor(fluid));
+        const fracTop = Math.max(st.fracTop || TARGET_HALF, hgt.top), fracBot = Math.max(st.fracBot || TARGET_HALF, hgt.bot);
+        const outOfZone = st.outOfZone || fracTop >= BARRIER_TOP;
+        if (outOfZone && !st.outOfZone) { deduct('outOfZone', 'stage ' + (s.stage + 1) + ' at ' + Math.round(netPsi) + ' psi net'); get().addLog('Fracture height grew out of zone on stage ' + (s.stage + 1) + ': net pressure ' + Math.round(netPsi) + ' psi is above the upper barrier contrast. Fluid and sand are going into the sand above the target.'); }
+        stages = stages.map((x, i) => i === s.stage ? { ...x, fracExtent: ext, proppantFill: fill, stageSlurryBbl: stageBbl, stageProppantLb: stageLb, fracComplete: ext >= 1 && fill >= 0.6, fracTop, fracBot, outOfZone } : x);
         if (!wasComplete && stages[s.stage].fracComplete) { const rec = score.stages[s.stage] || { stage: s.stage }; score = { ...score, stages: { ...score.stages, [s.stage]: { ...rec, fracEnd: t, placed: fill } } }; }
         if (screening && !alarms.screenout) { alarms.screenout = true; get().addLog('SCREENOUT: treating pressure ramping at constant rate. Cut sand and flush.'); }
         if (!screening && netPsi < 1500) alarms.screenout = false;

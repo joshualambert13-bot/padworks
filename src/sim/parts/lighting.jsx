@@ -504,19 +504,51 @@ function domeGeometry(sky, haze, ground, zenith) {
 // from a basin's daytime colors so every basin gets its own evening.
 export const SUN_DIR = new THREE.Vector3(60, 90, 30).normalize();
 export const SUN = {
-  day:  { dir: SUN_DIR, color: '#fff3e0', intensity: 2.4, disk: [1.8, 1.7, 1.45], glow: '#ffe9b8', exposure: 1.05, ambient: 0.12, hemi: 0.25, liteHemi: 0.55 },
-  dusk: { dir: new THREE.Vector3(-90, 17, -35).normalize(), color: '#ffb469', intensity: 1.7, disk: [2.4, 1.25, 0.6], glow: '#ff9a4a', exposure: 0.95, ambient: 0.16, hemi: 0.34, liteHemi: 0.8 },
+  day:   { dir: SUN_DIR, color: '#fff3e0', intensity: 2.4, disk: [1.8, 1.7, 1.45], glow: '#ffe9b8', exposure: 1.05, ambient: 0.12, hemi: 0.25, liteHemi: 0.55, diskR: 0.035, glowR: 0.4, glowA: 0.4 },
+  dusk:  { dir: new THREE.Vector3(-90, 17, -35).normalize(), color: '#ffb469', intensity: 1.7, disk: [2.4, 1.25, 0.6], glow: '#ff9a4a', exposure: 0.95, ambient: 0.16, hemi: 0.34, liteHemi: 0.8, diskR: 0.045, glowR: 0.66, glowA: 0.55 },
+  // night (Drop 31): a moon 18 degrees up in the east-southeast (the orbit camera cannot look above level, so a high
+  // moon would never be seen) as the only directional light, bluish and weak; the
+  // light towers carry the pad (`TowerLights` in SurfaceScene). Exposure stays near day so the lit pools read.
+  night: { dir: new THREE.Vector3(45, 25, -60).normalize(), color: '#aebfe0', intensity: 0.45, disk: [0.92, 0.95, 1.0], glow: '#9fb0d8', exposure: 0.9, ambient: 0.07, hemi: 0.14, liteHemi: 0.42, diskR: 0.022, glowR: 0.2, glowA: 0.35, moon: true },
 };
 export const sunFor = (tod) => SUN[tod] || SUN.day;
+export const TODS = ['day', 'dusk', 'night'];
+export const nextTod = (tod) => TODS[(TODS.indexOf(tod) + 1) % TODS.length];
 const mix = (a, b, t) => '#' + new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString();
 const scale = (a, k) => '#' + new THREE.Color(a).multiplyScalar(k).getHexString();
 export function skyFor(terrain, tod) {
-  if (tod !== 'dusk') return terrain;
-  return { ...terrain, sky: mix(terrain.sky, '#4d4a78', 0.55), fog: mix(terrain.fog, '#e89a5a', 0.6), ground: scale(terrain.ground, 0.62), pad: scale(terrain.pad, 0.7) };
+  if (tod === 'dusk') return { ...terrain, sky: mix(terrain.sky, '#4d4a78', 0.55), fog: mix(terrain.fog, '#e89a5a', 0.6), ground: scale(terrain.ground, 0.62), pad: scale(terrain.pad, 0.7) };
+  if (tod === 'night') return { ...terrain, sky: mix(terrain.sky, '#070b18', 0.9), fog: mix(terrain.fog, '#0d1220', 0.88), ground: scale(terrain.ground, 0.4), pad: scale(terrain.pad, 0.48) };
+  return terrain;
+}
+// Night sky (Drop 31): 1,400 points on the upper hemisphere of the dome, brightness and a faint tint per star, drawn
+// as one Points object (one draw call, screen-size points so they never bloat when the camera looks up).
+let _starGeom = null;
+function starGeometry(radius) {
+  if (_starGeom) return _starGeom;
+  const n = 1400, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  let k = 12345; const rnd = () => { k = (k * 9301 + 49297) % 233280; return k / 233280; };
+  for (let i = 0; i < n; i++) {
+    const u = rnd(), v = rnd(); const el = Math.asin(0.03 + 0.97 * u), az = v * Math.PI * 2;
+    pos[i * 3] = Math.cos(el) * Math.cos(az) * radius; pos[i * 3 + 1] = Math.sin(el) * radius; pos[i * 3 + 2] = Math.cos(el) * Math.sin(az) * radius;
+    const b = 0.35 + 0.65 * rnd() ** 2.2, warm = rnd();
+    col[i * 3] = b * (warm > 0.8 ? 1.0 : 0.88); col[i * 3 + 1] = b * 0.92; col[i * 3 + 2] = b * (warm > 0.8 ? 0.8 : 1.0);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  _starGeom = g; return g;
+}
+function Stars({ radius }) {
+  const geom = useMemo(() => starGeometry(radius), [radius]);
+  return (
+    <points geometry={geom} frustumCulled={false}>
+      <pointsMaterial size={2.0} sizeAttenuation={false} vertexColors transparent opacity={0.95} fog={false} toneMapped={false} depthWrite={false} />
+    </points>
+  );
 }
 function DomeMesh({ terrain, radius, sun = true, intensity = 1, tod = 'day' }) {
   const S = sunFor(tod);
-  const zenith = useMemo(() => '#' + new THREE.Color(terrain.sky).lerp(new THREE.Color(tod === 'dusk' ? '#1e2250' : '#2f5fa8'), 0.55).getHexString(), [terrain.sky, tod]);
+  const zenith = useMemo(() => '#' + new THREE.Color(terrain.sky).lerp(new THREE.Color(tod === 'night' ? '#02040a' : tod === 'dusk' ? '#1e2250' : '#2f5fa8'), tod === 'night' ? 0.7 : 0.55).getHexString(), [terrain.sky, tod]);
   const geom = useMemo(() => domeGeometry(terrain.sky, terrain.fog, terrain.ground, zenith), [terrain.sky, terrain.fog, terrain.ground, zenith]);
   const sunPos = S.dir.clone().multiplyScalar(radius * 0.98);
   return (
@@ -526,9 +558,10 @@ function DomeMesh({ terrain, radius, sun = true, intensity = 1, tod = 'day' }) {
       </mesh>
       {sun && (
         <>
-          <mesh position={sunPos}><sphereGeometry args={[radius * (tod === 'dusk' ? 0.045 : 0.035), 12, 8]} /><meshBasicMaterial color={new THREE.Color(...S.disk)} fog={false} toneMapped={false} /></mesh>
+          <mesh position={sunPos}><sphereGeometry args={[radius * S.diskR, 12, 8]} /><meshBasicMaterial color={new THREE.Color(...S.disk)} fog={false} toneMapped={false} /></mesh>
           {/* glow quad sits short of the dome so its corners stay inside the sphere (a corner outside fails the depth test and clips the glow to a polygon) */}
-          <sprite position={S.dir.clone().multiplyScalar(radius * (tod === 'dusk' ? 0.9 : 0.95))} scale={[radius * (tod === 'dusk' ? 0.66 : 0.4), radius * (tod === 'dusk' ? 0.66 : 0.4), 1]}><spriteMaterial map={glowTexture()} color={S.glow} transparent opacity={tod === 'dusk' ? 0.55 : 0.4} blending={THREE.AdditiveBlending} fog={false} toneMapped={false} depthWrite={false} /></sprite>
+          <sprite position={S.dir.clone().multiplyScalar(radius * (tod === 'dusk' ? 0.9 : 0.95))} scale={[radius * S.glowR, radius * S.glowR, 1]}><spriteMaterial map={glowTexture()} color={S.glow} transparent opacity={S.glowA} blending={THREE.AdditiveBlending} fog={false} toneMapped={false} depthWrite={false} /></sprite>
+          {S.moon && <Stars radius={radius * 0.96} />}
         </>
       )}
     </group>

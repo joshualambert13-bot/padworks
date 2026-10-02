@@ -1158,14 +1158,14 @@ export function WaterTanks({ position, count = 8, showLabels }) {
   );
 }
 
-export function DataVan({ position, showLabels }) {
+export function DataVan({ position, showLabels, lit = false }) {
   const D = 1.18;
   return (
     <Trailer length={13.4} width={2.8} position={position} rotation={[0, 0, 0]} name="PP-DATAVAN">
       {/* office body with a window band on the pad side, two roof air conditioners, entry stair, generator, antenna mast */}
       <RBox r={0.12} size={[12.4, 2.7, 2.7]} position={[-0.2, D + 1.35, 0]} mat={MAT.paintWhite} />
       <Box size={[12.5, 0.12, 2.8]} position={[-0.2, D + 2.72, 0]} mat={MAT.chassis} />
-      <Box size={[10.5, 0.8, 0.05]} position={[-0.6, D + 1.7, 1.36]} mat={MAT.glass} />
+      <Box size={[10.5, 0.8, 0.05]} position={[-0.6, D + 1.7, 1.36]} mat={lit ? MAT.glassLit : MAT.glass} />
       {[-4.0, -1.5, 1.0, 3.5].map((x, i) => <Box key={i} size={[0.06, 0.9, 0.06]} position={[x, D + 1.7, 1.37]} mat={MAT.chassis} />)}
       <Box size={[0.9, 2.1, 0.06]} position={[5.2, D + 1.1, 1.37]} mat={MAT.chassis} />
       <Stair steps={4} rise={0.3} run={0.32} width={0.9} position={[6.4, 0, 1.0]} rotation={[0, Math.PI, 0]} />

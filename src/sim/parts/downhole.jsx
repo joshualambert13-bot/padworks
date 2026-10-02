@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { useSim } from '../store.js';
 import { Label } from './primitives.jsx';
 import { rockTexture, fractureAlpha, turbulenceTexture, LITE } from './lighting.jsx';
+import { BEDS, TARGET_HALF } from '../geology.js';
 
 export const LATERAL = { heelX: -16, toeX: 16, casingR: 0.5, holeR: 0.68 };
 const count = () => useSim.getState().stages.length;
@@ -17,17 +18,7 @@ export const clusterX = (i, c) => { const n = clusters(); const span = stageLen(
 export const plugX = (i) => LATERAL.toeX - i * stageLen() - 0.45;                          // plug toe-ward of stage i perfs (between stage i and i-1)
 export const sleeveX = (i) => stageX(i);                                                    // frac sleeve sub at the stage center
 
-const LAYERS = [
-  { y: 4.8, h: 1.4, color: '#8c7a5e', kind: 'sand' },
-  { y: 3.5, h: 1.2, color: '#5e5040', kind: 'shale' },
-  { y: 2.3, h: 1.2, color: '#9a8a66', kind: 'sand' },
-  { y: 1.25, h: 0.9, color: '#6f7a84', kind: 'lime' },
-  { y: 0, h: 1.6, color: '#3f4a55', kind: 'shale', bore: true },   // target: a darker shale band around the lateral; the bore is cut out of its section face
-  { y: -1.25, h: 0.9, color: '#6f7a84', kind: 'lime' },
-  { y: -2.3, h: 1.2, color: '#8a7a5a', kind: 'sand' },
-  { y: -3.5, h: 1.2, color: '#55483a', kind: 'shale' },
-  { y: -4.8, h: 1.4, color: '#5a4e40', kind: 'sand' },
-];
+const LAYERS = BEDS;   // bed stack and colors live in geology.js (Drop 33) so the height model and the picture agree
 
 // The target band with the borehole cut out of it (Drop 30): a rectangle in the section plane with a half-round notch
 // of the hole radius, extruded along the lateral, so the rock meets the cement sheath and the section face sits at
@@ -145,20 +136,24 @@ function fracColor(net) {
 // Bi-wing fracture at one cluster: a thin main plane plus two smaller branches, height limited by the layers above and below.
 // `settled`: pumping is over and the fracture has closed on its proppant, so the pressure glow is gone and the
 // wings read as a faint propped plane rather than a lit one.
-function Fracture({ extent, color, seed, settled = false }) {
+// Height (Drop 33): `top` and `bot` are the reach above and below the lateral in display meters, from the stage's
+// record of the highest net pressure it has seen, so the wing stays in the target band until the barrier contrast
+// is exceeded and keeps its height after the pressure comes off. Half-length still follows `extent`.
+function Fracture({ extent, color, seed, settled = false, top = TARGET_HALF, bot = TARGET_HALF }) {
   const scale = 7 * extent;
   const branch = [0.55, 0.4];
   const alpha = useMemo(() => fractureAlpha(), []);
   const c = settled ? '#6f8aa6' : color;
   const glow = settled ? 0.15 : 1.1, op = settled ? 0.28 : 0.55;
+  const hgt = Math.min(top + bot, scale * 2 * 0.9), mid = (top - bot) / 2;   // a short young fracture is not yet tall either
   return (
     <group>
-      <mesh rotation={[0, Math.PI / 2, 0]} scale={[1, 0.5, 1]}>
-        <planeGeometry args={[scale * 2, scale * 2]} />
+      <mesh rotation={[0, Math.PI / 2, 0]} position={[0, mid, 0]}>
+        <planeGeometry args={[scale * 2, hgt]} />
         <meshStandardMaterial color={c} emissive={c} emissiveIntensity={glow} transparent opacity={op} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       {branch.map((b, i) => (
-        <mesh key={i} rotation={[0, Math.PI / 2 + (i ? -0.32 : 0.28) * (seed % 2 ? 1 : -1), 0.12 * (i ? -1 : 1)]} scale={[1, 0.42, 1]} position={[0.15 * (i ? -1 : 1), 0, 0]}>
+        <mesh key={i} rotation={[0, Math.PI / 2 + (i ? -0.32 : 0.28) * (seed % 2 ? 1 : -1), 0.12 * (i ? -1 : 1)]} scale={[1, Math.max(0.05, hgt * 0.8 / (scale * b * 2 || 1)), 1]} position={[0.15 * (i ? -1 : 1), mid, 0]}>
           <planeGeometry args={[scale * b * 2, scale * b * 2]} />
           <meshStandardMaterial color={c} emissive={c} emissiveIntensity={glow * 0.7} transparent opacity={op * 0.7} alphaMap={alpha || undefined} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
@@ -339,8 +334,8 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, 
           <SleeveSub open={stage.perforated} ballSeated={stage.plugSet && !stage.plugMilled} seating={seating} dissolve={dissolve} toe={stage.index === 0} ports={n} showLabels={showLabels} index={stage.index} />
           {stage.perforated && stage.fracExtent > 0 && Array.from({ length: Math.max(1, Math.min(3, Math.round(n / 2))) }).map((_, c, arr) => (
             <group key={c} position={[(c - (arr.length - 1) / 2) * 0.5, 0, 0]}>
-              <Fracture extent={stage.fracExtent * (1 - 0.12 * c)} color={color} seed={stage.index + c} settled={settled} />
-              <Proppant extent={stage.fracExtent * (1 - 0.12 * c)} fill={stage.proppantFill} />
+              <Fracture extent={stage.fracExtent * (1 - 0.12 * c)} color={color} seed={stage.index + c} settled={settled} top={stage.fracTop} bot={stage.fracBot} />
+              <Proppant extent={stage.fracExtent * (1 - 0.12 * c)} fill={stage.proppantFill} top={stage.fracTop} bot={stage.fracBot} />
             </group>
           ))}
         </group>
@@ -354,8 +349,8 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, 
               <PerfCluster fired={fired} />
               {fired && stage.fracExtent > 0 && (
                 <group>
-                  <Fracture extent={stage.fracExtent * stressShadow} color={color} seed={stage.index * 7 + c} settled={settled} />
-                  <Proppant extent={stage.fracExtent * stressShadow} fill={stage.proppantFill} />
+                  <Fracture extent={stage.fracExtent * stressShadow} color={color} seed={stage.index * 7 + c} settled={settled} top={stage.fracTop} bot={stage.fracBot} />
+                  <Proppant extent={stage.fracExtent * stressShadow} fill={stage.proppantFill} top={stage.fracTop} bot={stage.fracBot} />
                 </group>
               )}
             </group>
@@ -378,7 +373,7 @@ export function Stage({ stage, isCurrent, netPsi, showLabels, sleeve, openhole, 
 // disk that grows with the fracture; `fill` is how much of the pack has been placed. One draw call per wing.
 const GRAIN = new THREE.IcosahedronGeometry(0.03, 0);
 const PROPPANT_MAX = 240;
-function Proppant({ extent, fill }) {
+function Proppant({ extent, fill, top = TARGET_HALF, bot = TARGET_HALF }) {
   const ref = useRef();
   const seeds = useMemo(() => Array.from({ length: PROPPANT_MAX }, () => ({ r: 0.12 + 0.88 * Math.sqrt(Math.random()), a: Math.random() * Math.PI * 2, x: (Math.random() - 0.5) * 0.08, s: 0.7 + Math.random() * 0.6, c: 0.8 + Math.random() * 0.3, q: new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random() * 3, Math.random() * 3, 0)) })), []);
   const colors = useMemo(() => { const arr = new Float32Array(PROPPANT_MAX * 3); seeds.forEach((g, i) => { arr[i * 3] = g.c; arr[i * 3 + 1] = g.c * (0.9 + (g.s - 0.7) * 0.1); arr[i * 3 + 2] = g.c * 0.68; }); return arr; }, [seeds]);
@@ -386,12 +381,14 @@ function Proppant({ extent, fill }) {
   useFrame(() => {
     const m = ref.current; if (!m) return;
     const sc = 7 * extent;
-    if (m.userData.extent === extent && m.userData.n === n) return;
-    m.userData.extent = extent; m.userData.n = n;
+    const hTop = Math.min(top, sc * 0.9), hBot = Math.min(bot, sc * 0.9);
+    if (m.userData.extent === extent && m.userData.n === n && m.userData.hTop === hTop && m.userData.hBot === hBot) return;
+    m.userData.extent = extent; m.userData.n = n; m.userData.hTop = hTop; m.userData.hBot = hBot;
     const d = new THREE.Object3D();
     for (let i = 0; i < PROPPANT_MAX; i++) {
       const g = seeds[i];
-      d.position.set(g.x, Math.sin(g.a) * g.r * 0.5 * sc, Math.cos(g.a) * g.r * sc);
+      const sy = Math.sin(g.a);
+      d.position.set(g.x, sy * g.r * (sy > 0 ? hTop : hBot) * 0.92, Math.cos(g.a) * g.r * sc);
       d.quaternion.copy(g.q); d.scale.setScalar(g.s); d.updateMatrix(); m.setMatrixAt(i, d.matrix);
     }
     m.count = n; m.instanceMatrix.needsUpdate = true;

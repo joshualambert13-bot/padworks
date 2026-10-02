@@ -79,6 +79,20 @@ function focusView(f, c) {
     default: return null;
   }
 }
+const TOWERS = (rowLen) => [[-20, -40], [-56, 50], [36, rowLen + 40], [-40, rowLen + 44]];
+// Night (Drop 31): one shadowless spot light at each light tower's lamp head, aimed a little past halfway to the pad
+// center so the pools overlap on the working area. Spot lights cost per-fragment shader work in every material, so
+// they exist only while the night preset is on; the first switch recompiles the materials (a short hitch), after
+// which the frame cost is steady.
+function TowerLights({ towers, center }) {
+  const targets = useMemo(() => towers.map(() => new THREE.Object3D()), [towers.length]);
+  return towers.map(([x, z], i) => (
+    <group key={i}>
+      <primitive object={targets[i]} position={[x + (center[0] - x) * 0.55, 0, z + (center[1] - z) * 0.55]} />
+      <spotLight position={[x - 0.6, 10.2, z]} target={targets[i]} color="#ffeec4" intensity={115} distance={170} angle={0.78} penumbra={0.6} decay={1.5} />
+    </group>
+  ));
+}
 function FocusCamera({ ctx }) {
   const focus = useSim(s => s.ui.focus);
   const camera = useThree(s => s.camera);
@@ -161,7 +175,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   return (
     <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMappingExposure: 1.05 }}>
       <SkyDome terrain={terrain} tod={tod} />
-      <Clouds seed={basin.id.length} tint={tod === 'dusk' ? '#f2a988' : '#ffffff'} />
+      <Clouds seed={basin.id.length} tint={tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />
       <SceneEnvironment terrain={terrain} tod={tod} />
       <Exposure value={sun.exposure} />
       {LITE && <hemisphereLight args={[terrain.sky, terrain.ground, sun.liteHemi]} />}
@@ -222,10 +236,11 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <SandBoxes position={[-80, 0, -2]} showLabels={showLabels} />
       {(s.setup.fleet !== 'diesel' && s.setup.fleet !== 'grid') && <FuelTrailers position={[12, 0, -42.5]} count={Math.min(8, 3 + Math.round(spread.pumps / 3))} showLabels={showLabels} />}
       <ParkedPickups position={[30, 0, -36]} count={7} />
-      {[[-20, -40], [-56, 50], [36, rowLen + 40], [-40, rowLen + 44]].map(([x, z], i) => <LightTower key={i} position={[x, 0, z]} lit={tod === 'dusk'} />)}
+      {TOWERS(rowLen).map(([x, z], i) => <LightTower key={i} position={[x, 0, z]} lit={tod !== 'day'} />)}
+      {tod === 'night' && <TowerLights towers={TOWERS(rowLen)} center={[-6, rowLen / 2]} />}
       <WaterTanks position={[-80, 0, 36]} showLabels={showLabels} />
       <WaterTransfer tanks={[-80, 0, 36]} count={8} to={[MISSILE_X + 8 + 1.55, 1.48, bZ + 0.5 + 2.0]} showLabels={showLabels} />
-      <DataVan position={[-14, 0, -30]} showLabels={showLabels} />
+      <DataVan position={[-14, 0, -30]} showLabels={showLabels} lit={tod === 'night'} />
       {/* accumulator unit outside the red zone with one remote hydraulic stand per tree-and-leg pair on an arc in front of it; supply daisy-chains from the skid stand to stand, and each stand's control hoses run on the ground to its tree trunk (along the containment) and its zipper leg trunk (along the pump side) */}
       <Accumulator position={[ACC[0], 0, ACC[1]]} showLabels={showLabels} />
       {stands.map((st, i) => (

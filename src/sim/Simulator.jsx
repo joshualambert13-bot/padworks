@@ -1,6 +1,7 @@
-import { Suspense } from 'react';
-import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset } from 'lucide-react';
-import { LITE, setLite } from './parts/lighting.jsx';
+import { Suspense, useEffect, useState } from 'react';
+import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX } from 'lucide-react';
+import { soundOn, toggleSound, onSoundChange, armSoundOnGesture, disableSound } from './sound.js';
+import { LITE, setLite, nextTod } from './parts/lighting.jsx';
 import { useFx, fxOn, FX_LIMIT_MS } from './parts/effects.jsx';
 import { Wand2 } from 'lucide-react';
 import SurfaceScene from './SurfaceScene.jsx';
@@ -43,7 +44,11 @@ export default function Simulator() {
   const setView = (view) => setUi({ view });
   const setShowLabels = (showLabels) => setUi({ showLabels });
   const tod = ui.tod || 'day';
-  const dusk = tod === 'dusk';
+  const TOD_UI = { day: { Icon: Sun, label: 'Day', title: 'Midday sun. Click for dusk: low warm sun, light towers lit.' }, dusk: { Icon: Sunset, label: 'Dusk', title: 'Dusk: low sun in the west, light towers lit. Click for night.' }, night: { Icon: Moon, label: 'Night', title: 'Night: moonlight, light towers carrying the pad, data van lit. Click for day.' } };
+  const todUi = TOD_UI[tod] || TOD_UI.day;
+  // sound (Drop 32): on only after a click; a remembered preference re-arms on the first gesture; off when leaving the simulator
+  const [sound, setSound] = useState(soundOn());
+  useEffect(() => { const off = onSoundChange(setSound); const disarm = armSoundOnGesture(); return () => { off(); disarm(); disableSound(false); }; }, []);
   const setPreset = (preset) => setUi({ preset });
   const setMobileTab = (mobileTab) => setUi({ mobileTab });
   const phase = useSim(s => s.phase);
@@ -83,7 +88,8 @@ export default function Simulator() {
           </select>
         )}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
-        {view === 'surface' && <button className="btn flex items-center gap-1" title={dusk ? 'Dusk: low sun in the west, light towers lit. Click for midday.' : 'Midday sun. Click for dusk: low warm sun, light towers lit.'} onClick={() => setUi({ tod: dusk ? 'day' : 'dusk' })}>{dusk ? <Sunset size={14} /> : <Sun size={14} />}{dusk ? 'Dusk' : 'Day'}</button>}
+        {view === 'surface' && <button className="btn flex items-center gap-1" title={todUi.title} onClick={() => setUi({ tod: nextTod(tod) })}><todUi.Icon size={14} />{todUi.label}</button>}
+        <button className={'btn flex items-center gap-1 ' + (sound ? '' : 'text-mute')} title={sound ? 'Sound on: pumps, wireline, coil, flowback, alarms, valve actuation. Click to mute.' : 'Sound off. Click for pad sound (synthesized; no downloads).'} onClick={toggleSound}>{sound ? <Volume2 size={14} /> : <VolumeX size={14} />}{sound ? 'Sound' : 'Muted'}</button>
         <button className="btn flex items-center gap-1" title={LITE ? 'Lite rendering: hard shadows, no sky reflections. Click for full quality (reloads the page).' : 'Full rendering: sky reflections, soft shadows, ground detail. Click for lite mode on a slow machine (reloads the page).'} onClick={() => setLite(!LITE)}><Sparkles size={14} />{LITE ? 'Lite' : 'Full'}</button>
         {!LITE && <button className={'btn flex items-center gap-1 ' + (fxLive ? '' : 'text-mute')} title={fxLive ? 'Effects on: ambient occlusion and bloom. Click to turn them off.' : fx.auto ? 'Effects turned off automatically: this machine averaged ' + fx.frameMs + ' ms per frame with them on (limit ' + FX_LIMIT_MS + ' ms). Click to try again.' : 'Effects off. Click for ambient occlusion and bloom.'} onClick={() => fx.setWanted(!fxLive)} data-action="effects"><Wand2 size={14} />{fxLive ? 'Effects' : 'Effects off'}</button>}
       </div>

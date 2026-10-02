@@ -2,6 +2,7 @@ import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, Ch
 import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, LIFTS, EVENTS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals, scoreOf } from '../store.js';
 import { lessonById, nextLessonId, stepValve } from '../lessons.js';
 import SetupPanel from './SetupPanel.jsx';
+import { heightZone, BARRIER_TOP } from '../geology.js';
 
 // Score chip: points and grade for the job so far, and the way into the session summary
 export function ScoreChip({ s }) {
@@ -305,6 +306,7 @@ export default function ControlPanel() {
         <Readout label="Slurry density" value={s.slurryPpg.toFixed(2)} unit="ppg" />
         <Readout label="Bottomhole" value={s.bhtpPsi.toFixed(0)} unit="psi" />
         <Readout label="Net pressure" value={s.netPsi.toFixed(0)} unit="psi" warn={s.netPsi > 2000} />
+        <Readout label="Frac height" value={heightZone((s.stages[s.stage] || {}).fracTop || 0).label} unit={((s.stages[s.stage] || {}).fracTop || 0) >= BARRIER_TOP ? 'into sand above' : 'target band'} warn={heightZone((s.stages[s.stage] || {}).fracTop || 0).warn} />
         <Readout label="Friction" value={s.frictionPsi.toFixed(0)} unit="psi" />
         <Readout label="Hydrostatic" value={s.hydroPsi.toFixed(0)} unit="psi" />
         <Readout label="Slurry pumped" value={s.cumSlurryBbl.toFixed(0)} unit="bbl" />

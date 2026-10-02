@@ -83,7 +83,7 @@ export const LESSONS = [
     ],
   },
   {
-    id: 'L4', n: 4, title: 'Screenout', targetSec: 360, exempt: ['screenout'],
+    id: 'L4', n: 4, title: 'Screenout', targetSec: 360, exempt: ['screenout', 'outOfZone'],
     blurb: 'Cause a screenout on purpose, then recover: sand off, flush, watch net pressure fall, and stage sand back in lower.',
     setup: { basin: 'permian-delaware' }, pad: { wells: 2, mode: 'zipper' },
     prep: pumpingOnStageOne,
