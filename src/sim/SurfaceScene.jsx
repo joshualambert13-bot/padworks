@@ -4,9 +4,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useSim, padRoles, nextSteps, basinOf, spreadSizing } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
-import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, installSnowPatch, SNOW, Flurries, LITE } from './parts/lighting.jsx';
+import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, installSnowPatch, SNOW, GRIME, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
+import { Totes, IronRack, Cones, Barricades, Welfare, FuelCube, SafetyPoint, HoseCoils } from './parts/padlife.jsx';
+import { useHdri } from './parts/hdri.js';
+import { installTextureSets } from './parts/textures.js';
 installSnowPatch();
-import { Effects } from './parts/effects.jsx';
+import { Effects, Diagnostics } from './parts/effects.jsx';
 import { ContextLoss } from './parts/stability.jsx';
 import { Crew, Walker, Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
@@ -42,8 +45,13 @@ function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = fa
 }
 
 // Render counters for the headless checks (window.__padworksStats), no cost when nobody reads them.
+// Test hooks (the draw counters moved into Diagnostics in effects.jsx, Drop 45: one reader, one reset per frame)
 function RenderStats() {
-  useFrame((state) => { const r = state.gl.info.render; window.__padworksStats = { calls: r.calls, triangles: r.triangles, geometries: state.gl.info.memory.geometries, frame: state.gl.info.render.frame }; window.__padworksScene = state.scene; window.__padworksCam = () => ({ pos: state.camera.position.toArray(), target: state.controls ? state.controls.target.toArray() : null }); window.__padworksView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
+  useFrame((state) => {
+    window.__padworksScene = state.scene;
+    window.__padworksCam = () => ({ pos: state.camera.position.toArray(), target: state.controls ? state.controls.target.toArray() : null });
+    window.__padworksView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } };
+  });
   return null;
 }
 function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig }) {
@@ -103,13 +111,24 @@ function TowerLights({ towers }) {
     </group>
   ));
 }
-// Sets the shared snow uniform for this scene's draws only (the downhole section and the viewer stay bare)
+// Lamp-head glow at each tower after dark (Drop 48): one additive sprite per tower, the haze around a metal halide
+// head that bloom gives in Full and nothing gave in Lite
+function LampGlow({ towers, strength = 1 }) {
+  const tex = useMemo(() => glowTexture(), []);
+  return towers.map(([x, z], i) => (
+    <sprite key={i} position={[x - 0.6, 10.3, z]} scale={[4.5 * strength, 4.5 * strength, 1]}>
+      <spriteMaterial map={tex} color="#ffe9b0" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} fog={false} />
+    </sprite>
+  ));
+}
+// Sets the shared snow and grime uniforms for this scene's draws only (the downhole section and the viewer stay
+// bare and clean)
 function SnowSetter({ amount }) {
   const scene = useThree(st => st.scene);
   useEffect(() => {
-    scene.onBeforeRender = () => { SNOW.value = amount; };
-    scene.onAfterRender = () => { SNOW.value = 0; };
-    return () => { scene.onBeforeRender = () => {}; scene.onAfterRender = () => {}; SNOW.value = 0; };
+    scene.onBeforeRender = () => { SNOW.value = amount; GRIME.value = 1; };
+    scene.onAfterRender = () => { SNOW.value = 0; GRIME.value = 0; };
+    return () => { scene.onBeforeRender = () => {}; scene.onAfterRender = () => {}; SNOW.value = 0; GRIME.value = 0; };
   }, [scene, amount]);
   return null;
 }
@@ -150,6 +169,7 @@ function partnerValves(role) {
 
 export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const s = useSim();
+  useEffect(() => { installTextureSets(); }, []);   // optional photo texture sets in public/textures (Drop 44)
   const pumping = s.pumpsOnline && s.pumpRate > 0 && s.phase !== 'setup';
   const bore = BORE_M[s.pad.bore] || 0.18;
   const d = treeDims(bore);
@@ -160,6 +180,8 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const season = useSim(st => st.ui.season) || 'summer';
   const winter = season === 'winter';
   const snow = winter ? (basin.snow == null ? 0.6 : basin.snow) : 0;
+  const hdriStatus = useHdri(st => st[tod]);
+  const hdri = hdriActive(tod, season, hdriStatus);   // photographic sky in place of the atmosphere model (Drop 47)
   const terrain = seasonSky(skyFor(basin.terrain, tod), season, tod);
   const sun = seasonSun(sunFor(tod), season);
   PLUME.boost = winter ? 1.7 : 1;
@@ -170,6 +192,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const wellZ = useMemo(() => roles.map((_, i) => i * WELL_SPACING), [roles.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const rowCenter = (wellZ[0] + wellZ[wellZ.length - 1]) / 2;
   const rowLen = wellZ[wellZ.length - 1] - wellZ[0];
+  const coneSpots = useMemo(() => [...Array.from({ length: 8 }, (_, i) => [-34 + i * 6.3, -15.6]), ...Array.from({ length: 8 }, (_, i) => [-34 + i * 6.3, rowLen + 11.6])], [rowLen]);   // red zone corners (Drop 48)
   const treeTop = [0, d.topY, 0];
   const lubTop = lubricatorTopY(d, bore);
   // pumps: nose-in on both sides of the missile, one per pitch
@@ -194,6 +217,38 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const water = basin.water || 'tanks';
   const towerTransforms = useMemo(() => TOWERS(rowLen, bZ).map(([x, z, ax, az]) => ({ position: [x, 0, z], rotation: [0, Math.atan2(ax - x, az - z), 0] })), [rowLen, bZ]);
   const pad = useMemo(() => ({ x0: water === 'pit' ? -138 : -84, x1: 44, z0: -44, z1: Math.max(rowLen + 50, bZ + 22) }), [rowLen, bZ, water]);
+  // Pad stain layout (Drop 44): truck lanes, compaction, drips and spills drawn from where things actually are
+  const sandMode = s.setup.sand === 'boxes' ? 'boxes' : 'silos';
+  const fuelCount = (s.setup.fleet !== 'diesel' && s.setup.fleet !== 'grid') ? Math.min(8, 3 + Math.round(spread.pumps / 3)) : 0;
+  const stainLayout = useMemo(() => {
+    const lanes = [
+      [[pad.x1 + 2, -32], [38, -32], [38, rowLen + 36], [-62, rowLen + 36], [-62, -36], [-4, -36]],   // entrance, east service loop, north and west legs
+      [[-14, -33], [-14, bZ - 6]],                                                                     // east pump lane (trucks back in from here)
+      [[-47, -33], [-47, bZ - 19], [Math.max(pad.x0 + 4, -88), bZ - 19]],                              // west pump lane, on to the sand and water side
+      [[26, -32], [26, rowLen + 36]],                                                                  // wellhead service lane (wireline, coil, flowback)
+    ];
+    const spots = [];
+    pumps.forEach(p => {
+      spots.push({ x: p.x + p.side * 3.0, z: p.z, rx: 2.4, rz: 1.2, a: 0.32, drips: 14 });              // oil under the power end
+      spots.push({ x: p.x, z: p.z, rx: 6.5, rz: 1.5, a: 0.12 });                                         // compaction under the trailer
+    });
+    spots.push({ x: MISSILE_X, z: bZ, rx: 7, rz: 4.5, a: 0.22 });                                         // slurry around the blender
+    spots.push({ x: MISSILE_X, z: bZ - 5, rx: 3.5, rz: 2, a: 0.16, light: true });                        // dry sand at the hopper
+    spots.push({ x: MISSILE_X + 8, z: bZ + 0.5, rx: 4.5, rz: 3, a: 0.2 });                                // hydration unit
+    spots.push({ x: MISSILE_X + 16, z: bZ + 1, rx: 3, rz: 2, a: 0.16, drips: 8 });                        // chemical add
+    for (let i = 0; i < fuelCount; i++) spots.push({ x: 7.5, z: -39.5 + i * 3.6, rx: 1.4, rz: 0.9, a: 0.2, drips: 5 });   // diesel at the fuel row
+    spots.push({ x: -19.5, z: -30, rx: 1.6, rz: 1.2, a: 0.25, drips: 6 });                                // data van generator
+    spots.push({ x: 14, z: 22 + rowLen, rx: 9, rz: 5, a: 0.26 });                                         // flowback tanks and choke
+    wellZ.forEach(z => spots.push({ x: 0, z, rx: 3.2, rz: 3.2, a: 0.18 }));                               // cellar ring
+    if (water === 'tanks' || water === 'heated') spots.push({ x: -80, z: 31, rx: 12, rz: 2.5, a: 0.2 });   // under the tank manifolds
+    if (water === 'ast') spots.push({ x: -65, z: 29, rx: 14, rz: 2.5, a: 0.18 });
+    if (water === 'pit') spots.push({ x: PIT_POS[0] + 24, z: PIT_POS[2], rx: 4, rz: 2.5, a: 0.18 });      // bank pump
+    if (sandMode === 'boxes') { spots.push({ x: MISSILE_X - 50, z: bZ - 12, rx: 8, rz: 5, a: 0.2, light: true }); spots.push({ x: MISSILE_X - 19.6 - 5.75, z: bZ - 6, rx: 5, rz: 3, a: 0.18, light: true }); }
+    else spots.push({ x: MISSILE_X - 19.6, z: bZ - 6, rx: 7, rz: 4, a: 0.2, light: true });               // spilled sand at the silos or boxes
+    const rects = [{ x0: 26, z0: -38.5, x1: 34, z1: -36 + 7 * 3.2, a: 0.1 }];                             // pickups
+    if (fuelCount) rects.push({ x0: 5.5, z0: -41, x1: 18.5, z1: -39.5 + fuelCount * 3.6 - 1.8, a: 0.08 });
+    return { pad, lanes, spots, rects };
+  }, [pad, rowLen, bZ, pumps.length, missileZ, perSide, wellZ, water, sandMode, fuelCount]); // eslint-disable-line react-hooks/exhaustive-deps
   const zipperFrontZ = rowCenter - (rowLen + 6.0) / 2;
   const ACC = [-2, -22];
   const treatingLine = useMemo(() => [[MISSILE_X, md.hpY, missileOutletZ], [MISSILE_X, md.hpY, missileOutletZ - 1.4], [MISSILE_X + 2, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, zd.headerY, zipperFrontZ + 0.9 - zd.ftf / 2 - 0.1]], [md.hpY, missileOutletZ, zd.headerY, zd.ftf, zipperFrontZ]);
@@ -201,24 +256,27 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const stands = useMemo(() => standLayout(roles.length, ACC, 5), [roles.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMappingExposure: 1.05 }}>
-      <SkyDome terrain={terrain} tod={tod} />
-      <Clouds seed={basin.id.length} count={winter ? 18 : 9} tint={winter ? (tod === 'night' ? '#141822' : '#c9cfd8') : tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />
+    <Canvas shadows={LITE ? true : { type: THREE.PCFShadowMap }} dpr={[1, 1.5]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05 * 1.25 }}>
+      <HdriSky tod={tod} season={season} />
+      {!hdri && <SkyDome terrain={terrain} tod={tod} season={season} />}
+      {LITE && <Clouds seed={basin.id.length} count={winter ? 18 : 9} tint={winter ? (tod === 'night' ? '#141822' : '#c9cfd8') : tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />}
       <SnowSetter amount={snow} />
       {winter && snow >= 0.5 && <Flurries density={snow} />}
-      <SceneEnvironment terrain={terrain} tod={tod} />
+      {!hdri && <SceneEnvironment terrain={terrain} tod={tod} season={season} />}
       <Exposure value={sun.exposure} />
       {LITE && <hemisphereLight args={[terrain.sky, terrain.ground, sun.liteHemi]} />}
       <fog attach="fog" args={[terrain.fog, 180 + rowLen, 620 + rowLen]} />
       <ambientLight intensity={sun.ambient} />
       <SunLight tod={tod} />
+      
       <RenderStats />
+      <Diagnostics />
       <ContextLoss />
       <hemisphereLight args={[terrain.sky, terrain.ground, sun.hemi]} />
       <Ticker enabled={tickHere} />
       <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
       <FocusCamera ctx={{ rowCenter, rowLen, production: s.phase === 'production', rig: s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing'), k: 0.6 + 0.4 * bore / 0.18, bZ, d, zd, zipperFrontZ, sleeve }} />
-      <Ground terrain={terrain} pad={pad} seed={basin.id.length} />
+      <Ground terrain={terrain} pad={pad} seed={basin.id.length} stain={stainLayout} />
       <Containment x0={-3.2} x1={4.2} z0={-3.5} z1={rowLen + 3.5} />
       <RedZone visible={pumping} x0={-34} xm={-14} x1={10} z0={-14} zm={rear + 1.5} z1={rowLen + 10} />
       <group {...pick}>
@@ -257,7 +315,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
           <FracPumpLive position={[p.x, 0, p.z]} rotation={[0, p.side === 1 ? Math.PI : 0, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} rate={s.pumpRate} name={'PP-FRACPUMP-' + (i + 1)} electric={spread.electric} number={i + 1} />
           {/* discharge: swivel arm from the missile feed port over to the end of the pump's own discharge iron (at its nose, 2.18 m up, offset to its +z side); suction: hose from the low-pressure outlet down to the pump's suction hose end at ground level */}
           <PipeRun points={[[MISSILE_X + p.side * 1.06, md.hpY, p.z], [MISSILE_X + p.side * 2.0, 2.95, p.z - p.side * 0.55], [MISSILE_X + p.side * 1.4, 2.18, p.z - p.side * 1.2]]} r={0.07} mat={MAT.redIron} />
-          <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[MISSILE_X + p.side * 1.4, 0.35, p.z + p.side * 1.2]} r={0.14} sag={0.3} segments={10} />
+          <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[MISSILE_X + p.side * (8.0 - 3.4), 1.18 + 0.3, p.z + p.side * 1.2]} r={0.14} sag={0.45} segments={10} />
         </group>
       ))}
       {/* blender behind the missile, discharge end toward it: two suction hoses from its manifolds to the low-pressure headers; hydration and chemical units beside it, silos and conveyor feeding the hoppers */}
@@ -271,8 +329,8 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       {s.setup.sand === 'boxes' ? (
         <>
           <SandBoxStation position={[MISSILE_X - 19.6, 0, bZ - 6.0]} showLabels={showLabels} />
-          <SandBoxes position={[MISSILE_X - 46, 0, bZ - 12]} showLabels={showLabels} />
-          <ShuttleForklift path={[[MISSILE_X - 47.5, bZ - 18.2], [MISSILE_X - 19.6 + CRADLE_X[0], bZ - 18.2], [MISSILE_X - 19.6 + CRADLE_X[0], bZ - 6.0 + CRADLE_Z - 3.25]]} />
+          <SandBoxes position={[MISSILE_X - 50, 0, bZ - 12]} showLabels={showLabels} />
+          <ShuttleForklift path={[[MISSILE_X - 51.5, bZ - 18.2], [MISSILE_X - 19.6 + CRADLE_X[0], bZ - 18.2], [MISSILE_X - 19.6 + CRADLE_X[0], bZ - 6.0 + CRADLE_Z - 3.25]]} />
         </>
       ) : (
         <SandSilos position={[MISSILE_X - 19.6, 0, bZ - 6.0]} showLabels={showLabels} />
@@ -284,6 +342,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
         <LightTower position={[0, 0, 0]} lit={tod !== 'day'} />
       </Instanced>
       {tod === 'night' && <TowerLights towers={TOWERS(rowLen, bZ)} />}
+      {tod !== 'day' && <LampGlow towers={TOWERS(rowLen, bZ)} strength={tod === 'night' ? 1 : 0.6} />}
       {/* water source by basin (Drop 40): lined pit off the west edge (Permian, Eagle Ford, Haynesville), two storage
           tanks (Appalachia, DJ, Anadarko), or frac tanks with a frac heater (Bakken, Powder River); the rest use frac tanks */}
       {water === 'pit' && <WaterPit position={PIT_POS} frozen={winter && snow >= 0.5} showLabels={showLabels} />}
@@ -307,6 +366,17 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <Windsock position={[-4, 0, -33]} height={6} />
       <Flag position={[-6, 0, -33]} height={7} color="#ff6a00" />
       <Flagpoles position={[-13.5, 0, -33.6]} state={basin.state || 'TX'} />
+      {/* pad clutter (Drop 48): placed off the lanes and clear of the work areas */}
+      <Totes position={[MISSILE_X + 14, 0, bZ + 6]} count={6} />
+      <SafetyPoint position={[MISSILE_X + 9.5, 0, bZ + 4.6]} rotation={[0, Math.PI / 2, 0]} />
+      <IronRack position={[MISSILE_X - 6, 0, -19.5]} />
+      <Cones spots={coneSpots} />
+      <Barricades position={[MISSILE_X - 16, 0, -9.6]} count={3} />
+      <Barricades position={[MISSILE_X + 10, 0, -9.6]} count={3} />
+      <Welfare position={[18.5, 0, -41]} />
+      <FuelCube position={[MISSILE_X - 11, 0, -27]} />
+      <SafetyPoint position={[3.5, 0, -36]} />
+      <HoseCoils position={[-56, 0, bZ + 14]} rotation={[0, 0.4, 0]} />
       <Crew position={[-7.2, 0, -27.6]} rotation={-0.6} pose="stand" seed={1} />
       <Crew position={[-8.6, 0, -27.2]} rotation={0.9} pose="point" vest="#e8e83a" seed={2} />
       <Crew position={[ACC[0] + 0.4, 0, ACC[1] + 2.1]} rotation={Math.PI} pose="stand" seed={3} />

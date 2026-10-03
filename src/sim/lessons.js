@@ -42,7 +42,7 @@ export const LESSONS = [
       { text: 'Run in hole', hint: 'The string falls under its own weight in the vertical, then needs pump-down rate to move along the lateral.', done: s => s.wl.step !== 'idle', action: 'run', label: 'Run in hole' },
       { text: 'Pump-down rate 15 to 25 bpm', hint: 'Too slow and the string stalls in the lateral; too fast and you risk the weak point.', done: s => s.pumpRate >= 15 && s.pumpRate <= 25 },
       { text: 'Plug set at depth', hint: 'The setting tool fires when the string reaches depth. Nothing to do but hold rate.', done: s => cur(s).plugSet },
-      { text: 'Fire the guns bottom-up', hint: 'Clusters fire from the toe-most up so the string is never below fresh perforations.', done: s => cur(s).clustersFired > 0, action: 'fire', label: 'Fire guns' },
+      { text: 'Fire the guns bottom-up', hint: 'Clusters fire from the toe-most up so the string is never below fresh perforations.', done: s => cur(s).clustersFired > 0, action: 'fire', label: 'Fire guns', gate: s => s.wl.step === 'armed' },
       { text: 'Pull out of hole to the lubricator', hint: 'Line speed is limited by the pressure control equipment; wait for the string to be back in the lubricator.', done: s => s.wl.step === 'done' },
       { text: 'Swap to frac: swab closed, lubricator rigged down', hint: 'Once the swab is closed the frac crew can open the zipper leg to the inlet block.', done: s => s.phase === 'frac', action: 'phaseFrac', label: 'Swap to frac' },
     ],
@@ -131,7 +131,7 @@ export const LESSONS = [
       { text: 'Work the line: tension cycles within the safe pull', done: s => s.wl.step === 'freeing' || s.wl.step === 'setplug' || s.wl.step === 'armed', action: 'workLine', label: 'Work the line' },
       { text: 'String free and moving again', hint: 'Keep the rate on until the plug reaches depth.', done: s => s.wl.step === 'pumpdown' || s.wl.step === 'setplug' || s.wl.step === 'armed' },
       { text: 'Plug set at depth', done: s => cur(s).plugSet },
-      { text: 'Fire the guns', done: s => cur(s).clustersFired > 0, action: 'fire', label: 'Fire guns' },
+      { text: 'Fire the guns', done: s => cur(s).clustersFired > 0, action: 'fire', label: 'Fire guns', gate: s => s.wl.step === 'armed' },
       { text: 'Pull out of hole to the lubricator', done: s => s.wl.step === 'done' },
     ],
   },
@@ -169,6 +169,25 @@ export const LESSONS = [
       { text: 'Run the production tubing and land it in the tubing hanger', hint: 'Joint by joint through the annular. The rod pump and seating nipple go in with the string.', done: s => s.hookup.progress >= 1 },
       { text: 'Nipple down the BOP stack', done: s => s.hookup.step === 'tree' || s.hookup.step === 'done', action: 'hookupNext', label: 'Nipple down' },
       { text: 'Install and test the production tree; commission the lift', done: s => s.hookup.step === 'done', action: 'hookupNext', label: 'Install the tree' },
+    ],
+  },
+  {
+    id: 'L9', n: 9, title: 'Gun misfire', targetSec: 240,
+    blurb: 'The guns come up a cluster short. Read it from the fire count, get the string back to surface, re-arm, and run again for the missed cluster.',
+    setup: { basin: 'permian-delaware' }, pad: { wells: 2, mode: 'zipper' },
+    prep: (get, set) => {
+      get().setPhase('wireline');
+      snapValves(set);
+      set({ wl: { step: 'pumpdown', progress: 0.85 }, pumpRate: 22 });
+      get().injectEvent('misfire');
+    },
+    steps: [
+      { text: 'Plug set at depth', hint: 'The string is nearly there; keep the pump-down rate on.', done: s => cur(s).plugSet },
+      { text: 'Fire the guns', done: s => cur(s).clustersFired > 0, action: 'fire', label: 'Fire guns', gate: s => s.wl.step === 'armed' },
+      { text: 'Fire count short: one cluster did not fire. String back to the lubricator', hint: 'The event log and the stage table show the fired count against the design. Nothing is re-armed with the string in the hole.', done: s => s.wl.step === 'done' && s.events.misfired > 0 },
+      { text: 'Inspect, re-arm, and run again for the missed cluster', hint: 'The tree stays open; the lubricator is still rigged. The string goes back down on the pump.', done: s => s.wl.step !== 'done' && s.events.misfired === 0, action: 'rerunGuns', label: 'Re-run guns' },
+      { text: 'Guns armed at depth: fire the missed cluster', hint: 'The plug is already set; the string only has to reach depth and arm.', done: s => cur(s).clustersFired >= s.setup.clusters, action: 'fire', label: 'Fire guns', gate: s => s.wl.step === 'armed' },
+      { text: 'Pull out of hole to the lubricator', done: s => s.wl.step === 'done' && s.events.misfired === 0 },
     ],
   },
 ];

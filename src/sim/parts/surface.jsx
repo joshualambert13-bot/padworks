@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged, RBox, Mat, Cable, HydraulicCylinder, metal, Instanced } from './primitives.jsx';
 import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture, wrapTexture } from './lighting.jsx';
-import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume } from './life.jsx';
+import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume, Stencil } from './life.jsx';
 
 // Pulsing ring drawn around the valve the next-steps guidance is pointing at.
 function PulseRing({ r }) {
@@ -978,11 +978,17 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
           { g: GEO.cyl(0.03, 0.08, 6), p: [-1.1, D + 0.59, 1.18] }, { g: GEO.box(0.02, 0.5, 0.2), p: [-1.19, D + 0.3, 1.18] },
         ]} />
         <Merged mat={MAT.brass} parts={() => [-0.8, -0.4, 0, 0.4, 0.8].map(z => ({ g: GEO.cyl(0.16, 0.55), p: [4.15, D + 1.05, z], r: [0, 0, Math.PI / 2] }))} />
+        {/* bolt circles on the valve covers and the discharge flanges (Drop 46): six studs with nuts per cover */}
+        <Merged mat={MAT.dimSteel} shadow={false} parts={() => [-0.8, -0.4, 0, 0.4, 0.8].flatMap(z => [
+          ...Array.from({ length: 6 }, (_, k) => { const a = k / 6 * Math.PI * 2; return { g: GEO.cyl(0.022, 0.05, 6), p: [3.4 + Math.cos(a) * 0.11, D + 2.03, z + Math.sin(a) * 0.11] }; }),
+          ...Array.from({ length: 6 }, (_, k) => { const a = k / 6 * Math.PI * 2; return { g: GEO.cyl(0.022, 0.05, 6), p: [3.4 + Math.cos(a) * 0.11, D + 0.07, z + Math.sin(a) * 0.11] }; }),
+          ...Array.from({ length: 8 }, (_, k) => { const a = k / 8 * Math.PI * 2; return { g: GEO.cyl(0.02, 0.05, 6), p: [4.53, D + 1.05 + Math.cos(a) * 0.15, z + Math.sin(a) * 0.15], r: [0, 0, Math.PI / 2] }; }),
+        ])} />
         <Merged mat={MAT.darkSteel} parts={() => [{ g: GEO.box(1.4, 0.35, 1.2), p: [1.6, D + 2.0, 0] }, { g: GEO.cyl(0.12, 2.4), p: [3.4, D + 1.95, 0], r: [Math.PI / 2, 0, 0] }]} />
         {/* discharge iron to the missile (top) and the suction hose (bottom) */}
         <Pipe from={[3.4, D + 1.95, 1.2]} to={[5.0, D + 1.95, 1.2]} r={0.07} mat={MAT.redIron} />
         <Pipe from={[5.0, D + 1.95, 1.2]} to={[6.6, D + 1.0, 1.2]} r={0.07} mat={MAT.redIron} />
-        <Hose from={[3.4, D + 0.3, -1.2]} to={[6.6, 0.35, -1.2]} r={0.14} sag={0.35} segments={10} />
+        {/* the suction hose from the missile lands on this manifold end directly (SurfaceScene draws it, Drop 43) */}
         {/* pump number on the cab side, hazard strip across the rear, exhaust plume while the engine runs */}
         {number > 0 && !template && <Sign lines={['PUMP ' + number]} position={[electric ? -5.3 : -3.5, D + 1.3, 1.16]} width={0.9} height={0.4} bg="#1a1a1a" fg="#ffffff" />}
         <HazardStrip position={[6.72, D - 0.2, 0]} rotation={[0, Math.PI / 2, 0]} length={2.4} height={0.14} />
@@ -1123,12 +1129,13 @@ export function ChemAdd({ position, showLabels }) {
 
 // Collecting belt at z 2.1 from x -3 to 11, drive box, incline auger, and the discharge chute into the blender hopper.
 // Shared by the silo system and the box station (Drop 35); whichever sits at the sand position feeds the same hopper.
-export function SandConveyor() {
+export function SandConveyor({ from = -3 }) {
+  const len = 11 - from, mid = (11 + from) / 2, stands = Math.max(2, Math.round(len / 2));
   return (
     <group name="LG-CONVEYOR">
-      <Box size={[14, 0.25, 0.9]} position={[4, 0.95, 2.1]} mat={MAT.darkSteel} />
-      <Box size={[14, 0.04, 0.7]} position={[4, 1.1, 2.1]} mat={MAT.rubber} />
-      {Array.from({ length: 8 }).map((_, i) => <Cyl key={i} r={0.06} h={1.0} position={[-2.5 + i * 2.0, 0.5, 2.1]} mat={MAT.darkSteel} />)}
+      <Box size={[len, 0.25, 0.9]} position={[mid, 0.95, 2.1]} mat={MAT.darkSteel} />
+      <Box size={[len, 0.04, 0.7]} position={[mid, 1.1, 2.1]} mat={MAT.rubber} />
+      {Array.from({ length: stands }).map((_, i) => <Cyl key={i} r={0.06} h={1.0} position={[from + 0.5 + i * (len - 1) / (stands - 1), 0.5, 2.1]} mat={MAT.darkSteel} />)}
       <Cyl r={0.45} h={11} rotation={[0, 0, THREE.MathUtils.degToRad(-70)]} position={[13.5, 2.15, 2.1]} mat={MAT.darkSteel} />
       <Box size={[1.4, 0.8, 1.2]} position={[8.6, 0.45, 2.1]} mat={MAT.darkSteel} />
       {/* discharge chute from the auger head down into the blender hopper (the group sits so the head is over the hopper) */}
@@ -1140,7 +1147,7 @@ export function SandConveyor() {
 // Sand box unloading station (Drop 35): two cradles over the collecting belt, each a steel frame with a box on it
 // and a discharge hopper under the box's gate onto the belt. The handler sets full boxes down here from the stack.
 // Cradle boxes lie along x (the belt), 6 m long and 2.5 m wide, so a box carried in on the forks lands square.
-export const CRADLE_X = [3.0, 9.5], CRADLE_Z = 2.1;
+export const CRADLE_X = [-9.0, -2.5], CRADLE_Z = 2.1;   // west end of a belt extended to x -12, clear of the pump row to the east
 export function SandBoxStation({ position, showLabels }) {
   return (
     <group position={position} name="LG-SANDBOXSTATION">
@@ -1160,9 +1167,9 @@ export function SandBoxStation({ position, showLabels }) {
           </group>
         </group>
       ))}
-      <Handrail length={13} position={[-3, 0, CRADLE_Z + 1.9]} height={1.0} />
-      <SandConveyor />
-      {showLabels && <Label position={[6, 6.5, 2]} text={'Sand box station and conveyor'} />}
+      <Handrail length={13} position={[-5.75, 0, CRADLE_Z + 1.9]} height={1.0} />
+      <SandConveyor from={-12} />
+      {showLabels && <Label position={[-4, 6.5, 2]} text={'Sand box station and conveyor'} />}
     </group>
   );
 }
@@ -1196,17 +1203,12 @@ export function SandSilos({ position, showLabels }) {
 
 // 500 bbl frac tanks: rectangular body with a rounded top, stairs and a walkway at the front, a manifold of
 // valves and unions along the front bulkhead, wheels at the rear so a winch truck can move them.
-export function WaterTanks({ position, count = 8, showLabels }) {
-  // a cream and a white tank form the template pair; the pair is instanced along the row (Drop 41)
-  const pairs = Math.ceil(count / 2);
-  const transforms = useMemo(() => Array.from({ length: pairs }, (_, i) => ({ position: [i * 7.0, 0, 0] })), [pairs]);
+// One 500 bbl frac tank (Drop 50: factored out so the water side and the flowback side share it): rectangular body
+// with a crowned roof, stiffener bands, skid, rear wheels, the valve manifold on the front bulkhead, stairs to the
+// roof walkway with rails, plate seams, roof manways, sight glass, capacity stencil, and a no-smoking placard.
+export function FracTankBody({ mat = MAT.tankWhite, label = 'FRESH WATER', ink = '#2a2a2a' }) {
   return (
-    <group position={position} name="PP-FRACTANKS">
-      <Instanced transforms={transforms} name="PP-FRACTANKS">
-      {[0, 1].map((i) => {
-        const mat = i % 2 ? MAT.tankWhite : MAT.tankCream;
-        return (
-          <group key={i} position={[i * 3.5, 0, 0]} name="PP-FRACTANK">
+    <group name="PP-FRACTANK">
             <BlobShadow size={[4.6, 14.5]} />
             <RBox r={0.1} size={[3.0, 2.6, 12.5]} position={[0, 1.55, 0]} mat={mat} />
             {/* low crowned roof: the upper half of a cylinder flattened to a 0.45 m crown */}
@@ -1218,15 +1220,45 @@ export function WaterTanks({ position, count = 8, showLabels }) {
             <Merged mat={MAT.darkSteel} parts={() => [-0.9, -0.3, 0.3, 0.9].flatMap(x => [{ g: GEO.cyl(0.09 * 1.7, 0.09 * 2.2, 14), p: [x, 0.9, 6.8], r: [Math.PI / 2, 0, 0] }])} />
             <Merged mat={MAT.paintRed} parts={() => [-0.9, -0.3, 0.3, 0.9].map(x => ({ g: GEO.torus(0.16, 0.025, 6, 16), p: [x, 1.2, 6.5], r: [Math.PI / 2, 0, 0] }))} />
             {/* stairs up the front end from the ground to the roof walkway, which runs the length of the tank at the crown edge */}
-            <Stair steps={10} rise={0.3} run={0.3} width={0.7} position={[1.5, 0.05, 7.3]} rotation={[0, Math.PI, 0]} />
+            <Stair steps={10} rise={0.31} run={0.19} width={0.7} position={[1.5, 0.05, 6.25 + 1.9]} rotation={[0, Math.PI, 0]} />
             <Box size={[0.8, 0.03, 12.6]} position={[-1.05, 3.08, 0]} mat={MAT.grating} castShadow={false} />
             <Box size={[0.8, 0.03, 1.5]} position={[-1.05, 3.08, 6.95]} mat={MAT.grating} castShadow={false} />
             <Handrail length={12.6} position={[-1.45, 3.08, 0]} rotation={[0, Math.PI / 2, 0]} height={1.0} />
             <Handrail length={12.6} position={[-0.65, 3.08, 0]} rotation={[0, Math.PI / 2, 0]} height={1.0} />
-          </group>
-        );
-      })}
+            {/* Drop 46: shell plate seams, two roof manways with hatch handles, the sight glass and its scale on the
+                front bulkhead, the capacity stencil on both sides, and the no-smoking placard by the valves */}
+            <Merged mat={MAT.dimSteel} shadow={false} parts={() => [
+              ...[-1, 1].flatMap(sx => [1.15, 2.05].map(y => ({ g: GEO.box(0.012, 0.012, 12.3), p: [sx * 1.506, y, 0] }))),
+              ...[-1, 1].flatMap(sx => [-2, 2, 6].map(z => ({ g: GEO.box(0.012, 2.4, 0.012), p: [sx * 1.506, 1.55, z] }))),
+            ]} />
+            <Merged mat={MAT.steel} parts={() => [
+              ...[-3.5, 3.5].flatMap(z => [{ g: GEO.cyl(0.34, 0.07, 20), p: [0.4, 3.31, z] }, { g: GEO.torus(0.3, 0.02, 6, 20), p: [0.4, 3.35, z], r: [Math.PI / 2, 0, 0] }, { g: GEO.box(0.3, 0.04, 0.05), p: [0.4, 3.37, z] }]),
+              ...[0.5, 1.55, 2.6].map(y => ({ g: GEO.box(0.12, 0.04, 0.1), p: [1.25, y, 6.32] })),
+            ]} />
+            <Cyl r={0.025} h={2.3} position={[1.25, 1.55, 6.36]} mat={MAT.glass} segments={8} />
+            <Box size={[0.14, 2.2, 0.015]} position={[1.08, 1.55, 6.29]} mat={MAT.paintWhite} castShadow={false} />
+            <Stencil text="500 BBL" position={[1.52, 2.3, -3.6]} rotation={[0, Math.PI / 2, 0]} width={2.2} color={ink} wear={0.4} />
+            <Stencil text="500 BBL" position={[-1.52, 2.3, 3.6]} rotation={[0, -Math.PI / 2, 0]} width={2.2} color={ink} wear={0.4} />
+            <Stencil text={label} position={[1.52, 1.85, -3.6]} rotation={[0, Math.PI / 2, 0]} width={1.8} color={ink} wear={0.3} />
+            <Sign lines={['NO SMOKING']} position={[-0.95, 2.25, 6.31]} width={0.6} height={0.26} danger />
+    </group>
+  );
+}
+
+export function WaterTanks({ position, count = 8, showLabels }) {
+  // a cream and a white tank form the template pair; the pair is instanced along the row (Drop 41)
+  const pairs = Math.ceil(count / 2);
+  const transforms = useMemo(() => Array.from({ length: pairs }, (_, i) => ({ position: [i * 7.0, 0, 0] })), [pairs]);
+  return (
+    <group position={position} name="PP-FRACTANKS">
+      <Instanced transforms={transforms} name="PP-FRACTANKS">
+        {[0, 1].map((i) => <group key={i} position={[i * 3.5, 0, 0]}><FracTankBody mat={i % 2 ? MAT.tankWhite : MAT.tankCream} /></group>)}
       </Instanced>
+      {/* tank numbers (per tank, so outside the instanced template): stenciled on both sides at the front end */}
+      {Array.from({ length: count }, (_, i) => {
+        const x = Math.floor(i / 2) * 7.0 + (i % 2) * 3.5;
+        return [1, -1].map(sx => <Stencil key={i + ':' + sx} text={'T-' + (i + 1)} position={[x + sx * 1.52, 1.6, sx * 4.6]} rotation={[0, sx * Math.PI / 2, 0]} width={1.7} color="#8a1c1c" wear={0.3} />);
+      })}
       {showLabels && <Label position={[count * 1.7, 5, 0]} text={'Frac tanks (500 bbl)'} />}
     </group>
   );
@@ -1489,11 +1521,17 @@ export function CTUnit({ position, treeTop, showLabels, active, ct = null }) {
   );
 }
 
+const FB_TANK_SPOTS = [0, 1, 2].map(i => ({ position: [i * 3.5, 0, 0] }));
+const ONE_SPOT = [{ position: [0, 0, 0] }];
 export function FlowbackSpread({ position, showLabels, flaring }) {
   const flame = useRef();
   useFrame((state) => { if (flame.current) { const s = flaring ? 1 + Math.sin(state.clock.elapsedTime * 12) * 0.2 : 0.001; flame.current.scale.set(s, s * 1.3, s); } });
   return (
     <group position={position} name="FB-SPREAD">
+      {/* Drop 50: the spread's static units are baked into one instanced set (one draw per material, names kept for
+          picking); the flame and the tanks (instanced on their own) stay outside */}
+      <Instanced transforms={ONE_SPOT} name="FB-SPREAD">
+      <group>
       {/* choke manifold on a skid: two runs with a manual and an adjustable choke each, bypass across, gauges */}
       <group position={[0, 0, 0]} name="FB-CHOKEMANIFOLD">
         <Box size={[3.0, 0.25, 2.6]} position={[0, 0.12, 0]} mat={MAT.yellow} />
@@ -1564,25 +1602,17 @@ export function FlowbackSpread({ position, showLabels, flaring }) {
         {[0, 1, 2].map(k => { const a = k * Math.PI * 2 / 3; return <Cyl key={'s' + k} r={0.1} h={0.6} position={[Math.cos(a) * 6, 0.3, Math.sin(a) * 6]} mat={MAT.darkSteel} />; })}
         <Cyl r={0.6} h={1.6} rotation={[0, 0, Math.PI / 2]} position={[-2.2, 0.8, 0]} mat={MAT.steel} />
         <Pipe from={[-2.2, 1.4, 0]} to={[0, 2.0, 0]} r={0.1} mat={MAT.darkSteel} />
-        <mesh ref={flame} position={[0, 12.9, 0]}>
-          <coneGeometry args={[0.7, 2.2, 10]} />
-          <meshStandardMaterial color="#ff8a00" emissive="#ff5a00" emissiveIntensity={2.5} transparent opacity={0.85} />
-        </mesh>
       </group>
-      {/* flowback tanks: same 500 bbl tanks as the water side */}
+      </group>
+      </Instanced>
+      <mesh ref={flame} position={[22, 12.9, -6]}>
+        <coneGeometry args={[0.7, 2.2, 10]} />
+        <meshStandardMaterial color="#ff8a00" emissive="#ff5a00" emissiveIntensity={2.5} transparent opacity={0.85} />
+      </mesh>
+      {/* flowback tanks (Drop 50): the same 500 bbl tank as the water side, in dark paint, three in a row, instanced */}
       <group position={[18, 0, 6]} name="FB-TANKS">
-        {[0, 1, 2].map(i => (
-          <group key={i} position={[i * 3.5, 0, 0]}>
-            <BlobShadow size={[4.6, 14.5]} />
-            <Box size={[3.0, 2.6, 12.5]} position={[0, 1.55, 0]} mat={MAT.chassis} />
-            <Cyl r={1.5} h={12.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 2.85, 0]} mat={MAT.chassis} thetaLength={Math.PI} thetaStart={-Math.PI / 2} open />
-            <Merged mat={MAT.darkSteel} parts={() => [-4, 0, 4].map(z => ({ g: GEO.box(3.06, 2.5, 0.08), p: [0, 1.5, z] }))} />
-            <Wheel position={[-1.2, 0.45, -5.9]} r={0.45} w={0.3} dual />
-            <Wheel position={[1.2, 0.45, -5.9]} r={0.45} w={0.3} dual />
-            <Stair steps={12} rise={0.33} run={0.28} width={0.7} position={[-1.4, 0.2, 6.9]} rotation={[0, Math.PI / 2, 0]} />
-            <Handrail length={12.0} position={[-1.45, 4.36, 0]} rotation={[0, Math.PI / 2, 0]} height={1.0} />
-          </group>
-        ))}
+        <Instanced transforms={FB_TANK_SPOTS} name="FB-TANKS"><FracTankBody mat={MAT.tankDark} label="FLOWBACK" ink="#d8d2c4" /></Instanced>
+        {FB_TANK_SPOTS.map((t, i) => [1, -1].map(sx => <Stencil key={i + ':' + sx} text={'FB-' + (i + 1)} position={[t.position[0] + sx * 1.52, 1.6, sx * 4.6]} rotation={[0, sx * Math.PI / 2, 0]} width={1.7} color="#d8d2c4" wear={0.3} />))}
       </group>
       {showLabels && <Label position={[8, 5, 0]} text={'Flowback: chokes, plug catcher, sand separator, test separator, flare, tanks'} />}
     </group>
@@ -2057,8 +2087,18 @@ export function PowerGen({ fleet = 'diesel', position = [-40, 0, -34], showLabel
 export { terrainNoise, terrainHeight } from './terrain.js';
 import { terrainNoise, terrainHeight } from './terrain.js';
 import { Vegetation, Horizon, RoadFurniture } from './vegetation.jsx';
+import { padStainTexture } from './ground.js';
+const NO_GRIME = { grime: 0 };
+const TERRAIN = { grime: 0, terrain: 1 };   // ground planes take the macro soil variation (Drop 49)
 
-export function Ground({ terrain, pad, seed = 1 }) {
+export function Ground({ terrain, pad, seed = 1, stain = null }) {
+  // Drop 44: the pad's stain map (lanes, ruts, drips, spills drawn from the layout) reaches the pad material through
+  // stable uniform holders in its userData; the material patch in lighting.jsx samples it in world XZ.
+  const stainTex = useMemo(() => (stain ? padStainTexture(stain) : null), [stain]);
+  const stainHolder = useMemo(() => ({ uniform: { value: null }, rect: { value: new THREE.Vector4() } }), []);
+  stainHolder.uniform.value = stainTex;
+  stainHolder.rect.value.set(pad.x0, pad.z0, pad.x1 - pad.x0, pad.z1 - pad.z0);
+  const padUserData = useMemo(() => ({ grime: 0, stain: stainHolder }), [stainHolder]);
   const t = terrain || { ground: '#4b4235', pad: '#5a5245', relief: 0.5, veg: 'scrub', density: 0.1, vegColor: '#4f5b3c' };
   const geom = useMemo(() => {
     const g = new THREE.PlaneGeometry(720, 720, 144, 144);
@@ -2097,23 +2137,23 @@ export function Ground({ terrain, pad, seed = 1 }) {
   return (
     <group>
       <mesh geometry={geom} receiveShadow>
-        <meshStandardMaterial vertexColors roughness={1} metalness={0} map={groundTex || undefined} bumpMap={LITE ? undefined : groundTex || undefined} bumpScale={0.35} />
+        <meshStandardMaterial vertexColors roughness={1} metalness={0} map={groundTex || undefined} bumpMap={LITE ? undefined : groundTex || undefined} bumpScale={0.35} userData={TERRAIN} />
       </mesh>
       <mesh geometry={outer}>
-        <meshStandardMaterial color={t.ground} roughness={1} metalness={0} map={groundTex || undefined} />
+        <meshStandardMaterial color={t.ground} roughness={1} metalness={0} map={groundTex || undefined} userData={TERRAIN} />
       </mesh>
-      {/* the pad itself: graded caliche or crushed stone with wheel ruts, and the lease road out to the edge */}
+      {/* the pad itself: graded caliche or crushed stone, the stain map over it, and the lease road out to the edge */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(pad.x0 + pad.x1) / 2, 0.0, (pad.z0 + pad.z1) / 2]} receiveShadow>
         <planeGeometry args={[padW, padL]} />
-        <meshStandardMaterial color={t.pad} roughness={0.95} metalness={0} map={padTex || undefined} bumpMap={LITE ? undefined : padTex || undefined} bumpScale={0.12} />
+        <meshStandardMaterial color={t.pad} roughness={0.95} metalness={0} map={padTex || undefined} bumpMap={LITE ? undefined : padTex || undefined} bumpScale={0.12} userData={padUserData} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[pad.x1 + 160, 0.01, pad.z0 + 12]} receiveShadow>
         <planeGeometry args={[320, 7]} />
-        <meshStandardMaterial color={t.pad} roughness={0.95} metalness={0} map={roadTex || undefined} />
+        <meshStandardMaterial color={t.pad} roughness={0.95} metalness={0} map={roadTex || undefined} userData={NO_GRIME} />
       </mesh>
       {/* berm around the pad */}
       {[[pad.x0, (pad.z0 + pad.z1) / 2, 1.2, padL + 1.2], [pad.x1, (pad.z0 + pad.z1) / 2, 1.2, padL + 1.2], [(pad.x0 + pad.x1) / 2, pad.z0, padW + 1.2, 1.2], [(pad.x0 + pad.x1) / 2, pad.z1, padW + 1.2, 1.2]].map(([x, z, w, l], i) => (
-        <mesh key={i} position={[x, 0.25, z]}><boxGeometry args={[w, 0.5, l]} /><meshStandardMaterial color={t.ground} roughness={1} /></mesh>
+        <mesh key={i} position={[x, 0.25, z]}><boxGeometry args={[w, 0.5, l]} /><meshStandardMaterial color={t.ground} roughness={1} userData={NO_GRIME} /></mesh>
       ))}
       <Vegetation terrain={t} pad={pad} seed={seed} />
       <Horizon terrain={t} pad={pad} seed={seed} />

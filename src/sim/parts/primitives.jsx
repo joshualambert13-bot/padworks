@@ -17,6 +17,18 @@ const G = {
   cylOpen: (r, h, seg, thetaStart, thetaLength) => new THREE.CylinderGeometry(r, r, h, seg, 1, true, thetaStart, thetaLength),
   sphere: (r, w = 10, h = 8) => new THREE.SphereGeometry(r, w, h),
   torus: (r, t, rs = 6, ts = 16) => new THREE.TorusGeometry(r, t, rs, ts),
+  capsule: (r, len, cs = 3, rs = 8) => new THREE.CapsuleGeometry(r, len, cs, rs),
+  lathe: (pts, seg = 12) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg),
+  dome: (r, w = 12, h = 7) => new THREE.SphereGeometry(r, w, h, 0, Math.PI * 2, 0, Math.PI / 2),
+  // quarter fender (Drop 46): an arc of sheet from `a0` to `a1` (radians, 0 at +X, up through +Y) of radius `R` and
+  // thickness `t`, `w` wide along its axis (Z); indexed so it merges with the rest
+  fender: (R, w, t = 0.03, a0 = 0.3, a1 = Math.PI - 0.3) => {
+    const sh = new THREE.Shape();
+    sh.absarc(0, 0, R, a0, a1, false); sh.absarc(0, 0, R - t, a1, a0, true); sh.closePath();
+    const g = new THREE.ExtrudeGeometry(sh, { depth: w, bevelEnabled: false, curveSegments: 14 });
+    g.translate(0, 0, -w / 2);
+    return mergeVertices(g);
+  },
 };
 export const GEO = G;
 export function buildMerged(parts) {
@@ -70,12 +82,13 @@ export const metal = (color, metalness, roughness, extra = {}) => ({ color, meta
 const paint = (color, roughness = 0.55, metalness = 0.12, map = grime) => ({ color, metalness, roughness, roughnessMap: wear || undefined, map: map || undefined, bumpMap: LITE ? undefined : wear || undefined, bumpScale: 0.006, clearcoat: 0.4, clearcoatRoughness: 0.35 });
 const tankPaint = (color) => paint(color, 0.6, 0.1, streak);
 export const MAT = {
-  steel:   metal('#9aa2ab', 0.9, 0.32, { roughnessMap: brushed || undefined }),
-  darkSteel: metal('#4d565f', 0.8, 0.45, { roughnessMap: brushed || undefined, map: grime || undefined }),
+  steel:   metal('#9aa2ab', 0.9, 0.32, { roughnessMap: brushed || undefined, userData: { rust: 0.3 } }),
+  darkSteel: metal('#4d565f', 0.8, 0.45, { roughnessMap: brushed || undefined, map: grime || undefined, userData: { rust: 0.45 } }),
   tankWhite: tankPaint('#e4e8ec'),
   tankCream: tankPaint('#d9cfae'),
   tankBlue:  tankPaint('#2a5d9f'),
   tankGreen: tankPaint('#2e8b57'),
+  tankDark:  tankPaint('#3a3d42'),   // flowback and produced-fluid tanks (Drop 50)
   redIron: paint('#9e2a22', 0.5, 0.2),
   yellow:  paint('#d9a400', 0.55),
   white:   paint('#d7dde5', 0.55),
@@ -87,13 +100,13 @@ export const MAT = {
   tape:    { color: '#f2f2f2', metalness: 0.2, roughness: 0.25 },
   ground:  { color: '#4b4235', metalness: 0.0, roughness: 1.0 },
   sand:    { color: '#c9b47a', metalness: 0.0, roughness: 1.0 },
-  dimSteel: metal('#2c3137', 0.7, 0.6),
+  dimSteel: metal('#2c3137', 0.7, 0.6, { userData: { rust: 0.4 } }),
   paintRed: paint('#8f1f1f', 0.5, 0.15),
   paintWhite: paint('#e4e8ec', 0.5),
   cream:   paint('#d9cfae', 0.55),
   alu:     metal('#c3c8cd', 0.95, 0.28, { roughnessMap: brushed || undefined }),
-  chassis: paint('#2a2d31', 0.7, 0.3),
-  grating: metal('#3a3f45', 0.7, 0.7),
+  chassis: { ...paint('#2a2d31', 0.7, 0.3), userData: { rust: 0.35 } },
+  grating: metal('#3a3f45', 0.7, 0.7, { userData: { rust: 0.4 } }),
   glass:   metal('#20304a', 0.9, 0.06),
   glassLit: { color: '#ffe6a8', emissive: '#ffd98a', emissiveIntensity: 0.9, metalness: 0.1, roughness: 0.3 },   // lit windows after dark (Drop 31)
   hose:    { color: '#24262a', metalness: 0.05, roughness: 0.85 },
@@ -107,8 +120,10 @@ export const MAT = {
 const CLEARCOAT_KEYS = ['clearcoat', 'clearcoatRoughness'];
 export function stdProps(mat) { const o = { ...mat }; CLEARCOAT_KEYS.forEach(k => delete o[k]); return o; }
 export function Mat({ mat = MAT.steel, side }) {
-  if (!LITE && mat.clearcoat != null) return <meshPhysicalMaterial {...mat} side={side} />;
-  return <meshStandardMaterial {...stdProps(mat)} side={side} />;
+  // each material gets its own userData object (the patch flags and the instancing twin live there)
+  const ud = mat.userData ? { userData: { ...mat.userData } } : {};
+  if (!LITE && mat.clearcoat != null) return <meshPhysicalMaterial {...mat} {...ud} side={side} />;
+  return <meshStandardMaterial {...stdProps(mat)} {...ud} side={side} />;
 }
 
 export function Box({ size = [1, 1, 1], position = [0, 0, 0], rotation = [0, 0, 0], mat = MAT.steel, name, castShadow = true, children, ...rest }) {
@@ -375,6 +390,8 @@ export function Trailer({ length = 12, width = 2.6, position = [0, 0, 0], rotati
         ...(gooseneck ? [{ g: G.box(1.6, 0.3, width * 0.6), p: [f * (length / 2 - 0.9), deckY - 0.6, 0] }, { g: G.cyl(0.06, 0.25, 8), p: [f * (length / 2 - 0.9), deckY - 0.85, 0] }] : []),
         ...[-width * 0.3, width * 0.3].flatMap(z => [{ g: G.cyl(0.06, deckY - 0.5, 8), p: [f * length * 0.22, (deckY - 0.5) / 2 + 0.1, z] }, { g: G.box(0.35, 0.1, 0.35), p: [f * length * 0.22, 0.06, z] }]),
         ...axleX.map(x => ({ g: G.cyl(0.07, aw - 0.6, 8), p: [x, 0.52, 0], r: [Math.PI / 2, 0, 0] })),
+        // quarter fenders over every tire (Drop 46)
+        ...axleX.flatMap(x => wheelZ.map(z => ({ g: G.fender(R + 0.11, W * 2.1 + 0.16, 0.03), p: [x, 0.52, z] }))),
         ...[-1, 1].map(side => ({ g: G.box(axles * 1.35 + 0.6, 0.06, 0.55), p: [(axleX[0] + axleX[axleX.length - 1]) / 2, 1.12, side * (width / 2 - 0.25)] })),
         { g: G.box(0.1, 0.12, width * 0.8), p: [-f * (length / 2 - 0.05), 0.55, 0] },
         // under-deck furniture (Drop 25): mud flaps behind the rear axle, air tank and tool box ahead of the axles
@@ -460,6 +477,13 @@ export function Instanced({ transforms, version = 0, children, name }) {
     t.visible = false;
     const made = [];
     const n = transforms.length;
+    // instanced bodies draw with MeshStandardMaterial copies: the physical (clearcoat) variant plus instancing plus
+    // the snow patch rendered black on at least one laptop GPU (Drop 43); the sheen difference is slight
+    const asStandard = (m) => {
+      if (!m.isMeshPhysicalMaterial) return m;
+      if (!m.userData.standardTwin) { const t = new THREE.MeshStandardMaterial(); t.copy(m); t.userData.twinOf = m.uuid; m.userData.standardTwin = t; }
+      return m.userData.standardTwin;
+    };
     const mats = transforms.map(tr => new THREE.Matrix4().compose(new THREE.Vector3(...tr.position), new THREE.Quaternion().setFromEuler(new THREE.Euler(...(tr.rotation || [0, 0, 0]))), new THREE.Vector3(1, 1, 1)));
     for (const grp of groups.values()) {
       let geos = grp.geos;
@@ -470,7 +494,7 @@ export function Instanced({ transforms, version = 0, children, name }) {
       for (const g of geos) { for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) g.deleteAttribute(k); if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); if (!g.attributes.normal) g.computeVertexNormals(); }
       const merged = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
       if (!merged) continue;
-      const im = new THREE.InstancedMesh(merged, grp.material, n);
+      const im = new THREE.InstancedMesh(merged, asStandard(grp.material), n);
       for (let i = 0; i < n; i++) im.setMatrixAt(i, mats[i]);
       im.instanceMatrix.needsUpdate = true;
       im.castShadow = grp.cast; im.receiveShadow = true; im.name = grp.name; im.frustumCulled = false;

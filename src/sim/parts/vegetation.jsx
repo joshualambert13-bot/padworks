@@ -197,7 +197,7 @@ export function Horizon({ terrain, pad, seed = 1 }) {
   }, []);
   const strata = useMemo(() => strataTexture(), []);
   const treeGeom = useMemo(() => terrain.veg === 'pine' ? new THREE.ConeGeometry(0.5, 1, 6) : new THREE.SphereGeometry(0.5, 7, 5), [terrain.veg]);
-  return <Instanced geom={kind === 'treeline' ? treeGeom : kind === 'mesa' ? mesaGeom : ridgeGeom} mat={{ color: '#ffffff', roughness: 1, metalness: 0, map: kind === 'treeline' ? undefined : strata || undefined }} items={items} shadow={false} />;
+  return <Instanced geom={kind === 'treeline' ? treeGeom : kind === 'mesa' ? mesaGeom : ridgeGeom} mat={{ color: '#ffffff', roughness: 1, metalness: 0, map: kind === 'treeline' ? undefined : strata || undefined, userData: kind === 'treeline' ? { grime: 0 } : { grime: 0, mesa: 1 } }} items={items} shadow={false} />;
 }
 
 // ---------------------------------------------------------------- fence, cattle guard, gate sign

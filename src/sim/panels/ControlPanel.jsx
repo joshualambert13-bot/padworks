@@ -1,6 +1,6 @@
 import { Play, Pause, RotateCcw, AlertTriangle, Gauge, Zap, ArrowRightCircle, CheckCircle2, Lock, ListChecks, Circle, Settings2, Bolt, Dices, GraduationCap, Trophy, FileText, Lightbulb, XCircle } from 'lucide-react';
 import { useSim, phasesFor, FRAC_MODES, BORES, COMPLETIONS, FLEETS, LIFTS, EVENTS, padRoles, nextSteps, wellParams, basinOf, spreadSizing, designTotals, scoreOf } from '../store.js';
-import { lessonById, nextLessonId, stepValve } from '../lessons.js';
+import { LESSONS, lessonById, nextLessonId, stepValve } from '../lessons.js';
 import SetupPanel from './SetupPanel.jsx';
 import { heightZone, BARRIER_TOP } from '../geology.js';
 
@@ -27,7 +27,7 @@ function LessonCard({ s }) {
   const nextId = nextLessonId(L.id);
   return (
     <div className={'card p-2 space-y-1 ' + (s.lesson.finished ? 'border-ok/60 bg-ok/10' : 'border-cool/60')} data-panel="lesson">
-      <div className="flex items-center gap-1 text-xs font-semibold text-cool"><GraduationCap size={14} /><span>Lesson {L.n} of 8: {L.title}</span>
+      <div className="flex items-center gap-1 text-xs font-semibold text-cool"><GraduationCap size={14} /><span>Lesson {L.n} of {LESSONS.length}: {L.title}</span>
         <span className="ml-auto mono text-[10px] text-mute">{doneCount}/{L.steps.length}</span>
         {!s.lesson.finished && <button className="text-mute" title="Leave the lesson; the job continues" onClick={s.quitLesson}><XCircle size={14} /></button>}
       </div>
@@ -52,7 +52,7 @@ function LessonCard({ s }) {
             <li key={i} className={'flex items-start gap-2 text-xs ' + (done ? 'text-mute line-through' : isCurrent ? 'text-white' : 'text-mute')}>
               {done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-cool' : '')} />}
               <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
-              {isCurrent && step.action && <button className="btn btn-primary text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>}
+              {isCurrent && step.action && <button className="btn btn-primary text-[11px] px-2 py-0.5" disabled={step.gate ? !step.gate(s) : false} title={step.gate && !step.gate(s) ? 'Not yet: the job has to reach this point first' : undefined} onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>}
               {isCurrent && !step.action && valve && s.valves[valve] && <button className="btn text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ valve }); s.commandValve(valve, s.valves[valve].target === 1 ? 0 : 1); }}>{s.valves[valve].target === 1 ? 'Close' : 'Open'}</button>}
             </li>
           );

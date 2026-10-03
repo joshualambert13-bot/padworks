@@ -5,12 +5,19 @@
 // browser context signs in as the local admin through the API before it opens a page.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
+import net from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const out = process.argv[2] || 'shots';
 fs.mkdirSync(out, { recursive: true });
 const PORT = Number(process.env.PORT || 4173);
+// a server left behind by a crashed pass would silently serve the wrong build: refuse to start on a busy port
+await new Promise((resolve, reject) => {
+  const sock = net.connect(PORT, '127.0.0.1');
+  sock.once('connect', () => { sock.destroy(); reject(new Error('port ' + PORT + ' is already in use (an orphaned dev server?); kill it or set PORT')); });
+  sock.once('error', () => resolve());
+});
 const server = spawn('node', ['scripts/dev-server.mjs', String(PORT), process.env.DIST || 'dist'], { stdio: 'ignore' });   // PORT and DIST let two passes run side by side
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 await wait(3500);
@@ -37,7 +44,7 @@ async function page(w, h, mobile = false) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
   await signIn(ctx);
   const p = await ctx.newPage();
-  p.setDefaultTimeout(90000);   // software rendering in CI is slow; a click can wait several frames
+  p.setDefaultTimeout(240000);   // software rendering in CI is slow; a click on a six-well pad can wait several 25 s frames
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
   return p;
@@ -81,6 +88,16 @@ if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env
 p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
+// Drop 43: the Stats readout must show numbers and no shader error
+await p.getByRole('button', { name: 'Stats' }).click(); await wait(3000);
+{
+  const txt = await p.evaluate(() => { const el = document.querySelector('[data-stats]'); return el ? el.textContent : ''; });
+  console.log('stats:', txt.slice(0, 200));
+  if (!/fps/.test(txt)) errors.push('stats readout missing: ' + txt.slice(0, 80));
+  if (/SHADER ERROR/.test(txt)) errors.push('stats readout reports a shader error: ' + txt.slice(0, 300));
+}
+await shot(p, '00b-stats');
+await p.getByRole('button', { name: 'Stats' }).click(); await wait(300);
 // Drop 32: sound on for the whole walkthrough (synthesized Web Audio; errors in the voice mapping surface as console errors)
 await p.getByRole('button', { name: 'Muted' }).click(); await wait(800);
 await startJob(p);
@@ -120,7 +137,7 @@ try {
   const want = await p.evaluate(() => { const g = window.__padworksSim.getState(); return { phase: g.phase, stage: g.stage, basin: g.setup.basin }; });
   console.log('share link: token', token.length, 'chars', new Date().toISOString());
   // same context as p: a fresh context has a cold shader cache, and under software GL its first frames take minutes
-  const q = await p.context().newPage(); q.setDefaultTimeout(90000);
+  const q = await p.context().newPage(); q.setDefaultTimeout(240000);
   q.on('pageerror', e => errors.push('pageerror: ' + e.message));
   q.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
   console.log('share link: page ready', new Date().toISOString());
@@ -477,6 +494,17 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   await clickWhenEnabled(p, 'Pressure up'); await waitText(p, 'Toe sleeve opened', 150000); await wait(500);
   await p.getByRole('button', { name: 'Downhole' }).click(); await wait(2000);
   await shot(p, '135-lesson5-toe-open');
+  // lesson 9 (Drop 51): gun misfire, re-run for the missed cluster
+  await p.getByRole('button', { name: 'Surface' }).click(); await wait(500);
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L9"]'); await wait(800); await p.selectOption('select', '4');
+  await clickWhenEnabled(p, 'Fire guns', 120000); await wait(500);
+  await waitText(p, 'did not fire', 120000); await wait(300);
+  await shot(p, '135b-lesson9-misfire');
+  await clickWhenEnabled(p, 'Re-run guns', 120000); await wait(500);
+  await clickWhenEnabled(p, 'Fire guns', 120000); await wait(500);
+  await waitText(p, 'Lesson complete', 150000); await wait(300);
+  await shot(p, '135c-lesson9-complete');
   // the setup panel now shows the best results
   await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
   await shot(p, '136-lessons-with-results');
@@ -489,7 +517,7 @@ if (!process.env.ONLY || process.env.ONLY === 'drop16') {
 {
   { const warm = await browser.newContext(); await signIn(warm); await warm.close(); }   // makes sure the admin has the pass's password
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });   // a fresh context: no cookie
-  p = await ctx.newPage(); p.setDefaultTimeout(90000);
+  p = await ctx.newPage(); p.setDefaultTimeout(240000);
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
   await p.goto(base + SIM); await p.waitForSelector('[data-panel="login"]'); await wait(500);

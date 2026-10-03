@@ -1,8 +1,8 @@
 import { Suspense, useEffect, useState } from 'react';
-import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX, Snowflake, Leaf, Link2, Check } from 'lucide-react';
+import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX, Snowflake, Leaf, Link2, Check, Activity } from 'lucide-react';
 import { soundOn, toggleSound, onSoundChange, armSoundOnGesture, disableSound } from './sound.js';
 import { LITE, setLite, nextTod } from './parts/lighting.jsx';
-import { useFx, fxOn, FX_LIMIT_MS } from './parts/effects.jsx';
+import { useFx, fxOn, FX_LIMIT_MS, useDiag } from './parts/effects.jsx';
 import { Wand2 } from 'lucide-react';
 import SurfaceScene from './SurfaceScene.jsx';
 import DownholeScene from './DownholeScene.jsx';
@@ -50,6 +50,9 @@ export default function Simulator() {
   const [sound, setSound] = useState(soundOn());
   // shareable links (Drop 42): ?s=<token> on /simulate rebuilds the job; the Share button copies the current one
   const [copied, setCopied] = useState(false);
+  // Stats readout (Drop 43): the numbers to send when something runs slow or looks wrong on a machine I cannot see
+  const [statsOpen, setStatsOpen] = useState(false);
+  const diag = useDiag();
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('s');
     if (token) { useSim.getState().applyShareToken(token); window.history.replaceState({}, '', window.location.pathname); }
@@ -102,11 +105,17 @@ export default function Simulator() {
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
         {view === 'surface' && <button className="btn flex items-center gap-1" title={todUi.title} onClick={() => setUi({ tod: nextTod(tod) })}><todUi.Icon size={14} />{todUi.label}</button>}
         {view === 'surface' && <button className="btn flex items-center gap-1" title={ui.season === 'winter' ? 'Winter: snow by basin (deep in the north, frost in the Permian), overcast, flurries, condensing exhaust. Click for summer.' : 'Summer. Click for winter conditions.'} onClick={() => setUi({ season: ui.season === 'winter' ? 'summer' : 'winter' })}>{ui.season === 'winter' ? <Snowflake size={14} /> : <Leaf size={14} />}{ui.season === 'winter' ? 'Winter' : 'Summer'}</button>}
+        <button className={'btn flex items-center gap-1 ' + (statsOpen ? 'btn-primary' : '')} title="Stats: frame rate, frame time, draw calls, triangles, the graphics chip, and any shader error. Screenshot this when reporting a problem." onClick={() => setStatsOpen(!statsOpen)} data-action="stats"><Activity size={14} />Stats</button>
         <button className="btn flex items-center gap-1" title="Copy a link that opens this job as it is now: setup, phase, stage, time of day, season, and camera preset." onClick={share} data-action="share">{copied ? <Check size={14} /> : <Link2 size={14} />}{copied ? 'Copied' : 'Share'}</button>
         <button className={'btn flex items-center gap-1 ' + (sound ? '' : 'text-mute')} title={sound ? 'Sound on: pumps, wireline, coil, flowback, alarms, valve actuation. Click to mute.' : 'Sound off. Click for pad sound (synthesized; no downloads).'} onClick={toggleSound}>{sound ? <Volume2 size={14} /> : <VolumeX size={14} />}{sound ? 'Sound' : 'Muted'}</button>
         <button className="btn flex items-center gap-1" title={LITE ? 'Lite rendering: hard shadows, no sky reflections. Click for full quality (reloads the page).' : 'Full rendering: sky reflections, soft shadows, ground detail. Click for lite mode on a slow machine (reloads the page).'} onClick={() => setLite(!LITE)}><Sparkles size={14} />{LITE ? 'Lite' : 'Full'}</button>
         {!LITE && <button className={'btn flex items-center gap-1 ' + (fxLive ? '' : 'text-mute')} title={fxLive ? 'Effects on: ambient occlusion and bloom. Click to turn them off.' : fx.auto ? 'Effects turned off automatically: this machine averaged ' + fx.frameMs + ' ms per frame with them on (limit ' + FX_LIMIT_MS + ' ms). Click to try again.' : 'Effects off. Click for ambient occlusion and bloom.'} onClick={() => fx.setWanted(!fxLive)} data-action="effects"><Wand2 size={14} />{fxLive ? 'Effects' : 'Effects off'}</button>}
       </div>
+      {statsOpen && (
+        <div className="w-full mt-1 text-[11px] mono px-2 py-1 rounded bg-black/70 text-white pointer-events-none" data-stats>
+          {diag.fps} fps · {diag.frameMs} ms/frame · {diag.calls.toLocaleString()} draws · {(diag.triangles / 1000).toFixed(0)}k tris · {LITE ? 'Lite' : 'Full'}{!LITE ? (fxLive ? ' + effects' : ' (effects off)') : ''} · {window.innerWidth}x{window.innerHeight} @ {Math.round(window.devicePixelRatio * 100) / 100}x · GPU: {diag.gpu || '...'}{diag.shaderError ? ' · SHADER ERROR: ' + diag.shaderError : ''}
+        </div>
+      )}
       <div className={'w-full mt-1 text-xs px-2 py-1 rounded pointer-events-none ' + (anyAlarm ? 'bg-bad/80 text-white' : 'bg-black/50 text-mute')}>
         {anyAlarm ? 'ALARM ACTIVE: see the control panel' : phase === 'setup' ? 'Pad setup: pick a guided lesson or set up the pad yourself, then press Start the job.' : lessonText + PHASES.find(p => p.id === phase).label + ' · stage ' + (stage + 1)}
       </div>

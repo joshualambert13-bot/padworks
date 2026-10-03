@@ -5,6 +5,8 @@ import { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { loadHdri, hdriYaw, useHdri, HDRI_LEVEL } from './hdri.js';
 
 // Render quality. Full: sky environment map, soft shadows, bump maps. Lite (?lite=1, or localStorage
 // padworks.lite=1): hard shadows, no environment map, no bump maps; for slow machines and the headless checks.
@@ -70,11 +72,8 @@ export function padTexture() {
     const p = (y * size + x) * 4; img.data[p] = g; img.data[p + 1] = g; img.data[p + 2] = g; img.data[p + 3] = 255;
   }
   ctx.putImageData(img, 0, 0);
-  // wheel ruts and stains
-  ctx.globalAlpha = 0.13; ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-  for (let i = 0; i < 14; i++) { const y0 = 20 + i * 36 + (hash2(i, 3) - 0.5) * 20; ctx.beginPath(); ctx.moveTo(-20, y0); ctx.bezierCurveTo(size * 0.3, y0 + (hash2(i, 5) - 0.5) * 40, size * 0.7, y0 + (hash2(i, 7) - 0.5) * 40, size + 20, y0 + (hash2(i, 9) - 0.5) * 30); ctx.stroke(); }
-  ctx.globalAlpha = 0.09; ctx.fillStyle = '#000';
-  for (let i = 0; i < 18; i++) { ctx.beginPath(); ctx.ellipse(hash2(i, 11) * size, hash2(i, 13) * size, 12 + hash2(i, 17) * 30, 8 + hash2(i, 19) * 20, hash2(i, 23) * Math.PI, 0, Math.PI * 2); ctx.fill(); }
+  // (the ruts and stains that used to be baked into this tile repeated every 16 m; since Drop 44 they come from the
+  // pad stain map drawn over the real layout, see ground.js)
   // pebbles: small light and dark grains, and a few larger stones with a shadow side
   for (let i = 0; i < 2600; i++) { const x = hash2(i, 31) * size, y = hash2(i, 37) * size, r = 0.6 + hash2(i, 41) * 1.6; ctx.globalAlpha = 0.1 + hash2(i, 43) * 0.16; ctx.fillStyle = hash2(i, 47) > 0.45 ? '#fff' : '#000'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
   for (let i = 0; i < 60; i++) { const x = hash2(i, 53) * size, y = hash2(i, 59) * size, r = 1.5 + hash2(i, 61) * 2.5; ctx.globalAlpha = 0.28; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x + 1.2, y + 1.2, r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 0.5; ctx.fillStyle = '#ddd'; ctx.beginPath(); ctx.arc(x, y, r * 0.9, 0, Math.PI * 2); ctx.fill(); }
@@ -310,22 +309,83 @@ export function strataTexture() {
   });
 }
 // Cumulus patch: white with a soft alpha from fractal noise, fading at the edges of the tile.
-// ---------------------------------------------------------------- winter (Drop 39)
-// Snow is a shader patch, not geometry: every MeshStandardMaterial (and MeshPhysicalMaterial, which inherits it)
-// blends its diffuse toward snow white where the shaded normal faces up, by a shared uniform `SNOW`. The patch is
-// installed once on the prototype, so materials made anywhere in the app carry it; the uniform object is shared,
-// so changing `SNOW.value` reaches every program without a recompile. The surface scene sets the value in its
-// onBeforeRender and resets it afterward, so the downhole section and the library viewer stay bare.
+// ---------------------------------------------------------------- material patches (winter, Drop 39; weathering, Drop 44)
+// Snow, grime, rust, and the pad stain map are one shader patch on MeshStandardMaterial's prototype (MeshPhysicalMaterial
+// inherits it), so materials made anywhere in the app carry it and nothing costs a draw call.
+//   snow:  diffuse blends toward snow white where the shaded normal faces up, by the shared `SNOW` uniform.
+//   grime: diffuse darkens toward dust brown in the lowest 1.6 m above the pad, gated by world-space value noise
+//          stretched into vertical streaks, by the shared `GRIME` uniform times the material's `userData.grime`
+//          (default 1; the ground, water, and sky set 0 and compile without the code).
+//   rust:  bare-steel materials (`userData.rust` > 0) get rust-colored spots from a second world-space noise.
+//   stain: the pad's material (`userData.stain` = { uniform, rect }) multiplies its diffuse by a map drawn over the
+//          pad's rectangle in world XZ (lanes, ruts, drips, spills; `padStainTexture` in ground.js), with 0.5 as
+//          neutral so the map can lighten (spilled sand) as well as darken.
+// The uniform objects are shared, so changing `SNOW.value` or `GRIME.value` reaches every program without a
+// recompile; the surface scene sets both in its onBeforeRender and resets them afterward, so the downhole section
+// and the library viewer stay bare and clean.
 export const SNOW = { value: 0 };
+export const GRIME = { value: 0 };
 let snowPatched = false;
 export function installSnowPatch() {
   if (snowPatched) return; snowPatched = true;
   const proto = THREE.MeshStandardMaterial.prototype;
   proto.onBeforeCompile = function (shader) {
-    shader.uniforms.uSnow = SNOW;
+    const ud = this.userData || {};
+    const grime = ud.grime == null ? 1 : ud.grime, rust = ud.rust || 0, stain = ud.stain || null;
+    const terrain = ud.terrain || 0, mesa = ud.mesa || 0;   // Drop 49: ground and horizon rock
+    const world = grime > 0 || rust > 0 || stain || terrain || mesa;
+    shader.uniforms.uSnow = SNOW; shader.uniforms.uGrime = GRIME;
+    shader.uniforms.uGrimeK = { value: grime }; shader.uniforms.uRustK = { value: rust };
+    if (stain) { shader.uniforms.uStain = stain.uniform; shader.uniforms.uStainRect = stain.rect; }
+    if (world) {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPadW;')
+        .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+  { vec4 pw = vec4( transformed, 1.0 );
+    #ifdef USE_INSTANCING
+    pw = instanceMatrix * pw;
+    #endif
+    vPadW = ( modelMatrix * pw ).xyz; }`);
+    }
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform float uSnow;')
+      .replace('#include <common>', `#include <common>
+uniform float uSnow; uniform float uGrime; uniform float uGrimeK; uniform float uRustK;
+${world ? 'varying vec3 vPadW;' : ''}
+${stain ? 'uniform sampler2D uStain; uniform vec4 uStainRect;' : ''}
+float padHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float padNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(padHash(i), padHash(i + vec2(1.0, 0.0)), f.x), mix(padHash(i + vec2(0.0, 1.0)), padHash(i + vec2(1.0, 1.0)), f.x), f.y); }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+  ${stain ? 'diffuseColor.rgb *= 2.0 * texture2D(uStain, (vPadW.xz - uStainRect.xy) / uStainRect.zw).rgb;' : ''}
+  ${terrain ? `{
+    // ground (Drop 49): patches of darker soil and lighter caliche at 30 m and 4 m scales, so the plain never reads as one tone
+    float tA = padNoise(vPadW.xz * 0.035 + 7.0), tB = padNoise(vPadW.xz * 0.27 + 3.0);
+    diffuseColor.rgb *= (0.82 + 0.34 * tA) * (0.92 + 0.16 * tB);
+    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.9, 0.85, 0.78), smoothstep(0.6, 0.85, tA) * 0.6);
+  }` : ''}
+  ${mesa ? `{
+    // horizon rock (Drop 49): strata bands by height, cliff faces darker and redder than the caps and talus
+    vec3 upM = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+    float upK = dot(normal, upM);
+    float band = 0.9 + 0.14 * sin(vPadW.y * 0.9 + padNoise(vPadW.xz * 0.02) * 4.0) * (0.6 + 0.4 * padNoise(vPadW.xz * 0.12));
+    diffuseColor.rgb *= band;
+    diffuseColor.rgb = mix(diffuseColor.rgb * vec3(0.74, 0.6, 0.5), diffuseColor.rgb, smoothstep(0.25, 0.75, upK));
+  }` : ''}
+  ${rust > 0 ? `{
+    float rN = padNoise(vPadW.xz * 6.0 + vPadW.y * 4.0) * 0.55 + padNoise(vPadW.xz * 21.0 + vPadW.y * 15.0) * 0.45;
+    float rK = uRustK * smoothstep(0.6, 0.86, rN);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.36, 0.17, 0.07), rK);
+    roughnessFactor = mix(roughnessFactor, 0.92, rK);
+    metalnessFactor = mix(metalnessFactor, 0.1, rK);
+  }` : ''}
+  ${grime > 0 ? `if (uGrime > 0.001) {
+    float gH = 1.0 - smoothstep(0.0, 1.6, vPadW.y);
+    float gS = padNoise(vec2((vPadW.x + vPadW.z) * 1.7, vPadW.y * 0.35)) * 0.6 + padNoise(vec2((vPadW.x - vPadW.z) * 5.0, vPadW.y * 1.2)) * 0.4;
+    float gK = uGrime * uGrimeK * gH * smoothstep(0.35, 0.9, gS) * 0.6;
+    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.55, 0.5, 0.44) + vec3(0.04, 0.035, 0.03), gK);
+    roughnessFactor = mix(roughnessFactor, 0.95, gK * 0.8);
+    metalnessFactor = mix(metalnessFactor, 0.0, gK * 0.7);
+  }` : ''}
   if (uSnow > 0.001) {
     vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
     float snowK = uSnow * smoothstep(0.42, 0.78, dot(normal, upV));
@@ -334,7 +394,10 @@ export function installSnowPatch() {
     metalnessFactor = mix(metalnessFactor, 0.0, snowK);
   }`);
   };
-  proto.customProgramCacheKey = function () { return 'snow'; };
+  proto.customProgramCacheKey = function () {
+    const ud = this.userData || {};
+    return 'pad' + (ud.grime === 0 ? '' : 'g') + (ud.rust ? 'r' : '') + (ud.stain ? 's' : '') + (ud.terrain ? 't' : '') + (ud.mesa ? 'm' : '');
+  };
 }
 // Season palette on top of the time of day: winter is overcast, the sun weak and white, the haze close and pale.
 export function seasonSky(terrain, season, tod) {
@@ -379,7 +442,9 @@ export function Flurries({ count = 1600, box = 70, height = 30, wind = [1.4, 0, 
 // bison) are simplified silhouettes drawn with canvas paths. Texture is 2:1 or 3:2 per the flag's own ratio.
 const star = (ctx, cx, cy, r, color) => { ctx.fillStyle = color; ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.382 : r; ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); };
 const text = (ctx, t, x, y, size, color, weight = 'bold') => { ctx.fillStyle = color; ctx.font = weight + ' ' + size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, x, y); };
-const FLAG_RATIO = { us: 1.9, TX: 1.5, ND: 1.5, LA: 1.5, PA: 1.5, CO: 1.5, OK: 1.5, WY: 1.43, OH: 1.625, NM: 1.5 };
+const FLAG_RATIO = { us: 1.9, TX: 1.5, ND: 1.27, LA: 1.54, PA: 1.37, CO: 1.5, OK: 1.5, WY: 1.43, OH: 1.625, NM: 1.5 };
+// Kinds with artwork in public/flags/<kind>.svg (see the README there); the others are drawn in code only.
+export const FLAG_FILES = new Set(['ND', 'LA', 'PA', 'OK', 'WY']);
 export const flagRatio = (kind) => FLAG_RATIO[kind] || 1.5;
 export function flagTexture(kind) {
   const key = 'flag-' + kind;
@@ -460,6 +525,22 @@ export function flagTexture(kind) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   texCache.set(key, tex);
+  // Drop 43: seal flags have artwork in public/flags/<kind>.svg; it is drawn over the coded flag in place when it
+  // arrives (the drawing above shows until then). The traced files carry a ragged margin, so they are drawn 3%
+  // oversize and the edge is clipped off.
+  if (FLAG_FILES.has(kind)) {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        const r = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : FLAG_RATIO[kind] || 1.5, W2 = 1024, H2 = Math.round(W2 / r);
+        c.width = W2; c.height = H2;
+        const ctx2 = c.getContext('2d'); ctx2.clearRect(0, 0, W2, H2); ctx2.drawImage(img, -W2 * 0.015, -H2 * 0.015, W2 * 1.03, H2 * 1.03);
+        tex.needsUpdate = true; FLAG_RATIO[kind] = r;
+      };
+      img.onerror = () => {};
+      img.src = '/flags/' + kind + '.svg';
+    } catch { /* no DOM */ }
+  }
   return tex;
 }
 export function cloudTexture() {
@@ -570,15 +651,18 @@ export function LiteEnvironment({ terrain, intensity = 0.8, tod = 'day' }) {
 // Lite gets the environment only where `lite` is set (the library viewer: one model, few pixels). The pad and the
 // downhole section in Lite go without, because sampling the environment on every pixel is the one cost a software
 // or low-end renderer feels most; their metals are capped by `metal()` in primitives instead.
-export function SceneEnvironment({ terrain, intensity = 0.9, lite = false, tod = 'day' }) {
+export function SceneEnvironment({ terrain, intensity = 0.9, lite = false, tod = 'day', season = 'summer' }) {
   if (LITE) return lite ? <LiteEnvironment terrain={terrain} intensity={intensity * 0.85} tod={tod} /> : null;
-  return <PadEnvironment terrain={terrain} intensity={intensity} tod={tod} />;
+  return <PadEnvironment terrain={terrain} intensity={intensity} tod={tod} season={season} />;
 }
 
 // Tone-mapping exposure set from a prop so the time of day can change it without remounting the canvas.
+// AgX tone mapping (Drop 45) sits about a stop under ACES at the same exposure, so the sun presets' exposures are
+// scaled here rather than retuned
+export const TONE_GAIN = 1.25;
 export function Exposure({ value = 1.05 }) {
   const gl = useThree(s => s.gl);
-  useEffect(() => { gl.toneMappingExposure = value; }, [gl, value]);
+  useEffect(() => { gl.toneMappingExposure = value * TONE_GAIN; }, [gl, value]);
   return null;
 }
 
@@ -608,7 +692,7 @@ export function SunLight({ tod = 'day', mapSize = 2048 }) {
   });
   return (
     <>
-      <directionalLight ref={light} position={[dir.x * 160, dir.y * 160, dir.z * 160]} target={target} intensity={intensity} color={color} castShadow shadow-mapSize={[mapSize, mapSize]} shadow-camera-left={-100} shadow-camera-right={100} shadow-camera-top={100} shadow-camera-bottom={-100} shadow-camera-near={1} shadow-camera-far={420} shadow-bias={-0.0004} shadow-normalBias={0.03} />
+      <directionalLight ref={light} position={[dir.x * 160, dir.y * 160, dir.z * 160]} target={target} intensity={intensity} color={color} castShadow shadow-mapSize={[mapSize, mapSize]} shadow-camera-left={-100} shadow-camera-right={100} shadow-camera-top={100} shadow-camera-bottom={-100} shadow-camera-near={1} shadow-camera-far={420} shadow-bias={-0.0004} shadow-normalBias={0.03} shadow-radius={LITE ? 1 : 3} />
       <primitive object={target} />
     </>
   );
@@ -719,15 +803,108 @@ function DomeMesh({ terrain, radius, sun = true, intensity = 1, tod = 'day' }) {
     </group>
   );
 }
-export function SkyDome({ terrain, radius = 1200, tod = 'day' }) {
-  return <DomeMesh terrain={terrain} radius={radius} sun tod={tod} />;
+// ---------------------------------------------------------------- atmospheric sky (Drop 45)
+// The dome is three's Preetham-model Sky (an analytic daylight model: Rayleigh and Mie scattering from the sun's
+// position, turbidity, and haze) instead of a painted gradient, so the horizon haze, the brightening toward the sun,
+// and the zenith blue all come from one physical model and change together with the time of day. In Full the model's
+// own cloud layer (fbm noise in the same shader) carries the cloud cover; Lite keeps the shader's clear sky and the
+// cheaper sprite clouds. Two uniforms are added to the stock shader: `uScale` (the model expects an exposure near
+// 0.5; the pad renders at 1.05) and `uGray` (winter overcast desaturation). Night uses the moon as the model's sun,
+// scaled down to a faint glow, with the star field over it.
+const SKY_PRESETS = {
+  day:   { turbidity: 3.0, rayleigh: 1.6, mie: 0.005, g: 0.8, scale: 0.28, gray: 0.0 },
+  dusk:  { turbidity: 6.0, rayleigh: 2.0, mie: 0.012, g: 0.86, scale: 0.26, gray: 0.0 },
+  night: { turbidity: 2.0, rayleigh: 1.0, mie: 0.004, g: 0.8, scale: 0.05, gray: 0.35 },
+};
+const CLOUD_COVER = { scrub: 0.12, mesquite: 0.12, brush: 0.25, grass: 0.35, pine: 0.45, hardwood: 0.45, sage: 0.3 };
+export function skyParams(tod, season, terrain) {
+  const P = SKY_PRESETS[tod] || SKY_PRESETS.day;
+  const winter = season === 'winter';
+  const cover = winter ? 0.92 : (CLOUD_COVER[terrain && terrain.veg] ?? 0.25);
+  return {
+    ...P,
+    turbidity: winter ? P.turbidity + 8 : P.turbidity,
+    rayleigh: winter ? P.rayleigh * 0.8 : P.rayleigh,
+    scale: winter ? P.scale * 0.9 : P.scale,
+    gray: winter ? Math.max(P.gray, 0.45) : P.gray,
+    cover, density: winter ? 0.85 : 0.45, elevation: winter ? 0.7 : 0.5,
+  };
+}
+function makeSky() {
+  const sky = new Sky();
+  const m = sky.material;
+  m.uniforms.uScale = { value: 0.42 }; m.uniforms.uGray = { value: 0 };
+  m.fragmentShader = m.fragmentShader
+    .replace('uniform float showSunDisc;', 'uniform float showSunDisc; uniform float uScale; uniform float uGray;')
+    .replace('gl_FragColor = vec4( texColor, 1.0 );', 'texColor = mix( texColor, vec3( dot( texColor, vec3( 0.3333 ) ) ), uGray ) * uScale;\n\t\t\tgl_FragColor = vec4( texColor, 1.0 );');
+  m.fog = false;
+  sky.frustumCulled = false;
+  if (typeof window !== 'undefined') window.__padworksSky = sky;   // test hook
+  return sky;
+}
+export function AtmoSky({ tod = 'day', season = 'summer', terrain, radius = 1200, clouds = true, sunDisc = true }) {
+  const sky = useMemo(() => makeSky(), []);
+  const S = sunFor(tod);
+  const P = skyParams(tod, season, terrain);
+  useEffect(() => {
+    const u = sky.material.uniforms;
+    u.sunPosition.value.copy(S.dir);
+    u.turbidity.value = P.turbidity; u.rayleigh.value = P.rayleigh; u.mieCoefficient.value = P.mie; u.mieDirectionalG.value = P.g;
+    u.uScale.value = P.scale; u.uGray.value = P.gray;
+    u.cloudCoverage.value = clouds ? P.cover : 0; u.cloudDensity.value = P.density; u.cloudElevation.value = P.elevation;
+    u.cloudScale.value = 0.00025; u.cloudSpeed.value = 0.000012;
+    u.showSunDisc.value = sunDisc && !S.moon ? 1 : 0;
+    sky.scale.setScalar(radius * 0.9);
+  }, [sky, S, P.turbidity, P.rayleigh, P.mie, P.g, P.scale, P.gray, P.cover, P.density, P.elevation, clouds, sunDisc, radius]);
+  useFrame((state) => { if (clouds) sky.material.uniforms.time.value = state.clock.elapsedTime * 60; });
+  return <primitive object={sky} />;
+}
+// Photographic sky (Drop 47): when the HDRI for this time of day is present, it becomes the scene background and
+// environment, turned so its sun sits at the sun light's azimuth; the atmosphere model and the drei environment
+// stand down (SurfaceScene reads `hdriActive`). Winter keeps the atmosphere model (there is no overcast file).
+export function hdriActive(tod, season, status) { return !LITE && season !== 'winter' && status === true; }
+export function HdriSky({ tod = 'day', season = 'summer' }) {
+  const scene = useThree(s => s.scene);
+  const status = useHdri(s => s[tod]);
+  useEffect(() => { if (!LITE) loadHdri(tod); }, [tod]);
+  const active = hdriActive(tod, season, status);
+  useEffect(() => {
+    if (!active) return;
+    let gone = false;
+    loadHdri(tod).then((entry) => {
+      if (gone || !entry) return;
+      const yaw = hdriYaw(entry, sunFor(tod).dir);
+      scene.background = entry.texture; scene.environment = entry.texture;
+      scene.backgroundRotation.set(0, yaw, 0); scene.environmentRotation.set(0, yaw, 0);
+      scene.backgroundIntensity = HDRI_LEVEL[tod]; scene.environmentIntensity = HDRI_LEVEL[tod] * 0.9;
+    });
+    return () => { gone = true; if (scene.background && scene.background.isTexture) scene.background = null; scene.environment = null; scene.backgroundRotation.set(0, 0, 0); scene.environmentRotation.set(0, 0, 0); };
+  }, [active, tod, scene]);
+  return null;
+}
+export function SkyDome({ terrain, radius = 1200, tod = 'day', season = 'summer' }) {
+  const S = sunFor(tod);
+  return (
+    <group>
+      <AtmoSky tod={tod} season={season} terrain={terrain} radius={radius} clouds={!LITE} />
+      {S.moon && (
+        <>
+          <mesh position={S.dir.clone().multiplyScalar(radius * 0.88)}><sphereGeometry args={[radius * S.diskR, 12, 8]} /><meshBasicMaterial color={new THREE.Color(...S.disk)} fog={false} toneMapped={false} /></mesh>
+          <sprite position={S.dir.clone().multiplyScalar(radius * 0.85)} scale={[radius * S.glowR, radius * S.glowR, 1]}><spriteMaterial map={glowTexture()} color={S.glow} transparent opacity={S.glowA} blending={THREE.AdditiveBlending} depthWrite={false} fog={false} toneMapped={false} /></sprite>
+          <Stars radius={radius * 0.86} />
+        </>
+      )}
+    </group>
+  );
 }
 // Image-based lighting from the dome: rendered once into a small cube map (frames={1}); re-rendered when the
 // basin changes because the key changes.
-export function PadEnvironment({ terrain, intensity = 0.9, tod = 'day' }) {
+export function PadEnvironment({ terrain, intensity = 0.9, tod = 'day', season = 'summer' }) {
+  // the reflections see the same atmosphere (no sun disc: a hard bright dot in a 128 px cube map streaks)
   return (
-    <Environment key={terrain.sky + terrain.fog + terrain.ground + tod} resolution={128} frames={1} near={1} far={2000} environmentIntensity={intensity}>
-      <DomeMesh terrain={terrain} radius={900} sun intensity={1.15} tod={tod} />
+    <Environment key={terrain.sky + terrain.fog + terrain.ground + tod + season} resolution={128} frames={1} near={1} far={2000} environmentIntensity={intensity}>
+      <AtmoSky tod={tod} season={season} terrain={terrain} radius={900} clouds={false} sunDisc={false} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}><planeGeometry args={[1800, 1800]} /><meshBasicMaterial color={terrain.ground} /></mesh>
     </Environment>
   );
 }
