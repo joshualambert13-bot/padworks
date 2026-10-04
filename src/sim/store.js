@@ -319,7 +319,7 @@ export const useSim = create((set, get) => ({
   speed: 1,
   setup: defaultSetup(),
   pad: { wells: 4, mode: 'zipper', bore: BASINS[0].bore },
-  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false, focus: null, tod: 'day', season: 'summer' },
+  ui: { view: 'surface', showLabels: false, preset: 'pad', mobileTab: '3d', summary: false, focus: null, tod: 'day', season: 'summer', walk: false },
   ...freshJob(defaultSetup(), { wells: 4, mode: 'zipper', bore: BASINS[0].bore }),
   lessonResults: [],
   lastJob: null,

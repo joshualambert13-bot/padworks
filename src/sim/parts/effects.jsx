@@ -59,7 +59,7 @@ export function Effects({ ao = {}, bloom = {}, guard = true }) {
 // Diagnostics (Drop 43): what the renderer is doing, for the Stats readout on the toolbar. Filled by `Diagnostics`
 // inside the surface canvas; `shaderError` keeps the first program error the renderer reports, which is the one
 // thing a person cannot see without opening the developer tools.
-export const useDiag = create((set) => ({ fps: 0, frameMs: 0, calls: 0, triangles: 0, gpu: '', shaderError: '', set: (patch) => set(patch) }));
+export const useDiag = create((set) => ({ fps: 0, frameMs: 0, calls: 0, triangles: 0, gpu: '', shaderError: '', dpr: 0, set: (patch) => set(patch) }));
 export function Diagnostics() {
   const samples = useRef([]); const last = useRef(0);
   useFrame((state, dt) => {
@@ -81,7 +81,7 @@ export function Diagnostics() {
     if (now - last.current > 0.5 && samples.current.length) {
       const avg = samples.current.reduce((a, b) => a + b, 0) / samples.current.length;
       samples.current = []; last.current = now;
-      useDiag.getState().set({ fps: Math.round(1 / Math.max(1e-3, avg)), frameMs: Math.round(avg * 1000), calls: r.calls, triangles: r.triangles });
+      useDiag.getState().set({ fps: Math.round(1 / Math.max(1e-3, avg)), frameMs: Math.round(avg * 1000), calls: r.calls, triangles: r.triangles, dpr: Math.round(gl.getPixelRatio() * 100) / 100 });
     }
     gl.info.reset();
   });

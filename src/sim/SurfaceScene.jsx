@@ -7,14 +7,16 @@ import { useHover, pickHandlers } from './hover.js';
 import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, installSnowPatch, SNOW, GRIME, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
 import { Totes, IronRack, Cones, Barricades, Welfare, FuelCube, SafetyPoint, HoseCoils } from './parts/padlife.jsx';
 import { useHdri } from './parts/hdri.js';
+import { WalkControls, LAST_TARGET } from './parts/walk.jsx';
 import { installTextureSets } from './parts/textures.js';
+import { SOURCES } from './sound.js';
 installSnowPatch();
 import { Effects, Diagnostics } from './parts/effects.jsx';
 import { ContextLoss } from './parts/stability.jsx';
 import { Crew, Walker, Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
 import { terrainHeight } from './parts/terrain.js';
-import { Ground, FracTree, lubricatorTopY, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, FracPumpLive, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxStation, ShuttleForklift, CRADLE_X, CRADLE_Z, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, FlangedRun, WELL_COLORS, Accumulator, HydraulicStand, standLayout, HOSE_BUNDLE_X, ZIPPER_BUNDLE_X, WaterTransfer, WaterPit, StorageTank } from './parts/surface.jsx';
+import { Ground, FracTree, FracTreeIron, FracTreeTop, ProductionTreeIron, dimTint, lubricatorTopY, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, FracPumpLive, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxStation, ShuttleForklift, CRADLE_X, CRADLE_Z, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, FlangedRun, WELL_COLORS, Accumulator, HydraulicStand, standLayout, HOSE_BUNDLE_X, ZIPPER_BUNDLE_X, WaterTransfer, WaterPit, StorageTank } from './parts/surface.jsx';
 import { PipeRun, PipeStands, Pipe, Hose, MAT, Label, Instanced } from './parts/primitives.jsx';
 
 const WELL_SPACING = 8;   // meters between wellheads along the row
@@ -49,19 +51,21 @@ function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = fa
 function RenderStats() {
   useFrame((state) => {
     window.__padworksScene = state.scene;
+    if (state.controls && state.controls.target) LAST_TARGET.copy(state.controls.target);
     window.__padworksCam = () => ({ pos: state.camera.position.toArray(), target: state.controls ? state.controls.target.toArray() : null });
     window.__padworksView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } };
   });
   return null;
 }
-function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig }) {
+function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig, walk }) {
   const { camera, controls } = useThree();
   useEffect(() => {
+    if (walk) return;   // walk mode owns the camera; leaving it re-applies the preset
     const P = presets(rowCenter, rowLen, production, k, bZ, rig);
     const p = P[preset] || P.pad;
     camera.position.set(...p.pos);
     if (controls) { controls.target.set(...p.target); controls.update(); }
-  }, [preset, camera, controls, rowCenter, rowLen, production, k, bZ, rig]);
+  }, [preset, camera, controls, rowCenter, rowLen, production, k, bZ, rig, walk]);
   return null;
 }
 
@@ -178,6 +182,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const basin = basinOf(s);
   const tod = useSim(st => st.ui.tod) || 'day';
   const season = useSim(st => st.ui.season) || 'summer';
+  const walk = !!useSim(st => st.ui.walk);
   const winter = season === 'winter';
   const snow = winter ? (basin.snow == null ? 0.6 : basin.snow) : 0;
   const hdriStatus = useHdri(st => st[tod]);
@@ -254,6 +259,22 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const treatingLine = useMemo(() => [[MISSILE_X, md.hpY, missileOutletZ], [MISSILE_X, md.hpY, missileOutletZ - 1.4], [MISSILE_X + 2, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, zd.headerY, zipperFrontZ + 0.9 - zd.ftf / 2 - 0.1]], [md.hpY, missileOutletZ, zd.headerY, zd.ftf, zipperFrontZ]);
   const flowbackLine = useMemo(() => [[d.wingOuterX + d.ftf / 2, d.crossY, 0], [d.wingOuterX + 3, d.crossY, 0], [d.wingOuterX + 4, 2.0, 0], [d.wingOuterX + 4, 0.9, 6], [12.8, 0.9, 21.4 + rowLen]], [d.wingOuterX, d.ftf, d.crossY, rowLen]);
   const stands = useMemo(() => standLayout(roles.length, ACC, 5), [roles.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  // where the working sounds come from, for the positional mix while walking (Drop 60): pad meters [x, z]
+  useEffect(() => {
+    SOURCES.pump = [MISSILE_X, missileZ]; SOURCES.choke = [14, 22 + rowLen]; SOURCES.wl = [16.5, 3]; SOURCES.ct = [18.5, -10]; SOURCES.mill = [0, 0];
+  }, [missileZ, rowLen]);
+  // wells that carry a frac tree (the manual well until it goes on production, partners until they are done) and,
+  // among them, the ones with a bare top adapter (no lubricator, no ball launcher)
+  const hasTree = roles.map((r, i) => (i === 0 ? s.phase !== 'production' : r.role !== 'done'));
+  const bareTop = roles.map((r, i) => hasTree[i] && !sleeve && (i === 0 ? !s.lubricatorRigged : r.role !== 'wireline'));
+  const treeKey = hasTree.map(x => (x ? 1 : 0)).join('') + '|' + wellZ.join(',');
+  const topKey = bareTop.map(x => (x ? 1 : 0)).join('') + '|' + wellZ.join(',');
+  const treeSpots = useMemo(() => roles.map((r, i) => i).filter(i => hasTree[i]).map(i => ({ position: [0, 0, wellZ[i]], tint: i === 0 ? WELL_COLORS[i % WELL_COLORS.length] : dimTint(WELL_COLORS[i % WELL_COLORS.length]) })), [treeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const topSpots = useMemo(() => roles.map((r, i) => i).filter(i => bareTop[i]).map(i => ({ position: [0, 0, wellZ[i]] })), [topKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // wells on production with a production tree on them (the manual well once its hookup is past the rig, partners once done)
+  const hasProd = roles.map((r, i) => (i === 0 ? s.phase === 'production' && s.hookup.step !== 'rig' && s.hookup.step !== 'tubing' : r.role === 'done'));
+  const prodKey = hasProd.map(x => (x ? 1 : 0)).join('') + '|' + wellZ.join(',');
+  const prodSpots = useMemo(() => roles.map((r, i) => i).filter(i => hasProd[i]).map(i => ({ position: [0, 0, wellZ[i]], tint: i === 0 ? WELL_COLORS[i % WELL_COLORS.length] : dimTint(WELL_COLORS[i % WELL_COLORS.length]) })), [prodKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Canvas shadows={LITE ? true : { type: THREE.PCFShadowMap }} dpr={[1, 1.5]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05 * 1.25 }}>
@@ -274,14 +295,31 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <ContextLoss />
       <hemisphereLight args={[terrain.sky, terrain.ground, sun.hemi]} />
       <Ticker enabled={tickHere} />
-      <CameraPreset preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
+      <CameraPreset walk={walk} preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
       <FocusCamera ctx={{ rowCenter, rowLen, production: s.phase === 'production', rig: s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing'), k: 0.6 + 0.4 * bore / 0.18, bZ, d, zd, zipperFrontZ, sleeve }} />
       <Ground terrain={terrain} pad={pad} seed={basin.id.length} stain={stainLayout} />
       <Containment x0={-3.2} x1={4.2} z0={-3.5} z1={rowLen + 3.5} />
       <RedZone visible={pumping} x0={-34} xm={-14} x1={10} z0={-14} zm={rear + 1.5} z1={rowLen + 10} />
       <group {...pick}>
 
-      {/* the row of wells: well 0 is under manual control, the others follow the crews */}
+      {/* the row of wells: well 0 is under manual control, the others follow the crews. The frac trees' shared
+          iron is one instanced set over the wells that carry a frac tree (Drop 57), tinted per well; the top
+          adapter another over the wells with nothing rigged on top; each well then draws only its moving parts. */}
+      {treeSpots.length > 0 && (
+        <Instanced transforms={treeSpots} version={bore} name="WH-FRACTREE">
+          <FracTreeIron bore={bore} />
+        </Instanced>
+      )}
+      {topSpots.length > 0 && (
+        <Instanced transforms={topSpots} version={bore} name="WH-FRACTREE-TOPADAPTER">
+          <FracTreeTop bore={bore} />
+        </Instanced>
+      )}
+      {prodSpots.length > 0 && (
+        <Instanced transforms={prodSpots} name="UC-PRODTREE">
+          <ProductionTreeIron />
+        </Instanced>
+      )}
       {roles.map((r, i) => (
         <group key={i} position={[0, 0, wellZ[i]]}>
           {i === 0
@@ -289,10 +327,10 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
               ? (s.hookup.step === 'rig' || s.hookup.step === 'tubing'
                 ? <BopStack showLabels={showLabels && preset === 'tree'} />
                 : <ProductionTree showLabels={showLabels && preset === 'tree'} tint={WELL_COLORS[i % WELL_COLORS.length]} lift={s.hookup.step === 'done' ? s.setup.lift : 'flow'} />)
-              : <FracTree valves={s.valves} showLabels={showLabels && preset === 'tree'} lubricator={s.lubricatorRigged} wlStep={s.wl.step} bore={bore} focusValve={focusValve} launcher={sleeve} ballsLeft={Math.max(0, s.stages.length - 1 - s.ballsDropped)} tint={WELL_COLORS[i % WELL_COLORS.length]} wellNo={1} pumping={pumping} />)
+              : <FracTree valves={s.valves} showLabels={showLabels && preset === 'tree'} lubricator={s.lubricatorRigged} wlStep={s.wl.step} bore={bore} focusValve={focusValve} launcher={sleeve} ballsLeft={Math.max(0, s.stages.length - 1 - s.ballsDropped)} wellNo={1} pumping={pumping} />)
             : (r.role === 'done'
               ? <ProductionTree showLabels={false} partner tint={WELL_COLORS[i % WELL_COLORS.length]} lift={s.setup.lift} />
-              : <FracTree valves={partnerValves(r.role)} showLabels={false} lubricator={!sleeve && r.role === 'wireline'} wlStep={r.role === 'wireline' ? 'pumpdown' : 'idle'} bore={bore} dim partner launcher={sleeve} ballsLeft={3} tint={WELL_COLORS[i % WELL_COLORS.length]} wellNo={i + 1} pumping={r.role === 'frac'} />)}
+              : <FracTree valves={partnerValves(r.role)} showLabels={false} lubricator={!sleeve && r.role === 'wireline'} wlStep={r.role === 'wireline' ? 'pumpdown' : 'idle'} bore={bore} dim launcher={sleeve} ballsLeft={3} wellNo={i + 1} pumping={r.role === 'frac'} />)}
           {/* flanged treating spools from the zipper leg outlet up to the inlet block, in the well's color (gone once the well is on production) */}
           {!((i === 0 && s.phase === 'production') || (i > 0 && r.role === 'done')) && (
             <FlangedRun points={[[ZIPPER_X - 1.0 + zd.outletX, zd.topY, 0], [(ZIPPER_X - 1.0 + zd.outletX - bore * 2.6) / 2, zd.topY, 0], [-bore * 2.6, d.inletY, 0]]} r={bore * 0.6} color={WELL_COLORS[i % WELL_COLORS.length]} />
@@ -312,14 +350,14 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       </Instanced>
       {pumps.map((p, i) => (
         <group key={i}>
-          <FracPumpLive position={[p.x, 0, p.z]} rotation={[0, p.side === 1 ? Math.PI : 0, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} rate={s.pumpRate} name={'PP-FRACPUMP-' + (i + 1)} electric={spread.electric} number={i + 1} />
+          <FracPumpLive position={[p.x, 0, p.z]} rotation={[0, p.side === 1 ? Math.PI : 0, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} rate={s.pumpRate} name={'PP-FRACPUMP-' + (i + 1)} electric={spread.electric} number={i + 1} night={tod === 'night'} />
           {/* discharge: swivel arm from the missile feed port over to the end of the pump's own discharge iron (at its nose, 2.18 m up, offset to its +z side); suction: hose from the low-pressure outlet down to the pump's suction hose end at ground level */}
           <PipeRun points={[[MISSILE_X + p.side * 1.06, md.hpY, p.z], [MISSILE_X + p.side * 2.0, 2.95, p.z - p.side * 0.55], [MISSILE_X + p.side * 1.4, 2.18, p.z - p.side * 1.2]]} r={0.07} mat={MAT.redIron} />
           <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[MISSILE_X + p.side * (8.0 - 3.4), 1.18 + 0.3, p.z + p.side * 1.2]} r={0.14} sag={0.45} segments={10} />
         </group>
       ))}
       {/* blender behind the missile, discharge end toward it: two suction hoses from its manifolds to the low-pressure headers; hydration and chemical units beside it, silos and conveyor feeding the hoppers */}
-      <Blender position={[MISSILE_X, 0, bZ]} showLabels={showLabels} />
+      <Blender position={[MISSILE_X, 0, bZ]} showLabels={showLabels} lit={tod === 'night'} />
       <Hose from={[MISSILE_X + 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X + 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />
       <Hose from={[MISSILE_X - 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X - 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />
       <Hydration position={[MISSILE_X + 8, 0, bZ + 0.5]} showLabels={showLabels} />
@@ -404,12 +442,14 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       ))}
       {s.ctRigged && <CTUnit position={[18.5, 0, -10]} treeTop={treeTop} showLabels={showLabels} active={s.ct.progress > 0} ct={s.ct} />}
       {s.phase === 'production' && s.hookup.step !== 'done' && <WorkoverRig active={s.hookup.step === 'tubing'} showLabels={showLabels} />}
-      <FlowbackSpread position={[14, 0, 22 + rowLen]} showLabels={showLabels} flaring={s.phase === 'flowback' && s.valves.wingB.pos > 0.99} />
+      <FlowbackSpread position={[14, 0, 22 + rowLen]} showLabels={showLabels} flaring={s.phase === 'flowback' && s.valves.wingB.pos > 0.99} night={tod === 'night'} />
       {s.phase !== 'production' && <PipeRun points={flowbackLine} r={0.075} />}
       {s.phase !== 'production' && <PipeStands points={flowbackLine} r={0.075} every={4.0} />}
 
       </group>
-      <OrbitControls makeDefault maxPolarAngle={Math.PI / 2 - 0.02} minDistance={3} maxDistance={420} enableDamping dampingFactor={0.08} />
+      {walk
+        ? <WalkControls terrain={terrain} pad={pad} onExit={() => useSim.getState().setUi({ walk: false })} />
+        : <OrbitControls makeDefault maxPolarAngle={Math.PI / 2 - 0.02} minDistance={3} maxDistance={420} enableDamping dampingFactor={0.08} />}
       <Effects ao={{ aoRadius: 1.4, distanceFalloff: 1.0, intensity: 2.4 }} bloom={{ intensity: 0.25, luminanceThreshold: 1.3 }} />
     </Canvas>
   );

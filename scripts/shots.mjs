@@ -98,6 +98,17 @@ await p.getByRole('button', { name: 'Stats' }).click(); await wait(3000);
 }
 await shot(p, '00b-stats');
 await p.getByRole('button', { name: 'Stats' }).click(); await wait(300);
+// Drop 56: walk mode puts the camera at eye height and Escape brings the preset back
+{
+  const y0 = (await p.evaluate(() => window.__padworksCam().pos))[1];
+  await p.click('[data-action="walk"]'); await wait(4000);
+  const y1 = (await p.evaluate(() => window.__padworksCam().pos))[1];
+  if (Math.abs(y1 - 1.7) > 0.6) errors.push('walk mode camera height ' + y1.toFixed(2) + ' (expected about 1.7)');
+  await shot(p, '00c-walk');
+  await p.keyboard.press('Escape'); await wait(2500);
+  const y2 = (await p.evaluate(() => window.__padworksCam().pos))[1];
+  if (Math.abs(y2 - y0) > 0.5) errors.push('leaving walk mode did not restore the preset camera: ' + y2.toFixed(2) + ' vs ' + y0.toFixed(2));
+}
 // Drop 32: sound on for the whole walkthrough (synthesized Web Audio; errors in the voice mapping surface as console errors)
 await p.getByRole('button', { name: 'Muted' }).click(); await wait(800);
 await startJob(p);

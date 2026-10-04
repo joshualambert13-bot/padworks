@@ -256,20 +256,24 @@ export function Windsock({ position = [0, 0, 0], height = 6 }) {
   );
 }
 // Plain safety flag: a cloth plane whose vertices ripple in the wind
-export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 1.6, h = 1.0, map = null, alpha = false, seed = 0 }) {
+// Flags with lettering (the seal flags) get a reverse ply with the texture mirrored across the hoist, so the words
+// read correctly from behind; the seal stays centered so nothing else moves. Flags without lettering (US, Texas,
+// Colorado, New Mexico, Ohio) are one cloth: from behind, the canton or hoist stripe stays at the pole, as on the
+// real flag (Drop 52; the mirrored reverse had put the canton at the fly end).
+export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 1.6, h = 1.0, map = null, alpha = false, seed = 0, mirrorBack = false }) {
   const ref = useRef();
   const geom = useMemo(() => new THREE.PlaneGeometry(w, h, 20, 8), [w, h]);
   const base = useMemo(() => geom.attributes.position.array.slice(), [geom]);
   // Drop 43: a printed flag reads correctly from both sides (two cloths sewn back to back), so the reverse is a
   // second mesh sharing the front's positions, normals and index with the texture mirrored across the hoist.
   const back = useMemo(() => {
-    if (!map) return null;
+    if (!map || !mirrorBack) return null;
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', geom.attributes.position); g.setAttribute('normal', geom.attributes.normal); g.setIndex(geom.index);
     const uv = geom.attributes.uv.array.slice(); for (let i = 0; i < uv.length; i += 2) uv[i] = 1 - uv[i];
     g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
     return g;
-  }, [geom, map]);
+  }, [geom, map, mirrorBack]);
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime + seed, pos = geom.attributes.position, k = 0.9 + 0.5 * (w / 1.6);
@@ -281,7 +285,7 @@ export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 
       <Cyl r={0.05} h={height} position={[0, height / 2, 0]} mat={MAT.alu} />
       <mesh position={[0, height + 0.06, 0]}><sphereGeometry args={[0.09, 10, 8]} /><Mat mat={MAT.brass} /></mesh>
       <mesh ref={ref} geometry={geom} position={[w / 2 + 0.05, height - h / 2 - 0.1, 0]} castShadow>
-        <meshStandardMaterial color={map ? '#ffffff' : color} map={map || undefined} roughness={0.85} side={map ? THREE.FrontSide : THREE.DoubleSide} shadowSide={THREE.DoubleSide} transparent={alpha} alphaTest={alpha ? 0.5 : 0} />
+        <meshStandardMaterial color={map ? '#ffffff' : color} map={map || undefined} roughness={0.85} side={map && mirrorBack ? THREE.FrontSide : THREE.DoubleSide} shadowSide={THREE.DoubleSide} transparent={alpha} alphaTest={alpha ? 0.5 : 0} />
       </mesh>
       {back && (
         <mesh geometry={back} position={[w / 2 + 0.05, height - h / 2 - 0.1, 0]}>
@@ -293,13 +297,14 @@ export function Flag({ position = [0, 0, 0], height = 7, color = '#ff6a00', w = 
 }
 // Flagpoles at the data van (Drop 38): the US flag in the position of honor (its own right), the basin's state flag
 // beside it, both drawn in code (`flagTexture`); poles sized to the cloth, halyard sphere finials.
+const LETTERED_FLAGS = new Set(['OK', 'ND', 'LA', 'PA', 'WY']);
 export function Flagpoles({ position = [0, 0, 0], state = 'TX' }) {
   const us = useMemo(() => flagTexture('us'), []), st = useMemo(() => flagTexture(state), [state]);
   const wUs = 2.4, hUs = wUs / flagRatio('us'), wSt = 2.0, hSt = wSt / flagRatio(state);
   return (
     <group position={position} name="LG-FLAGPOLES">
       <Flag position={[0, 0, 0]} height={9.5} w={wUs} h={hUs} map={us} seed={0} />
-      <Flag position={[3.2, 0, 0]} height={8.5} w={wSt} h={hSt} map={st} alpha={state === 'OH'} seed={1.7} />
+      <Flag position={[3.2, 0, 0]} height={8.5} w={wSt} h={hSt} map={st} alpha={state === 'OH'} seed={1.7} mirrorBack={LETTERED_FLAGS.has(state)} />
     </group>
   );
 }

@@ -15,6 +15,31 @@ export const soundWanted = () => { try { return localStorage.getItem(KEY) === '1
 const remember = (on) => { try { localStorage.setItem(KEY, on ? '1' : '0'); } catch { /* private mode */ } };
 
 let engine = null;
+// Positional layer (Drop 60): while walking the pad, each working voice is attenuated by the walker's distance to
+// its source and panned by its bearing. The scene writes the source positions (pad meters) into SOURCES and the
+// walker writes LISTENER; `updateListener()` moves the distance gains and pans. Off the walk, every distance gain
+// is 1 and every pan 0, which is the pad mix as it always was.
+export const LISTENER = { x: 0, z: 0, yaw: 0, walk: false };
+export const SOURCES = { pump: null, choke: null, wl: null, ct: null, mill: null };   // [x, z]
+const RANGE = { pump: 34, choke: 12, wl: 10, ct: 12, mill: 10 };                     // distance at which a voice is at a quarter
+export function updateListener() {
+  if (!engine) return;
+  const { D, P, ctx } = engine;
+  for (const k in D) {
+    const src = SOURCES[k];
+    let g = 1, pan = 0;
+    if (LISTENER.walk && src) {
+      const dx = src[0] - LISTENER.x, dz = src[1] - LISTENER.z, d = Math.hypot(dx, dz);
+      g = 1 / (1 + (d / RANGE[k]) * (d / RANGE[k]) * 3);
+      // bearing relative to the walker's facing (forward is -Z rotated by yaw): positive to the right
+      const fx = -Math.sin(LISTENER.yaw), fz = -Math.cos(LISTENER.yaw);
+      const right = fx * dz - fz * dx;
+      pan = d > 1 ? Math.max(-0.8, Math.min(0.8, right / d)) : 0;
+    }
+    D[k].gain.setTargetAtTime(g, ctx.currentTime, 0.15);
+    if (P[k]) P[k].pan.setTargetAtTime(pan, ctx.currentTime, 0.15);
+  }
+}
 const listeners = new Set();
 export const onSoundChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 export const soundOn = () => !!(engine && engine.on);
@@ -40,13 +65,16 @@ function build() {
   const osc = (type, f) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.start(); return o; };
   const chain = (...nodes) => { for (let i = 0; i < nodes.length - 1; i++) nodes[i].connect(nodes[i + 1]); return nodes[nodes.length - 1]; };
   const V = {};
+  // positional voices run through a distance gain and a stereo pan before the master (Drop 60)
+  const D = {}, P = {};
+  const spatial = (k) => { D[k] = gain(1); P[k] = ctx.createStereoPanner ? ctx.createStereoPanner() : null; if (P[k]) chain(D[k], P[k], master); else D[k].connect(master); return D[k]; };
 
   // wind: low filtered noise, slow gusts
   V.wind = gain(0.03); chain(src(), filt('lowpass', 420, 0.7), V.wind, master);
   const gust = osc('sine', 0.09); const gustG = gain(0.012); gust.connect(gustG); gustG.connect(V.wind.gain);
 
   // pumps: rumble (noise band) + two detuned saws under a lowpass + a throb LFO on the saw level
-  V.pump = gain(0); V.pump.connect(master);
+  V.pump = gain(0); V.pump.connect(spatial('pump'));
   chain(src(), filt('bandpass', 85, 0.9), gain(0.9), V.pump);
   const sawG = gain(0.35); sawG.connect(V.pump);
   V.saw1 = osc('sawtooth', 48); V.saw2 = osc('sawtooth', 50.6);
@@ -55,15 +83,15 @@ function build() {
   chain(src(), filt('bandpass', 1400, 1.2), gain(0.08), V.pump);   // turbo / exhaust hiss
 
   // wireline: a whine with a slight warble
-  V.wl = gain(0); chain(osc('sawtooth', 170), filt('bandpass', 900, 2.2), V.wl, master);
+  V.wl = gain(0); chain(osc('sawtooth', 170), filt('bandpass', 900, 2.2), V.wl, spatial('wl'));
   const warble = osc('sine', 1.7); const warbleG = gain(4); warble.connect(warbleG);
 
   // coiled tubing: injector drive whine + mill noise
-  V.ct = gain(0); chain(osc('square', 95), filt('lowpass', 600, 0.9), gain(0.5), V.ct, master);
-  V.mill = gain(0); chain(src(), filt('bandpass', 2100, 1.5), V.mill, master);
+  V.ct = gain(0); chain(osc('square', 95), filt('lowpass', 600, 0.9), gain(0.5), V.ct, spatial('ct'));
+  V.mill = gain(0); chain(src(), filt('bandpass', 2100, 1.5), V.mill, spatial('mill'));
 
   // flowback: choke hiss
-  V.choke = gain(0); chain(src(), filt('highpass', 1600, 0.7), V.choke, master);
+  V.choke = gain(0); chain(src(), filt('highpass', 1600, 0.7), V.choke, spatial('choke'));
 
   // alarm: two tones gated by a 2 Hz square
   V.alarm = gain(0); V.alarm.connect(master);
@@ -90,7 +118,7 @@ function build() {
   V.clank = () => burst(() => { const o = oscSrc('square', 310); const f = filt('bandpass', 1200, 6); o.connect(f); return [o, f]; }, 0.18, 0.003, 0.04, 0.3);
   V.bonk = () => burst(() => { const o = oscSrc('triangle', 330); o.frequency.setValueAtTime(220, ctx.currentTime + 0.12); return [o, o]; }, 0.2, 0.01, 0.1, 0.5);
 
-  return { ctx, master, V };
+  return { ctx, master, V, D, P };
 }
 
 const set = (param, v, tc = 0.12, ctx) => { if (Math.abs(param.value - v) > 0.002 || v === 0) param.setTargetAtTime(v, ctx.currentTime, tc); };
@@ -137,7 +165,7 @@ export function enableSound() {
   if (!engine) {
     const E = build(); if (!E) return false;
     engine = E; engine.on = false; engine.prev = null;
-    if (typeof window !== 'undefined') window.__padworksSound = engine;   // test hook (shots.mjs reads the voice levels)
+    if (typeof window !== 'undefined') { window.__padworksSound = engine; engine.LISTENER = LISTENER; engine.SOURCES = SOURCES; }   // test hooks (shots.mjs reads the voice levels)
     engine.unsub = useSim.subscribe((s) => { if (!engine.on) return; try { apply(engine, s, engine.prev); } catch (e) { console.error('sound:', e); } engine.prev = s; });   // never let the audio graph take the sim down
   }
   engine.on = true; remember(true);

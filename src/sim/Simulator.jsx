@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from 'react';
-import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX, Snowflake, Leaf, Link2, Check, Activity } from 'lucide-react';
+import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxIcon, ListOrdered, Sparkles, Sun, Sunset, Moon, Volume2, VolumeX, Snowflake, Leaf, Link2, Check, Activity, Footprints, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { WALK } from './parts/walk.jsx';
 import { soundOn, toggleSound, onSoundChange, armSoundOnGesture, disableSound } from './sound.js';
 import { LITE, setLite, nextTod } from './parts/lighting.jsx';
 import { useFx, fxOn, FX_LIMIT_MS, useDiag } from './parts/effects.jsx';
@@ -30,6 +31,32 @@ function Viewport({ view, showLabels, preset }) {
   }
   if (view === 'downhole') return <div className="relative h-full"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere /></Suspense><HoverPopup canvasKey="downhole" /><Tagline text="Downhole section (schematic)" /></div>;
   return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface (generic models). Hover an item for its name; click to open its record." /></div>;
+}
+
+const WALK_ARROWS = [['f', 1, ArrowUp, 'Forward'], ['s', -1, ArrowLeft, 'Left'], ['s', 1, ArrowRight, 'Right'], ['f', -1, ArrowDown, 'Back']];
+// Phone walk pad (Drop 59): thumb-sized arrows in the lower right corner of the 3D view, shown only on narrow
+// screens (the toolbar keeps its small arrows on desktop). Hold an arrow to walk; the Run toggle in the middle
+// doubles the pace. Writes the same WALK input the keys do.
+function WalkPad() {
+  const [run, setRun] = useState(false);
+  const hold = (axis, v) => ({
+    onPointerDown: (e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); WALK[axis] = v; },
+    onPointerUp: () => { WALK[axis] = 0; }, onPointerCancel: () => { WALK[axis] = 0; }, onPointerLeave: () => { WALK[axis] = 0; },
+  });
+  const cell = 'w-12 h-12 rounded-lg bg-black/60 text-white flex items-center justify-center touch-none select-none active:bg-accent/80';
+  return (
+    <div className="absolute right-3 bottom-9 z-20 md:hidden grid grid-cols-3 gap-1 pointer-events-auto" data-walk-pad>
+      <div />
+      <button className={cell} aria-label="Forward" {...hold('f', 1)}><ArrowUp size={22} /></button>
+      <div />
+      <button className={cell} aria-label="Left" {...hold('s', -1)}><ArrowLeft size={22} /></button>
+      <button className={cell + ' text-[10px] font-semibold ' + (run ? 'bg-accent/80' : '')} aria-label="Run" onClick={() => { WALK.run = !run; setRun(!run); }}>RUN</button>
+      <button className={cell} aria-label="Right" {...hold('s', 1)}><ArrowRight size={22} /></button>
+      <div />
+      <button className={cell} aria-label="Back" {...hold('f', -1)}><ArrowDown size={22} /></button>
+      <div />
+    </div>
+  );
 }
 
 function Tagline({ text }) {
@@ -64,7 +91,8 @@ export default function Simulator() {
     else window.prompt('Copy this link', url);
   };
   useEffect(() => { const off = onSoundChange(setSound); const disarm = armSoundOnGesture(); return () => { off(); disarm(); disableSound(false); }; }, []);
-  const setPreset = (preset) => setUi({ preset });
+  const setPreset = (preset) => setUi({ preset, walk: false });
+  const walk = !!ui.walk;
   const setMobileTab = (mobileTab) => setUi({ mobileTab });
   const phase = useSim(s => s.phase);
   const stage = useSim(s => s.stage);
@@ -102,6 +130,7 @@ export default function Simulator() {
             <option value="basin">Basin view</option>
           </select>
         )}
+        {view === 'surface' && <button className={'btn flex items-center gap-1 ' + (walk ? 'btn-primary' : '')} title={walk ? 'Walking the pad: W A S D or arrows move, Shift runs, drag to look, Esc or click to leave.' : 'Walk the pad at eye height: W A S D or arrows move, Shift runs, drag to look, Esc to leave.'} onClick={() => setUi({ walk: !walk })} data-action="walk"><Footprints size={14} />Walk</button>}
         <button className={'btn flex items-center gap-1 ' + (showLabels ? 'btn-primary' : '')} onClick={() => setShowLabels(!showLabels)}><Tag size={14} />Labels</button>
         {view === 'surface' && <button className="btn flex items-center gap-1" title={todUi.title} onClick={() => setUi({ tod: nextTod(tod) })}><todUi.Icon size={14} />{todUi.label}</button>}
         {view === 'surface' && <button className="btn flex items-center gap-1" title={ui.season === 'winter' ? 'Winter: snow by basin (deep in the north, frost in the Permian), overcast, flurries, condensing exhaust. Click for summer.' : 'Summer. Click for winter conditions.'} onClick={() => setUi({ season: ui.season === 'winter' ? 'summer' : 'winter' })}>{ui.season === 'winter' ? <Snowflake size={14} /> : <Leaf size={14} />}{ui.season === 'winter' ? 'Winter' : 'Summer'}</button>}
@@ -113,7 +142,20 @@ export default function Simulator() {
       </div>
       {statsOpen && (
         <div className="w-full mt-1 text-[11px] mono px-2 py-1 rounded bg-black/70 text-white pointer-events-none" data-stats>
-          {diag.fps} fps · {diag.frameMs} ms/frame · {diag.calls.toLocaleString()} draws · {(diag.triangles / 1000).toFixed(0)}k tris · {LITE ? 'Lite' : 'Full'}{!LITE ? (fxLive ? ' + effects' : ' (effects off)') : ''} · {window.innerWidth}x{window.innerHeight} @ {Math.round(window.devicePixelRatio * 100) / 100}x · GPU: {diag.gpu || '...'}{diag.shaderError ? ' · SHADER ERROR: ' + diag.shaderError : ''}
+          {diag.fps} fps · {diag.frameMs} ms/frame · {diag.calls.toLocaleString()} draws · {(diag.triangles / 1000).toFixed(0)}k tris · {LITE ? 'Lite' : 'Full'}{!LITE ? (fxLive ? ' + effects' : ' (effects off)') : ''} · {window.innerWidth}x{window.innerHeight} @ {diag.dpr || Math.round(window.devicePixelRatio * 100) / 100}x (screen {Math.round(window.devicePixelRatio * 100) / 100}x) · GPU: {diag.gpu || '...'}{diag.shaderError ? ' · SHADER ERROR: ' + diag.shaderError : ''}
+        </div>
+      )}
+      {walk && view === 'surface' && (
+        <div className="w-full mt-1 flex items-center gap-2 text-[11px] px-2 py-1 rounded bg-black/60 text-white pointer-events-auto" data-walk-bar>
+          <span className="mr-auto hidden md:inline">Walking: W A S D or arrows move, Shift runs, drag the view to look around, Esc leaves.</span>
+          <span className="mr-auto md:hidden">Walking: drag to look around, the arrows walk, the Walk button leaves.</span>
+          {WALK_ARROWS.map(([axis, v, Icon, label]) => (
+            <button key={label} className="btn px-2 py-1 touch-none select-none hidden md:block" title={label} aria-label={label}
+              onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); WALK[axis] = v; }}
+              onPointerUp={() => { WALK[axis] = 0; }} onPointerCancel={() => { WALK[axis] = 0; }} onPointerLeave={() => { WALK[axis] = 0; }}>
+              <Icon size={14} />
+            </button>
+          ))}
         </div>
       )}
       <div className={'w-full mt-1 text-xs px-2 py-1 rounded pointer-events-none ' + (anyAlarm ? 'bg-bad/80 text-white' : 'bg-black/50 text-mute')}>
@@ -136,6 +178,7 @@ export default function Simulator() {
         <section className={'relative min-h-0 min-w-0 ' + (mobileTab === '3d' ? 'block' : 'hidden md:block')}>
           <Viewport view={view} showLabels={showLabels} preset={preset} />
           {toolbar}
+          {walk && view === 'surface' && <WalkPad />}
         </section>
         <aside className={'min-h-0 min-w-0 overflow-hidden border-l border-line bg-panel ' + (mobileTab === 'timeline' ? 'block' : 'hidden md:block')}><TimelinePanel /></aside>
       </div>

@@ -82,8 +82,8 @@ export const metal = (color, metalness, roughness, extra = {}) => ({ color, meta
 const paint = (color, roughness = 0.55, metalness = 0.12, map = grime) => ({ color, metalness, roughness, roughnessMap: wear || undefined, map: map || undefined, bumpMap: LITE ? undefined : wear || undefined, bumpScale: 0.006, clearcoat: 0.4, clearcoatRoughness: 0.35 });
 const tankPaint = (color) => paint(color, 0.6, 0.1, streak);
 export const MAT = {
-  steel:   metal('#9aa2ab', 0.9, 0.32, { roughnessMap: brushed || undefined, userData: { rust: 0.3 } }),
-  darkSteel: metal('#4d565f', 0.8, 0.45, { roughnessMap: brushed || undefined, map: grime || undefined, userData: { rust: 0.45 } }),
+  steel:   metal('#9aa2ab', 0.9, 0.32, { roughnessMap: brushed || undefined, userData: { rust: 0.12 } }),
+  darkSteel: metal('#4d565f', 0.8, 0.45, { roughnessMap: brushed || undefined, map: grime || undefined, userData: { rust: 0.2 } }),
   tankWhite: tankPaint('#e4e8ec'),
   tankCream: tankPaint('#d9cfae'),
   tankBlue:  tankPaint('#2a5d9f'),
@@ -100,13 +100,13 @@ export const MAT = {
   tape:    { color: '#f2f2f2', metalness: 0.2, roughness: 0.25 },
   ground:  { color: '#4b4235', metalness: 0.0, roughness: 1.0 },
   sand:    { color: '#c9b47a', metalness: 0.0, roughness: 1.0 },
-  dimSteel: metal('#2c3137', 0.7, 0.6, { userData: { rust: 0.4 } }),
+  dimSteel: metal('#2c3137', 0.7, 0.6, { userData: { rust: 0.3 } }),
   paintRed: paint('#8f1f1f', 0.5, 0.15),
   paintWhite: paint('#e4e8ec', 0.5),
   cream:   paint('#d9cfae', 0.55),
   alu:     metal('#c3c8cd', 0.95, 0.28, { roughnessMap: brushed || undefined }),
-  chassis: { ...paint('#2a2d31', 0.7, 0.3), userData: { rust: 0.35 } },
-  grating: metal('#3a3f45', 0.7, 0.7, { userData: { rust: 0.4 } }),
+  chassis: { ...paint('#2a2d31', 0.7, 0.3), userData: { rust: 0.22 } },   // Drop 61: a touch less, the trailer frames read as camouflage at 0.3
+  grating: metal('#3a3f45', 0.7, 0.7, { userData: { rust: 0.35 } }),
   glass:   metal('#20304a', 0.9, 0.06),
   glassLit: { color: '#ffe6a8', emissive: '#ffd98a', emissiveIntensity: 0.9, metalness: 0.1, roughness: 0.3 },   // lit windows after dark (Drop 31)
   hose:    { color: '#24262a', metalness: 0.05, roughness: 0.85 },
@@ -456,8 +456,13 @@ export function Label({ text, position = [0, 0, 0], size = 0.022 }) {
 // still works because each InstancedMesh carries the group's record name. Anything that moves, lights up, or
 // differs per unit (fans, lamps, plumes, numbers) is rendered per unit by a separate light component. `version`
 // rebuilds the instances when the template's look changes (lamps lit at night, say).
-const matKey = (m) => [m.type, m.color && m.color.getHexString(), m.emissive && m.emissive.getHexString(), m.emissiveIntensity, m.roughness, m.metalness, m.map && m.map.uuid, m.bumpMap && m.bumpMap.uuid, m.roughnessMap && m.roughnessMap.uuid, m.vertexColors, m.transparent, m.opacity, m.side, m.clearcoat, m.toneMapped].join('|');
+const matKey = (m) => [m.type, m.color && m.color.getHexString(), m.emissive && m.emissive.getHexString(), m.emissiveIntensity, m.roughness, m.metalness, m.map && m.map.uuid, m.bumpMap && m.bumpMap.uuid, m.roughnessMap && m.roughnessMap.uuid, m.vertexColors, m.transparent, m.opacity, m.side, m.clearcoat, m.toneMapped, m.colorWrite, m.depthFunc, m.userData.instanceTint ? 'T' : ''].join('|');
 function nearestName(o, stop) { let x = o; while (x && x !== stop) { if (x.name) return x.name; x = x.parent; } return ''; }
+// Drop 57: a transform may carry `tint` (a color); template materials flagged `userData.instanceTint` take it as
+// their per-instance color (the template draws them white, so each unit shows its own tint, the frac trees' well
+// colors). Instanced meshes inside the template (stud fields, bolt rings) are expanded into the bake, one copy per
+// instance, and render order is kept per group so the cellar's depth mask still works.
+const TINT_WHITE = new THREE.Color(1, 1, 1);
 export function Instanced({ transforms, version = 0, children, name }) {
   const tpl = useRef(), holder = useRef();
   const built = useRef([]);
@@ -466,13 +471,22 @@ export function Instanced({ transforms, version = 0, children, name }) {
     t.visible = true; t.updateMatrixWorld(true);
     const inv = new THREE.Matrix4().copy(t.matrixWorld).invert();
     const groups = new Map();
+    const tmp = new THREE.Matrix4();
+    // the order three would draw the mesh in: its nearest group's renderOrder (three resets the group order at
+    // every Group on the way down), else its own
+    const orderOf = (o) => { let x = o.parent; while (x && x !== t) { if (x.isGroup) return x.renderOrder || o.renderOrder; x = x.parent; } return o.renderOrder; };
     t.traverse(m => {
-      if (!m.isMesh || m.isInstancedMesh || !m.geometry || !m.material || m.isSprite) return;
+      if (!m.isMesh || !m.geometry || !m.material || m.isSprite) return;
       if (m.userData.noInstance) return;
-      const key = matKey(m.material) + '#' + nearestName(m, t) + '#' + (m.castShadow ? 1 : 0);
-      if (!groups.has(key)) groups.set(key, { material: m.material, name: nearestName(m, t), cast: m.castShadow, geos: [] });
-      const g = m.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld));
-      groups.get(key).geos.push(g);
+      const order = orderOf(m);
+      const key = matKey(m.material) + '#' + nearestName(m, t) + '#' + (m.castShadow ? 1 : 0) + '#' + order;
+      if (!groups.has(key)) groups.set(key, { material: m.material, name: nearestName(m, t), cast: m.castShadow, order, geos: [] });
+      const local = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld);
+      if (m.isInstancedMesh) {
+        for (let i = 0; i < m.count; i++) { m.getMatrixAt(i, tmp); groups.get(key).geos.push(m.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(local, tmp))); }
+        return;
+      }
+      groups.get(key).geos.push(m.geometry.clone().applyMatrix4(local));
     });
     t.visible = false;
     const made = [];
@@ -497,7 +511,11 @@ export function Instanced({ transforms, version = 0, children, name }) {
       const im = new THREE.InstancedMesh(merged, asStandard(grp.material), n);
       for (let i = 0; i < n; i++) im.setMatrixAt(i, mats[i]);
       im.instanceMatrix.needsUpdate = true;
-      im.castShadow = grp.cast; im.receiveShadow = true; im.name = grp.name; im.frustumCulled = false;
+      if (grp.material.userData.instanceTint) {
+        for (let i = 0; i < n; i++) im.setColorAt(i, transforms[i].tint ? new THREE.Color(transforms[i].tint) : TINT_WHITE);
+        im.instanceColor.needsUpdate = true;
+      }
+      im.castShadow = grp.cast; im.receiveShadow = true; im.name = grp.name; im.frustumCulled = false; im.renderOrder = grp.order;
       h.add(im); made.push(im);
     }
     built.current = made;
