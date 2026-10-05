@@ -4,14 +4,14 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useSim, padRoles, nextSteps, basinOf, spreadSizing } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
-import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, installSnowPatch, SNOW, GRIME, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
+import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, weatherSky, weatherSun, Rain, Lightning, WET, installSnowPatch, SNOW, GRIME, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
 import { Totes, IronRack, Cones, Barricades, Welfare, FuelCube, SafetyPoint, HoseCoils } from './parts/padlife.jsx';
 import { useHdri } from './parts/hdri.js';
 import { WalkControls, LAST_TARGET } from './parts/walk.jsx';
 import { installTextureSets } from './parts/textures.js';
-import { SOURCES } from './sound.js';
+import { SOURCES, thunder } from './sound.js';
 installSnowPatch();
-import { Effects, Diagnostics } from './parts/effects.jsx';
+import { Effects, Diagnostics, COMPOSER_OF } from './parts/effects.jsx';
 import { ContextLoss } from './parts/stability.jsx';
 import { Crew, Walker, Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
@@ -22,9 +22,14 @@ import { PipeRun, PipeStands, Pipe, Hose, MAT, Label, Instanced } from './parts/
 const WELL_SPACING = 8;   // meters between wellheads along the row
 const MISSILE_X = -30;    // missile centerline; pumps park nose-in on both sides
 
-function Ticker({ enabled }) {
+// The sim advances in 50 ms steps (Drop 67), not once per rendered frame: every store update re-renders the panels
+// and the scene tree, and at 60 fps that was three times the React work for the same simulation. `tick` clamps a
+// step at 100 ms, so the sim rate is unchanged; slow machines (a frame longer than 50 ms) tick every frame as before.
+export const TICK_STEP = 0.05;
+export function Ticker({ enabled }) {
   const tick = useSim(s => s.tick);
-  useFrame((_, dt) => { if (enabled) tick(dt); });
+  const acc = useRef(0);
+  useFrame((_, dt) => { if (!enabled) return; acc.current += dt; if (acc.current >= TICK_STEP) { tick(acc.current); acc.current = 0; } });
   return null;
 }
 
@@ -33,7 +38,7 @@ function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = fa
     // production: the workover rig's substructure sits on the +X side of the well, so the rig-up view comes from -X
     ...(production ? { tree: rig ? { pos: [-6.5, 4.5, 5.5], target: [0.3, 2.6, 0] } : { pos: [6.0, 4.0, 6.5], target: [0.3, 1.9, 0] } } : {}),
     pad:   { pos: [30 + rowLen * 0.25, 34 + rowLen * 0.2, 70 + rowLen * 0.35], target: [-18, 0, rowCenter] },
-    ...(production ? {} : { tree: { pos: [11 * k, 7.5 * k, 12 * k], target: [0, 3.2 * k, 0] } }),
+    ...(production ? {} : { tree: { pos: [9 * k, 6 * k, -11 * k], target: [0, 3.2 * k, 0] } }),   // from the south-east (Drop 66): the wireline crane parks on the north-east side and used to fill this view
     row:   { pos: [30 + rowLen * 0.45, 12 + rowLen * 0.18, rowCenter + 6], target: [-2, 3.5, rowCenter] },
     zipper: { pos: [-17, 7, rowCenter - 15], target: [-8, 2.4, rowCenter - 1] },
     pumps: { pos: [-6, 19, 38], target: [-30, 2, 4] },
@@ -41,7 +46,7 @@ function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = fa
     tanks: { pos: [-58, 14, 66], target: [-70, 2, 40] },
     gate: { pos: [78, 7, -12], target: [52, 1, -31] },
     support: { pos: [-2, 16, -60], target: [-22, 2, -34] },
-    flowback: { pos: [34, 14, 44 + rowLen], target: [26, 1, 20 + rowLen] },
+    flowback: { pos: [4, 12, 14 + rowLen], target: [26, 1.5, 24 + rowLen] },   // from the wells (Drop 66): choke, catcher, separators and the tanks behind, in one diagonal
     basin: { pos: [90, 60, 160 + rowLen], target: [-20, 0, rowCenter] },
   };
 }
@@ -54,18 +59,69 @@ function RenderStats() {
     if (state.controls && state.controls.target) LAST_TARGET.copy(state.controls.target);
     window.__padworksCam = () => ({ pos: state.camera.position.toArray(), target: state.controls ? state.controls.target.toArray() : null });
     window.__padworksView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } };
+    // Photo (Drop 64): draw one frame right now (through the composer when the effects are on) and read the canvas
+    // back in the same task, which needs no preserveDrawingBuffer
+    window.__padworksSnapshot = () => {
+      const c = COMPOSER_OF.get(state.gl);
+      if (c) c.render(0); else state.gl.render(state.scene, state.camera);
+      return state.gl.domElement.toDataURL('image/png');
+    };
   });
   return null;
 }
-function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig, walk }) {
+function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig, walk, tour }) {
   const { camera, controls } = useThree();
+  const wasTour = useRef(false);
   useEffect(() => {
     if (walk) return;   // walk mode owns the camera; leaving it re-applies the preset
+    if (tour) { wasTour.current = true; return; }   // the tour moves the camera itself (Drop 65)
+    if (wasTour.current) { wasTour.current = false; return; }   // leaving the tour keeps the view where the tour left it
     const P = presets(rowCenter, rowLen, production, k, bZ, rig);
     const p = P[preset] || P.pad;
     camera.position.set(...p.pos);
     if (controls) { controls.target.set(...p.target); controls.update(); }
-  }, [preset, camera, controls, rowCenter, rowLen, production, k, bZ, rig, walk]);
+  }, [preset, camera, controls, rowCenter, rowLen, production, k, bZ, rig, walk, tour]);
+  return null;
+}
+// Tour (Drop 65): the camera visits the presets on its own, a slow drift around each view then an eased move to the
+// next, for a demo loop or a kiosk. The dropdown follows. Any pointer or wheel on the canvas, a preset pick, Walk,
+// or the Tour button ends it, and the view stays where it was.
+const TOUR_ORDER = ['pad', 'tree', 'row', 'zipper', 'pumps', 'sand', 'tanks', 'support', 'gate', 'flowback', 'basin'];
+const TOUR = { hold: 11, move: 3.5 };   // seconds; the headless pass shortens them through window.__padworksTour
+if (typeof window !== 'undefined') window.__padworksTour = TOUR;
+function Tour({ on, preset, rowCenter, rowLen, production, k, bZ, rig }) {
+  const { camera, controls, gl } = useThree();
+  const st = useRef({ t: 0, from: null, to: null, move: 1 });
+  useEffect(() => {
+    if (!on) return;
+    const s = st.current; s.t = 0; s.move = 1; s.to = null;
+    const stop = () => useSim.getState().setUi({ tour: false });
+    const el = gl.domElement;
+    el.addEventListener('pointerdown', stop); el.addEventListener('wheel', stop, { passive: true });
+    return () => { el.removeEventListener('pointerdown', stop); el.removeEventListener('wheel', stop); };
+  }, [on, gl]);
+  useFrame((_, dt) => {
+    if (!on || !controls) return;
+    const s = st.current; const step = Math.min(dt, 0.1);
+    if (s.to && s.move < 1) {
+      s.move = Math.min(1, s.move + step / TOUR.move);
+      const e = s.move * s.move * (3 - 2 * s.move);
+      camera.position.lerpVectors(s.from.pos, s.to.pos, e); controls.target.lerpVectors(s.from.target, s.to.target, e); controls.update();
+      return;
+    }
+    // drift: a slow turn about the target
+    const off = camera.position.clone().sub(controls.target); off.applyAxisAngle(new THREE.Vector3(0, 1, 0), step * 0.045); camera.position.copy(controls.target).add(off); controls.update();
+    s.t += step;
+    if (s.t > TOUR.hold) {
+      s.t = 0;
+      const i = TOUR_ORDER.indexOf(preset); const next = TOUR_ORDER[(i + 1) % TOUR_ORDER.length];
+      const P = presets(rowCenter, rowLen, production, k, bZ, rig); const p = P[next] || P.pad;
+      s.from = { pos: camera.position.clone(), target: controls.target.clone() };
+      s.to = { pos: new THREE.Vector3(...p.pos), target: new THREE.Vector3(...p.target) };
+      s.move = 0;
+      useSim.getState().setUi({ preset: next });
+    }
+  });
   return null;
 }
 
@@ -127,13 +183,13 @@ function LampGlow({ towers, strength = 1 }) {
 }
 // Sets the shared snow and grime uniforms for this scene's draws only (the downhole section and the viewer stay
 // bare and clean)
-function SnowSetter({ amount }) {
+function SnowSetter({ amount, wet = 0 }) {
   const scene = useThree(st => st.scene);
   useEffect(() => {
-    scene.onBeforeRender = () => { SNOW.value = amount; GRIME.value = 1; };
-    scene.onAfterRender = () => { SNOW.value = 0; GRIME.value = 0; };
-    return () => { scene.onBeforeRender = () => {}; scene.onAfterRender = () => {}; SNOW.value = 0; GRIME.value = 0; };
-  }, [scene, amount]);
+    scene.onBeforeRender = () => { SNOW.value = amount; GRIME.value = 1; WET.value = wet; };
+    scene.onAfterRender = () => { SNOW.value = 0; GRIME.value = 0; WET.value = 0; };
+    return () => { scene.onBeforeRender = () => {}; scene.onAfterRender = () => {}; SNOW.value = 0; GRIME.value = 0; WET.value = 0; };
+  }, [scene, amount, wet]);
   return null;
 }
 function FocusCamera({ ctx }) {
@@ -182,13 +238,16 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const basin = basinOf(s);
   const tod = useSim(st => st.ui.tod) || 'day';
   const season = useSim(st => st.ui.season) || 'summer';
+  const weather = useSim(st => st.ui.weather) || 'clear';   // clear, overcast, rain (Drop 68)
+  const rain = weather === 'rain', lid = weather !== 'clear';
   const walk = !!useSim(st => st.ui.walk);
+  const tour = !!useSim(st => st.ui.tour) && !walk;
   const winter = season === 'winter';
   const snow = winter ? (basin.snow == null ? 0.6 : basin.snow) : 0;
   const hdriStatus = useHdri(st => st[tod]);
-  const hdri = hdriActive(tod, season, hdriStatus);   // photographic sky in place of the atmosphere model (Drop 47)
-  const terrain = seasonSky(skyFor(basin.terrain, tod), season, tod);
-  const sun = seasonSun(sunFor(tod), season);
+  const hdri = hdriActive(tod, season, hdriStatus) && !lid;   // photographic sky in place of the atmosphere model (Drop 47); a cloud deck keeps the model
+  const terrain = weatherSky(seasonSky(skyFor(basin.terrain, tod), season, tod), weather, tod);
+  const sun = weatherSun(seasonSun(sunFor(tod), season), weather);
   PLUME.boost = winter ? 1.7 : 1;
   const sleeve = s.setup.completion === 'sleeve';
   const spread = spreadSizing(s);
@@ -279,14 +338,16 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   return (
     <Canvas shadows={LITE ? true : { type: THREE.PCFShadowMap }} dpr={[1, 1.5]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05 * 1.25 }}>
       <HdriSky tod={tod} season={season} />
-      {!hdri && <SkyDome terrain={terrain} tod={tod} season={season} />}
-      {LITE && <Clouds seed={basin.id.length} count={winter ? 18 : 9} tint={winter ? (tod === 'night' ? '#141822' : '#c9cfd8') : tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />}
-      <SnowSetter amount={snow} />
+      {!hdri && <SkyDome terrain={terrain} tod={tod} season={season} weather={weather} />}
+      {LITE && <Clouds seed={basin.id.length} count={winter || lid ? 18 : 9} tint={winter || lid ? (tod === 'night' ? '#141822' : rain ? '#9aa1aa' : '#c9cfd8') : tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />}
+      <SnowSetter amount={snow} wet={rain ? 1 : 0} />
       {winter && snow >= 0.5 && <Flurries density={snow} />}
-      {!hdri && <SceneEnvironment terrain={terrain} tod={tod} season={season} />}
+      {rain && <Rain />}
+      {rain && <Lightning onThunder={thunder} />}
+      {!hdri && <SceneEnvironment terrain={terrain} tod={tod} season={season} weather={weather} />}
       <Exposure value={sun.exposure} />
       {LITE && <hemisphereLight args={[terrain.sky, terrain.ground, sun.liteHemi]} />}
-      <fog attach="fog" args={[terrain.fog, 180 + rowLen, 620 + rowLen]} />
+      <fog attach="fog" args={[terrain.fog, (rain ? 90 : lid ? 150 : 180) + rowLen, (rain ? 360 : lid ? 540 : 620) + rowLen]} />
       <ambientLight intensity={sun.ambient} />
       <SunLight tod={tod} />
       
@@ -295,7 +356,8 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <ContextLoss />
       <hemisphereLight args={[terrain.sky, terrain.ground, sun.hemi]} />
       <Ticker enabled={tickHere} />
-      <CameraPreset walk={walk} preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
+      <Tour on={tour} preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
+      <CameraPreset tour={tour} walk={walk} preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
       <FocusCamera ctx={{ rowCenter, rowLen, production: s.phase === 'production', rig: s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing'), k: 0.6 + 0.4 * bore / 0.18, bZ, d, zd, zipperFrontZ, sleeve }} />
       <Ground terrain={terrain} pad={pad} seed={basin.id.length} stain={stainLayout} />
       <Containment x0={-3.2} x1={4.2} z0={-3.5} z1={rowLen + 3.5} />

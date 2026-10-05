@@ -544,5 +544,17 @@
     "system": "MT",
     "record": "MT-PROPPANT",
     "definition": "The sized sand or ceramic pumped into the fracture to hold it open after the pressure comes off; sized by mesh, chosen by closure stress."
+  },
+  {
+    "term": "Lightning hold",
+    "aliases": [
+      "weather hold",
+      "lightning stop-work",
+      "ten-mile ring",
+      "all clear"
+    ],
+    "system": "LG",
+    "record": "LG-LIGHTTOWER",
+    "definition": "A stop-work called when lightning is detected inside the pad's ten-mile ring: pumps down, rate to zero, crews off the pad to shelter, no work on iron. The all clear comes thirty minutes after the last strike inside the ring; the Simulator compresses the hold to sixty seconds."
   }
 ]

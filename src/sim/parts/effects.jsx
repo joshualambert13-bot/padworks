@@ -3,8 +3,8 @@
 // fractures, the perforating flash, mill sparks). Lite mode never mounts it. A frame-time guard watches the first
 // seconds with the effects on and turns them off for the session when the average frame is slow, so a laptop
 // with a weak GPU still gets a usable frame rate; the Effects button turns them back on.
-import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useEffect, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, N8AO, Bloom, BrightnessContrast, HueSaturation, Vignette } from '@react-three/postprocessing';
 import { create } from 'zustand';
 import { LITE } from './lighting.jsx';
@@ -36,13 +36,22 @@ function Guard() {
   return null;
 }
 
+// The live composer per renderer (Drop 64): a photo of the view renders through it so the picture carries the
+// effects; absent (Lite, or effects off) the plain renderer draws the frame.
+export const COMPOSER_OF = new WeakMap();
+function ComposerHook() {
+  const gl = useThree(s => s.gl);
+  useEffect(() => () => { COMPOSER_OF.delete(gl); }, [gl]);
+  return null;
+}
 // `ao` and `bloom` override the defaults per scene (radius in world units).
 export function Effects({ ao = {}, bloom = {}, guard = true }) {
   const on = useFx(fxOn);
   if (!on) return null;
   return (
     <>
-      <EffectComposer multisampling={4}>
+      <ComposerHook />
+      <EffectComposer multisampling={4} ref={(c) => { if (c && c.getRenderer) COMPOSER_OF.set(c.getRenderer(), c); }}>
         <N8AO halfRes quality="performance" aoRadius={1.7} distanceFalloff={0.9} intensity={3.0} {...ao} />
         <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.15} intensity={0.35} radius={0.6} {...bloom} />
         {/* grade (Drop 45): a touch of contrast and saturation back after the AgX tone curve, and a soft vignette;

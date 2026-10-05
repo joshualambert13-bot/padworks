@@ -7,5 +7,6 @@
   { "class": "H2S", "description": "Sour gas at flowback and on some wells during wireline and drillout.", "control": "Monitors, wind indicators, breathing apparatus per site plan." },
   { "class": "Dropped object", "description": "Lubricator sections, injector heads, and tree components lifted over the well.", "control": "Certified lifting gear, exclusion below suspended loads, tag lines." },
   { "class": "Electrical", "description": "Electric fleets, VFD houses, and switchgear at high voltage.", "control": "Arc-flash boundaries, lockout, qualified personnel only." },
-  { "class": "Erosion cut-out", "description": "Proppant-laden flow erodes gates, seats, iron elbows, and swivels, leading to a loss of containment.", "control": "Tree saver in the wellhead, iron inspection and wall-thickness tracking, valves fully open or fully closed only." }
+  { "class": "Erosion cut-out", "description": "Proppant-laden flow erodes gates, seats, iron elbows, and swivels, leading to a loss of containment.", "control": "Tree saver in the wellhead, iron inspection and wall-thickness tracking, valves fully open or fully closed only." },
+  { "class": "Lightning", "description": "Strikes on an open pad that carries the tallest steel for miles: the crane boom, the lubricator, light towers, sand silos, the flare stack.", "control": "Lightning detection with a ten-mile ring; when a strike is inside it, pumps down, lines left in a safe state, crews to shelter; work resumes thirty minutes after the last strike inside the ring." }
 ]

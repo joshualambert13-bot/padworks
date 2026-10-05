@@ -190,6 +190,22 @@ export const LESSONS = [
       { text: 'Pull out of hole to the lubricator', done: s => s.wl.step === 'done' && s.events.misfired === 0 },
     ],
   },
+  {
+    id: 'L10', n: 10, title: 'Lightning hold', targetSec: 180,
+    blurb: 'A strike inside the ten-mile ring in the middle of a stage. Pumps down, crews off the pad, hold for the all clear, then bring the stage back.',
+    setup: { basin: 'permian-delaware' }, pad: { wells: 2, mode: 'zipper' },
+    exempt: ['lightningHold'],
+    prep: (get, set) => {
+      pumpingOnStageOne(get, set);
+      get().injectEvent('lightning');
+    },
+    steps: [
+      { text: 'Lightning within 10 miles: pumps offline, rate to zero', hint: 'The weather hold is a stop-work: the stage waits. Shut down cleanly; the fracture will close but the plug and perforations are not at risk.', done: s => !s.pumpsOnline && s.pumpRate === 0, action: 'stop', label: 'Stop pumping' },
+      { text: 'Hold until the all clear', hint: 'Nobody works iron and nothing pumps until the ring has been clear for the hold period. Restarting early is the mistake this lesson is about.', done: s => s.events.lightningTimer <= 0 && s.events.active !== 'lightning' },
+      { text: 'Pumps back online and the rate back up, 60 bpm or more', hint: 'Bring the rate up in steps as at the start of the stage; the near-wellbore has to open again.', done: s => s.pumpsOnline && s.pumpRate >= 60, action: 'rateFlush', label: 'Pumps on, 60 bpm' },
+      { text: 'Sand back in at 0.5 to 1.5 PPA', hint: 'The proppant slider on the control panel; the stage design picks up where it left off.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5 },
+    ],
+  },
 ];
 
 export function lessonById(id) { return LESSONS.find(l => l.id === id) || null; }

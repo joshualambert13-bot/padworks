@@ -93,6 +93,10 @@ function build() {
   // flowback: choke hiss
   V.choke = gain(0); chain(src(), filt('highpass', 1600, 0.7), V.choke, spatial('choke'));
 
+  // rain (Drop 68): a steady hiss, lower and wider than the choke's, with a slow swell
+  V.rain = gain(0); chain(src(), filt('bandpass', 2400, 0.35), V.rain, master);
+  const swell = osc('sine', 0.13); const swellG = gain(0.012); swell.connect(swellG); swellG.connect(V.rain.gain);
+
   // alarm: two tones gated by a 2 Hz square
   V.alarm = gain(0); V.alarm.connect(master);
   const tone = gain(0); tone.connect(V.alarm);
@@ -116,6 +120,12 @@ function build() {
     burst(() => { const s = noiseSrc(); const f = filt('lowpass', 900, 0.8); s.connect(f); return [s, f]; }, 0.25, 0.005, 0.05, 0.4);
   };
   V.clank = () => burst(() => { const o = oscSrc('square', 310); const f = filt('bandpass', 1200, 6); o.connect(f); return [o, f]; }, 0.18, 0.003, 0.04, 0.3);
+  // thunder (Drop 69): a low rumble that rolls for a few seconds, quieter when the strike was far (long delay)
+  V.thunder = (delay = 2) => {
+    const far = Math.min(1, delay / 5);
+    burst(() => { const s = ctx.createBufferSource(); s.buffer = noise; s.loop = true; s.start(); const f = filt('lowpass', 140 - far * 60, 0.9); s.connect(f); return [s, f]; }, 0.5 * (1 - far * 0.6), 0.08 + far * 0.3, 0.9 + far * 0.8, 3.5);
+    burst(() => { const o = oscSrc('sine', 48); o.frequency.exponentialRampToValueAtTime(28, ctx.currentTime + 1.2); return [o, o]; }, 0.35 * (1 - far * 0.6), 0.05, 0.5, 2.0);
+  };
   V.bonk = () => burst(() => { const o = oscSrc('triangle', 330); o.frequency.setValueAtTime(220, ctx.currentTime + 0.12); return [o, o]; }, 0.2, 0.01, 0.1, 0.5);
 
   return { ctx, master, V, D, P };
@@ -142,6 +152,7 @@ function apply(E, s, prev) {
   set(V.mill.gain, s.ct.milling > 0 && s.ct.milling < 1 ? 0.05 * run : 0, 0.3, ctx);
 
   set(V.choke.gain, s.phase === 'flowback' ? 0.14 * Math.sqrt(s.fb.choke || 0) * run : 0, 0.4, ctx);
+  set(V.rain.gain, s.ui && s.ui.weather === 'rain' ? 0.05 : 0, 0.8, ctx);
 
   const A = s.alarms; const latched = A.overpressure || A.prvLifted || A.kickout || A.screenout;
   set(V.alarm.gain, latched ? 0.15 : 0, 0.05, ctx);
@@ -181,6 +192,8 @@ export function disableSound(forget = true) {
   notify();
 }
 export const toggleSound = () => (soundOn() ? disableSound() : enableSound());
+// Thunder for the lightning in the scene (Drop 69): only when sound is on
+export const thunder = (delay) => { if (engine && engine.on) { try { engine.V.thunder(delay); } catch { /* audio graph gone */ } } };
 
 // Resume a remembered preference: directly when the context already exists (it was unlocked by an earlier gesture),
 // otherwise on the first gesture; returns a cleanup for the listeners.

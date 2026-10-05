@@ -13,7 +13,7 @@
     "date": "2026-09-29",
     "note": "Drop 8 seed"
   },
-  "hazards": [],
+  "hazards": [{"class": "Lightning", "control": "The mast is the tallest steel near the crews; lowered when a lightning hold is called, and nobody works at its base until the all clear."}],
   "tabs": {
     "overview": "Diesel or solar units with a telescoping mast and four lamp heads; placed at the well row, the pumps, and the sand area.",
     "engineering": "Coverage per the pad layout.",

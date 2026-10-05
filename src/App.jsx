@@ -14,6 +14,7 @@ import UserMenu from './auth/UserMenu.jsx';
 import ChangePassword from './auth/ChangePassword.jsx';
 import { useAuth, canSeeAdmin, effectiveRole, ROLE_LABEL } from './auth/auth.js';
 import { SITE_TAGLINE } from './config.js';
+import { useSim } from './sim/store.js';
 
 const navClass = ({ isActive }) =>
   'flex items-center gap-1.5 px-3 py-2 text-sm rounded-md ' + (isActive ? 'bg-panel2 text-white' : 'text-mute hover:text-white');
@@ -24,11 +25,12 @@ export default function App() {
   const setViewAs = useAuth(s => s.setViewAs);
   const role = effectiveRole(user, viewAs);
   const masked = !!user && user.role === 'admin' && !!viewAs;
+  const full = useSim(s => s.ui.full);   // simulator full screen (Drop 62): the header goes too
   return (
     <RequireAuth>
     <div className="h-full flex flex-col">
       {masked && <div className="shrink-0 flex items-center gap-2 px-3 py-1 text-xs bg-warn/15 border-b border-warn/50 text-warn" data-status="view-as">Viewing the site as a {ROLE_LABEL[viewAs].toLowerCase()} would see it. Your admin rights are unchanged.<button className="btn ml-auto text-[11px] px-2 py-0.5" onClick={() => setViewAs(null)} data-action="view-as-off">Back to admin view</button></div>}
-      <header className="shrink-0 h-12 flex items-center gap-2 px-3 border-b border-line bg-panel">
+      {!full && <header className="shrink-0 h-12 flex items-center gap-2 px-3 border-b border-line bg-panel">
         <NavLink to="/" className="flex items-center gap-2 font-semibold tracking-tight text-white mr-2">
           <img src="/brand/mark.svg" alt="" className="h-7 w-7" />
           <span className="hidden min-[440px]:inline">Pad<span className="text-accent">works</span></span>
@@ -43,7 +45,7 @@ export default function App() {
         </nav>
         <span className="ml-auto badge text-mute hidden xl:inline">Built for training. Not for operational decisions.</span>
         <UserMenu />
-      </header>
+      </header>}
       <main className="flex-1 min-h-0">
         <Suspense fallback={<div className="p-4 text-sm text-mute">Loading</div>}>
         <Routes>

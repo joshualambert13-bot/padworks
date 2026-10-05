@@ -41,7 +41,7 @@ async function signIn(ctx) {
   }
 }
 async function page(w, h, mobile = false) {
-  const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
+  const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile, acceptDownloads: true });
   await signIn(ctx);
   const p = await ctx.newPage();
   p.setDefaultTimeout(240000);   // software rendering in CI is slow; a click on a six-well pad can wait several 25 s frames
@@ -84,7 +84,10 @@ async function waitText(p, text, timeout = 90000) {
 
 // ---------------- Desktop simulator walkthrough
 let p;
-if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env.ONLY !== 'drop16') {
+// ONLY=main runs the walkthrough and the library pages (35 min); ONLY=drop7 the Drop 7 section (35 min); ONLY=tail the
+// accounts and phone sections (10 min); ONLY=rest is drop7 plus tail. Runs of 35 minutes or less survive a sandbox that
+// restarts itself every 70 minutes or so (Drop 71).
+if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env.ONLY !== 'drop16' && process.env.ONLY !== 'rest' && process.env.ONLY !== 'tail') {
 p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
@@ -108,6 +111,45 @@ await p.getByRole('button', { name: 'Stats' }).click(); await wait(300);
   await p.keyboard.press('Escape'); await wait(2500);
   const y2 = (await p.evaluate(() => window.__padworksCam().pos))[1];
   if (Math.abs(y2 - y0) > 0.5) errors.push('leaving walk mode did not restore the preset camera: ' + y2.toFixed(2) + ' vs ' + y0.toFixed(2));
+}
+// Drop 62: full screen folds the panels and the header away; the canvas takes the window, and the toggle brings them back
+{
+  const probe = () => p.evaluate(() => { const b = document.querySelector('canvas').getBoundingClientRect(); return { w: Math.round(b.width), header: !!document.querySelector('header'), layout: document.querySelector('[data-layout]').dataset.layout }; });
+  // the canvas follows the layout through a resize observer, which under SwiftShader can lag a frame or two: poll
+  const settle = async (ok) => { let r; for (let i = 0; i < 12; i++) { r = await probe(); if (ok(r)) return r; await wait(1500); } return r; };
+  await p.click('[data-action="full"]');
+  const f = await settle(r => r.layout === 'full' && !r.header && r.w >= 1400);
+  if (f.layout !== 'full' || f.header || f.w < 1400) errors.push('full screen did not take the window: ' + JSON.stringify(f));
+  await shot(p, '00d-fullscreen');
+  await p.click('[data-action="full"]');
+  const g = await settle(r => r.layout === 'panels' && r.header && r.w <= 1000);
+  if (g.layout !== 'panels' || !g.header || g.w > 1000) errors.push('leaving full screen did not restore the panels: ' + JSON.stringify(g));
+}
+// Drop 64: Photo downloads a PNG of the canvas, named by preset, phase and time
+{
+  const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 120000 }).catch(() => null), p.click('[data-action="photo"]')]);
+  if (!dl) errors.push('photo: no download started');
+  else {
+    const name = dl.suggestedFilename(); const file = path.join(out, 'photo-' + name); await dl.saveAs(file);
+    const size = fs.statSync(file).size;
+    if (!/^padworks-pad-setup-\d{8}-\d{4}\.png$/.test(name) || size < 100000) errors.push('photo: ' + name + ' ' + size + ' bytes');
+  }
+}
+// Drop 65: the tour advances the presets on its own and a click on the view stops it
+{
+  await p.evaluate(() => { window.__padworksTour.hold = 0.25; window.__padworksTour.move = 0.3; });
+  const read = () => p.evaluate(() => ({ preset: window.__padworksSim.getState().ui.preset, tour: !!window.__padworksSim.getState().ui.tour }));
+  await p.click('[data-action="tour"]');
+  let moved = null;
+  for (let i = 0; i < 12 && !moved; i++) { await wait(2500); const r = await read(); if (r.preset !== 'pad') moved = r; }
+  if (!moved || !moved.tour) errors.push('tour did not advance the preset: ' + JSON.stringify(moved || await read()));
+  await shot(p, '00e-tour');
+  const box = await (await p.$('canvas')).boundingBox();
+  await p.mouse.click(box.x + box.width / 2, box.y + box.height / 2); await wait(1500);
+  const after = await read();
+  if (after.tour) errors.push('a click on the view did not stop the tour');
+  await p.evaluate(() => { window.__padworksTour.hold = 11; window.__padworksTour.move = 3.5; });
+  await p.selectOption('select[title="Camera preset"]', 'pad'); await wait(2500);
 }
 // Drop 32: sound on for the whole walkthrough (synthesized Web Audio; errors in the voice mapping surface as console errors)
 await p.getByRole('button', { name: 'Muted' }).click(); await wait(800);
@@ -195,6 +237,23 @@ await p.getByRole('button', { name: 'Night' }).click(); await wait(1500);
 await p.getByRole('button', { name: 'Summer' }).click(); await wait(4500);
 await shot(p, '12d-sim-flowback-winter');
 await p.getByRole('button', { name: 'Winter' }).click(); await wait(1500);
+// Drop 68: weather cycles clear -> overcast -> rain -> clear (cloud deck, weak sun, wet pad, rain streaks, rain bed in the sound)
+await p.click('[data-action="weather"]'); await wait(4000);
+await shot(p, '12e-sim-flowback-overcast');
+await p.click('[data-action="weather"]'); await wait(4000);
+await shot(p, '12f-sim-flowback-rain');
+{
+  const w = await p.evaluate(() => ({ weather: window.__padworksSim.getState().ui.weather, rain: window.__padworksSound ? +window.__padworksSound.V.rain.gain.value.toFixed(3) : null }));
+  if (w.weather !== 'rain') errors.push('weather button did not reach rain: ' + JSON.stringify(w));
+  if (w.rain != null && w.rain < 0.02) errors.push('rain voice silent in the rain: ' + JSON.stringify(w));
+  // Drop 69: a forced lightning strike lights the sky dome and the pad for the held seconds
+  await p.evaluate(() => window.__padworksLightning && window.__padworksLightning.strike(10)); await wait(5000);
+  const flash = await p.evaluate(() => (window.__padworksSky && window.__padworksSky.material.uniforms.uFlash) ? window.__padworksSky.material.uniforms.uFlash.value : -1);
+  if (flash < 0.5) errors.push('lightning strike did not light the sky: uFlash ' + flash);
+  await shot(p, '12g-sim-flowback-lightning');
+  await wait(6000);
+}
+await p.click('[data-action="weather"]'); await wait(1500);
 {
   const snd = await p.evaluate(() => { const E = window.__padworksSound; if (!E) return null; const V = E.V; return { state: E.ctx.state, on: E.on, choke: +V.choke.gain.value.toFixed(3), pump: +V.pump.gain.value.toFixed(3) }; });
   if (!snd || snd.state !== 'running' || !snd.on) errors.push('sound not running at flowback: ' + JSON.stringify(snd));
@@ -283,7 +342,7 @@ await p.close();
 
 }
 
-if (process.env.ONLY !== 'main' && process.env.ONLY !== 'drop16') {
+if (process.env.ONLY !== 'main' && process.env.ONLY !== 'drop16' && process.env.ONLY !== 'tail') {
 p = await page(1440, 900);
 if (process.env.ONLY !== 'drop10') {
 // ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip
@@ -516,6 +575,25 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   await clickWhenEnabled(p, 'Fire guns', 120000); await wait(500);
   await waitText(p, 'Lesson complete', 150000); await wait(300);
   await shot(p, '135c-lesson9-complete');
+  // lesson 10 (Drop 70): lightning hold. The strike brings the rain; stop, hold for the all clear, resume
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L10"]'); await wait(1500); await p.selectOption('select', '4');
+  {
+    const w = await p.evaluate(() => window.__padworksSim.getState().ui.weather);
+    if (w !== 'rain') errors.push('lightning hold did not bring the rain: weather ' + w);
+  }
+  await shot(p, '135d-lesson10-hold');
+  await clickWhenEnabled(p, 'Stop pumping', 120000); await wait(4000);
+  await p.evaluate(() => { const S = window.__padworksSim; S.setState({ events: { ...S.getState().events, lightningTimer: 3 } }); });   // the 60 s hold would be ten minutes under SwiftShader
+  await waitText(p, 'no strikes within 10 miles', 150000); await wait(2500);   // the log line of the all clear ('all clear' alone also matches the lesson step)
+  {
+    const w = await p.evaluate(() => window.__padworksSim.getState().ui.weather);
+    if (w !== 'overcast') errors.push('all clear did not lift the storm: weather ' + w);
+  }
+  await clickWhenEnabled(p, 'Pumps on, 60 bpm', 120000); await wait(500);
+  await p.evaluate(() => window.__padworksSim.getState().setPpa(1.0)); await wait(500);
+  await waitText(p, 'Lesson complete', 150000); await wait(300);
+  await shot(p, '135e-lesson10-complete');
   // the setup panel now shows the best results
   await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
   await shot(p, '136-lessons-with-results');
@@ -524,7 +602,7 @@ await p.close();
 }
 
 // ---------------- Drop 16: accounts. Sign-in screen, forced password change, admin panel, trainee view, saved progress.
-if (!process.env.ONLY || process.env.ONLY === 'drop16') {
+if (!process.env.ONLY || process.env.ONLY === 'drop16' || process.env.ONLY === 'rest' || process.env.ONLY === 'tail') {
 {
   { const warm = await browser.newContext(); await signIn(warm); await warm.close(); }   // makes sure the admin has the pass's password
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });   // a fresh context: no cookie
@@ -581,7 +659,7 @@ if (!process.env.ONLY || process.env.ONLY === 'drop16') {
 }
 
 // ---------------- Phone
-if (!process.env.ONLY) {
+if (!process.env.ONLY || process.env.ONLY === 'rest' || process.env.ONLY === 'tail') {
 p = await page(390, 844, true);
 await p.goto(base + SIM); await wait(5000);
 await shot(p, '21-phone-sim-3d');

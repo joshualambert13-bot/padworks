@@ -325,6 +325,7 @@ export function strataTexture() {
 // and the library viewer stay bare and clean.
 export const SNOW = { value: 0 };
 export const GRIME = { value: 0 };
+export const WET = { value: 0 };   // rain (Drop 68): up-facing surfaces darken and go glossy, the pad's ruts and spots turn to puddles
 let snowPatched = false;
 export function installSnowPatch() {
   if (snowPatched) return; snowPatched = true;
@@ -334,7 +335,7 @@ export function installSnowPatch() {
     const grime = ud.grime == null ? 1 : ud.grime, rust = ud.rust || 0, stain = ud.stain || null;
     const terrain = ud.terrain || 0, mesa = ud.mesa || 0;   // Drop 49: ground and horizon rock
     const world = grime > 0 || rust > 0 || stain || terrain || mesa;
-    shader.uniforms.uSnow = SNOW; shader.uniforms.uGrime = GRIME;
+    shader.uniforms.uSnow = SNOW; shader.uniforms.uGrime = GRIME; shader.uniforms.uWet = WET;
     shader.uniforms.uGrimeK = { value: grime }; shader.uniforms.uRustK = { value: rust };
     if (stain) { shader.uniforms.uStain = stain.uniform; shader.uniforms.uStainRect = stain.rect; }
     if (world) {
@@ -349,14 +350,14 @@ export function installSnowPatch() {
     }
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
-uniform float uSnow; uniform float uGrime; uniform float uGrimeK; uniform float uRustK;
+uniform float uSnow; uniform float uGrime; uniform float uGrimeK; uniform float uRustK; uniform float uWet;
 ${world ? 'varying vec3 vPadW;' : ''}
 ${stain ? 'uniform sampler2D uStain; uniform vec4 uStainRect;' : ''}
 float padHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float padNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(padHash(i), padHash(i + vec2(1.0, 0.0)), f.x), mix(padHash(i + vec2(0.0, 1.0)), padHash(i + vec2(1.0, 1.0)), f.x), f.y); }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-  ${stain ? 'diffuseColor.rgb *= 2.0 * texture2D(uStain, (vPadW.xz - uStainRect.xy) / uStainRect.zw).rgb;' : ''}
+  ${stain ? 'float stainV = texture2D(uStain, (vPadW.xz - uStainRect.xy) / uStainRect.zw).r; diffuseColor.rgb *= 2.0 * stainV;' : ''}
   ${terrain ? `{
     // ground (Drop 49): patches of darker soil and lighter caliche at 30 m and 4 m scales, so the plain never reads as one tone
     float tA = padNoise(vPadW.xz * 0.035 + 7.0), tB = padNoise(vPadW.xz * 0.27 + 3.0);
@@ -386,6 +387,16 @@ float padNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0
     roughnessFactor = mix(roughnessFactor, 0.95, gK * 0.8);
     metalnessFactor = mix(metalnessFactor, 0.0, gK * 0.7);
   }` : ''}
+  if (uWet > 0.001) {
+    vec3 upW = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+    float wetK = uWet * smoothstep(0.3, 0.8, dot(normal, upW));
+    diffuseColor.rgb *= mix(1.0, 0.66, wetK);
+    roughnessFactor = mix(roughnessFactor, 0.26, wetK);
+    ${stain ? `float puddle = uWet * smoothstep(0.47, 0.40, stainV);
+    diffuseColor.rgb *= mix(1.0, 0.72, puddle);
+    roughnessFactor = mix(roughnessFactor, 0.04, puddle);
+    metalnessFactor = mix(metalnessFactor, 0.0, puddle);` : ''}
+  }
   if (uSnow > 0.001) {
     vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
     float snowK = uSnow * smoothstep(0.42, 0.78, dot(normal, upV));
@@ -409,6 +420,51 @@ export function seasonSky(terrain, season, tod) {
 export function seasonSun(S, season) {
   if (season !== 'winter') return S;
   return { ...S, color: '#e6ecf5', intensity: S.intensity * 0.55, disk: S.disk.map(v => v * 0.6), glowA: S.glowA * 0.5, ambient: S.ambient + 0.1, hemi: S.hemi + 0.12, liteHemi: S.liteHemi + 0.2, exposure: S.exposure * 0.97 };
+}
+// Weather on top of season and time of day (Drop 68): overcast is a gray lid with a weak white sun and no disk;
+// rain is darker still, the haze close, the ground dark and wet (the WET uniform does the surfaces).
+export function weatherSky(terrain, weather, tod) {
+  if (weather !== 'overcast' && weather !== 'rain') return terrain;
+  const rain = weather === 'rain';
+  if (tod === 'night') return { ...terrain, sky: mix(terrain.sky, '#10141c', 0.7), fog: mix(terrain.fog, rain ? '#161a20' : '#20252d', 0.7), ground: mix(terrain.ground, '#2a2c2e', rain ? 0.5 : 0.2) };
+  if (tod === 'dusk') return { ...terrain, sky: mix(terrain.sky, rain ? '#6f737c' : '#8f8e96', 0.75), fog: mix(terrain.fog, rain ? '#7d8188' : '#a89d98', 0.75), ground: mix(terrain.ground, '#3f3d3a', rain ? 0.5 : 0.15) };
+  return { ...terrain, sky: mix(terrain.sky, rain ? '#8e959e' : '#aeb5bf', 0.85), fog: mix(terrain.fog, rain ? '#9ba1a8' : '#c6cbd2', 0.85), ground: mix(terrain.ground, '#46443f', rain ? 0.5 : 0.15), pad: mix(terrain.pad, '#4a4845', rain ? 0.45 : 0.1) };
+}
+export function weatherSun(S, weather) {
+  if (weather !== 'overcast' && weather !== 'rain') return S;
+  const k = weather === 'rain' ? 0.3 : 0.42;
+  return { ...S, color: '#dfe6ef', intensity: S.intensity * k, disk: S.disk.map(v => v * 0.2), glowA: S.glowA * 0.25, ambient: S.ambient + 0.12, hemi: S.hemi + 0.16, liteHemi: S.liteHemi + 0.22, exposure: S.exposure * (weather === 'rain' ? 0.92 : 0.96) };
+}
+// Rain (Drop 68): streaks as line segments in a box around the camera, falling fast with the wind, wrapping like
+// the flurries do. One draw call.
+export function Rain({ count = 1800, box = 60, height = 26, wind = [2.2, 0, 0.8], density = 1 }) {
+  const ref = useRef();
+  const geom = useMemo(() => {
+    const n = count, pos = new Float32Array(n * 6), spd = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = (Math.random() - 0.5) * box, y = Math.random() * height, z = (Math.random() - 0.5) * box, len = 0.22 + Math.random() * 0.2;
+      pos[i * 6] = x; pos[i * 6 + 1] = y; pos[i * 6 + 2] = z; pos[i * 6 + 3] = x - wind[0] * 0.03; pos[i * 6 + 4] = y + len; pos[i * 6 + 5] = z - wind[2] * 0.03;
+      spd[i] = 8 + Math.random() * 4;
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.userData.spd = spd; return g;
+  }, [count, box, height]); // eslint-disable-line react-hooks/exhaustive-deps
+  useFrame((state, dt) => {
+    const p = ref.current; if (!p) return;
+    const cam = state.camera.position; p.position.set(cam.x, Math.max(0, cam.y - height * 0.45), cam.z);
+    const a = geom.attributes.position, spd = geom.userData.spd, h = height, half = box / 2, step = Math.min(dt, 0.1);
+    for (let i = 0; i < spd.length; i++) {
+      let x = a.getX(i * 2) + wind[0] * step, y = a.getY(i * 2) - spd[i] * step, z = a.getZ(i * 2) + wind[2] * step;
+      const len = a.getY(i * 2 + 1) - a.getY(i * 2);
+      if (y < 0) y += h; if (x > half) x -= box; if (x < -half) x += box; if (z > half) z -= box; if (z < -half) z += box;
+      a.setXYZ(i * 2, x, y, z); a.setXYZ(i * 2 + 1, x - wind[0] * 0.03, y + len, z - wind[2] * 0.03);
+    }
+    a.needsUpdate = true;
+  });
+  return (
+    <lineSegments ref={ref} geometry={geom} frustumCulled={false} renderOrder={3}>
+      <lineBasicMaterial color="#c9d2dc" transparent opacity={0.32 * density} depthWrite={false} fog />
+    </lineSegments>
+  );
 }
 // Flurries: a box of points around the camera that fall and drift; positions wrap within the box, so a fixed set
 // of 1,600 points covers wherever the camera goes. One draw call, screen-size points.
@@ -651,9 +707,9 @@ export function LiteEnvironment({ terrain, intensity = 0.8, tod = 'day' }) {
 // Lite gets the environment only where `lite` is set (the library viewer: one model, few pixels). The pad and the
 // downhole section in Lite go without, because sampling the environment on every pixel is the one cost a software
 // or low-end renderer feels most; their metals are capped by `metal()` in primitives instead.
-export function SceneEnvironment({ terrain, intensity = 0.9, lite = false, tod = 'day', season = 'summer' }) {
+export function SceneEnvironment({ terrain, intensity = 0.9, lite = false, tod = 'day', season = 'summer', weather = 'clear' }) {
   if (LITE) return lite ? <LiteEnvironment terrain={terrain} intensity={intensity * 0.85} tod={tod} /> : null;
-  return <PadEnvironment terrain={terrain} intensity={intensity} tod={tod} season={season} />;
+  return <PadEnvironment terrain={terrain} intensity={intensity} tod={tod} season={season} weather={weather} />;
 }
 
 // Tone-mapping exposure set from a prop so the time of day can change it without remounting the canvas.
@@ -698,6 +754,39 @@ export function SunLight({ tod = 'day', mapSize = 2048 }) {
   );
 }
 
+// Lightning (Drop 69): while it rains, a flash every 20 to 60 s. The flash is a short pulse on an extra ambient
+// light and on the sky dome's scale, two or three flickers over about a third of a second, from a random bearing;
+// the thunder follows after one to five seconds through `onThunder` (the sound engine's rumble). Nothing runs
+// between flashes but a timer.
+export function Lightning({ on = true, onThunder = null }) {
+  const light = useRef();
+  const st = useRef({ next: 8 + Math.random() * 20, t: 0, flash: 0, bursts: [] });
+  useEffect(() => {
+    // test hook: force a strike; `hold` (seconds) keeps the flash up that long (headless renders at under a frame a second)
+    if (typeof window !== 'undefined') window.__padworksLightning = { strike: (hold = 0) => { st.current.t = 1e9; st.current.hold = hold; } };
+    return () => { if (typeof window !== 'undefined') delete window.__padworksLightning; };
+  }, []);
+  useFrame((state, dt) => {
+    const s = st.current; const L = light.current;
+    s.t += dt;
+    if (on && s.t >= s.next) {
+      s.t = 0; s.next = 20 + Math.random() * 40;
+      const n = 2 + Math.floor(Math.random() * 2), delay = 1 + Math.random() * 4;
+      s.bursts = Array.from({ length: n }, (_, i) => ({ at: state.clock.elapsedTime + i * (0.08 + Math.random() * 0.1), k: 0.6 + Math.random() * 0.6 }));
+      const a = Math.random() * Math.PI * 2;
+      if (L) L.position.set(Math.cos(a) * 300, 220, Math.sin(a) * 300);
+      if (onThunder) setTimeout(() => onThunder(delay), delay * 1000);
+    }
+    let k = 0;
+    const now = state.clock.elapsedTime;
+    for (const b of s.bursts) { const age = now - b.at; if (age >= 0 && age < 0.12) k = Math.max(k, b.k * (1 - age / 0.12)); }
+    if (s.hold > 0) { k = 1; s.hold -= dt; }   // test hook: a flash held for `hold` seconds
+    if (L) { L.intensity = k * 9; L.visible = k > 0.001; }
+    const sky = typeof window !== 'undefined' ? window.__padworksSky : null;
+    if (sky && sky.material.uniforms.uFlash) sky.material.uniforms.uFlash.value = k;
+  });
+  return <directionalLight ref={light} intensity={0} visible={false} color="#dfe8ff" />;
+}
 // ---------------------------------------------------------------- blob contact shadow
 // A soft dark ellipse on the ground under a vehicle or a tank: the cheap contact darkening that reads as
 // ambient occlusion at pad scale.
@@ -817,35 +906,36 @@ const SKY_PRESETS = {
   night: { turbidity: 2.0, rayleigh: 1.0, mie: 0.004, g: 0.8, scale: 0.05, gray: 0.35 },
 };
 const CLOUD_COVER = { scrub: 0.12, mesquite: 0.12, brush: 0.25, grass: 0.35, pine: 0.45, hardwood: 0.45, sage: 0.3 };
-export function skyParams(tod, season, terrain) {
+export function skyParams(tod, season, terrain, weather = 'clear') {
   const P = SKY_PRESETS[tod] || SKY_PRESETS.day;
-  const winter = season === 'winter';
-  const cover = winter ? 0.92 : (CLOUD_COVER[terrain && terrain.veg] ?? 0.25);
+  const rain = weather === 'rain';
+  const lid = season === 'winter' || weather === 'overcast' || rain;   // a closed cloud deck
+  const cover = lid ? (rain ? 0.97 : 0.92) : (CLOUD_COVER[terrain && terrain.veg] ?? 0.25);
   return {
     ...P,
-    turbidity: winter ? P.turbidity + 8 : P.turbidity,
-    rayleigh: winter ? P.rayleigh * 0.8 : P.rayleigh,
-    scale: winter ? P.scale * 0.9 : P.scale,
-    gray: winter ? Math.max(P.gray, 0.45) : P.gray,
-    cover, density: winter ? 0.85 : 0.45, elevation: winter ? 0.7 : 0.5,
+    turbidity: lid ? P.turbidity + (rain ? 11 : 8) : P.turbidity,
+    rayleigh: lid ? P.rayleigh * 0.8 : P.rayleigh,
+    scale: lid ? P.scale * (rain ? 0.8 : 0.9) : P.scale,
+    gray: lid ? Math.max(P.gray, rain ? 0.55 : 0.45) : P.gray,
+    cover, density: lid ? (rain ? 0.95 : 0.85) : 0.45, elevation: lid ? 0.7 : 0.5,
   };
 }
 function makeSky() {
   const sky = new Sky();
   const m = sky.material;
-  m.uniforms.uScale = { value: 0.42 }; m.uniforms.uGray = { value: 0 };
+  m.uniforms.uScale = { value: 0.42 }; m.uniforms.uGray = { value: 0 }; m.uniforms.uFlash = { value: 0 };
   m.fragmentShader = m.fragmentShader
-    .replace('uniform float showSunDisc;', 'uniform float showSunDisc; uniform float uScale; uniform float uGray;')
-    .replace('gl_FragColor = vec4( texColor, 1.0 );', 'texColor = mix( texColor, vec3( dot( texColor, vec3( 0.3333 ) ) ), uGray ) * uScale;\n\t\t\tgl_FragColor = vec4( texColor, 1.0 );');
+    .replace('uniform float showSunDisc;', 'uniform float showSunDisc; uniform float uScale; uniform float uGray; uniform float uFlash;')
+    .replace('gl_FragColor = vec4( texColor, 1.0 );', 'texColor = mix( texColor, vec3( dot( texColor, vec3( 0.3333 ) ) ), uGray ) * uScale;\n\t\t\ttexColor += vec3( 0.75, 0.8, 0.95 ) * uFlash;\n\t\t\tgl_FragColor = vec4( texColor, 1.0 );');
   m.fog = false;
   sky.frustumCulled = false;
   if (typeof window !== 'undefined') window.__padworksSky = sky;   // test hook
   return sky;
 }
-export function AtmoSky({ tod = 'day', season = 'summer', terrain, radius = 1200, clouds = true, sunDisc = true }) {
+export function AtmoSky({ tod = 'day', season = 'summer', weather = 'clear', terrain, radius = 1200, clouds = true, sunDisc = true }) {
   const sky = useMemo(() => makeSky(), []);
   const S = sunFor(tod);
-  const P = skyParams(tod, season, terrain);
+  const P = skyParams(tod, season, terrain, weather);
   useEffect(() => {
     const u = sky.material.uniforms;
     u.sunPosition.value.copy(S.dir);
@@ -853,9 +943,9 @@ export function AtmoSky({ tod = 'day', season = 'summer', terrain, radius = 1200
     u.uScale.value = P.scale; u.uGray.value = P.gray;
     u.cloudCoverage.value = clouds ? P.cover : 0; u.cloudDensity.value = P.density; u.cloudElevation.value = P.elevation;
     u.cloudScale.value = 0.00025; u.cloudSpeed.value = 0.000012;
-    u.showSunDisc.value = sunDisc && !S.moon ? 1 : 0;
+    u.showSunDisc.value = sunDisc && !S.moon && weather === 'clear' ? 1 : 0;
     sky.scale.setScalar(radius * 0.9);
-  }, [sky, S, P.turbidity, P.rayleigh, P.mie, P.g, P.scale, P.gray, P.cover, P.density, P.elevation, clouds, sunDisc, radius]);
+  }, [sky, S, P.turbidity, P.rayleigh, P.mie, P.g, P.scale, P.gray, P.cover, P.density, P.elevation, clouds, sunDisc, radius, weather]);
   useFrame((state) => { if (clouds) sky.material.uniforms.time.value = state.clock.elapsedTime * 60; });
   return <primitive object={sky} />;
 }
@@ -882,12 +972,12 @@ export function HdriSky({ tod = 'day', season = 'summer' }) {
   }, [active, tod, scene]);
   return null;
 }
-export function SkyDome({ terrain, radius = 1200, tod = 'day', season = 'summer' }) {
+export function SkyDome({ terrain, radius = 1200, tod = 'day', season = 'summer', weather = 'clear' }) {
   const S = sunFor(tod);
   return (
     <group>
-      <AtmoSky tod={tod} season={season} terrain={terrain} radius={radius} clouds={!LITE} />
-      {S.moon && (
+      <AtmoSky tod={tod} season={season} weather={weather} terrain={terrain} radius={radius} clouds={!LITE} />
+      {S.moon && weather === 'clear' && (
         <>
           <mesh position={S.dir.clone().multiplyScalar(radius * 0.88)}><sphereGeometry args={[radius * S.diskR, 12, 8]} /><meshBasicMaterial color={new THREE.Color(...S.disk)} fog={false} toneMapped={false} /></mesh>
           <sprite position={S.dir.clone().multiplyScalar(radius * 0.85)} scale={[radius * S.glowR, radius * S.glowR, 1]}><spriteMaterial map={glowTexture()} color={S.glow} transparent opacity={S.glowA} blending={THREE.AdditiveBlending} depthWrite={false} fog={false} toneMapped={false} /></sprite>
@@ -899,11 +989,11 @@ export function SkyDome({ terrain, radius = 1200, tod = 'day', season = 'summer'
 }
 // Image-based lighting from the dome: rendered once into a small cube map (frames={1}); re-rendered when the
 // basin changes because the key changes.
-export function PadEnvironment({ terrain, intensity = 0.9, tod = 'day', season = 'summer' }) {
+export function PadEnvironment({ terrain, intensity = 0.9, tod = 'day', season = 'summer', weather = 'clear' }) {
   // the reflections see the same atmosphere (no sun disc: a hard bright dot in a 128 px cube map streaks)
   return (
-    <Environment key={terrain.sky + terrain.fog + terrain.ground + tod + season} resolution={128} frames={1} near={1} far={2000} environmentIntensity={intensity}>
-      <AtmoSky tod={tod} season={season} terrain={terrain} radius={900} clouds={false} sunDisc={false} />
+    <Environment key={terrain.sky + terrain.fog + terrain.ground + tod + season + weather} resolution={128} frames={1} near={1} far={2000} environmentIntensity={intensity}>
+      <AtmoSky tod={tod} season={season} weather={weather} terrain={terrain} radius={900} clouds={false} sunDisc={false} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}><planeGeometry args={[1800, 1800]} /><meshBasicMaterial color={terrain.ground} /></mesh>
     </Environment>
   );
