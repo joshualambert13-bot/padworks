@@ -48,13 +48,17 @@ export const useHover = create((set) => ({
   unpin: () => set({ pinned: false, id: null }),
 }));
 
-// Handlers to spread on a top-level <group> inside a Canvas.
+// Handlers to spread on a top-level <group> inside a Canvas. Only the nearest thing under the pointer counts
+// (Drop 75): the handler is called once per object the ray passes through, nearest first, and before this an
+// unnamed near object (a berm, the ground seen from inside the pit) let the record of whatever stood behind it
+// show. Things that must never catch the ray (rain, flurries, the leak spray, labels) have no-op raycasts.
+const nearest = (e) => { const hits = e.intersections; return !hits || hits.length === 0 || hits[0].object === e.object; };
 export function pickHandlers(canvasKey, show, hide) {
   return {
-    onPointerOver: (e) => { const id = recordFromObject(e.object); if (!id) return; e.stopPropagation(); show(id, e.nativeEvent.offsetX, e.nativeEvent.offsetY, canvasKey); document.body.style.cursor = 'pointer'; },
+    onPointerOver: (e) => { if (!nearest(e)) return; const id = recordFromObject(e.object); e.stopPropagation(); if (!id) { hide(); return; } show(id, e.nativeEvent.offsetX, e.nativeEvent.offsetY, canvasKey); document.body.style.cursor = 'pointer'; },
     onPointerOut: () => { document.body.style.cursor = 'auto'; hide(); },
-    onPointerMove: (e) => { const id = recordFromObject(e.object); if (!id) return; show(id, e.nativeEvent.offsetX, e.nativeEvent.offsetY, canvasKey); },
-    onClick: (e) => { const id = recordFromObject(e.object); if (!id) return; e.stopPropagation(); show(id, e.nativeEvent.offsetX, e.nativeEvent.offsetY, canvasKey, true); },
+    onPointerMove: (e) => { if (!nearest(e)) return; const id = recordFromObject(e.object); e.stopPropagation(); if (!id) { hide(); return; } show(id, e.nativeEvent.offsetX, e.nativeEvent.offsetY, canvasKey); },
+    onClick: (e) => { if (!nearest(e)) return; const id = recordFromObject(e.object); if (!id) return; e.stopPropagation(); show(id, e.nativeEvent.offsetX, e.nativeEvent.offsetY, canvasKey, true); },
     onPointerMissed: () => hide(true),
   };
 }

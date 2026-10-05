@@ -327,6 +327,32 @@ export const SNOW = { value: 0 };
 export const GRIME = { value: 0 };
 export const WET = { value: 0 };   // rain (Drop 68): up-facing surfaces darken and go glossy, the pad's ruts and spots turn to puddles
 let snowPatched = false;
+// Photographic detail (Drop 76): a material names its family in `userData.family` (paint, steel, rust, rubber,
+// ground, terrain, sand, concrete, plastic, liner, fabric, hivis). Each family owns one CC0 texture set (color,
+// normal, roughness, ambient occlusion; textures.js loads them from public/textures when the files are there)
+// sampled triplanar in world space, so procedural geometry with any UVs takes a photographed surface without
+// seams and at one real-world scale (`scale`, meters per tile). The color map is normalized to its own mean, so
+// the material's color stays what the palette says and the photo adds the structure; `colorK` lets the photo's
+// own hue through (the ground, sand) or reduces it to luminance (paint, steel). All of it is Full only (Lite
+// compiles none of this) and `k` stays 0 until a set has loaded, at which point every material of that family
+// picks it up through the shared uniforms, no recompile.
+const flat = (r, g, b, a = 255) => { const t = new THREE.DataTexture(new Uint8Array([r, g, b, a]), 1, 1); t.needsUpdate = true; return t; };
+const FAMILY_DEFAULTS = {
+  ground: { scale: 3, colorK: 1, nK: 0.9 }, terrain: { scale: 6, colorK: 1, nK: 0.8 }, sand: { scale: 2, colorK: 1, nK: 0.7 },
+  paint: { scale: 1.6, colorK: 0, nK: 0.35 }, steel: { scale: 1.2, colorK: 0, nK: 0.5 }, rust: { scale: 1.2, colorK: 0.6, nK: 0.7 },
+  rubber: { scale: 0.6, colorK: 0, nK: 0.6 }, concrete: { scale: 2, colorK: 0.5, nK: 0.7 }, plastic: { scale: 1, colorK: 0, nK: 0.4 },
+  liner: { scale: 2, colorK: 0, nK: 0.6 }, fabric: { scale: 0.5, colorK: 0.1, nK: 0.7 }, hivis: { scale: 0.3, colorK: 0, nK: 0.6 },
+};
+export const DETAIL = {};
+for (const fam in FAMILY_DEFAULTS) {
+  const d = FAMILY_DEFAULTS[fam];
+  const mk = (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+  DETAIL[fam] = {
+    map: { value: mk(flat(255, 255, 255)) }, normal: { value: mk(flat(128, 128, 255)) }, rough: { value: mk(flat(128, 128, 128)) }, ao: { value: mk(flat(255, 255, 255)) },
+    scale: { value: d.scale }, colorK: { value: d.colorK }, gain: { value: new THREE.Vector3(1, 1, 1) }, k: { value: 0 }, nK: { value: 0 }, nKDefault: d.nK, rGain: { value: 2.0 },
+    has: { map: false, normal: false, rough: false, ao: false },
+  };
+}
 export function installSnowPatch() {
   if (snowPatched) return; snowPatched = true;
   const proto = THREE.MeshStandardMaterial.prototype;
@@ -334,10 +360,16 @@ export function installSnowPatch() {
     const ud = this.userData || {};
     const grime = ud.grime == null ? 1 : ud.grime, rust = ud.rust || 0, stain = ud.stain || null;
     const terrain = ud.terrain || 0, mesa = ud.mesa || 0;   // Drop 49: ground and horizon rock
-    const world = grime > 0 || rust > 0 || stain || terrain || mesa;
+    const detail = !LITE && ud.family && DETAIL[ud.family] ? DETAIL[ud.family] : null;
+    const world = grime > 0 || rust > 0 || stain || terrain || mesa || detail;
     shader.uniforms.uSnow = SNOW; shader.uniforms.uGrime = GRIME; shader.uniforms.uWet = WET;
     shader.uniforms.uGrimeK = { value: grime }; shader.uniforms.uRustK = { value: rust };
     if (stain) { shader.uniforms.uStain = stain.uniform; shader.uniforms.uStainRect = stain.rect; }
+    if (detail) {
+      shader.uniforms.uDetailMap = detail.map; shader.uniforms.uDetailNormal = detail.normal; shader.uniforms.uDetailRough = detail.rough; shader.uniforms.uDetailAO = detail.ao;
+      shader.uniforms.uDetailScale = detail.scale; shader.uniforms.uDetailColorK = detail.colorK; shader.uniforms.uDetailGain = detail.gain;
+      shader.uniforms.uDetailK = detail.k; shader.uniforms.uDetailNK = detail.nK; shader.uniforms.uDetailRGain = detail.rGain;
+    }
     if (world) {
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vPadW;')
@@ -353,10 +385,33 @@ export function installSnowPatch() {
 uniform float uSnow; uniform float uGrime; uniform float uGrimeK; uniform float uRustK; uniform float uWet;
 ${world ? 'varying vec3 vPadW;' : ''}
 ${stain ? 'uniform sampler2D uStain; uniform vec4 uStainRect;' : ''}
+${detail ? 'uniform sampler2D uDetailMap; uniform sampler2D uDetailNormal; uniform sampler2D uDetailRough; uniform sampler2D uDetailAO; uniform float uDetailScale; uniform float uDetailColorK; uniform vec3 uDetailGain; uniform float uDetailK; uniform float uDetailNK; uniform float uDetailRGain;' : ''}
 float padHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float padNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(padHash(i), padHash(i + vec2(1.0, 0.0)), f.x), mix(padHash(i + vec2(0.0, 1.0)), padHash(i + vec2(1.0, 1.0)), f.x), f.y); }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+  ${detail ? `if (uDetailK > 0.001) {
+    // photographic detail (Drop 76): triplanar in world space; whiteout normal blend with per-axis sign flips
+    vec3 nW = normalize(normal * mat3(viewMatrix));
+    vec3 ax = sign(nW); ax += vec3(equal(ax, vec3(0.0)));
+    vec3 wts = pow(abs(nW), vec3(4.0)); wts /= (wts.x + wts.y + wts.z);
+    vec2 uvX = vec2(vPadW.z * ax.x, vPadW.y) / uDetailScale, uvY = vec2(vPadW.x * ax.y, vPadW.z) / uDetailScale, uvZ = vec2(vPadW.x * ax.z, vPadW.y) / uDetailScale;
+    vec3 dc = texture2D(uDetailMap, uvX).rgb * wts.x + texture2D(uDetailMap, uvY).rgb * wts.y + texture2D(uDetailMap, uvZ).rgb * wts.z;
+    float dl = dot(dc, vec3(0.299, 0.587, 0.114));
+    vec3 det = min(mix(vec3(dl), dc, uDetailColorK) * uDetailGain, vec3(2.5));   // a dark photo would otherwise blow its speckle out
+    float dao = texture2D(uDetailAO, uvX).r * wts.x + texture2D(uDetailAO, uvY).r * wts.y + texture2D(uDetailAO, uvZ).r * wts.z;
+    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * det * dao, uDetailK);
+    float dr = texture2D(uDetailRough, uvX).r * wts.x + texture2D(uDetailRough, uvY).r * wts.y + texture2D(uDetailRough, uvZ).r * wts.z;
+    roughnessFactor = mix(roughnessFactor, clamp(roughnessFactor * dr * uDetailRGain, 0.03, 1.0), uDetailK);
+    if (uDetailNK > 0.001) {
+      vec3 tx = texture2D(uDetailNormal, uvX).xyz * 2.0 - 1.0, ty = texture2D(uDetailNormal, uvY).xyz * 2.0 - 1.0, tz = texture2D(uDetailNormal, uvZ).xyz * 2.0 - 1.0;
+      tx.xy *= uDetailNK; ty.xy *= uDetailNK; tz.xy *= uDetailNK;
+      tx.x *= ax.x; ty.x *= ax.y; tz.x *= ax.z;
+      tx = vec3(tx.xy + nW.zy, abs(tx.z) * nW.x); ty = vec3(ty.xy + nW.xz, abs(ty.z) * nW.y); tz = vec3(tz.xy + nW.xy, abs(tz.z) * nW.z);
+      vec3 nDet = normalize(tx.zyx * wts.x + ty.xzy * wts.y + tz.xyz * wts.z);
+      normal = normalize(mix(normal, mat3(viewMatrix) * nDet, uDetailK));
+    }
+  }` : ''}
   ${stain ? 'float stainV = texture2D(uStain, (vPadW.xz - uStainRect.xy) / uStainRect.zw).r; diffuseColor.rgb *= 2.0 * stainV;' : ''}
   ${terrain ? `{
     // ground (Drop 49): patches of darker soil and lighter caliche at 30 m and 4 m scales, so the plain never reads as one tone
@@ -407,7 +462,7 @@ float padNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0
   };
   proto.customProgramCacheKey = function () {
     const ud = this.userData || {};
-    return 'pad' + (ud.grime === 0 ? '' : 'g') + (ud.rust ? 'r' : '') + (ud.stain ? 's' : '') + (ud.terrain ? 't' : '') + (ud.mesa ? 'm' : '');
+    return 'pad' + (ud.grime === 0 ? '' : 'g') + (ud.rust ? 'r' : '') + (ud.stain ? 's' : '') + (ud.terrain ? 't' : '') + (ud.mesa ? 'm' : '') + (!LITE && ud.family && DETAIL[ud.family] ? 'd' : '');
   };
 }
 // Season palette on top of the time of day: winter is overcast, the sun weak and white, the haze close and pale.
@@ -461,7 +516,7 @@ export function Rain({ count = 1800, box = 60, height = 26, wind = [2.2, 0, 0.8]
     a.needsUpdate = true;
   });
   return (
-    <lineSegments ref={ref} geometry={geom} frustumCulled={false} renderOrder={3}>
+    <lineSegments ref={ref} geometry={geom} frustumCulled={false} renderOrder={3} raycast={() => null}>
       <lineBasicMaterial color="#c9d2dc" transparent opacity={0.32 * density} depthWrite={false} fog />
     </lineSegments>
   );
@@ -487,7 +542,7 @@ export function Flurries({ count = 1600, box = 70, height = 30, wind = [1.4, 0, 
     a.needsUpdate = true;
   });
   return (
-    <points ref={ref} geometry={geom} frustumCulled={false} renderOrder={3}>
+    <points ref={ref} geometry={geom} frustumCulled={false} renderOrder={3} raycast={() => null}>
       <pointsMaterial size={2.6} sizeAttenuation={false} color="#f4f7fb" transparent opacity={0.85 * density} depthWrite={false} fog />
     </points>
   );
@@ -866,7 +921,7 @@ function starGeometry(radius) {
 function Stars({ radius }) {
   const geom = useMemo(() => starGeometry(radius), [radius]);
   return (
-    <points geometry={geom} frustumCulled={false}>
+    <points geometry={geom} frustumCulled={false} raycast={() => null}>
       <pointsMaterial size={2.0} sizeAttenuation={false} vertexColors transparent opacity={0.95} fog={false} toneMapped={false} depthWrite={false} />
     </points>
   );

@@ -51,7 +51,7 @@ export function IronLeak({ position = [0, 0.9, 0], maxPsi = 10000 }) {
   if (!on) return null;
   return (
     <group position={position}>
-      <lineSegments ref={ref} geometry={geom} frustumCulled={false} renderOrder={3}>
+      <lineSegments ref={ref} geometry={geom} frustumCulled={false} renderOrder={3} raycast={() => null}>
         <lineBasicMaterial color="#e8eef4" transparent opacity={0.5} depthWrite={false} fog />
       </lineSegments>
       <mesh ref={patch} position={[0, -position[1] + 0.012, -2.2]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>

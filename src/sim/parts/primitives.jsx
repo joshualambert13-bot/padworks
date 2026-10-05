@@ -114,6 +114,13 @@ export const MAT = {
   rust:    { color: '#6e4a2c', metalness: 0.35, roughness: 0.85 },
   black:   paint('#0e0f11', 0.75, 0.3),
 };
+// Material families for the photographic detail layer (Drop 76; DETAIL in lighting.jsx): every palette entry names
+// the texture set it takes when the files are present. Paint and bare steel are the defaults; the rest by name.
+const FAMILY_OF = { rubber: 'rubber', tire: 'rubber', hose: 'rubber', ground: 'terrain', sand: 'sand', rust: 'rust', tape: 'plastic', glass: null, glassLit: null };
+for (const k in MAT) {
+  const fam = k in FAMILY_OF ? FAMILY_OF[k] : (MAT[k].metalness >= 0.6 ? 'steel' : 'paint');
+  if (fam) MAT[k].userData = { ...(MAT[k].userData || {}), family: fam };
+}
 
 // Material element for a MAT entry. A clearcoat asks for MeshPhysicalMaterial (the second specular lobe is what
 // makes paint read as paint); in Lite the clearcoat keys are dropped and the cheaper standard material is used.
@@ -441,7 +448,7 @@ function labelTexture(text) {
 export function Label({ text, position = [0, 0, 0], size = 0.022 }) {
   const { tex, aspect } = useMemo(() => labelTexture(text), [text]);
   return (
-    <sprite position={position} scale={[size * aspect, size, 1]} renderOrder={10}>
+    <sprite position={position} scale={[size * aspect, size, 1]} renderOrder={10} raycast={() => null}>
       <spriteMaterial map={tex} sizeAttenuation={false} depthTest={false} depthWrite={false} transparent />
     </sprite>
   );
@@ -472,6 +479,8 @@ export function Instanced({ transforms, version = 0, children, name }) {
     const inv = new THREE.Matrix4().copy(t.matrixWorld).invert();
     const groups = new Map();
     const tmp = new THREE.Matrix4();
+    const walkBoxes = [];   // Drop 75: each source mesh's box in template space, for the walk obstacles (a merged set has no per-unit box)
+    const boxOf = (geo, mat) => { if (!geo.boundingBox) geo.computeBoundingBox(); const b = geo.boundingBox; if (b && !b.isEmpty()) walkBoxes.push(b.clone().applyMatrix4(mat)); };
     // the order three would draw the mesh in: its nearest group's renderOrder (three resets the group order at
     // every Group on the way down), else its own
     const orderOf = (o) => { let x = o.parent; while (x && x !== t) { if (x.isGroup) return x.renderOrder || o.renderOrder; x = x.parent; } return o.renderOrder; };
@@ -483,9 +492,10 @@ export function Instanced({ transforms, version = 0, children, name }) {
       if (!groups.has(key)) groups.set(key, { material: m.material, name: nearestName(m, t), cast: m.castShadow, order, geos: [] });
       const local = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld);
       if (m.isInstancedMesh) {
-        for (let i = 0; i < m.count; i++) { m.getMatrixAt(i, tmp); groups.get(key).geos.push(m.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(local, tmp))); }
+        for (let i = 0; i < m.count; i++) { m.getMatrixAt(i, tmp); const lm = new THREE.Matrix4().multiplyMatrices(local, tmp); boxOf(m.geometry, lm); groups.get(key).geos.push(m.geometry.clone().applyMatrix4(lm)); }
         return;
       }
+      boxOf(m.geometry, local);
       groups.get(key).geos.push(m.geometry.clone().applyMatrix4(local));
     });
     t.visible = false;
@@ -516,10 +526,12 @@ export function Instanced({ transforms, version = 0, children, name }) {
         im.instanceColor.needsUpdate = true;
       }
       im.castShadow = grp.cast; im.receiveShadow = true; im.name = grp.name; im.frustumCulled = false; im.renderOrder = grp.order;
+      im.userData.walkSkip = true;
       h.add(im); made.push(im);
     }
+    h.userData.walkBoxes = { boxes: walkBoxes, mats };
     built.current = made;
-    return () => { made.forEach(im => { h.remove(im); im.geometry.dispose(); }); built.current = []; };
+    return () => { made.forEach(im => { h.remove(im); im.geometry.dispose(); }); delete h.userData.walkBoxes; built.current = []; };
   }, [transforms, version]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>

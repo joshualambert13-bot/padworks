@@ -17,24 +17,31 @@ const KEYS = { KeyW: ['f', 1], ArrowUp: ['f', 1], KeyS: ['f', -1], ArrowDown: ['
 // Obstacles (Drop 61): the walker cannot pass through the units. Collected once when the walk starts from the
 // scene's own meshes: every visible mesh (each instance of an instanced mesh on its own) whose world box stands in
 // the body band (reaches above 0.7 m and starts below 1.3 m), is at least 0.5 m across both ways, and is not a
-// whole-area bake (over 150 square meters, or 30 m long: the ground, the pad, the flowback spread's one-piece
-// skids). Thin things (pipes, hoses, masts, flags, berm, cones) fall through and are walked past. Boxes are
-// padded by the body radius; the walker is pushed out of any box it ends a step in, along the shorter way, which
-// makes it slide along a trailer rather than stop dead.
+// whole-area bake (over 400 square meters, or 30 m long: the ground, the pad, the pad berm). Thin things (pipes,
+// hoses, masts, flags, cones) fall through and are walked past. Boxes are padded by the body radius; the walker is
+// pushed out of any box it ends a step in, along the shorter way, which makes it slide along a trailer rather
+// than stop dead.
+// Drop 75: an object can carry its own boxes in `userData.walkBoxes` ({ boxes: Box3[] in its own frame, mats:
+// Matrix4[] placements, force }) and its descendants `userData.walkSkip`. The instancing baker writes them for
+// every set it bakes (the boxes of the source meshes, one unit each, which a merged set loses), and the water pit
+// writes one forced box over the whole pit, berm included, since a ring is a keep-out and not a box to filter.
 const BODY_R = 0.6;
 function collectObstacles(scene) {
   const out = [];
   const box = new THREE.Box3(), m = new THREE.Matrix4(), w = new THREE.Matrix4();
-  const consider = (bb, world) => {
+  const consider = (bb, world, force = false) => {
     box.copy(bb).applyMatrix4(world);
     if (box.max.y < 0.7 || box.min.y > 1.3) return;
     const sx = box.max.x - box.min.x, sz = box.max.z - box.min.z;
-    if (sx < 0.5 || sz < 0.5 || sx > 30 || sz > 30 || sx * sz > 150) return;
+    if (!force && (sx < 0.5 || sz < 0.5 || sx > 30 || sz > 30 || sx * sz > 400)) return;
     out.push([box.min.x - BODY_R, box.min.z - BODY_R, box.max.x + BODY_R, box.max.z + BODY_R]);
   };
   scene.traverse(o => {
-    if (!o.isMesh || o.isSprite || !o.geometry) return;
+    if (o.userData.walkSkip) return;
     for (let p = o; p; p = p.parent) if (p.visible === false) return;
+    const wb = o.userData.walkBoxes;
+    if (wb) { for (const mat of wb.mats) for (const b of wb.boxes) consider(b, w.multiplyMatrices(o.matrixWorld, mat), !!wb.force); return; }
+    if (!o.isMesh || o.isSprite || !o.geometry) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
     const bb = o.geometry.boundingBox; if (!bb || bb.isEmpty()) return;
     if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); consider(bb, w.multiplyMatrices(o.matrixWorld, m)); } }
@@ -67,6 +74,7 @@ export function WalkControls({ terrain, pad, onExit }) {
     camera.updateProjectionMatrix();
     scene.updateMatrixWorld(true);
     obstacles.current = collectObstacles(scene);
+    if (typeof window !== 'undefined') window.__padworksObstacles = obstacles.current;   // test hook
     const p = { x, z }; pushOut(p, obstacles.current); camera.position.x = p.x; camera.position.z = p.z;   // never start inside a unit
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the exit callback lives in a ref: the listeners below are installed once per canvas, not once per scene render

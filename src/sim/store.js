@@ -1051,8 +1051,10 @@ export const useSim = create((set, get) => ({
           const result = { score: total, grade: gradeOf(total), secs: Math.round(secs), targetSec: L.targetSec, timePts, deductions: base.deductions };
           patch.lesson = { ...s.lesson, doneMask: mask, finished: true, result };
           const entry = { id: L.id, n: L.n, title: L.title, score: total, grade: result.grade, secs: result.secs, targetSec: L.targetSec, when: Date.now() };
-          patch.lessonResults = [...s.lessonResults, entry];
-          postLessonResult(entry, { setup: ns.setup, pad: ns.pad, t: ns.t, phase: ns.phase, stages: ns.stages, score: ns.score, log: ns.log, events: ns.events, lesson: patch.lesson, when: Date.now() });
+          if (!s.ui.demo) {   // a narrated demo (Drop 77) runs the lesson itself; its result is nobody's progress
+            patch.lessonResults = [...s.lessonResults, entry];
+            postLessonResult(entry, { setup: ns.setup, pad: ns.pad, t: ns.t, phase: ns.phase, stages: ns.stages, score: ns.score, log: ns.log, events: ns.events, lesson: patch.lesson, when: Date.now() });
+          }
           get().addLog('Lesson ' + L.n + ' complete: ' + total + ' points, grade ' + result.grade + ', ' + result.secs + ' s (target ' + L.targetSec + ' s).');
         } else if (changed) patch.lesson = { ...s.lesson, doneMask: mask };
       }

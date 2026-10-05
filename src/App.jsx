@@ -1,8 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { Library as LibraryIcon, Activity, ShieldCheck, Info, Users } from 'lucide-react';
+import { Library as LibraryIcon, Activity, ShieldCheck, Info, Users, GraduationCap } from 'lucide-react';
 const Simulator = lazy(() => import('./sim/Simulator.jsx'));
 import Library from './library/Library.jsx';
+import Landing from './Landing.jsx';
+import LessonsPage from './lessons/LessonsPage.jsx';
 import SystemPage from './library/SystemPage.jsx';
 const RecordPage = lazy(() => import('./library/RecordPage.jsx'));
 const AdminPage = lazy(() => import('./admin/AdminPage.jsx'));
@@ -37,8 +39,9 @@ export default function App() {
           <span className="hidden lg:inline text-xs font-normal text-mute tracking-normal">{SITE_TAGLINE}</span>
         </NavLink>
         <nav className="flex items-center gap-1">
-          <NavLink to="/library" className={navClass}><LibraryIcon size={16} /> <span className="hidden sm:inline">Library</span></NavLink>
+          <NavLink to="/lessons" className={navClass}><GraduationCap size={16} /> <span className="hidden sm:inline">Lessons</span></NavLink>
           <NavLink to="/simulate" className={navClass}><Activity size={16} /> <span className="hidden sm:inline">Simulator</span></NavLink>
+          <NavLink to="/library" className={navClass}><LibraryIcon size={16} /> <span className="hidden sm:inline">Library</span></NavLink>
           <NavLink to="/checks" className={navClass}><ShieldCheck size={16} /> <span className="hidden sm:inline">Build check</span></NavLink>
           <NavLink to="/about" className={navClass}><Info size={16} /> <span className="hidden sm:inline">About</span></NavLink>
           {canSeeAdmin(user, viewAs) && <NavLink to="/admin" className={navClass} data-nav="admin"><Users size={16} /> <span className="hidden sm:inline">{role === 'admin' ? 'Accounts' : 'Progress'}</span></NavLink>}
@@ -49,7 +52,8 @@ export default function App() {
       <main className="flex-1 min-h-0">
         <Suspense fallback={<div className="p-4 text-sm text-mute">Loading</div>}>
         <Routes>
-          <Route path="/" element={<Navigate to="/simulate" replace />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/lessons" element={<LessonsPage />} />
           <Route path="/simulate" element={<Simulator />} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/:system" element={<SystemPage />} />
@@ -60,7 +64,7 @@ export default function App() {
           <Route path="/preview" element={<Preview />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/account" element={<ChangePassword />} />
-          <Route path="*" element={<Navigate to="/simulate" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
       </main>

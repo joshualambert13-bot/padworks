@@ -12,6 +12,8 @@ import TimelinePanel from './panels/TimelinePanel.jsx';
 import { useSim, phasesFor } from './store.js';
 import { lessonById } from './lessons.js';
 import HoverPopup from './HoverPopup.jsx';
+import { DemoBar } from './DemoBar.jsx';
+import { startDemo, stopDemo } from './demo.js';
 import SessionSummary from './SessionSummary.jsx';
 
 const VIEWS = [
@@ -100,8 +102,14 @@ export default function Simulator() {
   }, [ui.full]);
   const diag = useDiag();
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get('s');
+    const q = new URLSearchParams(window.location.search);
+    const token = q.get('s');
     if (token) { useSim.getState().applyShareToken(token); window.history.replaceState({}, '', window.location.pathname); }
+    // the lessons page (Drop 77) opens the simulator with a lesson started (?lesson=L3) or a narrated demo running (?demo=L3, ?demo=intro)
+    const demo = q.get('demo'), lesson = q.get('lesson');
+    if (demo) { startDemo(demo); window.history.replaceState({}, '', window.location.pathname); }
+    else if (lesson) { if (lessonById(lesson)) useSim.getState().startLesson(lesson); window.history.replaceState({}, '', window.location.pathname); }
+    return () => stopDemo();
   }, []);
   const share = () => {
     const url = window.location.origin + window.location.pathname + '?s=' + useSim.getState().shareToken();
@@ -220,6 +228,7 @@ export default function Simulator() {
           <Viewport view={view} showLabels={showLabels} preset={preset} />
           {toolbar}
           {walk && view === 'surface' && <WalkPad />}
+          <DemoBar />
         </section>
         <aside className={'min-h-0 min-w-0 overflow-hidden border-l border-line bg-panel ' + (full ? (peek === 'timeline' ? 'absolute inset-y-0 right-0 z-30 w-[min(360px,88vw)] shadow-2xl' : 'hidden') : mobileTab === 'timeline' ? 'block' : 'hidden md:block')} data-panel="timeline"><TimelinePanel /></aside>
         {full && (

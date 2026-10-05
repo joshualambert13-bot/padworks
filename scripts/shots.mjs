@@ -365,6 +365,57 @@ await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(2500);
 await shot(p, '53-sim-tree-standard');
 await p.goto(base + '/about'); await wait(1000);
 await shot(p, '36-about');
+// Drop 77: the landing page, the lessons page, the narrated introduction (fast mode: no waits), a lesson demo
+// through its first checkpoints, and Try it starting a lesson
+await p.goto(base + '/'); await wait(2500);
+{
+  const doors = await p.evaluate(() => Array.from(document.querySelectorAll('[data-door]')).map(d => d.getAttribute('data-door')));
+  if (doors.join(',') !== 'lessons,simulate,library') errors.push('landing page doors: ' + doors.join(','));
+}
+await shot(p, '37-landing');
+await p.goto(base + '/lessons'); await wait(2500);
+{
+  const n = await p.evaluate(() => document.querySelectorAll('[data-lesson-card]').length);
+  if (n !== 12) errors.push('lessons page shows ' + n + ' cards, expected 12 (intro plus 11 lessons)');
+}
+await shot(p, '38-lessons-page');
+await p.addInitScript(() => { window.__padworksDemo = { fast: true }; });
+await p.goto(base + '/simulate?demo=intro' + (process.env.LITE ? '&lite=1' : '')); await wait(6000);
+{
+  const seen = new Set(); const t0 = Date.now();
+  while (Date.now() - t0 < 90000) {
+    const c = await p.evaluate(() => { const el = document.querySelector('[data-demo-caption]'); return el ? el.textContent.slice(0, 40) : null; });
+    if (c) seen.add(c); else if (seen.size) break;
+    await wait(250);
+  }
+  if (seen.size < 6) errors.push('introduction demo showed ' + seen.size + ' captions');
+  const demo = await p.evaluate(() => window.__padworksSim.getState().ui.demo);
+  if (demo) errors.push('introduction demo did not clear ui.demo when it ended');
+}
+await shot(p, '39-intro-demo-ended');
+await p.goto(base + '/simulate?demo=L3' + (process.env.LITE ? '&lite=1' : '')); await wait(5000);
+{
+  const t0 = Date.now(); let step = 0, cap = '';
+  while (Date.now() - t0 < 150000) {
+    const d = await p.evaluate(() => { const el = document.querySelector('[data-demo-caption]'); return { cap: el ? el.textContent : '', step: window.__padworksSim.getState().lesson.doneMask.filter(Boolean).length, id: window.__padworksSim.getState().lesson.id, demo: window.__padworksSim.getState().ui.demo }; });
+    cap = d.cap; step = d.step;
+    if (d.id !== 'L3') { errors.push('lesson demo did not start lesson 3: ' + d.id); break; }
+    if (step >= 2) break;
+    await wait(1000);
+  }
+  if (step < 2) errors.push('lesson 3 demo passed only ' + step + ' checkpoints in 150 s (caption: ' + cap.slice(0, 60) + ')');
+  await shot(p, '40-lesson-demo-running');
+  await p.click('[data-action="demo-stop"]'); await wait(800);
+  const after = await p.evaluate(() => ({ demo: window.__padworksSim.getState().ui.demo, bar: !!document.querySelector('[data-demo-bar]'), speed: window.__padworksSim.getState().speed }));
+  if (after.demo || after.bar || after.speed !== 1) errors.push('stopping the demo left ' + JSON.stringify(after));
+}
+await p.goto(base + '/simulate?lesson=L5' + (process.env.LITE ? '&lite=1' : '')); await wait(5000);
+{
+  const id = await p.evaluate(() => window.__padworksSim.getState().lesson.id);
+  if (id !== 'L5') errors.push('Try it did not start lesson 5: ' + id);
+  await waitText(p, 'Lesson 5 of 11', 30000);
+}
+await shot(p, '41-try-it-lesson5');
 await p.close();
 
 }

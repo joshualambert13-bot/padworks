@@ -9,6 +9,7 @@ import { Totes, IronRack, Cones, Barricades, Welfare, FuelCube, SafetyPoint, Hos
 import { useHdri } from './parts/hdri.js';
 import { WalkControls, LAST_TARGET } from './parts/walk.jsx';
 import { IronLeak } from './parts/leak.jsx';
+import { Decals } from './parts/decals.jsx';
 import { installTextureSets } from './parts/textures.js';
 import { SOURCES, thunder } from './sound.js';
 installSnowPatch();
@@ -370,6 +371,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <CameraPreset tour={tour} walk={walk} preset={preset} rowCenter={rowCenter} rowLen={rowLen} production={s.phase === 'production'} rig={s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing')} k={0.6 + 0.4 * bore / 0.18} bZ={bZ} />
       <FocusCamera ctx={{ rowCenter, rowLen, production: s.phase === 'production', rig: s.phase === 'production' && (s.hookup.step === 'rig' || s.hookup.step === 'tubing'), k: 0.6 + 0.4 * bore / 0.18, bZ, d, zd, zipperFrontZ, sleeve }} />
       <Ground terrain={terrain} pad={pad} seed={basin.id.length} stain={stainLayout} />
+      <Decals layout={stainLayout} />
       <Containment x0={-3.2} x1={4.2} z0={-3.5} z1={rowLen + 3.5} />
       <RedZone visible={pumping} x0={-34} xm={-14} x1={10} z0={-14} zm={rear + 1.5} z1={rowLen + 10} />
       <group {...pick}>

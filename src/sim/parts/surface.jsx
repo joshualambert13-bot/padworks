@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged, RBox, Mat, Cable, HydraulicCylinder, metal, Instanced } from './primitives.jsx';
 import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture, wrapTexture, glowTexture } from './lighting.jsx';
 import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume, Stencil } from './life.jsx';
+import { useWaterNormal } from './textures.js';
 
 // Pulsing ring drawn around the valve the next-steps guidance is pointing at.
 function PulseRing({ r }) {
@@ -2015,16 +2016,20 @@ export function WaterPit({ position, size = [44, 30], frozen = false, showLabels
   }, [L, Wd]);
   const wy = frozen ? 1.25 : 1.2;
   const k = wy / bh, wx = (L / 2 - 3.6) + 2.4 * k, wz = (Wd / 2 - 3.6) + 2.4 * k;   // water meets the liner slope at its own level
+  const waterN = useWaterNormal();   // ripples from public/textures/water_nor.jpg when present (Drop 76), drifting slowly
+  useFrame((_, dt) => { if (waterN && !frozen) { waterN.offset.x += dt * 0.012; waterN.offset.y += dt * 0.007; } });
+  // the walker stays off the whole pit, berm and all (Drop 75; see collectObstacles in walk.jsx)
+  const walk = useMemo(() => ({ walkBoxes: { boxes: [new THREE.Box3(new THREE.Vector3(-(L / 2 + 3), 0, -(Wd / 2 + 3)), new THREE.Vector3(L / 2 + 3, bh, Wd / 2 + 3))], mats: [new THREE.Matrix4()], force: true } }), [L, Wd, bh]);
   return (
-    <group position={position} name="LG-WATERPIT">
-      <mesh geometry={geo.outer} receiveShadow castShadow><meshStandardMaterial color="#8a7b63" roughness={1} side={THREE.DoubleSide} /></mesh>
-      <mesh geometry={geo.crest} receiveShadow><meshStandardMaterial color="#8a7b63" roughness={1} side={THREE.DoubleSide} /></mesh>
-      <mesh geometry={geo.liner} receiveShadow><meshStandardMaterial color="#161616" roughness={0.55} metalness={0.05} side={THREE.DoubleSide} /></mesh>
+    <group position={position} name="LG-WATERPIT" userData={walk}>
+      <mesh geometry={geo.outer} receiveShadow castShadow><meshStandardMaterial color="#8a7b63" roughness={1} side={THREE.DoubleSide} userData={{ family: 'terrain' }} /></mesh>
+      <mesh geometry={geo.crest} receiveShadow><meshStandardMaterial color="#8a7b63" roughness={1} side={THREE.DoubleSide} userData={{ family: 'terrain' }} /></mesh>
+      <mesh geometry={geo.liner} receiveShadow><meshStandardMaterial color="#161616" roughness={0.55} metalness={0.05} side={THREE.DoubleSide} userData={{ family: 'liner' }} /></mesh>
       <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[L - 7.2, Wd - 7.2]} /><meshStandardMaterial color="#141414" roughness={0.6} metalness={0.05} /></mesh>
       {/* water, or ice */}
       <mesh position={[0, wy, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow name="LG-WATERPIT-WATER">
         <planeGeometry args={[wx * 2, wz * 2]} />
-        {frozen ? <meshStandardMaterial color="#cfd9e3" roughness={0.55} metalness={0.05} /> : <meshStandardMaterial color="#2a6b78" roughness={0.12} metalness={0.05} transparent opacity={0.88} />}
+        {frozen ? <meshStandardMaterial color="#cfd9e3" roughness={0.55} metalness={0.05} /> : <meshStandardMaterial color="#2a6b78" roughness={0.12} metalness={0.05} transparent opacity={0.88} normalMap={waterN || undefined} normalScale={[0.3, 0.3]} />}
       </mesh>
       {/* floating pump skid: pontoons, deck, engine and pump, suction into the water */}
       <group position={[-L * 0.2, wy, Wd * 0.1]} name="LG-WATERPIT-SKID">
@@ -2270,7 +2275,7 @@ import { Vegetation, Horizon, RoadFurniture } from './vegetation.jsx';
 import { padStainTexture } from './ground.js';
 const NO_GRIME = { grime: 0 };
 const CAGE_STEEL = { color: '#9aa2ab', metalness: 0.7, roughness: 0.45 };
-const TERRAIN = { grime: 0, terrain: 1 };   // ground planes take the macro soil variation (Drop 49)
+const TERRAIN = { grime: 0, terrain: 1, family: 'terrain' };   // ground planes take the macro soil variation (Drop 49) and the terrain photo set (Drop 76)
 
 export function Ground({ terrain, pad, seed = 1, stain = null }) {
   // Drop 44: the pad's stain map (lanes, ruts, drips, spills drawn from the layout) reaches the pad material through
@@ -2279,7 +2284,7 @@ export function Ground({ terrain, pad, seed = 1, stain = null }) {
   const stainHolder = useMemo(() => ({ uniform: { value: null }, rect: { value: new THREE.Vector4() } }), []);
   stainHolder.uniform.value = stainTex;
   stainHolder.rect.value.set(pad.x0, pad.z0, pad.x1 - pad.x0, pad.z1 - pad.z0);
-  const padUserData = useMemo(() => ({ grime: 0, stain: stainHolder }), [stainHolder]);
+  const padUserData = useMemo(() => ({ grime: 0, stain: stainHolder, family: 'ground' }), [stainHolder]);
   const t = terrain || { ground: '#4b4235', pad: '#5a5245', relief: 0.5, veg: 'scrub', density: 0.1, vegColor: '#4f5b3c' };
   const geom = useMemo(() => {
     const g = new THREE.PlaneGeometry(720, 720, 144, 144);

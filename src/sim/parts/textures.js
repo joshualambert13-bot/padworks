@@ -1,36 +1,21 @@
-// Optional photographic texture sets (Drop 44). Everything the pad draws is generated in code; when CC0 photo sets
-// are dropped into public/textures/ (see the README there) they are swapped INTO the generated textures' images,
-// so every material that shares a generated texture picks the photo up at once, with no recompile and no new
-// textures. Each photo is reduced to luminance and rescaled to the generated tile's mean, so it adds grain and
-// detail while the material colors (basin ground, paint colors) stay what they are. Nothing happens for a set
-// whose files are absent (an Image load that fails is the probe; a 404 page is not an image).
+// Photographic texture sets (Drop 44, rebuilt in Drop 76). Everything the pad draws is generated in code; when CC0
+// photo sets are dropped into public/textures/ (see the README there) they become the detail layer of every
+// material in their family (see DETAIL in lighting.jsx): sampled triplanar in world space by the material patch,
+// so nothing needs UVs, nothing recompiles, and nothing happens for a file that is absent (an Image load that
+// fails is the probe; a 404 page is not an image). Per family the files are
 //
-//   ground_diff.jpg   the pad and the surrounding ground (one tile is about 3 m)
-//   paint_diff.jpg    painted sheet metal: the grime tile on every painted surface
-//   paint_rough.jpg   painted sheet metal: the wear tile (roughness and bump) on every painted surface
-//   steel_rough.jpg   bare steel: the brushed roughness tile
-import { padTexture, noiseTexture, grimeTexture, wearTexture, brushedTexture } from './lighting.jsx';
+//   <family>_diff.jpg    color (sRGB); normalized to its mean so the palette color stays and the photo adds structure
+//   <family>_nor.jpg     tangent-space normal map, OpenGL convention (Poly Haven's _nor_gl_)
+//   <family>_rough.jpg   roughness (white is rough)
+//   <family>_ao.jpg      ambient occlusion (optional; the ground and terrain use it)
+//
+// Families: ground (the pad), terrain (the land around it), sand, paint, steel, rust, rubber, concrete, plastic,
+// liner, fabric, hivis. Lite never loads any of this.
+import { useEffect, useState } from 'react';
+import * as THREE from 'three';
+import { DETAIL, LITE } from './lighting.jsx';
 
 let installed = false;
-
-// Draw `img` into the texture's canvas as luminance with the canvas's current mean, then mark the texture for upload
-function swapIn(tex, img, { metersPerTile = null, generatedMeters = null } = {}) {
-  const c = tex.image; if (!c || !c.getContext) return;
-  const ctx = c.getContext('2d');
-  const before = ctx.getImageData(0, 0, c.width, c.height).data;
-  let sum = 0; for (let i = 0; i < before.length; i += 4) sum += before[i];
-  const target = sum / (before.length / 4) / 255;
-  const size = Math.min(1024, img.naturalWidth || 1024);
-  c.width = size; c.height = size;
-  ctx.drawImage(img, 0, 0, size, size);
-  const d = ctx.getImageData(0, 0, size, size), p = d.data;
-  let lum = 0; for (let i = 0; i < p.length; i += 4) lum += 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
-  const mean = lum / (p.length / 4) / 255 || 0.5, k = target / mean;
-  for (let i = 0; i < p.length; i += 4) { const g = Math.max(0, Math.min(255, (0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2]) * k)); p[i] = p[i + 1] = p[i + 2] = g; }
-  ctx.putImageData(d, 0, 0);
-  if (metersPerTile && generatedMeters) tex.repeat.multiplyScalar(generatedMeters / metersPerTile);
-  tex.needsUpdate = true;
-}
 
 function probe(file, onload) {
   try {
@@ -41,14 +26,51 @@ function probe(file, onload) {
   } catch { /* no DOM */ }
 }
 
+// mean of the image (per channel, 0..1), from a 32 px reduction
+function meanOf(img) {
+  const c = document.createElement('canvas'); c.width = c.height = 32;
+  const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, 32, 32);
+  const d = ctx.getImageData(0, 0, 32, 32).data; const m = [0, 0, 0];
+  for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; }
+  const n = d.length / 4; return m.map(v => v / n / 255);
+}
+
+// the photo becomes the texture's image; the 1x1 placeholder is replaced in place so every program keeps its binding
+function adopt(uniform, img, srgb) {
+  const t = new THREE.Texture(img);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.anisotropy = 8; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.needsUpdate = true;
+  const old = uniform.value; uniform.value = t; if (old && old.dispose) old.dispose();
+}
+
 // Called once from the surface scene. Safe to call again; the probes run only the first time.
 export function installTextureSets() {
-  if (installed || typeof document === 'undefined') return; installed = true;
-  probe('ground_diff.jpg', (img) => {
-    const pad = padTexture(); if (pad) swapIn(pad, img, { metersPerTile: 3, generatedMeters: 16 });
-    const ground = noiseTexture('ground', { size: 256, octaves: 5, base: 0.78, amp: 0.3, period: 8, repeat: 90 }); if (ground) swapIn(ground, img, { metersPerTile: 3, generatedMeters: 8 });
-  });
-  probe('paint_diff.jpg', (img) => { const t = grimeTexture(); if (t) swapIn(t, img); });
-  probe('paint_rough.jpg', (img) => { const t = wearTexture(); if (t) swapIn(t, img); });
-  probe('steel_rough.jpg', (img) => { const t = brushedTexture(); if (t) swapIn(t, img); });
+  if (installed || typeof document === 'undefined' || LITE) return; installed = true;
+  for (const fam in DETAIL) {
+    const D = DETAIL[fam];
+    probe(fam + '_diff.jpg', (img) => {
+      const m = meanOf(img); const lum = 0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2] || 0.5;
+      // gain: the mean of the photo's luminance goes to 1, so the material color is kept on average; the color
+      // channels keep their ratio to each other so the photo's hue reads where colorK lets it through
+      const g = Math.min(6, 1 / lum); D.gain.value.set(g, g, g);
+      adopt(D.map, img, true); D.has.map = true; D.k.value = 1;
+    });
+    probe(fam + '_nor.jpg', (img) => { adopt(D.normal, img, false); D.has.normal = true; D.nK.value = D.nKDefault; });
+    probe(fam + '_rough.jpg', (img) => { const m = meanOf(img); D.rGain.value = 1 / Math.max(0.05, 0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2]); adopt(D.rough, img, false); D.has.rough = true; });
+    probe(fam + '_ao.jpg', (img) => { adopt(D.ao, img, false); D.has.ao = true; });
+  }
+  if (typeof window !== 'undefined') window.__padworksDetail = DETAIL;   // test hook
+}
+
+// Water ripples (Drop 76): `water_nor.jpg` as the normal map of the pit's water, scrolled slowly by the pit itself.
+let waterTex = null, waterProbed = false; const waterWaiters = new Set();
+export function useWaterNormal() {
+  const [tex, setTex] = useState(waterTex);
+  useEffect(() => {
+    if (LITE) return;
+    const fn = (t) => setTex(t); waterWaiters.add(fn);
+    if (!waterProbed) { waterProbed = true; probe('water_nor.jpg', (img) => { const t = new THREE.Texture(img); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 4); t.needsUpdate = true; waterTex = t; waterWaiters.forEach(f => f(t)); }); }
+    return () => waterWaiters.delete(fn);
+  }, []);
+  return tex;
 }

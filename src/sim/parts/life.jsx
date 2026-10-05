@@ -106,7 +106,7 @@ export function HazardStrip({ position = [0, 0, 0], rotation = [0, 0, 0], length
 // ---------------------------------------------------------------- crew figures
 // A worker in FRC coveralls, high-visibility vest, and hard hat (Drop 47): capsule limbs with elbows and knees,
 // a lathed torso, boots, gloves, safety glasses, reflective bands, a hard hat with a peak. The figure faces -Z.
-// Poses: 'stand', 'point' (right arm raised toward -Z), 'kneel' (right knee down, working low). Built as merged
+// Poses: 'stand', 'point' (right arm pointing low ahead, toward -Z), 'kneel' (right knee down, working low). Built as merged
 // meshes per material (eight draw calls), with a slight idle sway.
 const SKIN = { color: '#b58a66', metalness: 0, roughness: 0.8 };
 const COVERALLS = [{ color: '#2b3f66', metalness: 0.05, roughness: 0.85 }, { color: '#b3976a', metalness: 0.05, roughness: 0.85 }, { color: '#3b3d42', metalness: 0.05, roughness: 0.85 }];
@@ -141,7 +141,9 @@ function joints(pose) {
   const hipY = 0.9, lean = 0.04;
   const legs = [{ hip: [-0.1, hipY, 0], knee: [-0.1, 0.5, -0.02], ankle: [-0.1, 0.13, 0], boot: [-0.1, 0.065, -0.04] }, { hip: [0.1, hipY, 0], knee: [0.1, 0.5, -0.02], ankle: [0.1, 0.13, 0], boot: [0.1, 0.065, -0.04] }];
   const arms = [{ sh: [-0.2, 1.45, 0], el: [-0.26, 1.17, -0.03], wr: [-0.29, 0.93, -0.08] }, { sh: [0.2, 1.45, 0], el: [0.26, 1.17, -0.03], wr: [0.29, 0.93, -0.08] }];
-  if (pose === 'point') arms[1] = { sh: [0.2, 1.45, 0], el: [0.24, 1.44, -0.28], wr: [0.27, 1.46, -0.56] };
+  // point (Drop 75): a spotter's gesture, elbow bent and the forearm aimed low and ahead at the spot the truck stops;
+  // the old straight arm at shoulder height read as a salute
+  if (pose === 'point') arms[1] = { sh: [0.2, 1.45, 0], el: [0.27, 1.27, -0.23], wr: [0.31, 1.03, -0.46] };
   return { hipY, lean, legs, arms };
 }
 export function figureParts(pose, { vest, hat, coverall }, trunkOnly = false) {
@@ -174,7 +176,7 @@ export function figureParts(pose, { vest, hat, coverall }, trunkOnly = false) {
                { g: GEO.box(0.02, 0.02, 0.2), p: [headC[0], headC[1] + 0.14, headC[2]] });
   return out;
 }
-const FIG_MATS = (vest, hat, coverall) => ({ coverall, black: MAT.black, skin: SKIN, vest: { color: vest, metalness: 0, roughness: 0.7 }, reflex: REFLEX, glove: GLOVE, hat: { color: hat, metalness: 0.1, roughness: 0.4 }, glasses: GLASSES });
+const FIG_MATS = (vest, hat, coverall) => ({ coverall: { ...coverall, userData: { ...(coverall.userData || {}), family: 'fabric' } }, black: MAT.black, skin: SKIN, vest: { color: vest, metalness: 0, roughness: 0.7, userData: { family: 'hivis' } }, reflex: REFLEX, glove: GLOVE, hat: { color: hat, metalness: 0.1, roughness: 0.4, userData: { family: 'plastic' } }, glasses: GLASSES });
 export function Crew({ position = [0, 0, 0], rotation = 0, pose = 'stand', vest = '#ff7a1a', hat = '#f2f2f2', seed = 0 }) {
   const ref = useRef();
   useFrame((state) => { if (ref.current) ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.9 + seed) * 0.015; });
@@ -343,7 +345,7 @@ export function ExhaustPlume({ position = [0, 0, 0], active = true, strength = 1
   if (!tex) return null;
   return (
     <group position={position}>
-      {[0, 1, 2, 3].map(i => <sprite key={i} ref={el => (refs.current[i] = el)}><spriteMaterial map={tex} transparent depthWrite={false} opacity={0} /></sprite>)}
+      {[0, 1, 2, 3].map(i => <sprite key={i} ref={el => (refs.current[i] = el)} raycast={() => null}><spriteMaterial map={tex} transparent depthWrite={false} opacity={0} /></sprite>)}
     </group>
   );
 }

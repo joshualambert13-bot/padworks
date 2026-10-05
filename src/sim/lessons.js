@@ -5,6 +5,9 @@
 // screenouts, and for running past the lesson's time target (see scoreOf in store.js).
 // Nothing here is a procedure for a real job: it is a training sequence over a schematic model.
 // A step with `always` keeps its button on screen before its turn (Drop 74): the button that is the mistake.
+// A step with `demo` tells the narrated demo (Drop 77) what to do where there is no button or valve: a function of
+// the store, or a list of [seconds, function] pairs played in order (rate brought up in steps, sand added after).
+const rateUp = (to) => [[0, g => { if (!g.pumpsOnline) g.setPumpsOnline(true); g.setPumpRate(Math.min(30, to)); }], [4, g => g.setPumpRate(Math.min(55, to))], [8, g => g.setPumpRate(to)]];
 
 const open = (v) => v.pos > 0.99;
 const closed = (v) => v.pos < 0.01;
@@ -41,7 +44,7 @@ export const LESSONS = [
       { text: 'Lower master, upper master, and crown open', hint: 'The tool string passes through all three on its way into the well.', done: s => open(s.valves.lmv) && open(s.valves.umv) && open(s.valves.crown), valve: firstClosed(['lmv', 'umv', 'crown']) },
       { text: 'Swab valve open (lubricator tested)', hint: 'The swab is the last valve between the lubricator and the well bore.', done: s => open(s.valves.swab), valve: 'swab' },
       { text: 'Run in hole', hint: 'The string falls under its own weight in the vertical, then needs pump-down rate to move along the lateral.', done: s => s.wl.step !== 'idle', action: 'run', label: 'Run in hole' },
-      { text: 'Pump-down rate 15 to 25 bpm', hint: 'Too slow and the string stalls in the lateral; too fast and you risk the weak point.', done: s => s.pumpRate >= 15 && s.pumpRate <= 25 },
+      { text: 'Pump-down rate 15 to 25 bpm', demo: g => { if (!g.pumpsOnline) g.setPumpsOnline(true); g.setPumpRate(20); }, hint: 'Too slow and the string stalls in the lateral; too fast and you risk the weak point.', done: s => s.pumpRate >= 15 && s.pumpRate <= 25 },
       { text: 'Plug set at depth', hint: 'The setting tool fires when the string reaches depth. Nothing to do but hold rate.', done: s => cur(s).plugSet },
       { text: 'Fire the guns bottom-up', hint: 'Clusters fire from the toe-most up so the string is never below fresh perforations.', done: s => cur(s).clustersFired > 0, action: 'fire', label: 'Fire guns', gate: s => s.wl.step === 'armed' },
       { text: 'Pull out of hole to the lubricator', hint: 'Line speed is limited by the pressure control equipment; wait for the string to be back in the lubricator.', done: s => s.wl.step === 'done' },
@@ -56,8 +59,8 @@ export const LESSONS = [
     steps: [
       { text: 'Zipper working valve open to the inlet block', hint: 'The swab is closed and the lubricator is down, so the leg can open. The lower isolation valve is already open.', done: s => open(s.valves.zipWork), valve: 'zipWork' },
       { text: 'Pumps online', hint: 'Pumps come online at zero rate; the missile pressures up against the open path.', done: s => s.pumpsOnline, action: 'pumpsOn', label: 'Pumps online' },
-      { text: 'Bring the rate up in steps to 80 bpm or more', hint: 'Raise the slurry rate 10 to 20 bpm at a time and watch surface treating pressure against the kickout line.', done: s => s.pumpsOnline && s.pumpRate >= 80 },
-      { text: 'Add proppant at 0.5 to 1.5 PPA', hint: 'Slickwater carries sand by velocity: keep the rate up while the concentration climbs. This design averages about 1.2 PPA (2,000 lb/ft in 40 bbl/ft); much above that and the sand lands ahead of the fluid.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5 },
+      { text: 'Bring the rate up in steps to 80 bpm or more', demo: rateUp(80), hint: 'Raise the slurry rate 10 to 20 bpm at a time and watch surface treating pressure against the kickout line.', done: s => s.pumpsOnline && s.pumpRate >= 80 },
+      { text: 'Add proppant at 0.5 to 1.5 PPA', demo: g => g.setPpa(1.0), hint: 'Slickwater carries sand by velocity: keep the rate up while the concentration climbs. This design averages about 1.2 PPA (2,000 lb/ft in 40 bbl/ft); much above that and the sand lands ahead of the fluid.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5 },
       { text: 'Hold until the stage design is placed', hint: 'Watch the fracture extend and the pack fill in the downhole view; the stage completes on its own. Sand pumped past the design at any concentration packs the near-wellbore.', done: s => cur(s).fracComplete },
       { text: 'Sand off: proppant to 0 PPA', hint: 'Pumping sand past the design packs off the near-wellbore. Cut sand and flush the wellbore clean.', done: s => s.ppa === 0, action: 'ppaZero', label: 'Sand off' },
       { text: 'Advance to the next stage', hint: 'Wireline takes the well back for the next plug and guns.', done: s => s.stage >= 1, action: 'nextStage', label: 'Next stage: wireline' },
@@ -79,8 +82,8 @@ export const LESSONS = [
       { text: 'Find the closed valve and reopen the flow path', hint: 'The valve rows show which valve moved. The path is missile, isolation valve, zipper leg, crown, masters.', done: s => pathOpen(s), valve: firstClosed(['iso', 'zipIso', 'zipWork', 'crown', 'umv', 'lmv']) },
       { text: 'Acknowledge the kickout', hint: 'The acknowledge clears the trip once the path is open.', done: s => !s.alarms.kickout, action: 'ack', label: 'Acknowledge' },
       { text: 'Pumps online', done: s => s.pumpsOnline, action: 'pumpsOn', label: 'Pumps online' },
-      { text: 'Bring the rate back in steps to 80 bpm', hint: 'Same discipline as the first ramp: steps of 10 to 20 bpm.', done: s => s.pumpsOnline && s.pumpRate >= 80 },
-      { text: 'Sand back in at 0.5 PPA', hint: 'Rebuild the schedule from a low concentration; the near-wellbore may have partly packed during the trip.', done: s => s.ppa >= 0.5 },
+      { text: 'Bring the rate back in steps to 80 bpm', demo: rateUp(80), hint: 'Same discipline as the first ramp: steps of 10 to 20 bpm.', done: s => s.pumpsOnline && s.pumpRate >= 80 },
+      { text: 'Sand back in at 0.5 PPA', demo: g => g.setPpa(0.5), hint: 'Rebuild the schedule from a low concentration; the near-wellbore may have partly packed during the trip.', done: s => s.ppa >= 0.5 },
     ],
   },
   {
@@ -89,11 +92,11 @@ export const LESSONS = [
     setup: { basin: 'permian-delaware' }, pad: { wells: 2, mode: 'zipper' },
     prep: pumpingOnStageOne,
     steps: [
-      { text: 'Drop the rate to 40 bpm and raise proppant to 3.5 PPA', hint: 'Slickwater carries sand by velocity. Too much sand at low rate bridges in the perforations and the near-wellbore packs off.', done: s => s.alarms.screenout },
+      { text: 'Drop the rate to 40 bpm and raise proppant to 3.5 PPA', demo: g => { g.setPumpRate(40); g.setPpa(3.5); }, hint: 'Slickwater carries sand by velocity. Too much sand at low rate bridges in the perforations and the near-wellbore packs off.', done: s => s.alarms.screenout },
       { text: 'Screenout: pressure ramping at constant rate. Cut sand to 0 PPA', hint: 'Every second of sand now adds to the pack.', done: s => s.ppa === 0, action: 'ppaZero', label: 'Sand off' },
       { text: 'Raise the rate to 60 bpm or more to flush', hint: 'Clean fluid at rate erodes the pack and carries the sand into the fracture.', done: s => s.pumpsOnline && s.pumpRate >= 60, action: 'rateFlush', label: 'Rate 60 bpm' },
       { text: 'Net pressure falls below 1,500 psi', hint: 'Watch the net pressure readout; the screenout alarm clears when the near-wellbore opens back up.', done: s => s.netPsi < 1500 && !s.alarms.screenout },
-      { text: 'Sand back in at no more than 1 PPA with the rate held', hint: 'Rebuild the schedule from a low concentration.', done: s => s.ppa > 0 && s.ppa <= 1 && s.pumpRate >= 60 },
+      { text: 'Sand back in at no more than 1 PPA with the rate held', demo: g => g.setPpa(1.0), hint: 'Rebuild the schedule from a low concentration.', done: s => s.ppa > 0 && s.ppa <= 1 && s.pumpRate >= 60 },
       { text: 'Place the stage design', hint: 'Hold rate and concentration until the stage completes.', done: s => cur(s).fracComplete },
     ],
   },
@@ -108,7 +111,7 @@ export const LESSONS = [
       { text: 'Pressure up on the toe sleeve', hint: 'Watch for the pressure drop when the ports open.', done: s => s.wl.step === 'toe' || s.stages[0].perforated, action: 'run', label: 'Pressure up' },
       { text: 'Toe sleeve open', done: s => s.stages[0].perforated },
       { text: 'Swap to frac', hint: 'Keep pumping: there is no wireline to rig down.', done: s => s.phase === 'frac', action: 'phaseFrac', label: 'Swap to frac' },
-      { text: 'Pump stage 1: 60 bpm or more at about 1 PPA until the design is placed', hint: 'This design is lean on sand (1,200 lb/ft in 25 bbl/ft, about 1.1 PPA on average): above 1.2 PPA the sand lands ahead of the fluid and the near-wellbore packs off. Fewer entry points than a perforated stage, so watch the pressure.', done: s => s.stages[0].fracComplete },
+      { text: 'Pump stage 1: 60 bpm or more at about 1 PPA until the design is placed', demo: [...rateUp(60), [11, g => g.setPpa(1.0)]], hint: 'This design is lean on sand (1,200 lb/ft in 25 bbl/ft, about 1.1 PPA on average): above 1.2 PPA the sand lands ahead of the fluid and the near-wellbore packs off. Fewer entry points than a perforated stage, so watch the pressure.', done: s => s.stages[0].fracComplete },
       { text: 'Sand off and advance to stage 2', hint: 'The next sleeve opens with a ball.', done: s => s.stage >= 1, action: 'nextStage', label: 'Next stage: ball drop' },
       { text: 'Swab valve open to the ball launcher', hint: 'The launcher is above the swab; the ball enters the flow stream through it.', done: s => open(s.valves.swab), valve: 'swab' },
       { text: 'Pumps online at 10 to 20 bpm so the ball travels', done: s => s.pumpsOnline && s.pumpRate >= 5 && s.pumpRate <= 20, action: 'rateLow', label: 'Pumps on, 15 bpm' },
@@ -128,7 +131,7 @@ export const LESSONS = [
       get().injectEvent('stuck');
     },
     steps: [
-      { text: 'String stopped: hold the pump-down rate at 20 to 25 bpm', hint: 'Rate pushes on the string; do not pull toward the weak point.', done: s => s.pumpRate >= 20 && s.pumpRate <= 25 },
+      { text: 'String stopped: hold the pump-down rate at 20 to 25 bpm', demo: g => { if (!g.pumpsOnline) g.setPumpsOnline(true); g.setPumpRate(22); }, hint: 'Rate pushes on the string; do not pull toward the weak point.', done: s => s.pumpRate >= 20 && s.pumpRate <= 25 },
       { text: 'Work the line: tension cycles within the safe pull', done: s => s.wl.step === 'freeing' || s.wl.step === 'setplug' || s.wl.step === 'armed', action: 'workLine', label: 'Work the line' },
       { text: 'String free and moving again', hint: 'Keep the rate on until the plug reaches depth.', done: s => s.wl.step === 'pumpdown' || s.wl.step === 'setplug' || s.wl.step === 'armed' },
       { text: 'Plug set at depth', done: s => cur(s).plugSet },
@@ -151,7 +154,7 @@ export const LESSONS = [
       { text: 'Wing B open to the flowback spread for returns', hint: 'Cuttings and debris return up the annulus to the flowback equipment.', done: s => open(s.valves.wingB), valve: 'wingB' },
       { text: 'Mill the plugs heel to toe', hint: 'The coil runs to the heel-most plug first; each plug takes a few minutes of job time.', done: s => s.stages.every(x => x.plugMilled) },
       { text: 'Pull out and swap to flowback', done: s => s.phase === 'flowback', action: 'phaseFlowback', label: 'Flowback' },
-      { text: 'Open the choke in steps past 32/64 in.', hint: 'Step the choke open and watch the rate and the sand returns.', done: s => s.fb.choke > 0.5 },
+      { text: 'Open the choke in steps past 32/64 in.', demo: [[0, g => g.setChoke(0.25)], [4, g => g.setChoke(0.4)], [8, g => g.setChoke(0.56)]], hint: 'Step the choke open and watch the rate and the sand returns.', done: s => s.fb.choke > 0.5 },
       { text: 'Flow back 200 bbl', hint: 'The well cleans up as load water and sand return.', done: s => s.fb.cumBbl >= 200 },
       { text: 'Hand over to production', done: s => s.phase === 'production', action: 'phaseProduction', label: 'Production hookup' },
     ],
@@ -204,7 +207,7 @@ export const LESSONS = [
       { text: 'Lightning within 10 miles: pumps offline, rate to zero', hint: 'The weather hold is a stop-work: the stage waits. Shut down cleanly; the fracture will close but the plug and perforations are not at risk.', done: s => !s.pumpsOnline && s.pumpRate === 0, action: 'stop', label: 'Stop pumping' },
       { text: 'Hold until the all clear', hint: 'Nobody works iron and nothing pumps until the ring has been clear for the hold period. Restarting early is the mistake this lesson is about.', done: s => s.events.lightningTimer <= 0 && s.events.active !== 'lightning' },
       { text: 'Pumps back online and the rate back up, 60 bpm or more', hint: 'Bring the rate up in steps as at the start of the stage; the near-wellbore has to open again.', done: s => s.pumpsOnline && s.pumpRate >= 60, action: 'rateFlush', label: 'Pumps on, 60 bpm' },
-      { text: 'Sand back in at 0.5 to 1.5 PPA', hint: 'The proppant slider on the control panel; the stage design picks up where it left off.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5 },
+      { text: 'Sand back in at 0.5 to 1.5 PPA', demo: g => g.setPpa(1.0), hint: 'The proppant slider on the control panel; the stage design picks up where it left off.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5 },
     ],
   },
   {
