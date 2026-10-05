@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "The barricade line sits outside the whip and spray path of every pressurized line."
+    }
+  ],
+  "tabs": {
+    "overview": "Portable barricades at the pump row, the missile and the well row entries, set before pressure test and taken down after bleed-off. Signs on them name the hazard and the person who controls entry.",
+    "engineering": "Red zone limits per the job's pressure plan; entry controlled by the frac supervisor.",
+    "safety": "Nobody inside the red zone while iron is pressured except for a controlled entry; crossing a barricade is the stop-work everybody can call.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-BARRICADES",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Barricades",
+  "aliases": [
+    "red zone barricade",
+    "hard barricade",
+    "barricade tape"
+  ],
+  "function": "Hard barricades that close the red zone around the high-pressure iron while it is pressured.",
+  "scene": "LG-BARRICADES"
+}

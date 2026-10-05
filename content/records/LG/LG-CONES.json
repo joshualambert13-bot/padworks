@@ -1,0 +1,35 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "Orange cones at the red zone corners and along the lanes; moved as the layout changes between phases.",
+    "engineering": "Red zone limits per the job's pressure plan.",
+    "safety": "A cone line is a reminder, not a barrier; the barricades and the red zone rule do the work.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-CONES",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Traffic cones",
+  "aliases": [
+    "cones",
+    "lane markers",
+    "red zone markers"
+  ],
+  "function": "Cones marking the red zone corners, the truck lanes and anything on the ground that should not be driven over.",
+  "scene": "LG-CONES"
+}

@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Respirable silica",
+      "control": "Enclosed box outlets and dust suppression at the belt."
+    }
+  ],
+  "tabs": {
+    "overview": "Boxes set on the station open from the bottom onto a belt or screw that feeds the blender hopper; a shuttle forklift keeps full boxes coming and takes empties away. The alternative to silos on pads that run containerized sand.",
+    "engineering": "Throughput by the design's sand rate; box count on the pad by the stages before the next delivery.",
+    "safety": "Forklift traffic is the main exposure around the station; dust control at the box outlet.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-SANDBOXSTATION",
+  "parent": "LG",
+  "group": "sand",
+  "level": "equipment",
+  "name": "Sand box station",
+  "aliases": [
+    "box station",
+    "sandbox unloader",
+    "box unloader",
+    "containerized sand station"
+  ],
+  "function": "The unloading station that takes sand boxes from the forklift and meters their sand onto the blender's conveyor.",
+  "scene": "LG-SANDBOXSTATION"
+}

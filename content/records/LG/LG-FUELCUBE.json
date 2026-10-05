@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Hose and nozzle inspected; nozzle never left unattended while dispensing."
+    }
+  ],
+  "tabs": {
+    "overview": "A double-walled or bunded cube tank of a few hundred to a few thousand gallons with a transfer pump, meter and hose reel. The frac pumps themselves take fuel from the fuel row trailers; the cube feeds the small engines.",
+    "engineering": "Sized for the small-engine fleet between deliveries; grounding point and a fire extinguisher at the dispensing side.",
+    "safety": "No smoking or hot work within the fuel area; engines off while fueling; spill kit at the pump; grounding before transfer.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-FUELCUBE",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Fuel cube",
+  "aliases": [
+    "fuel tank",
+    "transfer tank",
+    "diesel cube",
+    "fuel station"
+  ],
+  "function": "A bunded diesel tank with its own pump and hose for the light towers, generators and forklift.",
+  "scene": "LG-FUELCUBE"
+}

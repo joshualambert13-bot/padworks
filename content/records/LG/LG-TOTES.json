@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Forklift moves of totes are planned; nobody between a moving tote and fixed iron."
+    }
+  ],
+  "tabs": {
+    "overview": "Caged plastic totes of about 275 or 330 gallons: friction reducer, biocide, scale inhibitor, surfactant, breaker. Staged on spill pallets within reach of the chemical add unit's pumps; empties go back on the truck. Each carries the product label and the safety data sheet reference.",
+    "engineering": "Count and sizes follow the stage design's additive loadings and the number of stages before the next delivery.",
+    "safety": "Spill containment under every tote; SDS on the pad; eye protection and gloves for connections; biocides and acids segregated. Forklift traffic around the totes is the pinch and crush exposure.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-TOTES",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Chemical totes",
+  "aliases": [
+    "tote",
+    "IBC",
+    "intermediate bulk container",
+    "chemical staging"
+  ],
+  "function": "Intermediate bulk containers of frac chemicals staged beside the chemical add unit.",
+  "scene": "LG-TOTES"
+}

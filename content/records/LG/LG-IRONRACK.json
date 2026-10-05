@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Pinch point",
+      "control": "Hands clear of hammer unions during make-up; iron racked against rolling."
+    }
+  ],
+  "tabs": {
+    "overview": "Spare iron for the treating and pump-down lines, racked by size and pressure rating with wall-thickness tags, so a cut-out or a layout change does not wait on the iron truck.",
+    "engineering": "Iron matched to the job's pressure rating; wall-thickness inspection records travel with it.",
+    "safety": "Iron is lifted with the forklift or in pairs; racked so nothing can roll; tags readable without handling.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-IRONRACK",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Iron rack",
+  "aliases": [
+    "iron rack",
+    "iron stand",
+    "spare iron",
+    "treating iron rack"
+  ],
+  "function": "A rack of spare high-pressure treating iron: pup joints, swivels, elbows and tees staged by the zipper.",
+  "scene": "LG-IRONRACK"
+}

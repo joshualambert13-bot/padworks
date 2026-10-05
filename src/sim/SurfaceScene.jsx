@@ -8,6 +8,7 @@ import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, 
 import { Totes, IronRack, Cones, Barricades, Welfare, FuelCube, SafetyPoint, HoseCoils } from './parts/padlife.jsx';
 import { useHdri } from './parts/hdri.js';
 import { WalkControls, LAST_TARGET } from './parts/walk.jsx';
+import { IronLeak } from './parts/leak.jsx';
 import { installTextureSets } from './parts/textures.js';
 import { SOURCES, thunder } from './sound.js';
 installSnowPatch();
@@ -21,6 +22,7 @@ import { PipeRun, PipeStands, Pipe, Hose, MAT, Label, Instanced } from './parts/
 
 const WELL_SPACING = 8;   // meters between wellheads along the row
 const MISSILE_X = -30;    // missile centerline; pumps park nose-in on both sides
+const LEAK_X = -20;       // the hammer union on the treating line that lets go in the iron leak event (Drop 74)
 
 // The sim advances in 50 ms steps (Drop 67), not once per rendered frame: every store update re-renders the panels
 // and the scene tree, and at 60 fps that was three times the React work for the same simulation. `tick` clamps a
@@ -52,20 +54,27 @@ function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = fa
 }
 
 // Render counters for the headless checks (window.__padworksStats), no cost when nobody reads them.
-// Test hooks (the draw counters moved into Diagnostics in effects.jsx, Drop 45: one reader, one reset per frame)
+// Test hooks (the draw counters moved into Diagnostics in effects.jsx, Drop 45: one reader, one reset per frame).
+// The hooks read the live canvas state through `get` (Drop 73): a hook built from one frame's state kept that
+// frame's `controls`, and between frames (seconds apart under software GL) a view set right after leaving walk mode
+// found no controls and moved the camera without its target.
 function RenderStats() {
-  useFrame((state) => {
-    window.__padworksScene = state.scene;
-    if (state.controls && state.controls.target) LAST_TARGET.copy(state.controls.target);
-    window.__padworksCam = () => ({ pos: state.camera.position.toArray(), target: state.controls ? state.controls.target.toArray() : null });
-    window.__padworksView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } };
+  const get = useThree(s => s.get);
+  useEffect(() => {
+    window.__padworksScene = get().scene;
+    window.__padworksCam = () => { const st = get(); return { pos: st.camera.position.toArray(), target: st.controls ? st.controls.target.toArray() : null, frame: st.gl.info.render.frame }; };
+    window.__padworksView = (pos, target) => { const st = get(); st.camera.position.set(...pos); if (st.controls) { st.controls.target.set(...target); st.controls.update(); } };
     // Photo (Drop 64): draw one frame right now (through the composer when the effects are on) and read the canvas
     // back in the same task, which needs no preserveDrawingBuffer
     window.__padworksSnapshot = () => {
-      const c = COMPOSER_OF.get(state.gl);
-      if (c) c.render(0); else state.gl.render(state.scene, state.camera);
-      return state.gl.domElement.toDataURL('image/png');
+      const st = get(); const c = COMPOSER_OF.get(st.gl);
+      if (c) c.render(0); else st.gl.render(st.scene, st.camera);
+      return st.gl.domElement.toDataURL('image/png');
     };
+  }, [get]);
+  useFrame((state) => {
+    window.__padworksScene = state.scene;
+    if (state.controls && state.controls.target) LAST_TARGET.copy(state.controls.target);
   });
   return null;
 }
@@ -145,6 +154,7 @@ function focusView(f, c) {
     case 'phaseProduction': case 'hookupNext': return P.tree;
     case 'nextStage': return P.row;
     case 'resetActuator': return { pos: [ZIPPER_X + 6, 4.5, -7], target: [ZIPPER_X - 1, zd.workY, 0] };
+    case 'bleedLine': case 'swapIron': case 'testIron': return { pos: [LEAK_X + 7, 3.6, -19], target: [LEAK_X, 0.9, -10.6] };
     default: return null;
   }
 }
@@ -315,12 +325,12 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   }, [pad, rowLen, bZ, pumps.length, missileZ, perSide, wellZ, water, sandMode, fuelCount]); // eslint-disable-line react-hooks/exhaustive-deps
   const zipperFrontZ = rowCenter - (rowLen + 6.0) / 2;
   const ACC = [-2, -22];
-  const treatingLine = useMemo(() => [[MISSILE_X, md.hpY, missileOutletZ], [MISSILE_X, md.hpY, missileOutletZ - 1.4], [MISSILE_X + 2, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, zd.headerY, zipperFrontZ + 0.9 - zd.ftf / 2 - 0.1]], [md.hpY, missileOutletZ, zd.headerY, zd.ftf, zipperFrontZ]);
+  const treatingLine = useMemo(() => [[MISSILE_X, md.hpY, missileOutletZ], [MISSILE_X, md.hpY, missileOutletZ - 1.4], [MISSILE_X + 2, 0.9, missileOutletZ - 2.6], [LEAK_X, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, zd.headerY, zipperFrontZ + 0.9 - zd.ftf / 2 - 0.1]], [md.hpY, missileOutletZ, zd.headerY, zd.ftf, zipperFrontZ]);
   const flowbackLine = useMemo(() => [[d.wingOuterX + d.ftf / 2, d.crossY, 0], [d.wingOuterX + 3, d.crossY, 0], [d.wingOuterX + 4, 2.0, 0], [d.wingOuterX + 4, 0.9, 6], [12.8, 0.9, 21.4 + rowLen]], [d.wingOuterX, d.ftf, d.crossY, rowLen]);
   const stands = useMemo(() => standLayout(roles.length, ACC, 5), [roles.length]); // eslint-disable-line react-hooks/exhaustive-deps
   // where the working sounds come from, for the positional mix while walking (Drop 60): pad meters [x, z]
   useEffect(() => {
-    SOURCES.pump = [MISSILE_X, missileZ]; SOURCES.choke = [14, 22 + rowLen]; SOURCES.wl = [16.5, 3]; SOURCES.ct = [18.5, -10]; SOURCES.mill = [0, 0];
+    SOURCES.pump = [MISSILE_X, missileZ]; SOURCES.leak = [LEAK_X, -10.6]; SOURCES.choke = [14, 22 + rowLen]; SOURCES.wl = [16.5, 3]; SOURCES.ct = [18.5, -10]; SOURCES.mill = [0, 0];
   }, [missileZ, rowLen]);
   // wells that carry a frac tree (the manual well until it goes on production, partners until they are done) and,
   // among them, the ones with a bare top adapter (no lubricator, no ball launcher)
@@ -403,8 +413,9 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       ))}
       <ZipperManifold valves={s.valves} showLabels={showLabels} wellZ={wellZ} roles={roles} bore={bore} focusValve={focusValve} />
       {/* treating line: missile high-pressure outlet to the zipper inlet isolation valve */}
-      <PipeRun points={treatingLine} r={0.14} mat={MAT.darkSteel} />
+      <PipeRun points={treatingLine} r={0.14} mat={MAT.darkSteel} name="WH-FRACLINE" />
       <PipeStands points={treatingLine} r={0.14} every={3.0} />
+      <IronLeak position={[LEAK_X, 0.9, missileOutletZ - 2.6]} />
       <Missile position={[MISSILE_X, 0, missileZ]} showLabels={showLabels} perSide={perSide} prvLifted={s.alarms.prvLifted} pumping={pumping} />
       {/* pump bodies as one instanced set (Drop 41); fans, lamps, plumes, and numbers per pump on top */}
       <Instanced transforms={pumpTransforms} version={spread.electric ? 1 : 0} name="PP-FRACPUMP">

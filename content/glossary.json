@@ -556,5 +556,40 @@
     "system": "LG",
     "record": "LG-LIGHTTOWER",
     "definition": "A stop-work called when lightning is detected inside the pad's ten-mile ring: pumps down, rate to zero, crews off the pad to shelter, no work on iron. The all clear comes thirty minutes after the last strike inside the ring; the Simulator compresses the hold to sixty seconds."
+  },
+  {
+    "term": "Red zone",
+    "aliases": [
+      "exclusion zone",
+      "pressurized iron zone",
+      "no-go zone"
+    ],
+    "system": "WH",
+    "record": "WH-FLOWIRON",
+    "definition": "The marked area around pressurized treating iron, the missile discharge side, the zipper and the trees while anything is pumping or holding pressure. Nobody enters it until the line is isolated and bled to zero; a leak or a failed union is a stored-pressure and line-of-fire release inside it."
+  },
+  {
+    "term": "Pressure test",
+    "aliases": [
+      "line test",
+      "iron test",
+      "test pressure",
+      "hold test"
+    ],
+    "system": "WH",
+    "record": "WH-FLOWIRON",
+    "definition": "Bringing the treating line up to a test pressure above the maximum expected treating pressure against a closed valve and holding it with no drop before anything is pumped. Done at rig-up and again after any iron is broken out and made up, so a bad seal shows up with the crew clear instead of at full rate. The Simulator holds the test for fifteen seconds."
+  },
+  {
+    "term": "Bleed-off",
+    "aliases": [
+      "bleed down",
+      "bleed the line",
+      "bleed to zero",
+      "bleed valve"
+    ],
+    "system": "WH",
+    "record": "WH-FLOWIRON",
+    "definition": "Letting the pressure out of an isolated section of iron through its bleed valve to a tank or the ground until the gauge reads zero, before any union is broken. Zero is read at a gauge on the section being opened, not assumed from a leak going quiet."
   }
 ]

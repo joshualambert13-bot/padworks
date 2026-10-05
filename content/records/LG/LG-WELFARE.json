@@ -1,0 +1,36 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "A towable trailer with a break area, restrooms and wash-up, placed on the service side of the pad away from the pumps and the well row. It is also where crews go on a stop-work.",
+    "engineering": "Placement by the pad layout; a generator or the pad power feeds it.",
+    "safety": "Outside the red zone and upwind of the flare and flowback where the layout allows; the muster point is not here but at the safety station.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-WELFARE",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Crew welfare trailer",
+  "aliases": [
+    "welfare unit",
+    "crew trailer",
+    "break trailer",
+    "restroom trailer"
+  ],
+  "function": "The break room, restrooms and hand wash for the crews, parked outside the red zone.",
+  "scene": "LG-WELFARE"
+}

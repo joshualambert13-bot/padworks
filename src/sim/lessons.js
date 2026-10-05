@@ -4,6 +4,7 @@
 // checkpoint is met it stays met. Points come off for wrong valve moves, interlock rejections, kickouts,
 // screenouts, and for running past the lesson's time target (see scoreOf in store.js).
 // Nothing here is a procedure for a real job: it is a training sequence over a schematic model.
+// A step with `always` keeps its button on screen before its turn (Drop 74): the button that is the mistake.
 
 const open = (v) => v.pos > 0.99;
 const closed = (v) => v.pos < 0.01;
@@ -204,6 +205,24 @@ export const LESSONS = [
       { text: 'Hold until the all clear', hint: 'Nobody works iron and nothing pumps until the ring has been clear for the hold period. Restarting early is the mistake this lesson is about.', done: s => s.events.lightningTimer <= 0 && s.events.active !== 'lightning' },
       { text: 'Pumps back online and the rate back up, 60 bpm or more', hint: 'Bring the rate up in steps as at the start of the stage; the near-wellbore has to open again.', done: s => s.pumpsOnline && s.pumpRate >= 60, action: 'rateFlush', label: 'Pumps on, 60 bpm' },
       { text: 'Sand back in at 0.5 to 1.5 PPA', hint: 'The proppant slider on the control panel; the stage design picks up where it left off.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5 },
+    ],
+  },
+  {
+    id: 'L11', n: 11, title: 'Treating iron leak', targetSec: 240,
+    blurb: 'A hammer union on the line from the missile starts to spray mid-stage. Shut down, isolate, bleed to zero, swap the joint, pressure test, then bring the stage back. The two mistakes that cost points: touching the iron live, and pumping on the new joint untested.',
+    setup: { basin: 'permian-delaware' }, pad: { wells: 2, mode: 'zipper' },
+    prep: (get, set) => {
+      pumpingOnStageOne(get, set);
+      get().injectEvent('ironLeak');
+    },
+    steps: [
+      { text: 'Leak on the treating line: rate to zero, pumps offline', hint: 'The spray is the line telling you a seal has let go. Nobody goes near it; the pumps come down first.', done: s => !s.pumpsOnline && s.pumpRate === 0, action: 'stop', label: 'Stop pumping' },
+      { text: 'Isolate the line from the well: close the zipper working valve', hint: 'With the working valve closed the wellhead stays shut in and only the line between the missile and the zipper has to come down.', done: s => s.valves.zipWork.pos < 0.01, valve: 'zipWork' },
+      { text: 'Bleed the treating line to zero', hint: 'The bleed-off on the missile side. The leak slows and stops as the line comes down; zero is read at the gauge, not assumed from the spray stopping.', done: s => ['bled', 'swapping', 'swapped', 'testing', 'tested', 'untested'].includes(s.events.ironStep), action: 'bleedLine', label: 'Bleed the line' },
+      { text: 'Line at zero: clear the red zone, break out the joint and make up the replacement', hint: 'The Swap button is live the whole time. Pressing it while the line still holds pressure is the line-of-fire mistake: it costs points and the swap does not happen.', done: s => ['swapped', 'testing', 'tested', 'untested'].includes(s.events.ironStep), action: 'swapIron', label: 'Swap the iron', always: true },
+      { text: 'Pressure test the new iron against the closed zipper valve', hint: 'The test proves the joint before the crew is near it at treating pressure. Pumps online without it costs points.', done: s => s.events.ironStep === 'tested' || s.events.ironStep === 'untested', action: 'testIron', label: 'Pressure test' },
+      { text: 'Open the zipper working valve', hint: 'Back to the stage: the flow path to the well first.', done: s => s.valves.zipWork.pos > 0.99, valve: 'zipWork' },
+      { text: 'Pumps online and the rate back up, 60 bpm or more', hint: 'Steps of 10 to 20 bpm, as at the start of the stage.', done: s => s.pumpsOnline && s.pumpRate >= 60, action: 'rateFlush', label: 'Pumps on, 60 bpm' },
     ],
   },
 ];

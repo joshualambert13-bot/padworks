@@ -1,0 +1,36 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "A trailer-mounted burner and coil that takes water from the tanks or pit and returns it warm to the suction manifold; run in cold weather so gel hydrates and the blender's lines keep flowing.",
+    "engineering": "Sized by the rate and the temperature rise the fluid design needs.",
+    "safety": "Open flame on the pad: fuel handling, exhaust and hot surfaces; placed away from the chemical totes and the fuel cube.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-FRACHEATER",
+  "parent": "LG",
+  "group": "water",
+  "level": "equipment",
+  "name": "Frac water heater",
+  "aliases": [
+    "heater",
+    "water heater",
+    "frac heater",
+    "hot oiler"
+  ],
+  "function": "A direct-fired heater that warms the frac water in winter so the fluid hydrates and does not freeze in the lines.",
+  "scene": "LG-FRACHEATER"
+}

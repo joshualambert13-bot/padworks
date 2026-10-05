@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Whip checks on every pressurized hose connection."
+    }
+  ],
+  "tabs": {
+    "overview": "Lay-flat and suction hose in coils and on reels, with the cam-lock fittings and gaskets they need; the low-pressure side of the pad is mostly hose.",
+    "engineering": "Sizes follow the transfer and blender suction manifolds.",
+    "safety": "Whip checks on pressurized hose; coils stacked low; cut ends capped.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-HOSECOILS",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Hose coils",
+  "aliases": [
+    "spare hose",
+    "hose coils",
+    "hose spares",
+    "coiled hose"
+  ],
+  "function": "Coiled spare low-pressure hose for water transfer, suction and discharge lines.",
+  "scene": "LG-HOSECOILS"
+}

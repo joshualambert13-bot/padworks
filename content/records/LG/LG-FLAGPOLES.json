@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "H2S",
+      "control": "The wind sock shows the escape direction; crews move crosswind and upwind of a release."
+    }
+  ],
+  "tabs": {
+    "overview": "Three poles at the data van with the national flag, the state flag and the company flag; a wind sock beside them. The wind sock is the safety item: it shows every crew where gas or vapor would travel.",
+    "engineering": "Pole height and placement per the pad layout.",
+    "safety": "Crews check the wind sock at muster and before any task near flowback, the flare or the chemical add.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-FLAGPOLES",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Flags and wind sock",
+  "aliases": [
+    "flagpoles",
+    "flags",
+    "wind sock",
+    "windsock"
+  ],
+  "function": "The national and state flags and the wind sock at the data van.",
+  "scene": "LG-FLAGPOLES"
+}

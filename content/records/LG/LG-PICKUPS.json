@@ -1,0 +1,35 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "Parked in a row on the service side with keys in and nose-out for a fast evacuation, away from the lanes the trucks use.",
+    "engineering": "Parking area per the pad layout.",
+    "safety": "Nose-out parking is the rule on a pad; no parking across a lane or inside the red zone.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-PICKUPS",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Crew pickups",
+  "aliases": [
+    "pickups",
+    "crew trucks",
+    "parking"
+  ],
+  "function": "The crews' pickups, parked nose-out in a row outside the red zone.",
+  "scene": "LG-PICKUPS"
+}

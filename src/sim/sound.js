@@ -20,8 +20,8 @@ let engine = null;
 // walker writes LISTENER; `updateListener()` moves the distance gains and pans. Off the walk, every distance gain
 // is 1 and every pan 0, which is the pad mix as it always was.
 export const LISTENER = { x: 0, z: 0, yaw: 0, walk: false };
-export const SOURCES = { pump: null, choke: null, wl: null, ct: null, mill: null };   // [x, z]
-const RANGE = { pump: 34, choke: 12, wl: 10, ct: 12, mill: 10 };                     // distance at which a voice is at a quarter
+export const SOURCES = { pump: null, choke: null, wl: null, ct: null, mill: null, leak: null };   // [x, z]
+const RANGE = { pump: 34, choke: 12, wl: 10, ct: 12, mill: 10, leak: 16 };                       // distance at which a voice is at a quarter
 export function updateListener() {
   if (!engine) return;
   const { D, P, ctx } = engine;
@@ -93,6 +93,9 @@ function build() {
   // flowback: choke hiss
   V.choke = gain(0); chain(src(), filt('highpass', 1600, 0.7), V.choke, spatial('choke'));
 
+  // iron leak (Drop 74): a sharp hiss from the union, positional, louder with the line pressure
+  V.leak = gain(0); chain(src(), filt('highpass', 3400, 0.6), V.leak, spatial('leak'));
+
   // rain (Drop 68): a steady hiss, lower and wider than the choke's, with a slow swell
   V.rain = gain(0); chain(src(), filt('bandpass', 2400, 0.35), V.rain, master);
   const swell = osc('sine', 0.13); const swellG = gain(0.012); swell.connect(swellG); swellG.connect(V.rain.gain);
@@ -153,6 +156,7 @@ function apply(E, s, prev) {
 
   set(V.choke.gain, s.phase === 'flowback' ? 0.14 * Math.sqrt(s.fb.choke || 0) * run : 0, 0.4, ctx);
   set(V.rain.gain, s.ui && s.ui.weather === 'rain' ? 0.05 : 0, 0.8, ctx);
+  set(V.leak.gain, s.events.ironLeak ? 0.11 * Math.sqrt(Math.min(1, (s.events.linePsi || 0) / 10000)) * run : 0, 0.3, ctx);
 
   const A = s.alarms; const latched = A.overpressure || A.prvLifted || A.kickout || A.screenout;
   set(V.alarm.gain, latched ? 0.15 : 0, 0.05, ctx);

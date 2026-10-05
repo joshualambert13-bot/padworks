@@ -70,6 +70,14 @@ async function setNamedRange(p, name, value) {
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }, [name, value]);
 }
+// wait for n more rendered frames (a frame takes about 2.5 s under software GL at 1440x900; the walk exit and a view
+// set take effect on the next frame, so a check that reads the camera or hovers the scene waits for frames, not time)
+async function frames(p, n = 1, timeout = 60000) {
+  const f0 = await p.evaluate(() => window.__padworksCam ? window.__padworksCam().frame : 0);
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeout) { await wait(250); const f = await p.evaluate(() => window.__padworksCam ? window.__padworksCam().frame : 0); if (f - f0 >= n) return true; }
+  errors.push('no frame rendered in ' + timeout + ' ms'); return false;
+}
 const startJob = async (p) => { await p.click('[data-action="start"]'); await wait(1200); };
 async function clickWhenEnabled(p, name, timeout = 60000) {
   const b = p.getByRole('button', { name }).first();
@@ -108,9 +116,28 @@ await p.getByRole('button', { name: 'Stats' }).click(); await wait(300);
   const y1 = (await p.evaluate(() => window.__padworksCam().pos))[1];
   if (Math.abs(y1 - 1.7) > 0.6) errors.push('walk mode camera height ' + y1.toFixed(2) + ' (expected about 1.7)');
   await shot(p, '00c-walk');
-  await p.keyboard.press('Escape'); await wait(2500);
+  await p.keyboard.press('Escape'); await frames(p, 1); await wait(500);
   const y2 = (await p.evaluate(() => window.__padworksCam().pos))[1];
   if (Math.abs(y2 - y0) > 0.5) errors.push('leaving walk mode did not restore the preset camera: ' + y2.toFixed(2) + ' vs ' + y0.toFixed(2));
+}
+// Drop 73: the pad clutter has records; hovering the fuel cube opens one
+{
+  await p.evaluate(() => window.__padworksView([-41, 3, -22], [-41, 0.6, -27])); await frames(p, 2);   // the raycast reads the camera as last rendered
+  const box = await (await p.$('canvas')).boundingBox();
+  await p.mouse.move(box.x + 8, box.y + box.height - 8); await wait(1500);
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await wait(3000);
+  const txt = await p.evaluate(() => { const el = document.querySelector('[data-hover-popup]'); return el ? el.innerText : ''; });
+  if (!/LG-FUELCUBE/.test(txt)) errors.push('hovering the fuel cube did not open its record: ' + txt.slice(0, 60));
+  await shot(p, '00f-hover-fuelcube');
+  // Drop 74: the treating line answers with the flow iron record (the union at the leak point is at the center)
+  await p.mouse.move(box.x + 8, box.y + box.height - 8); await wait(800);
+  await p.evaluate(() => window.__padworksView([-14, 3.2, -16.5], [-20, 0.9, -10.6])); await frames(p, 2);
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await wait(3000);
+  const txt2 = await p.evaluate(() => { const el = document.querySelector('[data-hover-popup]'); return el ? el.innerText : ''; });
+  if (!/WH-FLOWIRON/.test(txt2)) errors.push('hovering the treating line did not open the flow iron record: ' + txt2.slice(0, 60));
+  await shot(p, '00g-hover-treatingline');
+  await p.mouse.move(box.x + 5, box.y + 5); await wait(500);
+  await p.selectOption('select[title="Camera preset"]', 'pad'); await wait(2500);
 }
 // Drop 62: full screen folds the panels and the header away; the canvas takes the window, and the toggle brings them back
 {
@@ -594,6 +621,57 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
   await p.evaluate(() => window.__padworksSim.getState().setPpa(1.0)); await wait(500);
   await waitText(p, 'Lesson complete', 150000); await wait(300);
   await shot(p, '135e-lesson10-complete');
+  // lesson 11 (Drop 74): treating iron leak. The live swap first (the mistake, must cost points and do nothing), then
+  // the sequence with the timers shortened, through the test to Lesson complete; then a second start that pumps on
+  // the untested joint (the other mistake).
+  const ironStep = () => p.evaluate(() => window.__padworksSim.getState().events.ironStep);
+  const shortTimer = () => p.evaluate(() => { const S = window.__padworksSim; S.setState({ events: { ...S.getState().events, ironTimer: 0.3 } }); });
+  const waitStep = async (name) => { try { await p.waitForFunction((n) => window.__padworksSim.getState().events.ironStep === n, name, { timeout: 150000 }); } catch { errors.push('iron leak never reached ' + name + ' (at ' + await ironStep() + ')'); } };
+  const deductions = (code) => p.evaluate((c) => window.__padworksSim.getState().score.deductions.filter(x => x.code === c).length, code);
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L11"]'); await wait(1500); await p.selectOption('select', '4');
+  {
+    const e = await p.evaluate(() => { const e = window.__padworksSim.getState().events; return { active: e.active, leak: e.ironLeak, step: e.ironStep, psi: Math.round(e.linePsi) }; });
+    if (e.active !== 'ironLeak' || !e.leak) errors.push('iron leak lesson did not start the leak: ' + JSON.stringify(e));
+  }
+  await p.evaluate(() => window.__padworksView([-13, 3.6, -19], [-20, 0.9, -10.6])); await frames(p, 2);
+  await shot(p, '135f-lesson11-leak');
+  {
+    const calls = await p.evaluate(() => window.__padworksStats.calls);
+    console.log('draws with the leak running:', calls);
+  }
+  await p.getByRole('button', { name: 'Swap the iron' }).first().click(); await wait(800);   // the trap: the line is live
+  if (await deductions('ironLive') !== 1) errors.push('live swap did not cost points');
+  if (await ironStep() !== 'leak') errors.push('live swap changed the step to ' + await ironStep());
+  await clickWhenEnabled(p, 'Stop pumping', 120000); await wait(1500);
+  await p.evaluate(() => window.__padworksSim.getState().commandValve('zipWork', 0));
+  await p.waitForFunction(() => window.__padworksSim.getState().valves.zipWork.pos < 0.01, null, { timeout: 150000 }).catch(() => errors.push('zipper working valve never closed'));
+  await clickWhenEnabled(p, 'Bleed the line', 120000); await wait(800); await shortTimer(); await waitStep('bled');
+  await clickWhenEnabled(p, 'Swap the iron', 120000); await wait(800); await shortTimer(); await waitStep('swapped');
+  {
+    const leak = await p.evaluate(() => window.__padworksSim.getState().events.ironLeak);
+    if (leak) errors.push('the leak is still drawn after the swap');
+  }
+  await shot(p, '135g-lesson11-swapped');
+  await clickWhenEnabled(p, 'Pressure test', 120000); await wait(800); await shortTimer(); await waitStep('tested');
+  await p.evaluate(() => window.__padworksSim.getState().commandValve('zipWork', 1));
+  await p.waitForFunction(() => window.__padworksSim.getState().valves.zipWork.pos > 0.99, null, { timeout: 150000 }).catch(() => errors.push('zipper working valve never reopened'));
+  await clickWhenEnabled(p, 'Pumps on, 60 bpm', 120000); await wait(500);
+  await waitText(p, 'Lesson complete', 150000); await wait(300);
+  await shot(p, '135h-lesson11-complete');
+  // the other mistake: pumps online on the swapped, untested joint
+  await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
+  await p.click('[data-action="lesson-L11"]'); await wait(1500); await p.selectOption('select', '4');
+  await clickWhenEnabled(p, 'Stop pumping', 120000); await wait(1500);
+  await p.evaluate(() => window.__padworksSim.getState().commandValve('zipWork', 0));
+  await p.waitForFunction(() => window.__padworksSim.getState().valves.zipWork.pos < 0.01, null, { timeout: 150000 }).catch(() => errors.push('zipper working valve never closed (second run)'));
+  await clickWhenEnabled(p, 'Bleed the line', 120000); await wait(800); await shortTimer(); await waitStep('bled');
+  await clickWhenEnabled(p, 'Swap the iron', 120000); await wait(800); await shortTimer(); await waitStep('swapped');
+  await p.evaluate(() => window.__padworksSim.getState().commandValve('zipWork', 1));
+  await p.waitForFunction(() => window.__padworksSim.getState().valves.zipWork.pos > 0.99, null, { timeout: 150000 }).catch(() => errors.push('zipper working valve never reopened (second run)'));
+  await p.evaluate(() => window.__padworksSim.getState().setPumpsOnline(true)); await waitStep('untested');
+  if (await deductions('noTest') !== 1) errors.push('pumping on untested iron did not cost points');
+  await shot(p, '135i-lesson11-untested');
   // the setup panel now shows the best results
   await p.getByRole('button', { name: 'Reset' }).click(); await wait(800);
   await shot(p, '136-lessons-with-results');

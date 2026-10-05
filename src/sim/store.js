@@ -17,9 +17,11 @@ export const DEDUCT = {
   screenout: { pts: 12, label: 'Screenout: too much sand for the rate and fluid' },
   outOfZone: { pts: 5, label: 'Fracture grew out of zone: net pressure above the upper barrier contrast' },
   lightningHold: { pts: 10, label: 'Pumps restarted during a lightning hold' },
+  ironLive: { pts: 15, label: 'Iron worked with pressure on the line' },
+  noTest: { pts: 8, label: 'Pumped on replaced iron without a pressure test' },
 };
 // Time-to-recover targets for injected events, in seconds of simulation time
-export const EVENT_TARGETS = { misfire: 60, stuck: 45, valveFault: 30, sandOut: 40, prvLift: 45, screenout: 60, lightning: 30 };
+export const EVENT_TARGETS = { misfire: 60, stuck: 45, valveFault: 30, sandOut: 40, prvLift: 45, screenout: 60, lightning: 30, ironLeak: 150 };
 export function gradeOf(total) { return total >= 90 ? 'A' : total >= 80 ? 'B' : total >= 70 ? 'C' : total >= 60 ? 'D' : 'F'; }
 // Score of a job so far (or of a lesson window when since and exempt are given)
 export function scoreOf(score, { since = 0, exempt = [] } = {}) {
@@ -107,6 +109,7 @@ export const EVENTS = [
   { id: 'sandOut', label: 'Sand delivery interrupted', phases: ['frac'], blurb: 'The conveyor stops: proppant concentration falls to zero mid-stage. Hold rate on clean fluid until sand resumes, then stage back in.' },
   { id: 'prvLift', label: 'Relief valve lift', phases: ['frac'], blurb: 'The missile relief valve lifts on a pressure spike. Pumps offline, find the cause, reset.' },
   { id: 'screenout', label: 'Screenout', phases: ['frac'], blurb: 'The near-wellbore packs off and pressure ramps. Cut sand, flush, and stage back in lower.' },
+  { id: 'ironLeak', label: 'Treating iron leak', phases: ['frac'], blurb: 'A hammer union on the line from the missile starts to spray. Rate down, pumps offline, isolate at the zipper, bleed the line to zero, clear the red zone, swap the joint, pressure test, then restart. Working the iron live or pumping without a test costs points.' },
   { id: 'lightning', label: 'Lightning within 10 miles', phases: ['wireline', 'frac', 'drillout', 'flowback'], blurb: 'A strike inside the ten-mile ring: pumps down, rate to zero, crews off the pad, and hold until the all clear (60 s here; 30 minutes after the last strike on a real pad). Restarting before the all clear costs points.' },
 ];
 export const PROPPANTS = [
@@ -298,7 +301,7 @@ const freshJob = (setup, pad) => ({
   pumpRate: 0, ppa: 0, pumpsOnline: false, surfacePsi: 0, bhtpPsi: 0, hydroPsi: 0, frictionPsi: 0, netPsi: 0,
   slurryPpg: CONST.waterPpg, cumSlurryBbl: 0, cumProppantLb: 0, history: [], ballsDropped: 0,
   alarms: { overpressure: false, prvLifted: false, kickout: false, screenout: false, interlock: '' }, log: [],
-  events: { active: null, random: false, sandTimer: 0, valveFault: false, misfireArmed: false, misfired: 0, fired: [], lightningTimer: 0, lightningDown: false },
+  events: { active: null, random: false, sandTimer: 0, valveFault: false, misfireArmed: false, misfired: 0, fired: [], lightningTimer: 0, lightningDown: false, ironLeak: false, ironStep: '', ironTimer: 0, linePsi: 0 },
   hookup: { step: 'rig', progress: 0, joints: 0 },
   score: freshScore(),
   lesson: freshLesson(),
@@ -485,6 +488,9 @@ export const useSim = create((set, get) => ({
     else if (action === 'rerunGuns') { g.rerunGuns(); }
     else if (action === 'hookupNext') { g.hookupNext(); }
     else if (action === 'clearEvent') { g.clearEvent(); }
+    else if (action === 'bleedLine') { g.bleedLine(); }
+    else if (action === 'swapIron') { g.swapIron(); }
+    else if (action === 'testIron') { g.testIron(); }
     else if (action === 'reset') { g.reset(); }
   },
   acknowledgeAlarms: () => set(s => ({ alarms: { ...s.alarms, overpressure: false, prvLifted: false, screenout: false, kickout: false } })),
@@ -519,6 +525,11 @@ export const useSim = create((set, get) => ({
     } else if (id === 'screenout') {
       set({ events: { ...events, active: 'screenout' }, alarms: { ...s.alarms, screenout: true }, netPsi: Math.max(s.netPsi, 2600) });
       get().addLog('EVENT: SCREENOUT: treating pressure ramping at constant rate.');
+    } else if (id === 'ironLeak') {
+      // Drop 74: a hammer union on the treating line lets go at the seal. The line is live until it is isolated at the zipper and bled.
+      if (s.phase !== 'frac') { get().addLog('Event ignored: the treating line is only pressured while fracturing.'); return; }
+      set({ events: { ...events, active: 'ironLeak', ironLeak: true, ironStep: 'leak', ironTimer: 0, linePsi: s.surfacePsi } });
+      get().addLog('EVENT: treating iron leak. A hammer union on the line from the missile is spraying; nobody inside the red zone.');
     } else if (id === 'lightning') {
       // Drop 70: weather hold. The storm arrives with the strike; the all clear comes 60 s of sim time later (a real hold is 30 minutes after the last strike)
       set({ events: { ...events, active: 'lightning', lightningTimer: 60, lightningDown: false }, ui: { ...s.ui, weather: 'rain' } });
@@ -537,6 +548,35 @@ export const useSim = create((set, get) => ({
     if (!s.events.valveFault) return;
     set({ events: { ...s.events, valveFault: false, active: s.events.active === 'valveFault' ? null : s.events.active } });
     get().addLog('Working valve on the backup hydraulic circuit: actuator responds.');
+  },
+  // Drop 74: the iron leak sequence. Bleed needs the line isolated (zipper working valve closed, pumps off); the swap
+  // needs the line at zero (a live swap is the line-of-fire mistake and costs points, the swap does not happen); the
+  // test holds the new iron at the test pressure against the closed zipper valve.
+  bleedLine: () => {
+    const s = get(); const e = s.events;
+    if (!e.ironLeak || e.ironStep !== 'leak') return;
+    if (s.pumpsOnline || s.pumpRate > 0) { get().addLog('Bleed refused: pumps are still online. Rate to zero and pumps offline first.'); return; }
+    if (s.valves.zipWork.pos > 0.01) { get().addLog('Bleed refused: the treating line is open to the well. Close the zipper working valve to isolate it first.'); return; }
+    set({ events: { ...e, ironStep: 'bleeding', ironTimer: 8 } });
+    get().addLog('Bleeding the treating line to zero through the bleed-off; the leak slows as the line comes down.');
+  },
+  swapIron: () => {
+    const s = get(); const e = s.events;
+    if (!e.ironLeak || e.ironStep === 'swapping' || e.ironStep === 'swapped' || e.ironStep === 'testing') return;
+    if (e.ironStep !== 'bled' || e.linePsi > 50 || s.pumpsOnline) {
+      set(st => ({ score: { ...st.score, deductions: [...st.score.deductions, { t: st.t, code: 'ironLive', label: DEDUCT.ironLive.label + ': ' + Math.round(st.events.linePsi).toLocaleString() + ' psi on the line', pts: DEDUCT.ironLive.pts }], moves: st.score.moves + 1 } }));
+      get().addLog('STOP: the line is still under pressure (' + Math.round(e.linePsi).toLocaleString() + ' psi). Nobody breaks a union until the line is isolated and bled to zero.');
+      return;
+    }
+    set({ events: { ...e, ironStep: 'swapping', ironTimer: 20 } });
+    get().addLog('Red zone cleared and the line confirmed at zero. Breaking out the leaking joint and making up the replacement.');
+  },
+  testIron: () => {
+    const s = get(); const e = s.events;
+    if (e.ironStep !== 'swapped') { if (e.ironLeak) get().addLog('Pressure test refused: the leaking joint has not been replaced yet.'); return; }
+    if (s.pumpsOnline || s.valves.zipWork.pos > 0.01) { get().addLog('Pressure test refused: the line has to be isolated (zipper working valve closed) with the pumps offline.'); return; }
+    set({ events: { ...e, ironStep: 'testing', ironTimer: 15 } });
+    get().addLog('Pressure test: bringing the treating line up to ' + (Math.round(wellParams(s).maxTreatingPsi * 1.1 / 100) * 100).toLocaleString() + ' psi against the closed zipper valve and holding.');
   },
   rerunGuns: () => {
     const s = get();
@@ -820,9 +860,25 @@ export const useSim = create((set, get) => ({
       events = { ...events, lightningTimer: Math.max(0, left), active: left <= 0 && events.active === 'lightning' ? null : events.active };
       if (left <= 0) { get().addLog('All clear: no strikes within 10 miles for the hold period. Crews back on the pad; resume.'); patch.ui = { ...s.ui, weather: 'overcast' }; }
     }
+    // Drop 74: the iron leak. The line follows the wellhead while it is open to the well; isolated, the leak lets it
+    // down slowly; the bleed takes it to zero; the swap and the test run on timers; a restart without a test is logged
+    // and costs points (the test is the step a hurried crew skips).
+    if (events.ironLeak || events.ironStep) {
+      let lp = events.linePsi, step = events.ironStep, timer = events.ironTimer, leak = events.ironLeak;
+      const isolated = valves.zipWork.pos < 0.01 && !s.pumpsOnline;
+      const testPsi = Math.round(WELL.maxTreatingPsi * 1.1 / 100) * 100;
+      if (step === 'leak') lp = isolated ? Math.max(0, lp - 60 * dt) : surfacePsi;
+      else if (step === 'bleeding') { timer = Math.max(0, timer - dt); lp = Math.max(0, lp * Math.exp(-dt * 0.6)); if (timer <= 0) { lp = 0; step = 'bled'; get().addLog('Treating line at zero and confirmed at the bleed-off.'); } }
+      else if (step === 'bled') { if (!isolated) { step = 'leak'; lp = surfacePsi; get().addLog('The line is live again: the zipper working valve is open to the well (or the pumps came online).'); } }
+      else if (step === 'swapping') { timer = Math.max(0, timer - dt); if (timer <= 0) { step = 'swapped'; leak = false; get().addLog('Replacement joint made up and hammered. Restraints back on. The line is untested.'); } }
+      else if (step === 'testing') { timer = Math.max(0, timer - dt); lp = Math.min(testPsi, lp + testPsi * dt / 5); if (timer <= 0) { step = 'tested'; lp = 0; get().addLog('Pressure test held at ' + testPsi.toLocaleString() + ' psi with no drop. Bled back to zero; the line is good to pump.'); } }
+      if (step === 'swapped' && s.pumpsOnline) { step = 'untested'; deduct('noTest', ''); get().addLog('Pumps online on replaced iron with no pressure test: a leak at the new joint would show up at full treating pressure, with the crew at the iron.'); }
+      if (step === 'tested' || step === 'untested') { events = { ...events, ironLeak: false, ironStep: step, ironTimer: 0, linePsi: lp, active: events.active === 'ironLeak' ? null : events.active }; }
+      else events = { ...events, ironLeak: leak, ironStep: step, ironTimer: timer, linePsi: lp };
+    }
     if (events.random && !events.active && !events.misfireArmed && !a_any(s.alarms) && Math.random() < dt * 0.004) {
       const sleeve0 = s.setup.completion === 'sleeve';
-      const pool = EVENTS.filter(e => e.phases.includes(s.phase) && !(e.pnpOnly && sleeve0) && !(e.id === 'stuck' && s.wl.step !== 'pumpdown') && !(e.id === 'sandOut' && s.ppa <= 0) && !(e.id === 'screenout' && !(q > 0)) && !(e.id === 'prvLift' && !(q > 0)));
+      const pool = EVENTS.filter(e => e.phases.includes(s.phase) && !(e.pnpOnly && sleeve0) && !(e.id === 'stuck' && s.wl.step !== 'pumpdown') && !(e.id === 'sandOut' && s.ppa <= 0) && !(e.id === 'screenout' && !(q > 0)) && !(e.id === 'ironLeak' && !(s.pumpsOnline && q > 0)) && !(e.id === 'prvLift' && !(q > 0)));
       if (pool.length) { const pick = pool[Math.floor(Math.random() * pool.length)]; setTimeout(() => get().injectEvent(pick.id), 0); }
     }
     if (events !== s.events) patch.events = events;
@@ -963,6 +1019,7 @@ export const useSim = create((set, get) => ({
       else if (id === 'screenout') resolved = !alarms.screenout;
       else if (id === 'misfire') resolved = !!stNow && stNow.clustersFired >= s.setup.clusters;
       else if (id === 'lightning') resolved = !s.pumpsOnline && (patch.pumpRate ?? s.pumpRate) === 0;
+      else if (id === 'ironLeak') resolved = ev.ironStep === 'tested' || ev.ironStep === 'untested';
       if (resolved) {
         const secs = t - o.at;
         const target = EVENT_TARGETS[id] || 60;
@@ -1091,6 +1148,18 @@ export function nextSteps(s) {
     push('Check hydraulic supply and hoses; switch the leg to the backup circuit', false, { action: 'resetActuator', label: 'Backup circuit' });
     push('Cycle the valve and confirm position, then continue', false, { valve: 'zipWork' });
     return { blocked: true, title: 'Working valve actuator fault', why: 'Hydraulic supply lost or an actuator seal failed on the zipper working valve.', steps };
+  }
+  if (s.events.active === 'ironLeak') {
+    const e = s.events; const testPsi = Math.round(WELL.maxTreatingPsi * 1.1 / 100) * 100;
+    const past = (steps) => steps.includes(e.ironStep);
+    push('Leak at a hammer union on the treating line: spray from the seal, red zone on the line. Nobody approaches the iron', true);
+    push('Rate to zero, pumps offline', !s.pumpsOnline && s.pumpRate === 0, { action: 'stop', label: 'Stop pumping' });
+    push('Isolate the line from the well: close the zipper working valve', closed(v.zipWork), { valve: 'zipWork' });
+    push('Bleed the treating line to zero' + (e.ironStep === 'bleeding' ? ' (' + Math.round(e.linePsi).toLocaleString() + ' psi, about ' + Math.ceil(e.ironTimer) + ' s)' : e.ironStep === 'leak' ? ' (line at ' + Math.round(e.linePsi).toLocaleString() + ' psi)' : ''), past(['bled', 'swapping', 'swapped', 'testing']), { action: 'bleedLine', label: 'Bleed the line' });
+    push('Line confirmed at zero: clear the red zone, break out the leaking joint and make up the replacement' + (e.ironStep === 'swapping' ? ' (about ' + Math.ceil(e.ironTimer) + ' s)' : ''), past(['swapped', 'testing']), { action: 'swapIron', label: 'Swap the iron', always: true });   // the button is there the whole time: pressing it on a live line is the mistake
+    push('Pressure test the new iron to ' + testPsi.toLocaleString() + ' psi against the closed zipper valve before anything pumps' + (e.ironStep === 'testing' ? ' (' + Math.round(e.linePsi).toLocaleString() + ' psi, ' + Math.ceil(e.ironTimer) + ' s to go)' : ''), false, { action: 'testIron', label: 'Pressure test' });
+    push('Open the zipper working valve, pumps online, rate back up in steps', false);
+    return { blocked: true, title: 'Treating iron leak', why: 'A union seal on the high-pressure line from the missile let go. Stored pressure and line of fire: the iron is not touched until the line is isolated and at zero, and it is not pumped on until it has held a test.', steps };
   }
   if (s.events.active === 'lightning') {
     push('Lightning within 10 miles: weather hold on the pad', true);

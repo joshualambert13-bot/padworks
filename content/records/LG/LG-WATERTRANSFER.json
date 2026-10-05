@@ -1,0 +1,41 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [
+    {
+      "class": "Line of fire",
+      "control": "Whip checks and restraints at every connection on the discharge side."
+    }
+  ],
+  "tabs": {
+    "overview": "Transfer pumps at the source (tanks, pit or above-ground tank) push water through lay-flat hose and a suction manifold to the blender; the rate has to keep up with the pump rate on the high-pressure side.",
+    "engineering": "Pump and hose sizing by the maximum slurry rate plus a margin; manifolds with isolation so a hose can be changed while pumping.",
+    "safety": "Hose runs are the trip hazard of the pad and are crossed on ramps; a burst lay-flat hose moves a lot of water fast.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-WATERTRANSFER",
+  "parent": "LG",
+  "group": "water",
+  "level": "equipment",
+  "name": "Water transfer",
+  "aliases": [
+    "transfer pumps",
+    "lay-flat hose",
+    "water transfer system",
+    "transfer line"
+  ],
+  "function": "The pumps and lay-flat hose that move water from the source into the working tanks and the blender.",
+  "scene": "LG-WATERTRANSFER"
+}

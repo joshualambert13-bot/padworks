@@ -1,0 +1,36 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "A post with the muster sign and the pad's safety board, with extinguishers, an eyewash station and first aid in weather boxes at its base, and the wind sock in sight. On an evacuation or a stop-work everyone reports here for the head count.",
+    "engineering": "Located upwind of the usual wind, outside the red zone, with a clear route from every work area.",
+    "safety": "Everyone on the pad knows where it is before work starts; the head count is the first task of any muster.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-SAFETYPOINT",
+  "parent": "LG",
+  "group": "pad",
+  "level": "equipment",
+  "name": "Safety station and muster point",
+  "aliases": [
+    "muster point",
+    "safety station",
+    "safety board",
+    "first aid station"
+  ],
+  "function": "The sign, fire extinguishers, eyewash, first aid and wind sock where crews assemble on an alarm.",
+  "scene": "LG-SAFETYPOINT"
+}

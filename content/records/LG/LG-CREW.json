@@ -1,0 +1,36 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "A frac crew runs the pumps, blender, hydration and chemical add from the data van and the units; the wireline crew works at its unit and the tree; flowback hands tend the chokes and tanks; everyone else stays where the job plan puts them. In the Simulator, crew figures stand at the stations and walk between units.",
+    "engineering": "Head count by the job plan; shifts and rotations by the company.",
+    "safety": "Hi-vis, hard hat, glasses, gloves and FR clothing; nobody inside the red zone while iron is pressured; the head count at muster.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-CREW",
+  "parent": "LG",
+  "group": "crew",
+  "level": "equipment",
+  "name": "Crew on the pad",
+  "aliases": [
+    "crew",
+    "frac crew",
+    "pad personnel",
+    "hands"
+  ],
+  "function": "The people on the pad: the supervisor, pump and blender operators, wireline and flowback crews, and the walkers between units.",
+  "scene": "LG-CREW"
+}

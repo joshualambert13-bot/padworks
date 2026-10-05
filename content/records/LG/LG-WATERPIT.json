@@ -1,0 +1,37 @@
+{
+  "status": "draft",
+  "evidence_tier": "E3",
+  "reviewers": [],
+  "system": "LG",
+  "drawn_in_3d": true,
+  "sources": [
+    "S9"
+  ],
+  "revision": {
+    "rev": "A",
+    "author": "AI draft",
+    "date": "2026-10-05",
+    "note": "Drop 73: the pad clutter, water and crew that used to be mute under the pointer"
+  },
+  "hazards": [],
+  "tabs": {
+    "overview": "A geomembrane-lined pit off the pad's west edge with a berm, a floating or bank-mounted transfer pump skid, and lay-flat hose to the working tanks or the blender. Pits replace rows of frac tanks where water volumes and land allow.",
+    "engineering": "Volume by the job's total water; liner and berm per the operator's and the state's requirements; freeboard kept.",
+    "safety": "No entry inside the berm except on the pump skid walkway; the pit is a drowning hazard and a slick liner; fencing and signage where required.",
+    "evidence": "Pad photographs read for layout and proportion only (S9)."
+  },
+  "id": "LG-WATERPIT",
+  "parent": "LG",
+  "group": "water",
+  "level": "equipment",
+  "name": "Lined frac pit",
+  "aliases": [
+    "frac pit",
+    "water pit",
+    "pit",
+    "lined pit",
+    "impoundment"
+  ],
+  "function": "An excavated, lined and bermed impoundment holding the frac water supply where the basin uses pits.",
+  "scene": "LG-WATERPIT"
+}

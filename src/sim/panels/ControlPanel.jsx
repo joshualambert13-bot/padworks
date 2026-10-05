@@ -52,7 +52,7 @@ function LessonCard({ s }) {
             <li key={i} className={'flex items-start gap-2 text-xs ' + (done ? 'text-mute line-through' : isCurrent ? 'text-white' : 'text-mute')}>
               {done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-cool' : '')} />}
               <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
-              {isCurrent && step.action && <button className="btn btn-primary text-[11px] px-2 py-0.5" disabled={step.gate ? !step.gate(s) : false} title={step.gate && !step.gate(s) ? 'Not yet: the job has to reach this point first' : undefined} onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>}
+              {(isCurrent || (step.always && !done)) && step.action && <button className={'btn text-[11px] px-2 py-0.5 ' + (isCurrent ? 'btn-primary' : '')} disabled={step.gate ? !step.gate(s) : false} title={step.gate && !step.gate(s) ? 'Not yet: the job has to reach this point first' : undefined} onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>}
               {isCurrent && !step.action && valve && s.valves[valve] && <button className="btn text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ valve }); s.commandValve(valve, s.valves[valve].target === 1 ? 0 : 1); }}>{s.valves[valve].target === 1 ? 'Close' : 'Open'}</button>}
             </li>
           );
@@ -152,8 +152,8 @@ export default function ControlPanel() {
               <li key={i} className={'flex items-start gap-2 text-xs ' + (step.done ? 'text-mute line-through' : isCurrent ? 'text-white' : 'text-mute')}>
                 {step.done ? <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-ok" /> : <Circle size={14} className={'shrink-0 mt-0.5 ' + (isCurrent ? 'text-accent' : '')} />}
                 <span className="flex-1"><span className="mono text-[10px] mr-1">{i + 1}.</span>{step.text}</span>
-                {isCurrent && step.action && (
-                  <button className="btn btn-primary text-[11px] px-2 py-0.5" disabled={step.gate === false} onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>
+                {(isCurrent || (step.always && !step.done)) && step.action && (
+                  <button className={'btn text-[11px] px-2 py-0.5 ' + (isCurrent ? 'btn-primary' : '')} disabled={step.gate === false} onClick={() => { s.focusOn({ action: step.action }); s.guide(step.action); }}>{step.label || 'Do it'}</button>
                 )}
                 {isCurrent && step.valve && !step.action && (
                   <button className="btn text-[11px] px-2 py-0.5" onClick={() => { s.focusOn({ valve: step.valve }); s.commandValve(step.valve, s.valves[step.valve].target === 1 ? 0 : 1); }}>{s.valves[step.valve].target === 1 ? 'Close' : 'Open'}</button>
@@ -195,7 +195,7 @@ export default function ControlPanel() {
         </div>
         <div className="grid grid-cols-2 gap-1">
           {EVENTS.filter(e => !(e.pnpOnly && sleeve)).map(e => (
-            <button key={e.id} className="btn text-[11px] px-1" disabled={!e.phases.includes(s.phase) || s.events.active === e.id || (e.id === 'misfire' && s.events.misfireArmed) || (e.id === 'stuck' && s.wl.step !== 'pumpdown') || (e.id === 'valveFault' && s.events.valveFault) || ((e.id === 'screenout' || e.id === 'prvLift' || e.id === 'sandOut') && liveRate <= 0) || (e.id === 'screenout' && s.alarms.screenout)} title={e.blurb} onClick={() => s.injectEvent(e.id)}>{e.label}</button>
+            <button key={e.id} className="btn text-[11px] px-1" disabled={!e.phases.includes(s.phase) || s.events.active === e.id || (e.id === 'misfire' && s.events.misfireArmed) || (e.id === 'stuck' && s.wl.step !== 'pumpdown') || (e.id === 'valveFault' && s.events.valveFault) || ((e.id === 'screenout' || e.id === 'prvLift' || e.id === 'sandOut' || e.id === 'ironLeak') && liveRate <= 0) || (e.id === 'ironLeak' && !!s.events.ironStep && s.events.ironStep !== 'tested' && s.events.ironStep !== 'untested') || (e.id === 'screenout' && s.alarms.screenout)} title={e.blurb} onClick={() => s.injectEvent(e.id)}>{e.label}</button>
           ))}
         </div>
         <div className="text-[10px] text-mute">{s.events.active ? 'Active: ' + (EVENTS.find(e => e.id === s.events.active) || {}).label + '. Follow the recovery steps above.' : s.events.misfireArmed ? 'Misfire armed for the next perforating run.' : 'Inject a fault to practice the recovery; the steps card shows the sequence.'}</div>
