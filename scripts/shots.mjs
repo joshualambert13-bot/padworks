@@ -787,6 +787,33 @@ if (!process.env.ONLY || process.env.ONLY === 'drop16' || process.env.ONLY === '
 }
 }
 
+// ---------------- Themes (Drop 81): the admin picks a sample theme; the pad repaints and the site chrome follows
+if (!process.env.ONLY || process.env.ONLY === 'rest' || process.env.ONLY === 'tail') {
+p = await page(1440, 900);
+await p.goto(base + '/admin'); await wait(3000);
+if (!(await p.$('[data-panel="theme"]'))) errors.push('admin page has no theme panel');
+await p.selectOption('[data-select="theme"]', 'red-fleet'); await wait(1500);
+{
+  const t = await p.evaluate(() => { const T = window.__padworksTheme.getState().theme; return { id: T.id, primary: T.fleet.primary, tagline: document.querySelector('header') ? document.querySelector('header').textContent : '' }; });
+  if (t.id !== 'red-fleet') errors.push('theme select did not apply: ' + t.id);
+  if (!/Red fleet sample theme/.test(t.tagline)) errors.push('header did not take the theme tagline');
+}
+await shot(p, '24-admin-theme');
+await p.goto(base + SIM + (process.env.LITE ? '&' : '?') + 'theme=red-fleet'); await wait(6000);
+await p.selectOption('select[title="Camera preset"]', 'pumps'); await frames(p, 2);
+{
+  const c = await p.evaluate(() => {
+    const want = window.__padworksTheme.getState().theme.fleet.primary.slice(1); const w = [0, 2, 4].map(i => parseInt(want.slice(i, i + 2), 16));
+    let hit = null; window.__padworksScene.traverse(o => { if (hit || !o.isMesh || !/^PP-FRACPUMP/.test(o.name) || !o.material || !o.material.color) return; const h = o.material.color.getHexString(); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); if (v.every((x, i) => Math.abs(x - w[i]) <= 3)) hit = h; });
+    return hit;
+  });
+  if (!c) errors.push('no pump material carries the red fleet primary');
+}
+await shot(p, '25-sim-red-fleet');
+await p.evaluate(() => window.__padworksTheme.getState().setTheme('padworks')); await wait(1500);
+await p.close();
+}
+
 // ---------------- Phone
 if (!process.env.ONLY || process.env.ONLY === 'rest' || process.env.ONLY === 'tail') {
 p = await page(390, 844, true);

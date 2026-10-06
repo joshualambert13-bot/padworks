@@ -1,5 +1,6 @@
 import { glossary, hazards } from '../lib/records.js';
 import { Link } from 'react-router-dom';
+import credits from '../../content/credits.json';
 
 export default function About() {
   return (
@@ -26,6 +27,11 @@ export default function About() {
         <div>
           <h2 className="font-semibold">Hazard classes used in the Hazards tabs</h2>
           <ul className="mt-2 space-y-1">{hazards.map(h => <li key={h.class}><span className="font-medium">{h.class}</span>: <span className="text-mute">{h.description} Control: {h.control}</span></li>)}</ul>
+        </div>
+        <div data-section="credits">
+          <h2 className="font-semibold">Credits</h2>
+          <p className="text-mute mt-1">Everything on the pad is drawn in code except the items below, which come from free libraries under the license shown. Photographic textures and skies are CC0 from Poly Haven and ambientCG (no attribution required). The crew are Mixamo characters and animations (Adobe), used under the Mixamo terms. Models attributed under CC-BY-4.0 are used unmodified apart from scaling and texture size.</p>
+          <ul className="mt-2 space-y-0.5 text-xs">{credits.map(c => <li key={c.id}><span className="font-medium">{c.title}</span> by <a className="text-accent" href={c.authorUrl || c.source} target="_blank" rel="noreferrer">{c.author}</a> via <a className="text-accent" href={c.source} target="_blank" rel="noreferrer">{c.via}</a>, {c.license === 'CC0' ? 'CC0' : <a className="text-accent" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">{c.license}</a>}</li>)}</ul>
         </div>
         <div>
           <h2 className="font-semibold">Terms</h2>

@@ -62,11 +62,12 @@ export function PickupTruck({ paint = MAT.paintWhite, wheelRefs = null, shadow =
 }
 
 // Trucks parked in a row, nose to the same side.
-export function ParkedPickups({ position, count = 6 }) {
+export function ParkedPickups({ position, count = 6, paint = null }) {
   const transforms = useMemo(() => Array.from({ length: count }, (_, i) => ({ position: [0, 0, i * 3.2] })), [count]);
+  const mat = useMemo(() => (paint ? { ...MAT.paintWhite, color: paint } : MAT.paintWhite), [paint]);   // the operator's color (Drop 81)
   return (
     <group position={position} name="LG-PICKUPS">
-      <Instanced transforms={transforms} name="LG-PICKUPS"><PickupTruck /></Instanced>
+      <Instanced transforms={transforms} name="LG-PICKUPS" version={paint || ''}><PickupTruck paint={mat} /></Instanced>
     </group>
   );
 }

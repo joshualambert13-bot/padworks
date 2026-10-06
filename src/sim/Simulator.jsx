@@ -14,6 +14,7 @@ import { lessonById } from './lessons.js';
 import HoverPopup from './HoverPopup.jsx';
 import { DemoBar } from './DemoBar.jsx';
 import { startDemo, stopDemo } from './demo.js';
+import { useTheme } from '../theme/theme.js';
 import SessionSummary from './SessionSummary.jsx';
 
 const VIEWS = [
@@ -23,16 +24,17 @@ const VIEWS = [
 ];
 
 function Viewport({ view, showLabels, preset }) {
+  const themeVersion = useTheme(s => s.version);   // a theme change remounts the surface scene so every material is repainted (Drop 81)
   if (view === 'split') {
     return (
       <div className="h-full grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 gap-px bg-line">
-        <div className="relative min-h-0"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface" /></div>
+        <div className="relative min-h-0"><Suspense fallback={null}><SurfaceScene key={themeVersion} showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface" /></div>
         <div className="relative min-h-0"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere={false} /></Suspense><HoverPopup canvasKey="downhole" /><Tagline text="Downhole section (schematic)" /></div>
       </div>
     );
   }
   if (view === 'downhole') return <div className="relative h-full"><Suspense fallback={null}><DownholeScene showLabels={showLabels} tickHere /></Suspense><HoverPopup canvasKey="downhole" /><Tagline text="Downhole section (schematic)" /></div>;
-  return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface (generic models). Hover an item for its name; click to open its record." /></div>;
+  return <div className="relative h-full"><Suspense fallback={null}><SurfaceScene key={themeVersion} showLabels={showLabels} preset={preset} tickHere /></Suspense><HoverPopup canvasKey="surface" /><Tagline text="Surface (generic models). Hover an item for its name; click to open its record." /></div>;
 }
 
 const WALK_ARROWS = [['f', 1, ArrowUp, 'Forward'], ['s', -1, ArrowLeft, 'Left'], ['s', 1, ArrowRight, 'Right'], ['f', -1, ArrowDown, 'Back']];

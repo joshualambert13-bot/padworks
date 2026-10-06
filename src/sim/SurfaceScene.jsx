@@ -9,13 +9,16 @@ import { Totes, IronRack, Cones, Barricades, Welfare, FuelCube, SafetyPoint, Hos
 import { useHdri } from './parts/hdri.js';
 import { WalkControls, LAST_TARGET } from './parts/walk.jsx';
 import { IronLeak } from './parts/leak.jsx';
+import { CrewModel, CrewWalker } from './parts/crewmodel.jsx';
+import { Props, padProps } from './parts/props.jsx';
+import { useTheme } from '../theme/theme.js';
 import { Decals } from './parts/decals.jsx';
 import { installTextureSets } from './parts/textures.js';
 import { SOURCES, thunder } from './sound.js';
 installSnowPatch();
 import { Effects, Diagnostics, COMPOSER_OF } from './parts/effects.jsx';
 import { ContextLoss } from './parts/stability.jsx';
-import { Crew, Walker, Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
+import { Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
 import { terrainHeight } from './parts/terrain.js';
 import { Ground, FracTree, FracTreeIron, FracTreeTop, ProductionTreeIron, dimTint, lubricatorTopY, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, FracPumpLive, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxStation, ShuttleForklift, CRADLE_X, CRADLE_Z, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, FlangedRun, WELL_COLORS, Accumulator, HydraulicStand, standLayout, HOSE_BUNDLE_X, ZIPPER_BUNDLE_X, WaterTransfer, WaterPit, StorageTank } from './parts/surface.jsx';
@@ -251,6 +254,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const season = useSim(st => st.ui.season) || 'summer';
   const weather = useSim(st => st.ui.weather) || 'clear';   // clear, overcast, rain (Drop 68)
   const rain = weather === 'rain', lid = weather !== 'clear';
+  const theme = useTheme(st => st.theme);   // the customer's colors (Drop 81)
   const walk = !!useSim(st => st.ui.walk);
   const tour = !!useSim(st => st.ui.tour) && !walk;
   const winter = season === 'winter';
@@ -325,6 +329,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
     return { pad, lanes, spots, rects };
   }, [pad, rowLen, bZ, pumps.length, missileZ, perSide, wellZ, water, sandMode, fuelCount]); // eslint-disable-line react-hooks/exhaustive-deps
   const zipperFrontZ = rowCenter - (rowLen + 6.0) / 2;
+  const propItems = useMemo(() => padProps(MISSILE_X, bZ, rowLen, pad), [bZ, rowLen, pad]);   // downloaded props (Drops 79 and 80)
   const ACC = [-2, -22];
   const treatingLine = useMemo(() => [[MISSILE_X, md.hpY, missileOutletZ], [MISSILE_X, md.hpY, missileOutletZ - 1.4], [MISSILE_X + 2, 0.9, missileOutletZ - 2.6], [LEAK_X, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, 0.9, missileOutletZ - 2.6], [ZIPPER_X - 1.0, zd.headerY, zipperFrontZ + 0.9 - zd.ftf / 2 - 0.1]], [md.hpY, missileOutletZ, zd.headerY, zd.ftf, zipperFrontZ]);
   const flowbackLine = useMemo(() => [[d.wingOuterX + d.ftf / 2, d.crossY, 0], [d.wingOuterX + 3, d.crossY, 0], [d.wingOuterX + 4, 2.0, 0], [d.wingOuterX + 4, 0.9, 6], [12.8, 0.9, 21.4 + rowLen]], [d.wingOuterX, d.ftf, d.crossY, rowLen]);
@@ -449,7 +454,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
         <SandSilos position={[MISSILE_X - 19.6, 0, bZ - 6.0]} showLabels={showLabels} />
       )}
       {(s.setup.fleet !== 'diesel' && s.setup.fleet !== 'grid') && <FuelTrailers position={[12, 0, -39.5]} count={Math.min(8, 3 + Math.round(spread.pumps / 3))} showLabels={showLabels} />}
-      <ParkedPickups position={[30, 0, -36]} count={7} />
+      <ParkedPickups position={[30, 0, -36]} count={7} paint={theme.operator.primary} />
       {/* light towers as one instanced set, each yawed so its lamp side (local +z) faces its aim point */}
       <Instanced transforms={towerTransforms} version={tod === 'day' ? 0 : 1} name="LG-LIGHTTOWER">
         <LightTower position={[0, 0, 0]} lit={tod !== 'day'} />
@@ -488,18 +493,19 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <Barricades position={[MISSILE_X + 10, 0, -9.6]} count={3} />
       <Welfare position={[18.5, 0, -41]} />
       <FuelCube position={[MISSILE_X - 11, 0, -27]} />
+      <Props items={propItems} />
       <SafetyPoint position={[3.5, 0, -36]} />
       <HoseCoils position={[-56, 0, bZ + 14]} rotation={[0, 0.4, 0]} />
-      <Crew position={[-7.2, 0, -27.6]} rotation={-0.6} pose="stand" seed={1} />
-      <Crew position={[-8.6, 0, -27.2]} rotation={0.9} pose="point" vest="#e8e83a" seed={2} />
-      <Crew position={[ACC[0] + 0.4, 0, ACC[1] + 2.1]} rotation={Math.PI} pose="stand" seed={3} />
-      <Crew position={[-77, 0, 8.5]} rotation={Math.PI / 2} pose="stand" vest="#e8e83a" seed={4} />
+      <CrewModel position={[-7.2, 0, -27.6]} rotation={-0.6} pose="stand" seed={1} />
+      <CrewModel position={[-8.6, 0, -27.2]} rotation={0.9} pose="point" vest="#e8e83a" seed={2} />
+      <CrewModel position={[ACC[0] + 0.4, 0, ACC[1] + 2.1]} rotation={Math.PI} pose="stand" seed={3} />
+      <CrewModel position={[-77, 0, 8.5]} rotation={Math.PI / 2} pose="stand" vest="#e8e83a" seed={4} />
       {/* crew on the move (Drop 28): data van to the accumulator stand along the red zone edge, and a tank watch along the frac tanks */}
-      <Walker path={[[-13, -27], [-4, -24.5], [1.5, -19], [-6, -19], [-14, -24]]} speed={1.1} seed={1} />
-      <Walker path={[[-81, 45.5], [-57, 45.5], [-57, 48], [-81, 48]]} speed={1.0} vest="#e8e83a" seed={2} />
-      {(s.phase === 'wireline' && !sleeve) && <Crew position={[10.5, 0, 6.5]} rotation={-Math.PI / 2} pose="point" seed={5} />}
-      {s.phase === 'flowback' && <Crew position={[16, 0, 24 + rowLen]} rotation={Math.PI} pose="kneel" seed={6} />}
-      {s.phase === 'production' && <Crew position={[3.6, 0, -3.2]} rotation={2.3} pose="stand" seed={7} />}
+      <CrewWalker path={[[-13, -27], [-4, -24.5], [1.5, -19], [-6, -19], [-14, -24]]} speed={1.1} seed={1} />
+      <CrewWalker path={[[-81, 45.5], [-57, 45.5], [-57, 48], [-81, 48]]} speed={1.0} vest="#e8e83a" seed={2} />
+      {(s.phase === 'wireline' && !sleeve) && <CrewModel position={[10.5, 0, 6.5]} rotation={-Math.PI / 2} pose="point" seed={5} />}
+      {s.phase === 'flowback' && <CrewModel position={[16, 0, 24 + rowLen]} rotation={Math.PI} pose="kneel" seed={6} />}
+      {s.phase === 'production' && <CrewModel position={[3.6, 0, -3.2]} rotation={2.3} pose="stand" seed={7} />}
       <RoadTruck road={{ x0: pad.x1 + 6, x1: pad.x1 + 150, z: pad.z0 + 12 }} speed={5} height={(x, z) => terrainHeight(x, z, terrain.relief, pad)} />
       <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[10.6, 1.4, -14.6]} rotation={[0, Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />
       <Sign lines={['RED ZONE', 'NO ENTRY WHILE PUMPING']} position={[10.6, 1.4, rowLen + 10.6]} rotation={[0, -Math.PI / 4, 0]} width={1.2} height={0.6} post={1.4} danger />

@@ -9,6 +9,7 @@ import { api, useAuth, canSeeAdmin, effectiveRole, ROLE_LABEL } from '../auth/au
 import { LESSONS } from '../sim/lessons.js';
 import { fromServer } from '../sim/progress.js';
 import SessionSummary from '../sim/SessionSummary.jsx';
+import ThemePanel from '../theme/ThemePanel.jsx';
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : 'never');
 const gradeColor = (g) => (g === 'A' ? 'text-ok' : g === 'B' ? 'text-accent' : g === 'C' ? 'text-warn' : 'text-bad');
@@ -182,6 +183,7 @@ export default function AdminPage() {
         <button className="btn flex items-center gap-1 text-xs" onClick={load} data-action="reload-users"><RefreshCw size={12} />Refresh</button>
       </div>
       {error && <div className="text-xs text-bad" data-status="admin-error">{error}</div>}
+      {isAdmin && <ThemePanel />}
       {isAdmin && <CreateAccount onCreated={(d) => { setOtp({ kind: 'create', username: d.user.username, password: d.oneTimePassword }); load(); }} />}
       {otp && <OneTimeCard otp={otp} onClose={() => setOtp(null)} />}
       <div className="card p-2 overflow-x-auto">

@@ -15,7 +15,7 @@ import RequireAuth from './auth/RequireAuth.jsx';
 import UserMenu from './auth/UserMenu.jsx';
 import ChangePassword from './auth/ChangePassword.jsx';
 import { useAuth, canSeeAdmin, effectiveRole, ROLE_LABEL } from './auth/auth.js';
-import { SITE_TAGLINE } from './config.js';
+import { useTheme } from './theme/theme.js';
 import { useSim } from './sim/store.js';
 
 const navClass = ({ isActive }) =>
@@ -28,15 +28,16 @@ export default function App() {
   const role = effectiveRole(user, viewAs);
   const masked = !!user && user.role === 'admin' && !!viewAs;
   const full = useSim(s => s.ui.full);   // simulator full screen (Drop 62): the header goes too
+  const site = useTheme(s => s.theme.site);   // the customer's name, tagline and logo (Drop 81)
   return (
     <RequireAuth>
     <div className="h-full flex flex-col">
       {masked && <div className="shrink-0 flex items-center gap-2 px-3 py-1 text-xs bg-warn/15 border-b border-warn/50 text-warn" data-status="view-as">Viewing the site as a {ROLE_LABEL[viewAs].toLowerCase()} would see it. Your admin rights are unchanged.<button className="btn ml-auto text-[11px] px-2 py-0.5" onClick={() => setViewAs(null)} data-action="view-as-off">Back to admin view</button></div>}
       {!full && <header className="shrink-0 h-12 flex items-center gap-2 px-3 border-b border-line bg-panel">
         <NavLink to="/" className="flex items-center gap-2 font-semibold tracking-tight text-white mr-2">
-          <img src="/brand/mark.svg" alt="" className="h-7 w-7" />
-          <span className="hidden min-[440px]:inline">Pad<span className="text-accent">works</span></span>
-          <span className="hidden lg:inline text-xs font-normal text-mute tracking-normal">{SITE_TAGLINE}</span>
+          <img src={site.logo || '/brand/mark.svg'} alt="" className="h-7 w-7 object-contain" />
+          <span className="hidden min-[440px]:inline" data-site-name>{site.name === 'Padworks' ? <>Pad<span className="text-accent">works</span></> : site.name}</span>
+          <span className="hidden lg:inline text-xs font-normal text-mute tracking-normal">{site.tagline}</span>
         </NavLink>
         <nav className="flex items-center gap-1">
           <NavLink to="/lessons" className={navClass}><GraduationCap size={16} /> <span className="hidden sm:inline">Lessons</span></NavLink>

@@ -479,6 +479,13 @@ export function Instanced({ transforms, version = 0, children, name }) {
     const inv = new THREE.Matrix4().copy(t.matrixWorld).invert();
     const groups = new Map();
     const tmp = new THREE.Matrix4();
+    // a glTF prop (Drop 79) may carry quantized attributes (normalized int16 positions and uvs, KHR_mesh_quantization);
+    // applyMatrix4 on those clamps, so the clone is widened to float first
+    const floatGeo = (g) => {
+      const c = g.clone();
+      for (const k of ['position', 'normal', 'uv']) { const a = c.attributes[k]; if (a && (a.normalized || !(a.array instanceof Float32Array))) { const f = new Float32Array(a.count * a.itemSize); for (let i = 0; i < a.count; i++) for (let j = 0; j < a.itemSize; j++) f[i * a.itemSize + j] = a.getComponent(i, j); c.setAttribute(k, new THREE.BufferAttribute(f, a.itemSize)); } }
+      return c;
+    };
     const walkBoxes = [];   // Drop 75: each source mesh's box in template space, for the walk obstacles (a merged set has no per-unit box)
     const boxOf = (geo, mat) => { if (!geo.boundingBox) geo.computeBoundingBox(); const b = geo.boundingBox; if (b && !b.isEmpty()) walkBoxes.push(b.clone().applyMatrix4(mat)); };
     // the order three would draw the mesh in: its nearest group's renderOrder (three resets the group order at
@@ -492,11 +499,11 @@ export function Instanced({ transforms, version = 0, children, name }) {
       if (!groups.has(key)) groups.set(key, { material: m.material, name: nearestName(m, t), cast: m.castShadow, order, geos: [] });
       const local = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld);
       if (m.isInstancedMesh) {
-        for (let i = 0; i < m.count; i++) { m.getMatrixAt(i, tmp); const lm = new THREE.Matrix4().multiplyMatrices(local, tmp); boxOf(m.geometry, lm); groups.get(key).geos.push(m.geometry.clone().applyMatrix4(lm)); }
+        for (let i = 0; i < m.count; i++) { m.getMatrixAt(i, tmp); const lm = new THREE.Matrix4().multiplyMatrices(local, tmp); boxOf(m.geometry, lm); groups.get(key).geos.push(floatGeo(m.geometry).applyMatrix4(lm)); }
         return;
       }
       boxOf(m.geometry, local);
-      groups.get(key).geos.push(m.geometry.clone().applyMatrix4(local));
+      groups.get(key).geos.push(floatGeo(m.geometry).applyMatrix4(local));
     });
     t.visible = false;
     const made = [];
