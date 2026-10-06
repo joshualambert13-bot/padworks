@@ -61,8 +61,8 @@ export function padProps(MISSILE_X, bZ) {
     { id: 'dumpster', name: 'LG-WELFARE', spots: at([[13.5, 0, -43.3, Math.PI / 2]]) },
     { id: 'conex', name: 'LG-IRONRACK', spots: at([[-50, 0, -17, 0]]) },
     { id: 'watertank', name: 'LG-WELFARE', spots: at([[9.6, 0, -43.2, 0]]) },
-    // the cone model is packed point-down: turned over, base on the ground, between the drawn red zone cones
-    { id: 'cone', name: 'LG-CONES', spots: [[-26, -14], [-17, -14], [-8, -14]].map(([x, z]) => ({ position: [x, 0.72, z], rotation: [Math.PI, 0, 0] })) },
+    // the cone model stands on its base as packed (Drop 84 turned it over by mistake: the drawn cones were the ones on their points); between the drawn red zone cones
+    { id: 'cone', name: 'LG-CONES', spots: at([[-26, 0, -14, 0], [-17, 0, -14, 0.4], [-8, 0, -14, 0.9]]) },
     { id: 'forklift', name: 'LG-IRONRACK', spots: at([[MISSILE_X - 15, 0, -16.5, -0.5]]) },
   ];
 }

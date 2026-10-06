@@ -50,12 +50,18 @@ function Rolling({ road, speed, height, paint }) {
   const scene = useMemo(() => {
     const s = paintedClone(gltf.scene, paint || '#d7dde5');
     // each wheel mesh has its geometry where the wheel sits; move the geometry onto the node's origin and the node onto
-    // the wheel's center, so a rotation about z (the axle) turns it in place
+    // the wheel's center, so a turn about the axle spins it in place. The axle runs along the truck's z, but the wheel
+    // nodes sit under the model's own rotated root (a Sketchfab export), so the axle is taken into each node's own frame
+    // (Drop 85; turning about the node's z spun the wheels flat)
     const list = [];
+    s.updateMatrixWorld(true);
+    const q = new THREE.Quaternion();
     s.traverse(o => {
       if (!o.isMesh || !/WheelStock/i.test(o.name)) return;
       const g = o.geometry.clone(); g.computeBoundingBox(); const c = g.boundingBox.getCenter(new THREE.Vector3());
-      g.translate(-c.x, -c.y, -c.z); o.geometry = g; o.position.add(c); list.push(o);
+      g.translate(-c.x, -c.y, -c.z); o.geometry = g; o.position.add(c);
+      o.parent.getWorldQuaternion(q); o.userData.axle = new THREE.Vector3(0, 0, 1).applyQuaternion(q.invert()).normalize();
+      list.push(o);
     });
     wheels.current = list;
     return s;
@@ -68,7 +74,7 @@ function Rolling({ road, speed, height, paint }) {
     const z = road.z + (out ? 1.6 : -1.6);
     ref.current.position.set(x, height(x, z), z);
     ref.current.rotation.y = out ? 0 : Math.PI;
-    wheels.current.forEach(wh => { wh.rotation.z -= dt * speed / 0.385; });
+    wheels.current.forEach(wh => { wh.rotateOnAxis(wh.userData.axle, -dt * speed / 0.385); });
   });
   return <group ref={ref} name="LG-PICKUPS"><primitive object={scene} /></group>;
 }

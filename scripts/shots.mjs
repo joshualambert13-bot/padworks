@@ -146,6 +146,21 @@ p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
 await frames(p, 3); await layoutCheck(p, 'default pad');
+// Drop 85: the road truck's wheels turn about the axle (the truck's z), not flat
+{
+  const sample = () => p.evaluate(() => { const T = window.__THREE; let w = null; window.__padworksScene.traverse(o => { if (!w && o.isMesh && /WheelStock_FL/.test(o.name) && !o.isInstancedMesh && o.getWorldPosition(new T.Vector3()).y > -100) w = o; }); if (!w) return null; let root = w; while (root.parent && root.name !== 'LG-PICKUPS') root = root.parent; return { q: w.getWorldQuaternion(new T.Quaternion()).toArray(), rq: root.getWorldQuaternion(new T.Quaternion()).toArray() }; });
+  let a = await sample(); if (!a) { await frames(p, 3); a = await sample(); }
+  await frames(p, 2); const b = await sample();
+  if (!a || !b) errors.push('road truck not found for the wheel check');
+  else {
+    const T = await import('three');
+    const qa = new T.Quaternion().fromArray(a.q), qb = new T.Quaternion().fromArray(b.q), rq = new T.Quaternion().fromArray(b.rq);
+    const d = rq.clone().invert().multiply(qb.clone().multiply(qa.clone().invert())).multiply(rq);
+    const sn = Math.sqrt(Math.max(0, 1 - d.w * d.w));
+    if (sn < 0.01) errors.push('road truck wheels do not turn');
+    else if (Math.abs(d.z / sn) < 0.95) errors.push('road truck wheels turn about the wrong axis: ' + [d.x / sn, d.y / sn, d.z / sn].map(v => v.toFixed(2)).join(','));
+  }
+}
 // Drop 43: the Stats readout must show numbers and no shader error
 await p.getByRole('button', { name: 'Stats' }).click(); await wait(3000);
 {

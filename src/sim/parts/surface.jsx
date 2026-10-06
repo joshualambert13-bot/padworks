@@ -2149,7 +2149,8 @@ export function LightTower({ position, rotation = [0, 0, 0], lit = false }) {
       <RBox r={0.08} size={[2.2, 1.0, 1.2]} position={[0.1, 1.1, 0]} mat={MAT.paintWhite} />
       <Box size={[1.0, 0.25, 0.6]} position={[-1.6, 0.45, 0]} mat={MAT.chassis} />
       <Cyl r={0.04} h={0.4} position={[-2.1, 0.25, 0]} mat={MAT.darkSteel} />
-      {[-0.55, 0.55].map((z, i) => <Wheel key={i} position={[0.6, 0.4, z]} r={0.35} w={0.2} />)}
+      {/* the trailer runs along x, so the axle runs along z: Wheel's axle is x, turned a quarter (Drop 85) */}
+      {[-0.55, 0.55].map((z, i) => <group key={i} position={[0.6, 0.4, z]} rotation={[0, Math.PI / 2, 0]}><Wheel position={[0, 0, 0]} r={0.35} w={0.2} /></group>)}
       <Cyl r={0.09} h={3.0} position={[-0.6, 3.1, 0]} mat={MAT.darkSteel} />
       <Cyl r={0.07} h={3.0} position={[-0.6, 6.0, 0]} mat={MAT.darkSteel} />
       <Cyl r={0.05} h={3.0} position={[-0.6, 8.9, 0]} mat={MAT.steel} />

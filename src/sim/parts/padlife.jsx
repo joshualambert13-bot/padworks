@@ -62,8 +62,9 @@ export function Cones({ spots = [] }) {
     <group name="LG-CONES">
       <Instanced transforms={transforms} name="LG-CONES">
         <group>
-          <Merged mat={ORANGE} parts={() => [{ g: GEO.box(0.4, 0.04, 0.4), p: [0, 0.02, 0] }, { g: GEO.cyl(0.03, 0.72, 10, 0.16), p: [0, 0.38, 0] }]} />
-          <Merged mat={WHITE} shadow={false} parts={() => [{ g: GEO.cyl(0.095, 0.1, 10, 0.12), p: [0, 0.5, 0] }]} />
+          {/* GEO.cyl(r, h, seg, r2) puts r at the bottom and r2 at the top: wide at the base, a point on top (Drop 85; it stood on its point before) */}
+          <Merged mat={ORANGE} parts={() => [{ g: GEO.box(0.4, 0.04, 0.4), p: [0, 0.02, 0] }, { g: GEO.cyl(0.16, 0.72, 10, 0.03), p: [0, 0.38, 0] }]} />
+          <Merged mat={WHITE} shadow={false} parts={() => [{ g: GEO.cyl(0.092, 0.1, 10, 0.074), p: [0, 0.5, 0] }]} />
         </group>
       </Instanced>
     </group>
