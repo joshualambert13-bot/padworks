@@ -1,10 +1,12 @@
 // Landing page (Drop 77): three doors instead of dropping straight into the simulator. Lessons for the guided,
 // scored path with narrated demos; the full simulator for free play; the library for the equipment records.
+// Drop 83: a themed site with a focus leads with that company's lessons (a featured row) and its own welcome text.
 import { Link } from 'react-router-dom';
-import { Activity, GraduationCap, Library as LibraryIcon, Play, ArrowRight } from 'lucide-react';
+import { Activity, GraduationCap, Library as LibraryIcon, Play, ArrowRight, Pencil, Star } from 'lucide-react';
 import { LESSONS } from './sim/lessons.js';
 import { records } from './lib/records.js';
 import { useTheme } from './theme/theme.js';
+import { focusOf, focusName, featuredLessons } from './theme/focus.js';
 
 const DOORS = [
   {
@@ -24,8 +26,12 @@ const DOORS = [
   },
 ];
 
+const WELCOME = 'A frac pad you can run. Wireline, fracturing, drillout, flowback and the production hookup on a multi-well pad drawn from generic equipment at real proportions, with the interlocks, the alarms and the mistakes that cost points.';
+
 export default function Landing() {
-  const site = useTheme(s => s.theme.site);
+  const theme = useTheme(s => s.theme);
+  const site = theme.site;
+  const focus = focusOf(theme), who = focusName(theme), featured = featuredLessons(theme);
   return (
     <div className="h-full overflow-y-auto" data-page="landing">
       <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
@@ -37,12 +43,29 @@ export default function Landing() {
               <div className="text-sm text-mute">{site.tagline}</div>
             </div>
           </div>
-          <p className="mt-4 text-base text-mute max-w-2xl">A frac pad you can run. Wireline, fracturing, drillout, flowback and the production hookup on a multi-well pad drawn from generic equipment at real proportions, with the interlocks, the alarms and the mistakes that cost points.</p>
+          <p className="mt-4 text-base text-mute max-w-2xl" data-text="welcome">{site.welcome || WELCOME}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/simulate?demo=intro" className="btn btn-primary flex items-center gap-1.5" data-action="watch-intro"><Play size={14} />Watch the introduction</Link>
             <span className="badge text-mute self-center">Built for training. Not for operational decisions.</span>
           </div>
         </div>
+        {featured.length > 0 && (
+          <div className="card p-4 border-accent/40" data-panel="featured">
+            <div className="flex items-center gap-2"><Star size={14} className="text-accent" /><span className="text-[10px] uppercase tracking-wide text-mute mono">Featured for {who}</span><span className="text-[11px] text-mute">{focus.label}</span></div>
+            <p className="text-sm text-mute mt-1">{focus.line}</p>
+            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-5 gap-2">
+              {featured.map(l => (
+                <div key={l.id} className="card p-2 flex flex-col" data-featured={l.id}>
+                  <div className="text-sm font-medium"><span className="mono text-xs text-mute mr-1">{l.n}</span>{l.title}</div>
+                  <div className="mt-auto pt-2 flex items-center gap-1">
+                    <Link to={'/simulate?demo=' + l.id} className="btn text-[11px] px-2 py-0.5 flex items-center gap-1" data-action={'watch-' + l.id}><Play size={11} />Watch</Link>
+                    <Link to={'/simulate?lesson=' + l.id} className="btn text-[11px] px-2 py-0.5 flex items-center gap-1" data-action={'try-' + l.id}><Pencil size={11} />Try it</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="grid md:grid-cols-3 gap-3">
           {DOORS.map(d => (
             <Link key={d.to} to={d.to} className={'card p-4 flex flex-col hover:border-ok/60 transition ' + (d.accent ? 'border-accent/50' : '')} data-door={d.data}>

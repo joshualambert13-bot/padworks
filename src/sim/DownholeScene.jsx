@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useSim, wellParams } from './store.js';
+import { useSim, wellParams, TICK_STEP, tickCatchUp } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
 import { SceneEnvironment, LITE } from './parts/lighting.jsx';
 import { Effects } from './parts/effects.jsx';
@@ -13,7 +13,7 @@ import { Formation, Casing, Stage, FluidFlow, FlowbackFlow, CuttingsBed, PerfFla
 function Ticker({ enabled }) {   // the 50 ms step of Drop 67 lives in the surface scene's Ticker; this one only runs when the surface scene is not mounted (downhole view alone)
   const tick = useSim(s => s.tick);
   const acc = useRef(0);
-  useFrame((state, dt) => { if (enabled) { acc.current += dt; if (acc.current >= 0.05) { tick(acc.current); acc.current = 0; } } window.__padworksDownScene = state.scene; window.__padworksDownView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
+  useFrame((state, dt) => { if (enabled) { acc.current += dt; if (acc.current >= TICK_STEP) { tickCatchUp(tick, acc.current); acc.current = 0; } } window.__padworksDownScene = state.scene; window.__padworksDownView = (pos, target) => { state.camera.position.set(...pos); if (state.controls) { state.controls.target.set(...target); state.controls.update(); } }; });
   return null;
 }
 

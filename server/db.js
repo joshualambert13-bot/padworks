@@ -74,6 +74,16 @@ const SCHEMA = [
     at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS login_attempts_user ON login_attempts(username, at)`,
+  // Drop 82: organizations (customers). An organization owns a theme (its colors and logo, the JSON shape in
+  // src/theme/theme.js); its accounts get that theme on sign-in. Deleting an organization leaves its accounts in place.
+  `CREATE TABLE IF NOT EXISTS orgs (
+    id SERIAL PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    theme JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES orgs(id) ON DELETE SET NULL`,
 ];
 
 // Creates the tables once per process; cheap no-ops afterwards (IF NOT EXISTS).

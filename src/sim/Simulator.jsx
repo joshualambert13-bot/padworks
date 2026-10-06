@@ -15,6 +15,7 @@ import HoverPopup from './HoverPopup.jsx';
 import { DemoBar } from './DemoBar.jsx';
 import { startDemo, stopDemo } from './demo.js';
 import { useTheme } from '../theme/theme.js';
+import { focusOf } from '../theme/focus.js';
 import SessionSummary from './SessionSummary.jsx';
 
 const VIEWS = [
@@ -111,6 +112,8 @@ export default function Simulator() {
     const demo = q.get('demo'), lesson = q.get('lesson');
     if (demo) { startDemo(demo); window.history.replaceState({}, '', window.location.pathname); }
     else if (lesson) { if (lessonById(lesson)) useSim.getState().startLesson(lesson); window.history.replaceState({}, '', window.location.pathname); }
+    // Drop 83: a themed site with a focus opens on that company's equipment, unless a link or the user already chose a view
+    if (!token && !demo && !lesson) { const preset = focusOf(useTheme.getState().theme).preset; if (preset !== 'pad' && useSim.getState().ui.preset === 'pad') useSim.getState().setUi({ preset }); }
     return () => stopDemo();
   }, []);
   const share = () => {

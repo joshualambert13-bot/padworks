@@ -1,12 +1,18 @@
 // Narrated demos (Drop 77): the simulator performs a lesson itself, or tours the pad, while a caption bar shows
-// what is being done and the browser's own speech voice reads it. No video files: the demo always matches the
-// current build, and the person can stop it and take over at any point. `useDemo` holds the state; `runDemo` is
-// the sequencer. Speech comes from the Web Speech API (free, built into the browser) with a neutral American male
-// voice preferred; where no voice exists, or when a voice never reports finishing, a timer sized to the text
-// stands in so the demo keeps moving. The headless pass sets `window.__padworksDemo.fast` to skip the waits.
+// what is being done and a voice reads it. No video files: the demo always matches the current build, and the
+// person can stop it and take over at any point. `useDemo` holds the state; `startDemo` is the sequencer.
+// The lines come from content/narration.json (Drop 84; the introduction's defaults are in demo-intro.js, the
+// lesson lines are assembled from lessons.js when the file has none). The voice (Drop 84): a rendered clip in
+// public/audio/narration when one exists for the line (scripts/narration-render.mjs, a neutral American male
+// voice from an open text-to-speech model, so every browser hears the same voice), else the browser's own speech
+// voice (Web Speech, free) with a neutral American male preferred; where neither exists, or a voice never reports
+// finishing, a timer sized to the text stands in so the demo keeps moving. The headless pass sets
+// `window.__padworksDemo.fast` to skip the waits.
 import { create } from 'zustand';
 import { useSim } from './store.js';
 import { lessonById, stepValve } from './lessons.js';
+import { INTRO } from './demo-intro.js';
+import NARRATION from '../../content/narration.json';
 
 export const useDemo = create((set) => ({
   active: null,        // 'intro' | lesson id | null
@@ -19,6 +25,7 @@ export const useDemo = create((set) => ({
 
 const FAST = () => !!(typeof window !== 'undefined' && window.__padworksDemo && window.__padworksDemo.fast);
 if (typeof window !== 'undefined') window.__padworksDemo = window.__padworksDemo || { fast: false };
+if (typeof window !== 'undefined') Object.assign(window.__padworksDemo, { hasClip: (id, text) => hasClip(id, text), clipName: (id, text) => clipName(id, text), introLines: () => introLines(), lessonLines: (id) => { const L = lessonById(id); return L ? lessonLines(L) : null; } });   // test hooks (Drop 84)
 
 // ---------------------------------------------------------------- speech
 let voice = null, voicesTried = false;
@@ -39,13 +46,35 @@ function ensureVoice() {
   voice = pickVoice();
   try { window.speechSynthesis.addEventListener('voiceschanged', () => { voice = pickVoice(); }); } catch { /* no speech */ }
 }
-export function cancelSpeech() { try { window.speechSynthesis.cancel(); } catch { /* no speech */ } }
+let playing = null;   // the clip playing now, so a stop or a skip ends it
+export function cancelSpeech() { try { window.speechSynthesis.cancel(); } catch { /* no speech */ } if (playing) { try { playing.pause(); } catch { /* done */ } playing = null; } }
+// a short hash of a line, part of its clip's file name: an edited line falls back to the browser voice until it is rendered again
+export function lineHash(text) { let h = 0x811c9dc5; for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); }
+const CLIPS = new Set((NARRATION.clips || []));
+export const clipName = (id, text) => id + '-' + lineHash(text);
+export const hasClip = (id, text) => CLIPS.has(clipName(id, text));
+// plays the rendered clip for a line; resolves true when it ended, false when there is no clip or it could not play
+function playClip(id, text, token) {
+  if (!id || !hasClip(id, text)) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    let done = false; const finish = (ok) => { if (!done) { done = true; if (playing === a) playing = null; resolve(ok); } };
+    const a = new Audio('/audio/narration/' + clipName(id, text) + '.mp3');
+    a.preload = 'auto';
+    a.onended = () => finish(true); a.onerror = () => finish(false);
+    playing = a; token.clip = a;
+    const p = a.play(); if (p && p.catch) p.catch(() => finish(false));
+    setTimeout(() => finish(true), Math.max(4000, text.length * 120) * 2);   // a clip that never reports its end does not stall the demo
+  });
+}
 // resolves when the sentence has been spoken (or would have been)
-function speak(text, token) {
+async function speak(text, token, id = null) {
   const ms = Math.max(2200, text.length * 62);
   if (FAST()) return new Promise(r => setTimeout(r, 500));
   const muted = useDemo.getState().muted;
-  if (muted || typeof window === 'undefined' || !window.speechSynthesis) return new Promise(r => setTimeout(r, ms));
+  if (muted) return new Promise(r => setTimeout(r, ms));
+  if (typeof window !== 'undefined' && await playClip(id, text, token)) return;
+  if (token.cancelled) return;
+  if (typeof window === 'undefined' || !window.speechSynthesis) return new Promise(r => setTimeout(r, ms));
   ensureVoice();
   return new Promise((resolve) => {
     let done = false; const finish = () => { if (!done) { done = true; resolve(); } };
@@ -60,20 +89,21 @@ function speak(text, token) {
   });
 }
 
-// ---------------------------------------------------------------- the introduction script
-export const INTRO = [
-  { preset: 'pad', text: 'Welcome to Padworks. This is a multi-well frac pad, drawn from generic equipment at real proportions. The simulator runs the whole completion: wireline, fracturing, drillout, flowback and the production hookup. Let us walk the pad.' },
-  { preset: 'tree', text: 'The frac tree. Lower and upper master valves, the cross with a wing valve each side, the crown valve, and the swab valve on top for lubricator access. Every valve here is live in the simulator, and the interlocks between them are the first thing the lessons teach.' },
-  { preset: 'row', text: 'The wellhead row. Each well gets its own tree, and the colors on the valve bodies match the colors on the zipper leg that feeds it, so you can follow a flow path from the manifold to the well.' },
-  { preset: 'zipper', text: 'The zipper manifold. The treating line from the missile comes into the inlet isolation valve; each well has a leg with an isolation valve and a working valve. Opening and closing legs is how one frac spread serves several wells without breaking a connection.' },
-  { preset: 'pumps', text: 'The pump row and the missile. Pump trucks park nose-in on both sides of the manifold trailer. Low-pressure suction on the outside, high-pressure discharge down the centerline, the relief valve set below the iron rating.' },
-  { preset: 'sand', text: 'The sand side. Silos or boxes feed the conveyor to the blender, where water, sand and chemicals become slurry. Proppant concentration is the number you will watch most when you pump a stage.' },
-  { preset: 'tanks', text: 'Water. A lined pit, tanks, or storage tanks depending on the basin, with the transfer pump and the lay-flat line to the blender. In winter the Bakken adds a heater on the discharge.' },
-  { preset: 'support', text: 'Support: the data van where the job is run, the fuel row, light plants, the chemical totes, and the crew. Everything on the pad opens a record in the library when you hover and click it.' },
-  { preset: 'gate', text: 'The gate and the lease road. Trucks come and go through here; the lanes and ruts on the pad come from where they actually drive.' },
-  { preset: 'flowback', text: 'Flowback. After drillout the well flows through the choke manifold to the separator and the tanks, and the flare stack takes the gas until the sales line is tied in.' },
-  { preset: 'pad', text: 'That is the pad. Press Lessons to be walked through a job one checkpoint at a time, with a score; press Full simulator to run it your own way. Hover anything to name it; click to open its record.' },
-];
+// ---------------------------------------------------------------- the lines
+// the introduction's stops from content/narration.json, with demo-intro.js filling any that are missing
+export function introLines() {
+  const file = Array.isArray(NARRATION.intro) ? NARRATION.intro : [];
+  return INTRO.map((it, i) => { const id = 'intro-' + (i + 1); const f = file.find(x => x.id === id); return { id, preset: it.preset, text: f && f.text ? f.text : it.text }; });
+}
+// a lesson's lines: the file's where it has them, else the lesson's own text and hints
+export function lessonLines(L) {
+  const f = (NARRATION.lessons && NARRATION.lessons[L.id]) || {};
+  return {
+    intro: f.intro || ('Lesson ' + L.n + ', ' + L.title + '. ' + L.blurb + ' Watch first; then try it yourself.'),
+    steps: L.steps.map((s, i) => (f.steps && f.steps[i]) || ('Step ' + (i + 1) + ' of ' + L.steps.length + '. ' + s.text + '.' + (s.hint ? ' ' + s.hint : ''))),
+    end: f.end || 'Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel.',
+  };
+}
 
 // ---------------------------------------------------------------- the sequencer
 let current = null;   // the running demo's token: { cancelled, utterance }
@@ -94,7 +124,7 @@ export function stopDemo() {
   D.set({ active: null, caption: '', step: 0, steps: 0 });
 }
 // skip the rest of the current step's narration (the sequencer moves on when the sentence ends)
-export function skipNarration() { if (current && current.utterance) { try { window.speechSynthesis.cancel(); } catch { /* no speech */ } } }
+export function skipNarration() { if (current && current.clip) { try { current.clip.pause(); current.clip.dispatchEvent(new Event('ended')); } catch { /* done */ } } if (current && current.utterance) { try { window.speechSynthesis.cancel(); } catch { /* no speech */ } } }
 
 export async function startDemo(kind) {
   stopDemo();
@@ -103,14 +133,15 @@ export async function startDemo(kind) {
   const D = useDemo.getState();
   S.setUi({ demo: true, walk: false, tour: false });
   if (kind === 'intro') {
-    D.set({ active: 'intro', step: 0, steps: INTRO.length, caption: INTRO[0].text });
+    const lines = introLines();
+    D.set({ active: 'intro', step: 0, steps: lines.length, caption: lines[0].text });
     if (S.phase !== 'setup') S.reset();
-    for (let i = 0; i < INTRO.length; i++) {
+    for (let i = 0; i < lines.length; i++) {
       if (!alive(token)) return;
-      const it = INTRO[i];
+      const it = lines[i];
       useSim.getState().setUi({ preset: it.preset, walk: false, tour: false });
       D.set({ step: i, caption: it.text });
-      await speak(it.text, token); if (!alive(token)) return;
+      await speak(it.text, token, it.id); if (!alive(token)) return;
       await wait(900);
     }
     if (alive(token)) stopDemo();
@@ -118,20 +149,21 @@ export async function startDemo(kind) {
   }
   const L = lessonById(kind);
   if (!L) { stopDemo(); return; }
+  const N = lessonLines(L);
   D.set({ active: L.id, step: 0, steps: L.steps.length, caption: 'Lesson ' + L.n + ': ' + L.title + '. ' + L.blurb });
   S.startLesson(L.id);
   useSim.getState().setSpeed(2);
-  await speak('Lesson ' + L.n + ', ' + L.title + '. ' + L.blurb + ' Watch first; then try it yourself.', token); if (!alive(token)) return;
+  await speak(N.intro, token, L.id + '-intro'); if (!alive(token)) return;
   for (let i = 0; i < L.steps.length; i++) {
     if (!alive(token)) return;
     const step = L.steps[i];
-    const say = 'Step ' + (i + 1) + ' of ' + L.steps.length + '. ' + step.text + '.' + (step.hint ? ' ' + step.hint : '');
+    const say = N.steps[i];
     D.set({ step: i, caption: say });
     // the camera goes where the person's own click would send it
     const g = useSim.getState();
     if (step.action) g.focusOn({ action: step.action });
     else if (step.valve) { const v = stepValve(step, g); if (v) g.focusOn({ valve: v }); }
-    await speak(say, token); if (!alive(token)) return;
+    await speak(say, token, L.id + '-step-' + (i + 1)); if (!alive(token)) return;
     if (step.gate) { await until(s => step.gate(s)); if (!alive(token)) return; }
     // do the step the way the trainee would
     const g2 = useSim.getState();
@@ -148,8 +180,8 @@ export async function startDemo(kind) {
   }
   if (!alive(token)) return;
   const r = useSim.getState().lesson.result;
-  const end = 'Lesson complete' + (r ? ', ' + r.score + ' points, grade ' + r.grade : '') + '. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel.';
-  D.set({ step: L.steps.length, caption: end });
-  await speak(end, token);
+  // the score is in the caption; the spoken end line is the same for every run, so it has a clip
+  D.set({ step: L.steps.length, caption: (r ? r.score + ' points, grade ' + r.grade + '. ' : '') + N.end });
+  await speak(N.end, token, L.id + '-end');
   if (alive(token)) { useSim.getState().setSpeed(1); stopDemo(); }
 }

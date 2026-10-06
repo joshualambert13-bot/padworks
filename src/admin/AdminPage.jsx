@@ -1,15 +1,16 @@
-// Admin panel: accounts (create with a one-time password, reset, disable, role, delete) and the progress
-// dashboard (per-trainee lesson bests, attempts, time on task, saved job summaries, CSV export). Instructors
-// get the dashboard read-only.
+// Admin panel: accounts (create with a one-time password, reset, disable, role, delete), organizations (a
+// customer, its theme, which accounts belong to it; Drop 82) and the progress dashboard (per-trainee lesson
+// bests, attempts, time on task, saved job summaries, CSV export). Instructors get the dashboard read-only.
 import { useEffect, useState, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
-import { UserPlus, RefreshCw, Download, KeyRound, Ban, CheckCircle2, Trash2, Eye, Copy, X, Eraser, Bug, Check } from 'lucide-react';
+import { UserPlus, RefreshCw, Download, KeyRound, Ban, CheckCircle2, Trash2, Eye, Copy, X, Eraser, Bug, Check, Building2, Palette, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api, useAuth, canSeeAdmin, effectiveRole, ROLE_LABEL } from '../auth/auth.js';
 import { LESSONS } from '../sim/lessons.js';
 import { fromServer } from '../sim/progress.js';
 import SessionSummary from '../sim/SessionSummary.jsx';
 import ThemePanel from '../theme/ThemePanel.jsx';
+import { useTheme } from '../theme/theme.js';
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : 'never');
 const gradeColor = (g) => (g === 'A' ? 'text-ok' : g === 'B' ? 'text-accent' : g === 'C' ? 'text-warn' : 'text-bad');
@@ -158,6 +159,65 @@ function Reports({ isAdmin }) {
   );
 }
 
+// Organizations (Drop 82): a customer. Its accounts get its theme on sign-in, on any machine. The theme is set from
+// whatever theme is current in this browser (pick or load it in the Theme card first), previewed back into this
+// browser, or cleared. Deleting an organization keeps its accounts, with no organization.
+function Organizations({ isAdmin, orgs, onChange }) {
+  const [name, setName] = useState(''); const [slug, setSlug] = useState(''); const [error, setError] = useState(null); const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(null); const [editName, setEditName] = useState('');
+  const [confirm, setConfirm] = useState(null);
+  const theme = useTheme(s => s.theme); const addCustom = useTheme(s => s.addCustom);
+  const act = async (fn) => { setError(null); setBusy(true); try { await fn(); onChange(); } catch (e) { setError(e.message); } finally { setBusy(false); } };
+  const create = (e) => { e.preventDefault(); act(async () => { await api('admin/orgs', { method: 'POST', body: { name, slug } }); setName(''); setSlug(''); }); };
+  const slugFrom = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  const storeCurrent = (o) => act(() => api('admin/orgs/' + o.id, { method: 'PATCH', body: { theme: { site: theme.site, fleet: theme.fleet, wellhead: theme.wellhead, operator: theme.operator } } }));
+  const clearTheme = (o) => act(() => api('admin/orgs/' + o.id, { method: 'PATCH', body: { theme: null } }));
+  const preview = (o) => { if (o.theme) addCustom({ ...o.theme, id: 'org-' + o.slug, name: o.name }); };
+  const rename = (o) => act(async () => { await api('admin/orgs/' + o.id, { method: 'PATCH', body: { name: editName } }); setEditing(null); });
+  const remove = (o) => act(async () => { await api('admin/orgs/' + o.id, { method: 'DELETE' }); setConfirm(null); });
+  return (
+    <div className="card p-3 space-y-2" data-panel="orgs">
+      <div className="flex items-center gap-2"><Building2 size={14} className="text-accent" /><span className="text-white font-semibold text-sm">Organizations</span><span className="text-[11px] text-mute">a customer; its accounts get its theme when they sign in, on any machine</span></div>
+      {error && <div className="text-xs text-bad" data-status="org-error">{error}</div>}
+      {orgs && orgs.length === 0 && <div className="text-xs text-mute">None yet.</div>}
+      {orgs && orgs.length > 0 && (
+        <table className="w-full text-xs" data-table="orgs">
+          <thead className="text-mute text-[10px] uppercase tracking-wide"><tr><th className="text-left font-normal p-1">Name</th><th className="text-left font-normal p-1">Slug</th><th className="text-right font-normal p-1">Accounts</th><th className="text-left font-normal p-1">Theme</th><th className="text-right font-normal p-1">Actions</th></tr></thead>
+          <tbody>
+            {orgs.map(o => (
+              <tr key={o.id} className="border-t border-line" data-org={o.slug}>
+                <td className="p-1">{editing === o.id ? <span className="flex items-center gap-1"><input className="input text-xs py-0.5" value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') rename(o); if (e.key === 'Escape') setEditing(null); }} data-input={'org-name-' + o.slug} /><button className="btn text-[11px] px-2 py-0.5" onClick={() => rename(o)} data-action={'org-rename-save-' + o.slug}><Check size={12} /></button></span> : <span className="text-white">{o.name}</span>}</td>
+                <td className="p-1 mono text-mute">{o.slug}</td>
+                <td className="p-1 text-right mono">{o.members}</td>
+                <td className="p-1">{o.hasTheme ? <span className="inline-flex items-center gap-1" data-value={'org-theme-' + o.slug}><span className="inline-block w-3 h-3 rounded border border-line" style={{ background: (o.theme.fleet && o.theme.fleet.primary) || '#888' }} /><span className="inline-block w-3 h-3 rounded border border-line" style={{ background: (o.theme.wellhead && o.theme.wellhead.primary) || '#888' }} /><span className="inline-block w-3 h-3 rounded border border-line" style={{ background: (o.theme.operator && o.theme.operator.primary) || '#888' }} />{o.theme.site && o.theme.site.logo ? <span className="text-mute">with logo</span> : null}</span> : <span className="text-mute">default</span>}</td>
+                <td className="p-1">
+                  <div className="flex items-center justify-end gap-1 flex-wrap">
+                    {o.hasTheme && <button className="btn text-[11px] px-2 py-0.5 flex items-center gap-1" onClick={() => preview(o)} title="Apply this organization's theme in this browser" data-action={'org-preview-' + o.slug}><Eye size={12} />Preview</button>}
+                    {isAdmin && <button className="btn text-[11px] px-2 py-0.5 flex items-center gap-1" disabled={busy} onClick={() => storeCurrent(o)} title={'Store the theme now current in this browser (' + theme.name + ') as this organization\'s theme'} data-action={'org-use-theme-' + o.slug}><Palette size={12} />Use current theme</button>}
+                    {isAdmin && o.hasTheme && <button className="btn text-[11px] px-2 py-0.5" disabled={busy} onClick={() => clearTheme(o)} title="Back to the default look" data-action={'org-clear-theme-' + o.slug}>Clear theme</button>}
+                    {isAdmin && editing !== o.id && <button className="btn text-[11px] px-2 py-0.5" onClick={() => { setEditing(o.id); setEditName(o.name); }} data-action={'org-rename-' + o.slug}>Rename</button>}
+                    {isAdmin && (confirm === o.id
+                      ? <><button className="btn btn-danger text-[11px] px-2 py-0.5" onClick={() => remove(o)} data-action={'org-confirm-delete-' + o.slug}>Delete {o.name}?</button><button className="btn text-[11px] px-2 py-0.5" onClick={() => setConfirm(null)}>Keep</button></>
+                      : <button className="btn text-[11px] px-2 py-0.5" onClick={() => setConfirm(o.id)} title="Delete the organization (its accounts stay)" data-action={'org-delete-' + o.slug}><Trash2 size={12} /></button>)}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {isAdmin && (
+        <form onSubmit={create} className="grid sm:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+          <label className="block space-y-1 text-xs text-mute">Name<input className="input" value={name} onChange={e => { setName(e.target.value); if (!slug || slug === slugFrom(name)) setSlug(slugFrom(e.target.value)); }} placeholder="Acme Energy" data-input="org-name" /></label>
+          <label className="block space-y-1 text-xs text-mute">Slug (in links and theme ids)<input className="input" value={slug} onChange={e => setSlug(e.target.value)} placeholder="acme-energy" autoCapitalize="none" data-input="org-slug" /></label>
+          <button className="btn btn-primary flex items-center gap-1" disabled={busy || !name || !slug} data-action="create-org"><Upload size={14} />Add</button>
+        </form>
+      )}
+      <div className="text-[10px] text-mute">To give a customer their look: load or pick their theme in the Theme card above (their colors and logo as JSON), then press "Use current theme" on their row. Put their accounts in the organization in the accounts table. Their next page load paints it.</div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const me = useAuth(s => s.user);
   const viewAs = useAuth(s => s.viewAs);
@@ -167,13 +227,18 @@ export default function AdminPage() {
   const [otp, setOtp] = useState(null);
   const [selected, setSelected] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const load = useCallback(() => { api('admin/users').then(d => { setUsers(d.users); setError(null); }).catch(e => setError(e.message)); }, []);
+  const [orgs, setOrgs] = useState(null);
+  const load = useCallback(() => {
+    api('admin/users').then(d => { setUsers(d.users); setError(null); }).catch(e => setError(e.message));
+    api('admin/orgs').then(d => setOrgs(d.orgs)).catch(e => setError(e.message));
+  }, []);
   useEffect(() => { if (canSeeAdmin(me, viewAs)) load(); }, [me, viewAs, load]);
   if (!canSeeAdmin(me, viewAs)) return <Navigate to="/simulate" replace />;
   const act = async (fn) => { try { await fn(); load(); } catch (e) { setError(e.message); } };
   const reset = (u) => act(async () => { const d = await api('admin/users/' + u.id + '/reset', { method: 'POST' }); setOtp({ kind: 'reset', username: u.username, password: d.oneTimePassword }); });
   const toggle = (u) => act(() => api('admin/users/' + u.id, { method: 'PATCH', body: { disabled: !u.disabled } }));
   const setRole = (u, role) => act(() => api('admin/users/' + u.id, { method: 'PATCH', body: { role } }));
+  const setOrg = (u, orgId) => act(() => api('admin/users/' + u.id, { method: 'PATCH', body: { orgId: orgId ? Number(orgId) : null } }));
   const remove = (u) => act(async () => { await api('admin/users/' + u.id, { method: 'DELETE' }); setConfirmDelete(null); if (selected && selected.id === u.id) setSelected(null); });
   return (
     <div className="relative h-full overflow-y-auto p-3 md:p-4 space-y-3" data-panel="admin">
@@ -184,13 +249,14 @@ export default function AdminPage() {
       </div>
       {error && <div className="text-xs text-bad" data-status="admin-error">{error}</div>}
       {isAdmin && <ThemePanel />}
+      <Organizations isAdmin={isAdmin} orgs={orgs} onChange={load} />
       {isAdmin && <CreateAccount onCreated={(d) => { setOtp({ kind: 'create', username: d.user.username, password: d.oneTimePassword }); load(); }} />}
       {otp && <OneTimeCard otp={otp} onClose={() => setOtp(null)} />}
       <div className="card p-2 overflow-x-auto">
         {!users && !error && <div className="text-xs text-mute p-2">Loading accounts</div>}
         {users && (
           <table className="w-full text-xs" data-table="users">
-            <thead className="text-mute text-[10px] uppercase tracking-wide"><tr><th className="text-left font-normal p-1">Username</th><th className="text-left font-normal p-1">Name</th><th className="text-left font-normal p-1">Role</th><th className="text-left font-normal p-1">Status</th><th className="text-left font-normal p-1">Last sign-in</th><th className="text-right font-normal p-1">Lessons run</th><th className="text-right font-normal p-1">Avg best</th><th className="text-right font-normal p-1">Summaries</th><th className="text-right font-normal p-1">Actions</th></tr></thead>
+            <thead className="text-mute text-[10px] uppercase tracking-wide"><tr><th className="text-left font-normal p-1">Username</th><th className="text-left font-normal p-1">Name</th><th className="text-left font-normal p-1">Role</th><th className="text-left font-normal p-1">Organization</th><th className="text-left font-normal p-1">Status</th><th className="text-left font-normal p-1">Last sign-in</th><th className="text-right font-normal p-1">Lessons run</th><th className="text-right font-normal p-1">Avg best</th><th className="text-right font-normal p-1">Summaries</th><th className="text-right font-normal p-1">Actions</th></tr></thead>
             <tbody>
               {users.map(u => {
                 const run = Object.keys(u.lessons).length; const avg = avgBest(u.lessons);
@@ -199,6 +265,7 @@ export default function AdminPage() {
                     <td className="p-1 mono">{u.username}{me.id === u.id && <span className="text-mute"> (you)</span>}</td>
                     <td className="p-1">{u.displayName}</td>
                     <td className="p-1">{isAdmin && me.id !== u.id ? <select className="btn text-[11px] py-0.5" value={u.role} onChange={e => setRole(u, e.target.value)} data-select={'role-' + u.username}><option value="trainee">Trainee</option><option value="instructor">Instructor</option><option value="admin">Admin</option></select> : ROLE_LABEL[u.role]}</td>
+                    <td className="p-1">{isAdmin ? <select className="btn text-[11px] py-0.5" value={u.orgId || ''} onChange={e => setOrg(u, e.target.value)} data-select={'org-' + u.username}><option value="">none</option>{(orgs || []).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select> : (u.org ? u.org.name : <span className="text-mute">none</span>)}</td>
                     <td className="p-1">{u.disabled ? <span className="text-bad">Disabled</span> : u.mustChange ? <span className="text-warn" title="Has a one-time password; must choose a password at the next sign-in">Password pending</span> : <span className="text-ok">Active</span>}</td>
                     <td className="p-1 text-mute">{fmtDate(u.lastLogin)}</td>
                     <td className="p-1 text-right mono">{run}/{LESSONS.length}</td>
@@ -227,7 +294,7 @@ export default function AdminPage() {
       </div>
       {selected && <ProgressDrawer user={users.find(u => u.id === selected.id) || selected} onClose={() => setSelected(null)} isAdmin={isAdmin} onCleared={load} />}
       <Reports isAdmin={isAdmin} />
-      <div className="text-[10px] text-mute">Accounts store a username, a display name, a password hash, lesson results, and job summaries. No email, no tracking. Deleting an account deletes its results.</div>
+      <div className="text-[10px] text-mute">Accounts store a username, a display name, a password hash, an organization, lesson results, and job summaries. No email, no tracking. Deleting an account deletes its results.</div>
     </div>
   );
 }

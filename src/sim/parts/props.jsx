@@ -33,35 +33,38 @@ export function Props({ items }) {
   );
 }
 
-// the pad's standing dressing, by station (pad meters). MISSILE_X and bZ come from the scene.
-export function padProps(MISSILE_X, bZ, rowLen, pad) {
+// the pad's standing dressing, by station (pad meters). MISSILE_X and bZ come from the scene. Every spot is
+// [x, y, z, yaw] or { position, rotation }; Drop 84 placed each one against the layout check (scripts/probe-layout84.mjs,
+// and the pass), so nothing here sits inside drawn equipment, a light tower or the forklift's lane.
+export function padProps(MISSILE_X, bZ) {
   const rot = (a) => [0, a, 0];
-  const gateX = pad ? pad.x1 : 40;
+  const at = (list) => list.map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) }));
+  const tz = bZ - 26;   // the telehandler and its spotter, south of the sand station and clear of the forklift's lane (bZ - 18.2)
   return [
-    // vehicles (Drop 80): an iron hauler on the lease road at the gate, the fuel tanker behind the fuel row, a generator trailer
-    // by the data van, a second office trailer south of the pickups, two more pickups at the end of the row, a telehandler on the sand side
-    { id: 'semitruck', name: 'LG-PICKUPS', spots: [[gateX + 16, 0, -32.2, -Math.PI / 2]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'flatbed', name: 'LG-PICKUPS', spots: [[gateX + 26.5, 0, -32.2, -Math.PI / 2]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'fueltanker', name: 'LG-FUELCUBE', spots: [[-4, 0, -40.2, Math.PI / 2]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'generator', name: 'LG-WELFARE', spots: [[-23.5, 0, -34.5, 0]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'officetrailer', name: 'LG-WELFARE', spots: [[33, 0, -22, Math.PI / 2]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'pickup', name: 'LG-PICKUPS', spots: [[30, 0, -36 + 7 * 3.6, 0], [30, 0, -36 + 8 * 3.6, 0.05]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'telehandler', name: 'LG-SANDBOXSTATION', spots: [[MISSILE_X - 44, 0, bZ - 20, 0.9]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'barrel', name: 'LG-TOTES', spots: [[MISSILE_X + 17.5, 0, bZ + 8.2, 0.3], [MISSILE_X + 18.3, 0, bZ + 8.4, 1.9], [MISSILE_X + 18.0, 0, bZ + 7.3, 0.8], [MISSILE_X + 19.1, 0, bZ + 7.6, 2.6]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'pallet', name: 'LG-IRONRACK', spots: [[MISSILE_X - 9.5, 0, -22.3, 0.1], [MISSILE_X - 11.0, 0, -22.5, 1.62], [MISSILE_X - 9.5, 0.14, -22.3, 0.08]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'tire', name: 'LG-IRONRACK', spots: [[MISSILE_X - 12.6, 0, -22.4, 0.4], [MISSILE_X - 12.9, 0.25, -22.3, 1.1]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'extinguisher', name: 'LG-SAFETYPOINT', spots: [[MISSILE_X + 9.5, 0, bZ + 5.9, 0.6], [4.3, 0, -36.9, -0.4]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'jerrycan', name: 'LG-FUELCUBE', spots: [[MISSILE_X - 9.4, 0, -26.0, 0.2], [MISSILE_X - 9.8, 0, -26.2, 1.4], [MISSILE_X - 9.1, 0, -26.5, 2.9]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'toolbox', name: 'LG-WELFARE', spots: [[21.3, 0, -38.6, 0.3]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'trashcan', name: 'LG-WELFARE', spots: [[22.2, 0, -39.4, 0], [15.0, 0, -38.8, 0.7]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'box', name: 'LG-WELFARE', spots: [[21.9, 0, -37.8, 0.5], [21.6, 0.5, -37.9, 1.1]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'portapotty', name: 'LG-WELFARE', spots: [[24.5, 0, -43.2, Math.PI], [25.9, 0, -43.2, Math.PI]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'dumpster', name: 'LG-WELFARE', spots: [[13.5, 0, -43.3, Math.PI / 2]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'conex', name: 'LG-IRONRACK', spots: [[MISSILE_X - 22, 0, -27.5, Math.PI / 2]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'watertank', name: 'LG-WELFARE', spots: [[9.6, 0, -43.2, 0]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'cone', name: 'LG-CONES', spots: [[MISSILE_X - 16.5, 0, -11.8, 0], [MISSILE_X + 10.5, 0, -11.8, 0], [MISSILE_X - 2, 0, -13.0, 0]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
-    { id: 'forklift', name: 'LG-IRONRACK', spots: [[MISSILE_X - 15, 0, -16.5, -0.5]].map(([x, y, z, a]) => ({ position: [x, y, z], rotation: rot(a) })) },
+    // vehicles (Drop 80, re-placed Drop 84): the empty iron flatbed dropped by the iron rack with its nose east, the fuel
+    // tanker behind the fuel row (landing gear drawn by the scene), a generator trailer by the data van, the telehandler
+    // on the sand side. The pickups are the modeled truck in the operator's color (vehicles.jsx); no semi on the lease road.
+    { id: 'flatbed', name: 'LG-IRONRACK', spots: at([[-32.7, 0, -35, Math.PI / 2]]) },
+    { id: 'fueltanker', name: 'LG-FUELCUBE', spots: at([[-4, 0, -40.2, Math.PI / 2]]) },
+    { id: 'generator', name: 'LG-WELFARE', spots: at([[-23.5, 0, -34.5, 0]]) },
+    { id: 'telehandler', name: 'LG-SANDBOXSTATION', spots: at([[MISSILE_X - 44, 0, tz, 0.9]]) },
+    // drums by the chemical totes (the totes sit past the chemical trailer's rear, Drop 84)
+    { id: 'barrel', name: 'LG-TOTES', spots: at([[MISSILE_X + 18.2, 0, bZ + 9.8, 0.3], [MISSILE_X + 19.0, 0, bZ + 10.0, 1.9], [MISSILE_X + 18.7, 0, bZ + 8.9, 0.8], [MISSILE_X + 19.8, 0, bZ + 9.2, 2.6]]) },
+    { id: 'pallet', name: 'LG-IRONRACK', spots: at([[MISSILE_X - 9.5, 0, -22.3, 0.1], [MISSILE_X - 11.0, 0, -22.5, 1.62], [MISSILE_X - 9.5, 0.14, -22.3, 0.08]]) },
+    // tires lying flat, three high (the model stands on its tread: laid over with a quarter turn, its center then sits 0.525 m along z)
+    { id: 'tire', name: 'LG-IRONRACK', spots: [0.14, 0.42, 0.70].map((y, i) => ({ position: [MISSILE_X - 12.2, y, -22.4 - 0.525], rotation: [Math.PI / 2, 0, i * 0.9] })) },
+    { id: 'extinguisher', name: 'LG-SAFETYPOINT', spots: at([[MISSILE_X + 11.9, 0, bZ + 11.4, 0.6], [4.3, 0, -36.9, -0.4]]) },
+    { id: 'toolbox', name: 'LG-WELFARE', spots: at([[21.3, 0, -38.6, 0.3]]) },
+    { id: 'trashcan', name: 'LG-WELFARE', spots: at([[22.2, 0, -39.4, 0], [24.6, 0, -39.0, 0.7]]) },
+    { id: 'box', name: 'LG-WELFARE', spots: at([[21.9, 0, -37.8, 0.5], [21.6, 0.5, -37.9, 1.1]]) },
+    { id: 'portapotty', name: 'LG-WELFARE', spots: at([[36.6, 0, -43.2, Math.PI], [38.0, 0, -43.2, Math.PI]]) },
+    { id: 'dumpster', name: 'LG-WELFARE', spots: at([[13.5, 0, -43.3, Math.PI / 2]]) },
+    { id: 'conex', name: 'LG-IRONRACK', spots: at([[-50, 0, -17, 0]]) },
+    { id: 'watertank', name: 'LG-WELFARE', spots: at([[9.6, 0, -43.2, 0]]) },
+    // the cone model is packed point-down: turned over, base on the ground, between the drawn red zone cones
+    { id: 'cone', name: 'LG-CONES', spots: [[-26, -14], [-17, -14], [-8, -14]].map(([x, z]) => ({ position: [x, 0.72, z], rotation: [Math.PI, 0, 0] })) },
+    { id: 'forklift', name: 'LG-IRONRACK', spots: at([[MISSILE_X - 15, 0, -16.5, -0.5]]) },
   ];
 }
 
-export function preloadProps() { for (const id of ['semitruck', 'flatbed', 'fueltanker', 'generator', 'officetrailer', 'pickup', 'telehandler', 'barrel', 'pallet', 'tire', 'extinguisher', 'jerrycan', 'toolbox', 'trashcan', 'box', 'portapotty', 'dumpster', 'conex', 'watertank', 'cone', 'forklift']) useGLTF.preload(url(id)); }
+export function preloadProps() { for (const id of ['flatbed', 'fueltanker', 'generator', 'pickup', 'telehandler', 'barrel', 'pallet', 'tire', 'extinguisher', 'toolbox', 'trashcan', 'box', 'portapotty', 'dumpster', 'conex', 'watertank', 'cone', 'forklift']) useGLTF.preload(url(id)); }

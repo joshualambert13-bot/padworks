@@ -28,18 +28,53 @@ function send(res, status, body, headers = {}) {
   for (const [k, v] of Object.entries(headers)) res.setHeader(k, v);
   res.end(JSON.stringify(body));
 }
-const publicUser = (u) => ({ id: u.id, username: u.username, displayName: u.display_name, role: u.role, mustChange: u.must_change, disabled: u.disabled, createdAt: u.created_at, lastLogin: u.last_login });
+const publicUser = (u) => ({ id: u.id, username: u.username, displayName: u.display_name, role: u.role, mustChange: u.must_change, disabled: u.disabled, createdAt: u.created_at, lastLogin: u.last_login,
+  orgId: u.org_id || null, org: u.org_id ? { id: u.org_id, slug: u.org_slug || '', name: u.org_name || '' } : null });
+// a user row with its organization's slug, name and theme alongside (Drop 82)
+const USER_WITH_ORG = 'SELECT u.*, o.slug AS org_slug, o.name AS org_name, o.theme AS org_theme FROM users u LEFT JOIN orgs o ON o.id = u.org_id';
+const userTheme = (u) => (u && u.org_id && u.org_theme ? { ...u.org_theme, id: 'org-' + u.org_slug, name: u.org_name || u.org_theme.name || u.org_slug } : null);
 
 async function currentUser(db, req) {
   const token = parseCookies(req)[COOKIE];
   if (!token) return null;
   const s = await readSession(token);
   if (!s) return null;
-  const rows = await db.query('SELECT * FROM users WHERE id = $1', [Number(s.sub)]);
+  const rows = await db.query(USER_WITH_ORG + ' WHERE u.id = $1', [Number(s.sub)]);
   const u = rows[0];
   if (!u || u.disabled || u.token_version !== s.v) return null;
   return u;
 }
+
+// Drop 82: a customer theme as stored on an organization. Only the known keys are kept, colors must be six-digit
+// hex, names are capped, and the logo must be a small image data URL (SVG, PNG, JPEG or WebP, 400 KB at most).
+// Drop 83: site.focus (pad, pumping, wellhead, operator) and site.welcome (a paragraph, 600 characters) ride along.
+const HEX = /^#[0-9a-f]{6}$/i;
+const LOGO = /^data:image\/(svg\+xml|png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+function cleanTheme(raw) {
+  if (!raw || typeof raw !== 'object') throw bad('Send a theme object.');
+  const field = (kind, v, what) => {
+    if (v === undefined || v === null) return undefined;
+    if (kind === 'color') { if (v === '') return undefined; const s = String(v).trim().toLowerCase(); if (!HEX.test(s)) throw bad(what + ' must be a six-digit hex color like #1d4f9c.'); return s; }
+    if (kind === 'logo') { const s = String(v); if (s === '') return ''; if (!LOGO.test(s) || s.length > 400000) throw bad('site.logo must be an SVG, PNG, JPEG or WebP data URL under 400 KB.'); return s; }
+    if (kind === 'focus') { const s = String(v).trim().toLowerCase(); if (!['pad', 'pumping', 'wellhead', 'operator'].includes(s)) throw bad('site.focus must be pad, pumping, wellhead or operator.'); return s; }
+    return String(v).trim().slice(0, kind === 'text' ? 600 : kind === 'long' ? 160 : 80);
+  };
+  const block = (b, spec, label) => {
+    if (b === undefined || b === null) return undefined;
+    if (typeof b !== 'object') throw bad(label + ' must be an object.');
+    const out = {};
+    for (const [k, kind] of Object.entries(spec)) { const v = field(kind, b[k], label + '.' + k); if (v !== undefined) out[k] = v; }
+    return out;
+  };
+  const t = {};
+  const site = block(raw.site, { name: 'str', tagline: 'long', accent: 'color', logo: 'logo', focus: 'focus', welcome: 'text' }, 'site'); if (site) t.site = site;
+  const fleet = block(raw.fleet, { name: 'str', primary: 'color', secondary: 'color' }, 'fleet'); if (fleet) t.fleet = fleet;
+  const wellhead = block(raw.wellhead, { name: 'str', primary: 'color', accent: 'color' }, 'wellhead'); if (wellhead) t.wellhead = wellhead;
+  const operator = block(raw.operator, { name: 'str', primary: 'color', ppe: 'color', hat: 'color' }, 'operator'); if (operator) t.operator = operator;
+  return t;
+}
+const SLUG = /^[a-z0-9][a-z0-9-]{1,39}$/;
+const publicOrg = (o) => ({ id: o.id, slug: o.slug, name: o.name, theme: o.theme || null, hasTheme: Boolean(o.theme), createdAt: o.created_at, members: o.members != null ? Number(o.members) : undefined });
 const requireUser = (u) => { if (!u) throw new ApiError(401, 'Sign in to continue.'); return u; };
 const requireRole = (u, roles) => { requireUser(u); if (!roles.includes(u.role)) throw new ApiError(403, 'Not allowed for your role.'); return u; };
 
@@ -77,7 +112,7 @@ export async function handle(req, res) {
     // ---------------------------------------------------------------- auth
     if (parts[0] === 'auth') {
       if (parts[1] === 'me' && method === 'GET') {
-        if (me) return send(res, 200, { user: publicUser(me) });
+        if (me) return send(res, 200, { user: publicUser(me), theme: userTheme(me) });
         const n = await db.query('SELECT COUNT(*)::int AS n FROM users');
         return send(res, 200, { user: null, setup: Number(n[0].n) === 0 ? 'no-accounts' : null });
       }
@@ -88,7 +123,7 @@ export async function handle(req, res) {
         if (!username || !password) throw bad('Enter your username and password.');
         const fails = await db.query(`SELECT COUNT(*)::int AS n FROM login_attempts WHERE username = $1 AND at > now() - interval '${FAILURE_WINDOW_MIN} minutes'`, [username]);
         if (Number(fails[0].n) >= MAX_FAILURES) throw new ApiError(429, `Too many sign-in attempts. Wait ${FAILURE_WINDOW_MIN} minutes and try again.`);
-        const rows = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+        const rows = await db.query(USER_WITH_ORG + ' WHERE u.username = $1', [username]);
         const u = rows[0];
         const ok = u ? await checkPassword(password, u.pw_hash) : await checkPassword(password, await dummyHash());   // same work for unknown names
         if (!u || !ok) {
@@ -100,7 +135,7 @@ export async function handle(req, res) {
         await db.query('DELETE FROM login_attempts WHERE username = $1', [username]);
         await db.query('UPDATE users SET last_login = now() WHERE id = $1', [u.id]);
         const token = await signSession(u);
-        return send(res, 200, { user: publicUser({ ...u, last_login: new Date().toISOString() }) }, { 'Set-Cookie': sessionCookie(req, token) });
+        return send(res, 200, { user: publicUser({ ...u, last_login: new Date().toISOString() }), theme: userTheme(u) }, { 'Set-Cookie': sessionCookie(req, token) });
       }
       if (parts[1] === 'logout' && method === 'POST') return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, '') });
       if (parts[1] === 'password' && method === 'POST') {
@@ -169,7 +204,7 @@ export async function handle(req, res) {
       if (userId !== null && !Number.isInteger(userId)) throw bad('Bad user id.');
 
       if (parts[1] === 'users' && !userId && method === 'GET') {
-        const users = await db.query('SELECT * FROM users ORDER BY role, username');
+        const users = await db.query(USER_WITH_ORG + ' ORDER BY u.role, u.username');
         const stats = await lessonStats(db);
         const sums = await db.query('SELECT user_id, COUNT(*)::int AS n FROM job_summaries GROUP BY user_id');
         const sumBy = Object.fromEntries(sums.map(r => [r.user_id, Number(r.n)]));
@@ -189,7 +224,7 @@ export async function handle(req, res) {
         return send(res, 200, { user: { ...publicUser(rows[0]), lessons: {}, summaries: 0 }, oneTimePassword: otp });
       }
       if (parts[1] === 'users' && userId && parts[3] === 'progress' && method === 'GET') {
-        const u = (await db.query('SELECT * FROM users WHERE id = $1', [userId]))[0];
+        const u = (await db.query(USER_WITH_ORG + ' WHERE u.id = $1', [userId]))[0];
         if (!u) throw new ApiError(404, 'No such user.');
         const results = await db.query('SELECT id, lesson_id, grade, total, secs, at FROM lesson_results WHERE user_id = $1 ORDER BY at', [userId]);
         const summaries = await db.query('SELECT id, kind, title, grade, total, secs, at FROM job_summaries WHERE user_id = $1 ORDER BY at DESC LIMIT 200', [userId]);
@@ -223,8 +258,15 @@ export async function handle(req, res) {
           const admins = await db.query('SELECT COUNT(*)::int AS n FROM users WHERE role = $1 AND disabled = FALSE AND id <> $2', ['admin', u.id]);
           if (Number(admins[0].n) === 0) throw bad('At least one active admin must remain.');
         }
+        // Drop 82: move the account into an organization (null leaves it; an org change takes effect at the next page load)
+        let orgId = u.org_id;
+        if (b.orgId !== undefined) {
+          orgId = b.orgId === null || b.orgId === '' ? null : Number(b.orgId);
+          if (orgId !== null && !(await db.query('SELECT id FROM orgs WHERE id = $1', [orgId]))[0]) throw bad('No such organization.');
+        }
         const bump = (disabled && !u.disabled) || role !== u.role ? 1 : 0;
-        const rows = await db.query('UPDATE users SET role = $1, disabled = $2, display_name = $3, token_version = token_version + $4 WHERE id = $5 RETURNING *', [role, disabled, displayName, bump, userId]);
+        await db.query('UPDATE users SET role = $1, disabled = $2, display_name = $3, token_version = token_version + $4, org_id = $5 WHERE id = $6', [role, disabled, displayName, bump, orgId, userId]);
+        const rows = await db.query(USER_WITH_ORG + ' WHERE u.id = $1', [userId]);
         return send(res, 200, { user: publicUser(rows[0]) });
       }
       if (parts[1] === 'users' && userId && !parts[3] && method === 'DELETE') {
@@ -255,6 +297,42 @@ export async function handle(req, res) {
       if (parts[1] === 'reports' && parts[2] && method === 'DELETE') {
         adminOnly();
         await db.query('DELETE FROM reports WHERE id = $1', [Number(parts[2])]);
+        return send(res, 200, { ok: true });
+      }
+      // ---- organizations (Drop 82): instructors read the list; admins create, rename, set the theme, delete
+      const orgId = parts[1] === 'orgs' && parts[2] ? Number(parts[2]) : null;
+      if (orgId !== null && !Number.isInteger(orgId)) throw bad('Bad organization id.');
+      if (parts[1] === 'orgs' && !orgId && method === 'GET') {
+        const rows = await db.query('SELECT o.*, (SELECT COUNT(*)::int FROM users u WHERE u.org_id = o.id) AS members FROM orgs o ORDER BY o.name, o.slug');
+        return send(res, 200, { orgs: rows.map(publicOrg) });
+      }
+      if (parts[1] === 'orgs' && !orgId && method === 'POST') {
+        adminOnly();
+        const b = await readJson(req);
+        const slug = String(b.slug || '').trim().toLowerCase();
+        if (!SLUG.test(slug)) throw bad('Slug: 2 to 40 characters, lower-case letters, numbers and dashes, starting with a letter or number.');
+        const name = String(b.name || '').trim().slice(0, 80);
+        if (!name) throw bad('Give the organization a name.');
+        if ((await db.query('SELECT id FROM orgs WHERE slug = $1', [slug]))[0]) throw bad('That slug is taken.');
+        const theme = b.theme ? cleanTheme(b.theme) : null;
+        const rows = await db.query('INSERT INTO orgs (slug, name, theme) VALUES ($1, $2, $3) RETURNING *', [slug, name, theme ? JSON.stringify(theme) : null]);
+        return send(res, 200, { org: publicOrg({ ...rows[0], members: 0 }) });
+      }
+      if (parts[1] === 'orgs' && orgId && method === 'PATCH') {
+        adminOnly();
+        const b = await readJson(req);
+        const o = (await db.query('SELECT * FROM orgs WHERE id = $1', [orgId]))[0];
+        if (!o) throw new ApiError(404, 'No such organization.');
+        const name = b.name !== undefined ? String(b.name).trim().slice(0, 80) : o.name;
+        if (!name) throw bad('Give the organization a name.');
+        const theme = b.theme === undefined ? o.theme : (b.theme === null ? null : cleanTheme(b.theme));
+        await db.query('UPDATE orgs SET name = $1, theme = $2 WHERE id = $3', [name, theme ? JSON.stringify(theme) : null, orgId]);
+        const rows = await db.query('SELECT o.*, (SELECT COUNT(*)::int FROM users u WHERE u.org_id = o.id) AS members FROM orgs o WHERE o.id = $1', [orgId]);
+        return send(res, 200, { org: publicOrg(rows[0]) });
+      }
+      if (parts[1] === 'orgs' && orgId && method === 'DELETE') {
+        adminOnly();
+        await db.query('DELETE FROM orgs WHERE id = $1', [orgId]);   // accounts stay, with no organization
         return send(res, 200, { ok: true });
       }
       if (parts[1] === 'export.csv' && method === 'GET') {

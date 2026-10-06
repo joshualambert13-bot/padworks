@@ -1,10 +1,10 @@
 // Pad clutter (Drop 48): the small things a working pad is never without. All generic, all merged by material,
 // placed by the layout from SurfaceScene. Totes on pallets at the chemical add, a rack of spare treating iron on
-// timbers by the missile, cones at the red zone corners, water-filled barricades at the pump row ends, a dumpster
-// and two portable toilets by the parking, a fuel cube by the pump row, a spill kit and extinguisher stands at the
+// timbers by the missile, cones at the red zone corners, water-filled barricades at the pump row ends, a crew
+// trailer by the parking (Drop 84), a fuel cube by the pump row, a spill kit and extinguisher stands at the
 // chemical add and hydration unit, coiled lay-flat hose by the water transfer.
 import { useMemo } from 'react';
-import { Merged, GEO, MAT, Instanced } from './primitives.jsx';
+import { Merged, GEO, MAT, Instanced, Trailer, Box, RBox, Stair, Handrail, Label } from './primitives.jsx';
 import { Stencil } from './life.jsx';
 
 const ORANGE = { color: '#e8641b', metalness: 0, roughness: 0.6 };
@@ -12,8 +12,6 @@ const WHITE = { color: '#e9e9e9', metalness: 0, roughness: 0.6 };
 const TOTE = { color: '#eef0ea', metalness: 0, roughness: 0.5 };
 const CAGE = { color: '#9aa2ab', metalness: 0.7, roughness: 0.45 };
 const TIMBER = { color: '#6b5533', metalness: 0, roughness: 0.95 };
-const BLUE = { color: '#2d5fb5', metalness: 0.1, roughness: 0.6 };
-const GREEN = { color: '#2f6f3e', metalness: 0.2, roughness: 0.6 };
 const YELLOW = { color: '#e6c21a', metalness: 0.1, roughness: 0.6 };
 const HOSE = { color: '#2a7fd0', metalness: 0.05, roughness: 0.8 };
 
@@ -87,14 +85,58 @@ export function Barricades({ position = [0, 0, 0], rotation = [0, 0, 0], count =
   );
 }
 
-// Dumpster and two portable toilets by the parking
-export function Welfare({ position = [0, 0, 0], rotation = [0, 0, 0] }) {
+// Crew trailer (Drop 84): a 40 ft office and break trailer on a tandem chassis, the kind a crew eats and does paperwork
+// in. Body at real proportions (12.2 m by 3.0 m, 2.9 m inside the walls), a door with a porch and stairs at each end
+// on the pad side, a window band each side, two roof air conditioners, an exterior lamp over each door. Replaces the
+// office container (the downloaded one was a shipping box with a window) and the drawn dumpster and toilets, which the
+// downloaded dumpster and toilets had doubled. `lit` lights the windows after dark.
+export function CrewTrailer({ position = [0, 0, 0], rotation = [0, 0, 0], showLabels = false, lit = false }) {
+  const D = 1.18, L = 12.2, W = 3.0, H = 2.9;
   return (
-    <group position={position} rotation={rotation} name="LG-WELFARE">
-      <Merged mat={GREEN} parts={() => [{ g: GEO.box(3.0, 1.3, 1.6), p: [0, 0.75, 0] }, { g: GEO.box(3.1, 0.1, 1.7), p: [0, 1.42, 0] }, { g: GEO.box(0.08, 0.1, 1.2), p: [-1.6, 0.05, 0] }, { g: GEO.box(0.08, 0.1, 1.2), p: [1.6, 0.05, 0] }]} />
-      <Merged mat={BLUE} parts={() => [3.0, 4.4].map(x => ({ g: GEO.rbox(1.1, 2.25, 1.1, 0.05, 1), p: [x, 1.14, 0] }))} />
-      <Merged mat={WHITE} shadow={false} parts={() => [3.0, 4.4].flatMap(x => [{ g: GEO.box(1.14, 0.12, 1.14), p: [x, 2.3, 0] }, { g: GEO.box(0.5, 1.0, 0.02), p: [x, 1.1, 0.56] }])} />
-      <Merged mat={MAT.dimSteel} shadow={false} parts={() => [3.0, 4.4].map(x => ({ g: GEO.box(0.02, 0.4, 0.02), p: [x - 0.18, 1.1, 0.58] }))} />
+    <Trailer length={L + 0.2} width={W} position={position} rotation={rotation} name="LG-WELFARE" axles={2} gooseneck={false} front={1}>
+      <RBox r={0.08} size={[L, H, W]} position={[0, D + H / 2, 0]} mat={MAT.paintWhite} name="LG-WELFARE-BODY" />
+      <Box size={[L + 0.1, 0.1, W + 0.1]} position={[0, D + H + 0.02, 0]} mat={MAT.chassis} />
+      {/* window bands: four windows on the pad side between the doors, three on the far side */}
+      <Box size={[7.6, 0.8, 0.05]} position={[0, D + 1.9, W / 2 + 0.02]} mat={lit ? MAT.glassLit : MAT.glass} />
+      <Box size={[6.0, 0.8, 0.05]} position={[-1.0, D + 1.9, -W / 2 - 0.02]} mat={lit ? MAT.glassLit : MAT.glass} />
+      <Merged mat={MAT.chassis} parts={() => [
+        ...[-3.8, -1.9, 0, 1.9, 3.8].map(x => ({ g: GEO.box(0.06, 0.9, 0.06), p: [x, D + 1.9, W / 2 + 0.03] })),
+        ...[-4.0, -2.0, 0, 2.0].map(x => ({ g: GEO.box(0.06, 0.9, 0.06), p: [x, D + 1.9, -W / 2 - 0.03] })),
+        { g: GEO.box(7.7, 0.06, 0.06), p: [0, D + 2.33, W / 2 + 0.03] }, { g: GEO.box(7.7, 0.06, 0.06), p: [0, D + 1.47, W / 2 + 0.03] },
+        { g: GEO.box(6.1, 0.06, 0.06), p: [-1.0, D + 2.33, -W / 2 - 0.03] }, { g: GEO.box(6.1, 0.06, 0.06), p: [-1.0, D + 1.47, -W / 2 - 0.03] },
+        // doors at both ends on the pad side, with a small window and a frame; a lamp box over each
+        ...[-5.3, 5.3].flatMap(x => [{ g: GEO.box(0.95, 2.05, 0.06), p: [x, D + 1.08, W / 2 + 0.02] }, { g: GEO.box(1.1, 0.06, 0.08), p: [x, D + 2.14, W / 2 + 0.03] }, { g: GEO.box(0.26, 0.12, 0.18), p: [x, D + 2.35, W / 2 + 0.06] }]),
+        // skirting below the body on the far side, where there is no door
+        { g: GEO.box(L - 0.6, 0.55, 0.04), p: [0, D - 0.5, -W / 2 + 0.05] },
+      ]} />
+      <Merged mat={MAT.alu} shadow={false} parts={() => [-5.3, 5.3].flatMap(x => [{ g: GEO.box(0.5, 0.6, 0.02), p: [x, D + 1.55, W / 2 + 0.06] }, { g: GEO.box(0.03, 0.22, 0.04), p: [x + 0.36, D + 1.0, W / 2 + 0.07] }])} />
+      {/* porch and stairs at each door, stairs climbing toward the trailer */}
+      {[-5.3, 5.3].map(x => (
+        <group key={x}>
+          <Box size={[1.4, 0.06, 1.1]} position={[x, D - 0.03, W / 2 + 0.55]} mat={MAT.grating} />
+          <Handrail length={1.4} position={[x, D, W / 2 + 1.08]} height={1.0} posts={2} />
+          <Handrail length={1.1} position={[x + 0.68, D, W / 2 + 0.55]} rotation={[0, Math.PI / 2, 0]} height={1.0} posts={2} />
+          <Stair steps={4} rise={D / 4} run={0.32} width={0.9} position={[x - 0.1, 0, W / 2 + 1.1 + 4 * 0.32]} rotation={[0, Math.PI / 2, 0]} />
+        </group>
+      ))}
+      {/* roof air conditioners, a vent stack, a satellite dish mast */}
+      {[-3.2, 3.2].map(x => <RBox key={x} r={0.05} size={[1.2, 0.45, 0.95]} position={[x, D + H + 0.3, 0.2]} mat={MAT.paintWhite} />)}
+      <Merged mat={MAT.darkSteel} shadow={false} parts={() => [{ g: GEO.cyl(0.05, 0.5, 8), p: [0.5, D + H + 0.3, -0.8] }, { g: GEO.cyl(0.03, 1.2, 6), p: [-5.6, D + H + 0.6, -1.0] }, { g: GEO.cyl(0.3, 0.03, 12), p: [-5.6, D + H + 1.2, -1.0], r: [0.9, 0, 0] }]} />
+      {showLabels && <Label position={[0, D + H + 1.6, 0]} text={'Crew trailer'} />}
+    </Trailer>
+  );
+}
+
+// Landing gear (Drop 84): two legs with sand shoes and a crank under the front of a trailer standing without its tractor.
+// `height` is ground to the trailer frame; legs 1.7 m apart across the frame.
+export function LandingGear({ position = [0, 0, 0], rotation = [0, 0, 0], height = 1.05, spread = 1.7 }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <Merged mat={MAT.dimSteel} deps={[height, spread]} parts={() => [
+        ...[-spread / 2, spread / 2].flatMap(z => [{ g: GEO.box(0.14, height, 0.14), p: [0, height / 2, z] }, { g: GEO.box(0.12, height * 0.55, 0.12), p: [0, height * 0.72, z] }, { g: GEO.box(0.36, 0.08, 0.36), p: [0, 0.04, z] }]),
+        { g: GEO.box(0.06, 0.06, spread), p: [0, height * 0.35, 0] }, { g: GEO.box(0.06, 0.06, spread), p: [0, height * 0.85, 0] },
+        { g: GEO.cyl(0.03, 0.5, 6), p: [0.25, height * 0.8, spread / 2 + 0.12], r: [0, 0, Math.PI / 2] }, { g: GEO.cyl(0.02, 0.2, 6), p: [0.5, height * 0.8 - 0.1, spread / 2 + 0.12] },
+      ]} />
     </group>
   );
 }

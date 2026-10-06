@@ -15,6 +15,8 @@ import { Crew, Walker } from './life.jsx';
 import { useTheme } from '../../theme/theme.js';
 
 export const CREW_MODELS = ['lewis', 'pete', 'brian', 'kate'];
+// Drop 84: a character whose mesh already wears a hard hat gets no drawn hat on top (pete's model has its own)
+export const OWN_HAT = { pete: true };
 const url = (name) => '/models/crew/' + name + '.glb';
 const CLIP = { stand: 'idle', point: 'point', kneel: 'kneel', radio: 'radio', hammer: 'hammer', walk: 'walk' };
 const HAT = { white: '#f2f2f2', yellow: '#e8d23a', orange: '#f07a2a', blue: '#2a5d9f' };
@@ -41,7 +43,8 @@ function Model({ name, clip = 'idle', hat = 'white', timeScale = 1, phase = 0 })
     // the hat: on the head bone (Mixamo head bones point +Y up the skull), at the height crew-frc.py measured for
     // this character and stored in the scene extras (the characters differ in height and head size)
     let head = null; scene.traverse(o => { if (!head && o.isBone && /Head$/.test(o.name)) head = o; });
-    if (head) {
+    if (head && OWN_HAT[name]) { const old = head.getObjectByName('HAT'); if (old) head.remove(old); }
+    else if (head) {
       const old = head.getObjectByName('HAT'); if (old) head.remove(old);
       const h = hardHat(HAT[hat] || hat); h.name = 'HAT';
       // Mixamo rigs are in centimeters under a 0.01 root scale: the hat is built in meters, so it counters that scale
@@ -49,7 +52,7 @@ function Model({ name, clip = 'idle', hat = 'white', timeScale = 1, phase = 0 })
       const hatY = ((gltf.scene.userData && gltf.scene.userData.hatY) || 0.165) - 0.02;   // measured to the hair; the hat sits in it a little
       h.scale.setScalar(k); h.position.set(0, hatY * k, 0.02 * k); head.add(h);
     }
-  }, [scene, hat, gltf.scene]);
+  }, [scene, hat, gltf.scene, name]);
   useEffect(() => {
     const a = actions[CLIP[clip] || clip] || actions.idle;
     if (!a) return;

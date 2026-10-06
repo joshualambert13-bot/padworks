@@ -1,6 +1,7 @@
 // Sign-in state and the API client. Sessions are an httpOnly cookie set by the server; the browser never sees
 // a token. Accounts are created by an admin (no self-signup, no email): a username, a display name, a role.
 import { create } from 'zustand';
+import { useTheme } from '../theme/theme.js';
 
 export async function api(path, { method = 'GET', body } = {}) {
   const init = { method, credentials: 'same-origin', headers: {} };
@@ -32,23 +33,24 @@ export const useAuth = create((set, get) => ({
   setup: null,            // 'no-accounts' when the database has no users yet
   serviceError: null,     // the accounts service itself is unavailable (no database, no secret, not deployed)
   busy: false,
+  // the server sends the account's organization theme (Drop 82) with every sign-in and page load; null drops it
   refresh: async () => {
-    try { const d = await api('auth/me'); set({ user: d.user, setup: d.setup || null, serviceError: null }); }
+    try { const d = await api('auth/me'); set({ user: d.user, setup: d.setup || null, serviceError: null }); useTheme.getState().setOrgTheme(d.theme || null); }
     catch (e) { set({ user: null, serviceError: e.message }); }
   },
   login: async (username, password) => {
     set({ busy: true });
-    try { const d = await api('auth/login', { method: 'POST', body: { username, password } }); set({ user: d.user, serviceError: null }); return d.user; }
+    try { const d = await api('auth/login', { method: 'POST', body: { username, password } }); set({ user: d.user, serviceError: null }); useTheme.getState().setOrgTheme(d.theme || null); return d.user; }
     finally { set({ busy: false }); }
   },
   logout: async () => {
     try { await api('auth/logout', { method: 'POST' }); } catch { /* the cookie is cleared server side; fall through */ }
-    set({ user: null });
+    set({ user: null }); useTheme.getState().setOrgTheme(null);
   },
   changePassword: async (current, next) => {
     set({ busy: true });
     try { const d = await api('auth/password', { method: 'POST', body: { current, next } }); set({ user: d.user }); return d.user; }
     finally { set({ busy: false }); }
   },
-  signedOutByServer: () => { if (get().user) set({ user: null }); },
+  signedOutByServer: () => { if (get().user) { set({ user: null }); useTheme.getState().setOrgTheme(null); } },
 }));

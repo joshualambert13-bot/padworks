@@ -19,7 +19,6 @@ const SPEC = {
   'polyhaven/barrel_03': { id: 'barrel', dim: 'y', size: 0.88, tex: 512 },
   'polyhaven/cardboard_box_01': { id: 'box', dim: 'max', size: 0.55, tex: 512 },
   'polyhaven/korean_fire_extinguisher_01': { id: 'extinguisher', dim: 'y', size: 0.56, tex: 256 },
-  'polyhaven/metal_jerrycan': { id: 'jerrycan', dim: 'y', size: 0.47, tex: 512 },
   'polyhaven/metal_toolbox': { id: 'toolbox', dim: 'max', size: 0.55, tex: 512 },
   'polyhaven/metal_trash_can': { id: 'trashcan', dim: 'y', size: 0.9, tex: 512, drop: /_rust/ },   // the set holds a clean and a rusted can side by side; keep the clean one
   'polyhaven/old_tyre': { id: 'tire', dim: 'max', size: 1.05, tex: 512 },
@@ -35,9 +34,7 @@ const SPEC = {
   'sketchfab/ball_valve': { id: 'ballvalve', dim: 'max', size: 0.35, tex: 512 },
   'sketchfab/light_tower': { id: 'lighttower', dim: 'y', size: 9.0, tex: 1024 },
   'sketchfab/generator_trailer': { id: 'generator', dim: 'max', size: 5.5, tex: 1024 },
-  'sketchfab/office_trailer': { id: 'officetrailer', dim: 'max', size: 12.0, tex: 1024 },
   'sketchfab/pickup_truck': { id: 'pickup', dim: 'max', size: 5.8, tex: 1024, blank: /badge|plate/i },
-  'sketchfab/semi_truck': { id: 'semitruck', dim: 'max', size: 7.5, tex: 1024 },
   'sketchfab/flatbed_trailer': { id: 'flatbed', dim: 'max', size: 14.6, tex: 1024 },
   'sketchfab/fuel_tanker_trailer': { id: 'fueltanker', dim: 'max', size: 12.5, tex: 1024 },
   'sketchfab/telehandler': { id: 'telehandler', dim: 'max', size: 6.0, tex: 1024 },

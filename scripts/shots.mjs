@@ -44,7 +44,7 @@ async function page(w, h, mobile = false) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile, acceptDownloads: true });
   await signIn(ctx);
   const p = await ctx.newPage();
-  p.setDefaultTimeout(240000);   // software rendering in CI is slow; a click on a six-well pad can wait several 25 s frames
+  p.setDefaultTimeout(360000);   // software rendering in CI is slow; a click on a six-well pad can wait several 25 s frames, and a page load compiles every shader before the first frame (a minute or more on a loaded host)
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
   return p;
@@ -79,7 +79,8 @@ async function frames(p, n = 1, timeout = 60000) {
   errors.push('no frame rendered in ' + timeout + ' ms'); return false;
 }
 const startJob = async (p) => { await p.click('[data-action="start"]'); await wait(1200); };
-async function clickWhenEnabled(p, name, timeout = 60000) {
+// a step's button may sit behind a scene rebuild (a new basin compiles its shaders before the first frame: a minute or more on a loaded host)
+async function clickWhenEnabled(p, name, timeout = 150000) {
   const b = p.getByRole('button', { name }).first();
   await b.waitFor({ state: 'visible', timeout });
   const t0 = Date.now();
@@ -88,6 +89,51 @@ async function clickWhenEnabled(p, name, timeout = 60000) {
 }
 async function waitText(p, text, timeout = 90000) {
   try { await p.getByText(text, { exact: false }).first().waitFor({ state: 'visible', timeout }); return true; } catch { errors.push('text not seen: ' + text); return false; }
+}
+
+
+// Drop 84: the layout check. Every unit on the pad gets a world box (instanced placements one by one, from the boxes the
+// baker records; drawn groups by their record name), and two units whose boxes share real volume are an error, unless
+// one of them is a thing other things sit against by design (the containment berm, the pit, the sand conveyor and its
+// forklift, the flowback spread's and the fuel row's big groups, the trailers whose boxes carry their stairs).
+const LAYOUT_SKIP = /^(LG-CONTAINMENT|LG-SANDBOX-HANDLER|LG-SANDBOXES|LG-SANDBOXSTATION$|LG-WATERPIT|FB-SPREAD|PP-FUELGAS|PP-BLENDER|PP-HYDRATION|PP-CHEMADD$|WH-|PP-MISSILE|PP-FRACPUMP|PP-POWERGEN|LG-FLAGPOLES|LG-CREW)/;
+async function layoutCheck(p, label) {
+  const units = await p.evaluate(() => {
+    const THREE = window.__THREE; const scene = window.__padworksScene; const units = [];
+    if (!THREE || !scene) return units;
+    const box = new THREE.Box3(), w = new THREE.Matrix4(); const taken = new Set();
+    scene.updateMatrixWorld(true);
+    const nameOf = (o) => { let x = o; while (x) { if (x.name) return x.name; x = x.parent; } return '?'; };
+    scene.traverse(o => {
+      for (let a = o.parent; a; a = a.parent) { if (taken.has(a)) return; if (/TEMPLATE/.test(a.name)) return; }
+      const wb = o.userData.walkBoxes;
+      if (wb && wb.mats && wb.boxes && wb.boxes.length) {
+        taken.add(o);
+        wb.mats.forEach((mat, i) => { const u = new THREE.Box3(); for (const b of wb.boxes) { box.copy(b).applyMatrix4(w.multiplyMatrices(o.matrixWorld, mat)); u.union(box); } if (u.min.y > -100) units.push({ name: nameOf(o) + '#' + i, min: u.min.toArray(), max: u.max.toArray() }); });
+        return;
+      }
+      if (o.isGroup && o.name && /^(LG-|PP-|WH-|SU-|MT-|FB-|WL-|CT-|RG-|UC-|DA-|CM-|LI-)/.test(o.name) && !/TEMPLATE/.test(o.name)) {
+        if (o.visible === false) return;
+        const u = new THREE.Box3().setFromObject(o); if (u.isEmpty() || u.min.y < -100) return;
+        if (u.max.x - u.min.x > 40 || u.max.z - u.min.z > 40) return;
+        taken.add(o); units.push({ name: o.name, min: u.min.toArray(), max: u.max.toArray() });
+      }
+    });
+    return units;
+  });
+  const base = (n) => n.replace(/#\d+$/, '');
+  let n = 0;
+  for (let i = 0; i < units.length; i++) for (let j = i + 1; j < units.length; j++) {
+    const a = units[i], b = units[j];
+    if (base(a.name) === base(b.name)) continue;
+    if (!/^LG-/.test(a.name) && !/^LG-/.test(b.name)) continue;
+    if (LAYOUT_SKIP.test(a.name) || LAYOUT_SKIP.test(b.name)) continue;
+    const ix = Math.min(a.max[0], b.max[0]) - Math.max(a.min[0], b.min[0]);
+    const iy = Math.min(a.max[1], b.max[1]) - Math.max(a.min[1], b.min[1]);
+    const iz = Math.min(a.max[2], b.max[2]) - Math.max(a.min[2], b.min[2]);
+    if (ix > 0.15 && iy > 0.15 && iz > 0.15 && ix * iy * iz > 0.03) { n++; if (n <= 12) errors.push('layout ' + label + ': ' + a.name + ' sits in ' + b.name + ' (' + [ix, iy, iz].map(v => v.toFixed(2)).join(' x ') + ' m)'); }
+  }
+  console.log('layout check', label, units.length, 'units,', n, 'overlaps');
 }
 
 // ---------------- Desktop simulator walkthrough
@@ -99,6 +145,7 @@ if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env
 p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
+await frames(p, 3); await layoutCheck(p, 'default pad');
 // Drop 43: the Stats readout must show numbers and no shader error
 await p.getByRole('button', { name: 'Stats' }).click(); await wait(3000);
 {
@@ -361,6 +408,7 @@ await startJob(p);
 await p.getByRole('button', { name: 'Frac' }).first().click(); await wait(300);
 await p.selectOption('select[title="Camera preset"]', 'row'); await wait(3000);
 await shot(p, '52-sim-row-trimul-6wells');
+await frames(p, 2); await layoutCheck(p, 'six wells');
 await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(2500);
 await shot(p, '53-sim-tree-standard');
 await p.goto(base + '/about'); await wait(1000);
@@ -393,6 +441,29 @@ await p.goto(base + '/simulate?demo=intro' + (process.env.LITE ? '&lite=1' : '')
   if (demo) errors.push('introduction demo did not clear ui.demo when it ended');
 }
 await shot(p, '39-intro-demo-ended');
+// Drop 84: the narration has rendered clips (the first stop of the introduction, a lesson step), served from the build
+{
+  const c = await p.evaluate(async () => { const D = window.__padworksDemo; const first = D.introLines()[0]; const step = D.lessonLines('L3').steps[0]; const name = D.clipName(first.id, first.text); const r = await fetch('/audio/narration/' + name + '.mp3', { method: 'HEAD' }); return { intro: D.hasClip(first.id, first.text), step: D.hasClip('L3-step-1', step), served: r.ok, type: r.headers.get('content-type') }; });
+  if (!c.intro || !c.step) errors.push('narration clips missing: ' + JSON.stringify(c));
+  if (!c.served) errors.push('narration clip not served: ' + JSON.stringify(c));
+}
+// Drop 84: the pad put right. The pickup row is the modeled truck in the operator's color; the zipper header ends at the
+// last well. (The crew hat check needs the modeled crew, which the Lite pass does not load: scripts/probe-crew84.mjs.)
+{
+  const r = await p.evaluate(() => {
+    const out = { pickups: 0, tinted: false, headerEnd: null, lastWell: null };
+    const sc = window.__padworksScene;
+    sc.traverse(o => {
+      if (o.isGroup && o.name === 'LG-PICKUPS') for (const c of o.children) { if (c.isInstancedMesh) { out.pickups = Math.max(out.pickups, c.count); if (c.material.userData && c.material.userData.instanceTint && c.instanceColor) out.tinted = true; } }
+      if (o.name === 'WH-ZIPPER-INLETHEADER') { const b = new window.__THREE.Box3().setFromObject(o); out.headerEnd = b.max.z; }
+    });
+    // wells stand 8 m apart from z 0 of the zipper group: the last well's z is (wells - 1) times the spacing
+    const st = window.__padworksSim.getState(); let zipper = null; sc.traverse(o => { if (!zipper && o.name === 'WH-ZIPPER') zipper = o; }); out.lastWell = (st.pad.wells - 1) * 8 + (zipper ? zipper.position.z : 0);
+    return out;
+  });
+  if (r.pickups < 9 || !r.tinted) errors.push('pickup row is not the modeled truck in the operator color: ' + JSON.stringify(r));
+  if (r.headerEnd == null || r.headerEnd > r.lastWell + 1.2) errors.push('zipper header runs past the last well: ' + JSON.stringify(r));
+}
 await p.goto(base + '/simulate?demo=L3' + (process.env.LITE ? '&lite=1' : '')); await wait(5000);
 {
   const t0 = Date.now(); let step = 0, cap = '';
@@ -405,7 +476,9 @@ await p.goto(base + '/simulate?demo=L3' + (process.env.LITE ? '&lite=1' : '')); 
   }
   if (step < 2) errors.push('lesson 3 demo passed only ' + step + ' checkpoints in 150 s (caption: ' + cap.slice(0, 60) + ')');
   await shot(p, '40-lesson-demo-running');
-  await p.click('[data-action="demo-stop"]'); await wait(800);
+  // stop it if it is still running (on a fast host the short demo can end on its own first; either way the bar must be gone and the speed back)
+  if (await p.$('[data-action="demo-stop"]')) await p.click('[data-action="demo-stop"]', { timeout: 30000 }).catch(() => {});
+  await wait(800);
   const after = await p.evaluate(() => ({ demo: window.__padworksSim.getState().ui.demo, bar: !!document.querySelector('[data-demo-bar]'), speed: window.__padworksSim.getState().speed }));
   if (after.demo || after.bar || after.speed !== 1) errors.push('stopping the demo left ' + JSON.stringify(after));
 }
@@ -480,7 +553,7 @@ await clickWhenEnabled(p, 'Pumps online'); await setRange(p, 0, 70);
 await waitText(p, 'kicked out', 180000); await wait(800);
 await shot(p, '83-guidance-kickout-steps');
 // hover popup, pinned, and the round trip to the library and back
-await p.selectOption('select[title="Camera preset"]', 'tree'); await wait(2500);
+await p.selectOption('select[title="Camera preset"]', 'tree'); await frames(p, 3);   // the glide to the tree takes two slow frames (Drop 84)
 {
   const c = await p.locator('canvas').first().boundingBox();
   let hit = false;
@@ -528,8 +601,8 @@ for (const [id, n] of [['AL', '101'], ['AL-BEAMUNIT', '102'], ['AL-RODPUMP', '10
   await startJob(p); await p.selectOption('select', '4');
   await p.getByRole('button', { name: 'Wireline' }).first().click(); await wait(800);
   await p.getByRole('button', { name: 'Gun misfire' }).click(); await wait(300);
-  await clickWhenEnabled(p, 'Run in hole'); await setRange(p, 0, 20); await wait(2500);
-  await p.getByRole('button', { name: 'Tool string stuck' }).click(); await wait(1500);
+  await clickWhenEnabled(p, 'Run in hole'); await setRange(p, 0, 20);
+  await clickWhenEnabled(p, 'Tool string stuck'); await wait(1500);   // enabled only during the pumpdown, which the sim now finishes in real time (Drop 84)
   await shot(p, '108-event-stuck-tool');
   await clickWhenEnabled(p, 'Work the line', 20000); await wait(4000);
   await clickWhenEnabled(p, 'Fire guns', 120000); await wait(6000);
@@ -610,10 +683,18 @@ for (const [id, n] of [['RG', '116'], ['RG-BOPSTACK', '117'], ['RG-BOPSTACK-RAMS
     const row = p.locator('div', { hasText: 'Upper master valve' }).filter({ has: p.getByRole('button', { name: 'Open' }) }).last();
     await row.getByRole('button', { name: 'Open' }).click().catch(() => {});
   }
-  await wait(3500); await p.selectOption('select', '4');
+  await wait(3500);
+  // the wrong move may have kicked the pumps out before the valve reopened (the sim keeps real pace on slow frames since
+  // Drop 83): clear the kickout first, so the fault below shows its own steps
+  if (await p.evaluate(() => window.__padworksSim.getState().alarms.kickout)) {
+    if (await p.getByRole('button', { name: 'Rate to 0' }).first().isVisible().catch(() => false)) { await clickWhenEnabled(p, 'Rate to 0'); await wait(400); }
+    await clickWhenEnabled(p, 'Acknowledge', 120000); await wait(600);
+    await clickWhenEnabled(p, 'Pumps online'); await setRange(p, 0, 60); await wait(1500);
+  }
+  await p.selectOption('select', '4');
   // event recovery is timed against a target
   await p.getByRole('button', { name: 'Working valve actuator fault' }).click(); await wait(2500);
-  await clickWhenEnabled(p, 'Stop pumping'); await wait(600);
+  if (await p.evaluate(() => window.__padworksSim.getState().pumpsOnline)) { await clickWhenEnabled(p, 'Stop pumping'); await wait(600); }
   await clickWhenEnabled(p, 'Backup circuit'); await wait(800);
   await waitText(p, 'Recovered from working valve actuator fault', 20000);
   await shot(p, '130-event-recovery-timed');
@@ -735,7 +816,7 @@ if (!process.env.ONLY || process.env.ONLY === 'drop16' || process.env.ONLY === '
 {
   { const warm = await browser.newContext(); await signIn(warm); await warm.close(); }   // makes sure the admin has the pass's password
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });   // a fresh context: no cookie
-  p = await ctx.newPage(); p.setDefaultTimeout(240000);
+  p = await ctx.newPage(); p.setDefaultTimeout(360000);
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
   await p.goto(base + SIM); await p.waitForSelector('[data-panel="login"]'); await wait(500);
@@ -769,7 +850,9 @@ if (!process.env.ONLY || process.env.ONLY === 'drop16' || process.env.ONLY === '
   await clickWhenEnabled(p, 'Install the tree'); await wait(1500);
   await waitText(p, 'Lesson complete', 20000); await wait(1500);
   await shot(p, '147-trainee-lesson-complete');
+  console.log('trainee reload', new Date().toISOString());
   await p.reload(); await p.waitForSelector('[data-action="lesson-L8"]'); await wait(3000);
+  console.log('trainee reload done', new Date().toISOString());
   const saved = await p.evaluate(() => window.__padworksSim.getState().lessonResults.length);
   if (saved < 1) errors.push('lesson result did not come back from the server after reload');
   await shot(p, '148-trainee-results-after-reload');
@@ -799,7 +882,17 @@ await p.selectOption('[data-select="theme"]', 'red-fleet'); await wait(1500);
   if (!/Red fleet sample theme/.test(t.tagline)) errors.push('header did not take the theme tagline');
 }
 await shot(p, '24-admin-theme');
+// Drop 83: the red fleet sample has a pressure pumping focus: featured lessons on the landing page, listed first on the lessons page, the simulator opening on the pumps
+await p.goto(base + '/'); await p.waitForSelector('[data-page="landing"]'); await wait(500);
+if (!(await p.$('[data-panel="featured"] [data-featured="L2"]'))) errors.push('landing page does not feature the pumping lessons under the red fleet theme');
+await shot(p, '28-landing-focus');
+await p.goto(base + '/lessons'); await p.waitForSelector('[data-lesson-card="L1"]'); await wait(300);
+{
+  const first = await p.evaluate(() => { const c = document.querySelectorAll('[data-lesson-card]'); return c[1] ? c[1].getAttribute('data-lesson-card') : null; });   // [0] is the introduction card
+  if (first !== 'L2') errors.push('lessons page does not list the featured lesson first: ' + first);
+}
 await p.goto(base + SIM + (process.env.LITE ? '&' : '?') + 'theme=red-fleet'); await wait(6000);
+if ((await p.inputValue('select[title="Camera preset"]')) !== 'pumps') errors.push('simulator did not open on the focus preset');
 await p.selectOption('select[title="Camera preset"]', 'pumps'); await frames(p, 2);
 {
   const c = await p.evaluate(() => {
@@ -811,7 +904,52 @@ await p.selectOption('select[title="Camera preset"]', 'pumps'); await frames(p, 
 }
 await shot(p, '25-sim-red-fleet');
 await p.evaluate(() => window.__padworksTheme.getState().setTheme('padworks')); await wait(1500);
+// Drop 82: an organization with a theme and a logo on the server; a member sees it on sign-in; logo plates on the pumps
+{
+await p.goto(base + '/admin'); await p.waitForSelector('[data-panel="orgs"]'); await wait(500);
+const logo = await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 256; c.height = 96; const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, 256, 96); x.fillStyle = '#0a3d91'; x.beginPath(); x.arc(48, 48, 36, 0, Math.PI * 2); x.fill(); x.font = 'bold 44px Arial'; x.fillText('ACME', 96, 64); return c.toDataURL('image/png'); });
+await p.fill('[data-input="org-name"]', 'Acme Energy'); await wait(200);
+if ((await p.inputValue('[data-input="org-slug"]')) !== 'acme-energy') errors.push('org slug did not follow the name');
+await p.click('[data-action="create-org"]'); await p.waitForSelector('[data-org="acme-energy"]');
+await p.click('[data-panel="theme"] summary'); await wait(300);
+await p.fill('[data-input="theme-json"]', JSON.stringify({ id: 'acme', name: 'Acme Energy', site: { name: 'Acme Padworks', tagline: 'Acme Energy training', accent: '#0a84ff', logo }, fleet: { name: 'Acme Pumping', primary: '#0a3d91', secondary: '#f0f0f0' }, wellhead: { primary: '#202020', accent: '#d9a400' }, operator: { primary: '#ffffff', ppe: '#ff7a1a', hat: '#ffffff' } }));
+await p.click('[data-action="theme-load"]'); await wait(800);
+await p.click('[data-action="org-use-theme-acme-energy"]'); await p.waitForSelector('[data-value="org-theme-acme-energy"]'); await wait(300);
+if (!/with logo/.test(await p.textContent('[data-org="acme-energy"]'))) errors.push('org theme stored without its logo');
+// a trainee in the organization (the drop 16 section's trainee has had her password reset by now)
+await p.fill('[data-input="new-username"]', 'acme.trainee'); await p.fill('[data-input="new-display"]', 'Acme Trainee'); await p.click('[data-action="create-account"]');
+await p.waitForSelector('[data-panel="one-time-password"]'); const otp = (await p.textContent('[data-value="otp"]')).trim();
+await p.waitForSelector('[data-select="org-acme.trainee"]'); await p.selectOption('[data-select="org-acme.trainee"]', { label: 'Acme Energy' }); await wait(800);
+if (!/acme-energy\s*1(?!\d)/.test((await p.textContent('[data-org="acme-energy"]')).replace(/\s+/g, ' '))) errors.push('org member count did not update');
+await shot(p, '26-admin-orgs');
+await p.evaluate(() => window.__padworksTheme.getState().setTheme('padworks')); await wait(500);
 await p.close();
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  p = await ctx.newPage(); p.setDefaultTimeout(360000);
+  p.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  p.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
+  await p.goto(base + '/lessons'); await p.waitForSelector('[data-panel="login"]');
+  await p.fill('[data-input="username"]', 'acme.trainee'); await p.fill('[data-input="password"]', otp); await p.click('[data-action="login"]');
+  await p.waitForSelector('[data-panel="change-password"]');
+  await p.fill('[data-input="current"]', otp); await p.fill('[data-input="next"]', 'trainee-password-2'); await p.fill('[data-input="again"]', 'trainee-password-2'); await p.click('[data-action="change-password"]');
+  await p.waitForSelector('[data-action="user-menu"]'); await wait(1500);
+  const t = await p.evaluate(() => { const T = window.__padworksTheme.getState().theme; return { id: T.id, logo: T.site.logo.length, header: document.querySelector('header') ? document.querySelector('header').textContent : '' }; });
+  if (t.id !== 'org-acme-energy') errors.push('member did not get the organization theme: ' + t.id);
+  if (!/Acme Energy training/.test(t.header)) errors.push('header did not take the organization tagline');
+  await p.goto(base + SIM); await wait(8000);
+  await p.selectOption('select[title="Camera preset"]', 'pumps'); await frames(p, 2);
+  const c = await p.evaluate(() => { const r = { id: window.__padworksTheme.getState().theme.id, version: window.__padworksTheme.getState().version, plates: 0 }; window.__padworksScene.traverse(o => { if (o.isInstancedMesh && /^PP-FRACPUMP/.test(o.name) && o.material && o.material.map && o.material.transparent) r.plates += o.count; }); return r; });
+  if (c.id !== 'org-acme-energy') errors.push('organization theme lost on reload: ' + c.id);
+  if (c.version !== 0) errors.push('organization theme repainted after mount (version ' + c.version + '), the cache should paint it first');
+  if (c.plates < 2) errors.push('no logo plates on the pumps: ' + c.plates);
+  await shot(p, '27-sim-org-logo');
+  await p.click('[data-action="user-menu"]'); await p.click('[data-action="menu-logout"]'); await p.waitForSelector('[data-panel="login"]'); await wait(500);
+  const after = await p.evaluate(() => ({ id: window.__padworksTheme.getState().theme.id, cached: window.localStorage.getItem('padworks.orgTheme') }));
+  if (after.id !== 'padworks' || after.cached) errors.push('organization theme did not drop at sign-out: ' + JSON.stringify(after));
+  await p.close(); await ctx.close();
+}
+}
 }
 
 // ---------------- Phone

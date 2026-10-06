@@ -30,7 +30,7 @@ export default function About() {
         </div>
         <div data-section="credits">
           <h2 className="font-semibold">Credits</h2>
-          <p className="text-mute mt-1">Everything on the pad is drawn in code except the items below, which come from free libraries under the license shown. Photographic textures and skies are CC0 from Poly Haven and ambientCG (no attribution required). The crew are Mixamo characters and animations (Adobe), used under the Mixamo terms. Models attributed under CC-BY-4.0 are used unmodified apart from scaling and texture size.</p>
+          <p className="text-mute mt-1">Everything on the pad is drawn in code except the items below, which come from free libraries under the license shown. Photographic textures and skies are CC0 from Poly Haven and ambientCG (no attribution required). The crew are Mixamo characters and animations (Adobe), used under the Mixamo terms. The narration voice is rendered with Piper text-to-speech (MIT) from the LibriTTS English model, trained on the LibriTTS corpus (CC BY 4.0, Zen et al., Google), speaker 1027. Models attributed under CC-BY-4.0 are used unmodified apart from scaling and texture size.</p>
           <ul className="mt-2 space-y-0.5 text-xs">{credits.map(c => <li key={c.id}><span className="font-medium">{c.title}</span> by <a className="text-accent" href={c.authorUrl || c.source} target="_blank" rel="noreferrer">{c.author}</a> via <a className="text-accent" href={c.source} target="_blank" rel="noreferrer">{c.via}</a>, {c.license === 'CC0' ? 'CC0' : <a className="text-accent" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">{c.license}</a>}</li>)}</ul>
         </div>
         <div>

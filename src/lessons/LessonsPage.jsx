@@ -6,9 +6,13 @@ import { Play, Pencil, Clock, Trophy } from 'lucide-react';
 import { LESSONS } from '../sim/lessons.js';
 import { useSim } from '../sim/store.js';
 import { bestFor } from '../sim/progress.js';
+import { useTheme } from '../theme/theme.js';
+import { orderedLessons, featuredLessons, focusName } from '../theme/focus.js';
 
 export default function LessonsPage() {
   const results = useSim(s => s.lessonResults);
+  const theme = useTheme(s => s.theme);
+  const lessons = orderedLessons(theme), featured = featuredLessons(theme), who = focusName(theme);   // Drop 83: the focus's lessons first
   const done = LESSONS.filter(l => bestFor(results, l.id)).length;
   return (
     <div className="h-full overflow-y-auto" data-page="lessons">
@@ -26,14 +30,15 @@ export default function LessonsPage() {
           <Link to="/simulate?demo=intro" className="btn btn-primary flex items-center gap-1.5 self-start md:self-center" data-action="watch-intro"><Play size={14} />Watch the introduction</Link>
         </div>
         <div className="grid md:grid-cols-2 gap-3">
-          {LESSONS.map(l => {
+          {lessons.map(l => {
             const best = bestFor(results, l.id);
+            const star = featured.includes(l);
             return (
-              <div key={l.id} className="card p-4 flex flex-col" data-lesson-card={l.id}>
+              <div key={l.id} className={'card p-4 flex flex-col ' + (star ? 'border-accent/40' : '')} data-lesson-card={l.id} data-featured={star ? '1' : undefined}>
                 <div className="flex items-start gap-2">
                   <span className="mono text-xs px-1.5 py-0.5 rounded bg-panel2 border border-line shrink-0">{l.n}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium">{l.title}</div>
+                    <div className="font-medium">{l.title}{star && <span className="badge text-accent ml-2 text-[10px]" title={'Featured for ' + who}>Featured</span>}</div>
                     <p className="text-sm text-mute mt-1">{l.blurb}</p>
                   </div>
                 </div>

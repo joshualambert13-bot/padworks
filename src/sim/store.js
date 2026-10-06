@@ -6,6 +6,13 @@ import { LESSONS, lessonById, nextLessonId } from './lessons.js';
 import { fromServer, postLessonResult, postJobSummary } from './progress.js';
 import { fracHeight, viscosityFactor, BARRIER_TOP, TARGET_HALF } from './geology.js';
 
+// The sim advances in TICK_STEP batches from the scene's frame loop and `tick` clamps one step at TICK_MAX. Drop 83:
+// a slow frame (a laptop at a few frames a second, the headless pass under software rendering) is caught up in
+// TICK_MAX sub-steps up to CATCH_UP seconds of simulation per frame, so a job keeps real pace on a slow machine;
+// anything beyond that (a tab left in the background) is dropped as before.
+export const TICK_STEP = 0.05, TICK_MAX = 0.1, CATCH_UP = 1.0;
+export function tickCatchUp(tick, dt) { let left = Math.min(dt, CATCH_UP); while (left > 1e-6) { const step = Math.min(left, TICK_MAX); tick(step); left -= step; } }
+
 // ---------------------------------------------------------------------------------------------
 // Scoring. A job (or a lesson) starts at 100. Points come off for moves against the sequence and for
 // recoveries that run past their time target. The numbers are training weights, not an industry scale.
@@ -689,7 +696,7 @@ export const useSim = create((set, get) => ({
   tick: (dtRaw) => {
     const s = get();
     if (!s.running || s.phase === 'setup') return;
-    const dt = Math.min(dtRaw, 0.1) * s.speed;
+    const dt = Math.min(dtRaw, TICK_MAX) * s.speed;
     const t = s.t + dt;
     const patch = { t };
     // scoring accumulators for this tick

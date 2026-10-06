@@ -1,80 +1,65 @@
-// Light vehicles. A generic three-quarter-ton crew-cab pickup with the proportions of a modern North American
-// work truck (6.4 m long, 2.0 m wide, 2.0 m tall, four doors, 2 m bed, tow mirrors), white, with no badge, grille
-// signature, or livery: the shape is the type, not a make. Rounded sheet metal, glass, black trim, chrome bumpers.
-import { useRef, useMemo } from 'react';
+// Light vehicles (Drop 84): the downloaded crew-cab pickup (public/models/props/pickup.glb, CC-BY, credited on the
+// About page; badges and plates blanked at pack time) in the operator's color, both parked in a row and driving the
+// lease road. The model's paint is one flat material, so the fleet is one instanced draw per material with the paint
+// as a per-instance tint, and the road truck is a clone with its wheels re-centered on their axles so they turn.
+// The drawn pickup of Drops 25 to 81 is gone: the shape is the type, the model carries it better.
+import { useRef, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Merged, MAT, GEO, metal , Instanced } from './primitives.jsx';
-import { BlobShadow } from './lighting.jsx';
+import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
+import { Instanced } from './primitives.jsx';
 
-const CHROME = metal('#d9dde2', 1.0, 0.15);
-const TRIM = { color: '#15171a', metalness: 0.2, roughness: 0.7 };
-const LAMP = { color: '#fff7df', metalness: 0.1, roughness: 0.2 };
+const URL = '/models/props/pickup.glb';
+const isBody = (m) => m && /Bodymat/i.test(m.name);
 
-// `wheelRefs` receives the four wheel groups so a mover can spin them. x forward, bed at -x.
-export function PickupTruck({ paint = MAT.paintWhite, wheelRefs = null, shadow = true, lights = false }) {
-  const refs = useRef([]);
-  const W = 2.0, FLOOR = 0.42;
-  return (
-    <group>
-      {shadow && <BlobShadow size={[7.4, 3.2]} />}
-      {/* sheet metal: hood, cowl and cab, roof, bed sides and tailgate, rear fender flares */}
-      <Merged mat={paint} parts={() => [
-        { g: GEO.rbox(1.75, 0.62, W - 0.1, 0.12), p: [2.35, FLOOR + 0.95, 0] },                 // hood and front fenders
-        { g: GEO.rbox(2.1, 0.75, W, 0.1), p: [0.45, FLOOR + 0.82, 0] },                          // cab lower body, four doors
-        { g: GEO.rbox(2.0, 0.78, W - 0.22, 0.14), p: [0.4, FLOOR + 1.55, 0] },                   // cab upper body (pillars and roof)
-        { g: GEO.rbox(2.05, 0.74, W, 0.08), p: [-1.7, FLOOR + 0.8, 0] },                         // bed sides and front wall
-        { g: GEO.box(0.06, 0.6, W - 0.1), p: [-2.72, FLOOR + 0.85, 0] },                          // tailgate
-        { g: GEO.rbox(0.9, 0.3, 0.2, 0.08), p: [-1.75, FLOOR + 0.5, W / 2 + 0.02] }, { g: GEO.rbox(0.9, 0.3, 0.2, 0.08), p: [-1.75, FLOOR + 0.5, -W / 2 - 0.02] },   // rear flares
-      ]} />
-      {/* glass: windshield, side glass, rear window */}
-      <Merged mat={MAT.glass} shadow={false} parts={() => [
-        { g: GEO.box(0.06, 0.62, W - 0.5), p: [1.36, FLOOR + 1.6, 0], r: [0, 0, -0.42] },
-        { g: GEO.box(1.8, 0.5, 0.02), p: [0.4, FLOOR + 1.58, W / 2 - 0.095] }, { g: GEO.box(1.8, 0.5, 0.02), p: [0.4, FLOOR + 1.58, -W / 2 + 0.095] },   // just proud of the door skin
-        { g: GEO.box(0.04, 0.5, W - 0.6), p: [-0.58, FLOOR + 1.58, 0] },
-      ]} />
-      {/* trim: bed floor, grille, bumper fascia, door handles, mirrors, running boards, wheel wells */}
-      <Merged mat={TRIM} shadow={false} parts={() => [
-        { g: GEO.box(2.0, 0.08, W - 0.2), p: [-1.7, FLOOR + 0.48, 0] },
-        { g: GEO.box(0.06, 0.5, 1.3), p: [3.24, FLOOR + 0.75, 0] },                               // grille opening, plain mesh
-        { g: GEO.box(0.5, 0.12, 0.3), p: [0.95, FLOOR + 1.7, W / 2 + 0.22] }, { g: GEO.box(0.5, 0.12, 0.3), p: [0.95, FLOOR + 1.7, -W / 2 - 0.22] },   // tow mirror heads
-        { g: GEO.box(0.08, 0.3, 0.2), p: [0.95, FLOOR + 1.5, W / 2 + 0.2] }, { g: GEO.box(0.08, 0.3, 0.2), p: [0.95, FLOOR + 1.5, -W / 2 - 0.2] },
-        { g: GEO.box(1.9, 0.08, 0.25), p: [0.45, FLOOR + 0.25, W / 2 + 0.1] }, { g: GEO.box(1.9, 0.08, 0.25), p: [0.45, FLOOR + 0.25, -W / 2 - 0.1] },   // running boards
-        { g: GEO.box(0.5, 0.35, 0.3), p: [1.0, FLOOR + 1.6, W / 2 - 0.1] },                      // B pillar
-      ]} />
-      <Merged mat={CHROME} shadow={false} parts={() => [
-        { g: GEO.rbox(0.25, 0.3, W + 0.1, 0.06), p: [3.25, FLOOR + 0.35, 0] },                    // front bumper
-        { g: GEO.rbox(0.22, 0.26, W + 0.05, 0.05), p: [-2.85, FLOOR + 0.35, 0] },                 // rear bumper
-        { g: GEO.box(0.04, 0.06, 1.2), p: [3.28, FLOOR + 1.02, 0] },                              // hood lip
-      ]} />
-      <Merged mat={LAMP} shadow={false} parts={() => [[1, 1], [1, -1]].map(([, sz]) => ({ g: GEO.box(0.04, 0.22, 0.42), p: [3.24, FLOOR + 1.0, sz * 0.72] }))} />
-      <Merged mat={{ color: '#b0121b', metalness: 0.2, roughness: 0.4 }} shadow={false} parts={() => [[1], [-1]].map(([sz]) => ({ g: GEO.box(0.04, 0.5, 0.14), p: [-2.76, FLOOR + 0.9, sz * 0.9] }))} />
-      {lights && <mesh position={[-1.75, FLOOR + 1.75, 0]}><boxGeometry args={[0.3, 0.22, 0.4]} /><meshStandardMaterial color="#ffb020" emissive="#ffb020" emissiveIntensity={1.4} /></mesh>}
-      {/* axles and wheels */}
-      <Merged mat={MAT.chassis} shadow={false} parts={() => [{ g: GEO.cyl(0.07, W - 0.3, 8), p: [2.0, FLOOR, 0], r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.09, W - 0.3, 8), p: [-1.95, FLOOR, 0], r: [Math.PI / 2, 0, 0] }, { g: GEO.box(4.6, 0.12, 0.7), p: [0, FLOOR + 0.1, 0] }]} />
-      {[[2.0, W / 2 - 0.1], [2.0, -W / 2 + 0.1], [-1.95, W / 2 - 0.1], [-1.95, -W / 2 + 0.1]].map(([x, z], k) => (
-        <group key={k} ref={el => { refs.current[k] = el; if (wheelRefs) wheelRefs.current[k] = el; }} position={[x, FLOOR, z]}>
-          <Merged mat={MAT.tire} parts={() => [{ g: GEO.cyl(0.42, 0.3, 20), r: [Math.PI / 2, 0, 0] }]} />
-          <Merged mat={MAT.alu} shadow={false} parts={() => [{ g: GEO.cyl(0.26, 0.32, 12), r: [Math.PI / 2, 0, 0] }, { g: GEO.cyl(0.09, 0.4, 8), r: [Math.PI / 2, 0, 0] }]} />
-        </group>
-      ))}
-    </group>
-  );
+// a clone of the model with the paint material swapped: `tint` true leaves it white and flags it for the instanced
+// per-unit color; a color string paints it outright
+function paintedClone(scene, paint) {
+  const s = scene.clone(true);
+  let body = null;
+  s.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    if (isBody(o.material)) {
+      if (!body) { body = o.material.clone(); if (paint === true) { body.color.set('#ffffff'); body.userData.instanceTint = true; } else body.color.set(paint); }
+      o.material = body;
+    }
+  });
+  return s;
 }
 
-// Trucks parked in a row, nose to the same side.
-export function ParkedPickups({ position, count = 6, paint = null }) {
-  const transforms = useMemo(() => Array.from({ length: count }, (_, i) => ({ position: [0, 0, i * 3.2] })), [count]);
-  const mat = useMemo(() => (paint ? { ...MAT.paintWhite, color: paint } : MAT.paintWhite), [paint]);   // the operator's color (Drop 81)
+function Fleet({ position, count, paint, spacing }) {
+  const gltf = useGLTF(URL);
+  const scene = useMemo(() => paintedClone(gltf.scene, true), [gltf.scene]);
+  const transforms = useMemo(() => Array.from({ length: count }, (_, i) => ({ position: [0, 0, i * spacing], rotation: [0, 0, 0], tint: paint })), [count, spacing, paint]);
   return (
     <group position={position} name="LG-PICKUPS">
-      <Instanced transforms={transforms} name="LG-PICKUPS" version={paint || ''}><PickupTruck paint={mat} /></Instanced>
+      <Instanced transforms={transforms} name="LG-PICKUPS" version={paint || ''}><primitive object={scene} /></Instanced>
     </group>
   );
 }
+// Trucks parked in a row along z, noses to +x, in the operator's color.
+export function ParkedPickups({ position, count = 6, paint = '#d7dde5', spacing = 3.4 }) {
+  return <Suspense fallback={null}><Fleet position={position} count={count} paint={paint} spacing={spacing} /></Suspense>;
+}
 
-// The crew truck on the lease road: out to the edge of the terrain and back, on the road surface, with a light bar.
-export function RoadTruck({ road, speed = 6, height = () => 0 }) {
+// The crew truck on the lease road: out to the edge of the terrain and back, on the road surface.
+function Rolling({ road, speed, height, paint }) {
+  const gltf = useGLTF(URL);
   const ref = useRef(); const wheels = useRef([]);
+  const scene = useMemo(() => {
+    const s = paintedClone(gltf.scene, paint || '#d7dde5');
+    // each wheel mesh has its geometry where the wheel sits; move the geometry onto the node's origin and the node onto
+    // the wheel's center, so a rotation about z (the axle) turns it in place
+    const list = [];
+    s.traverse(o => {
+      if (!o.isMesh || !/WheelStock/i.test(o.name)) return;
+      const g = o.geometry.clone(); g.computeBoundingBox(); const c = g.boundingBox.getCenter(new THREE.Vector3());
+      g.translate(-c.x, -c.y, -c.z); o.geometry = g; o.position.add(c); list.push(o);
+    });
+    wheels.current = list;
+    return s;
+  }, [gltf.scene, paint]);
   useFrame((state, dt) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime * speed;
@@ -83,7 +68,10 @@ export function RoadTruck({ road, speed = 6, height = () => 0 }) {
     const z = road.z + (out ? 1.6 : -1.6);
     ref.current.position.set(x, height(x, z), z);
     ref.current.rotation.y = out ? 0 : Math.PI;
-    wheels.current.forEach(wh => { if (wh) wh.rotation.z -= dt * speed / 0.42; });
+    wheels.current.forEach(wh => { wh.rotation.z -= dt * speed / 0.385; });
   });
-  return <group ref={ref}><PickupTruck wheelRefs={wheels} lights /></group>;
+  return <group ref={ref} name="LG-PICKUPS"><primitive object={scene} /></group>;
+}
+export function RoadTruck({ road, speed = 6, height = () => 0, paint = null }) {
+  return <Suspense fallback={null}><Rolling road={road} speed={speed} height={height} paint={paint} /></Suspense>;
 }

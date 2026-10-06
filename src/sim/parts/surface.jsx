@@ -4,6 +4,7 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { LogoPlate } from './logo.jsx';
 import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, Handrail, Ladder, Stair, UnionNut, Studs, Merged, GEO, buildMerged, RBox, Mat, Cable, HydraulicCylinder, metal, Instanced } from './primitives.jsx';
 import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture, wrapTexture, glowTexture } from './lighting.jsx';
 import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume, Stencil } from './life.jsx';
@@ -801,10 +802,11 @@ export function zipperDims(bore) {
 // stands on its own small base, and the flanged line from the top elbow runs level to the top of the tree.
 export function ZipperManifold({ valves, showLabels, position = [ZIPPER_X, 0, 0], wellZ = [0], roles = [], bore = 0.18, focusValve = null }) {
   const n = wellZ.length;
-  const z0 = wellZ[0], z1 = wellZ[n - 1];
-  const len = Math.abs(z1 - z0) + 6.0;
+  const z0 = Math.min(...wellZ), z1 = Math.max(...wellZ);
   const zc = (z0 + z1) / 2;
-  const zFront = zc - len / 2;
+  // the header runs from the inlet valve, 3 m ahead of the first leg, to a blind flange just past the last leg (Drop 84:
+  // it used to run 3 m past the last leg to a bleed valve; the manifold ends at the last well)
+  const zFront = z0 - 3.0, zBack = z1 + 0.7;
   const d = zipperDims(bore);
   const hx = -1.0;
   const legSpots = useMemo(() => wellZ.map(z => ({ position: [hx, 0, z] })), [wellZ.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -813,10 +815,12 @@ export function ZipperManifold({ valves, showLabels, position = [ZIPPER_X, 0, 0]
       {/* inlet isolation valve from the missile, bore along the header, at the front end */}
       <Box size={[2.6, 0.2, 2.4]} position={[hx + 0.3, 0.1, zFront + 0.9]} mat={MAT.yellow} name="WH-ZIPPER-SKID" />
       <GateValveBlock open={valves.iso.pos} kind="hydraulic" axis="z" bore={d.bz} position={[hx, d.headerY, zFront + 0.9]} name="WH-ZIPPER-INLETVALVE" pulse={focusValve === 'iso'} label={showLabels ? 'Inlet isolation valve (from the missile)' : null} />
-      <Pipe from={[hx, d.headerY, zFront + 0.9 + d.ftf / 2]} to={[hx, d.headerY, zc + len / 2 - 0.6]} r={d.bz * 0.62} mat={MAT.redIron} unions={false} name="WH-ZIPPER-INLETHEADER" />
-      {Array.from({ length: Math.max(2, Math.round(len / 4)) }).map((_, i) => <Box key={i} size={[0.6, d.headerY - d.bz * 0.55, 0.3]} position={[hx, (d.headerY - d.bz * 0.55) / 2, zFront + 2.2 + i * 4]} mat={MAT.darkSteel} />)}
-      {/* bleed valve on the far end of the header */}
-      <GateValveBlock open={0} kind="manual" axis="z" bore={0.05} position={[hx, d.headerY, zc + len / 2 - 0.25]} name="WH-ZIPPER-BLEEDVALVE" />
+      <Pipe from={[hx, d.headerY, zFront + 0.9 + d.ftf / 2]} to={[hx, d.headerY, zBack]} r={d.bz * 0.62} mat={MAT.redIron} unions={false} name="WH-ZIPPER-INLETHEADER" />
+      {/* blind flange on the end of the header; the bleed valve sits on the inlet end now, downstream of the inlet valve */}
+      <Cyl r={d.bz * 1.05} h={0.08} position={[hx, d.headerY, zBack + 0.04]} rotation={[Math.PI / 2, 0, 0]} mat={MAT.steel} />
+      <GateValveBlock open={0} kind="manual" axis="horizontal" bore={0.05} position={[hx - d.bz * 0.62 - 0.22, d.headerY, zFront + 2.1]} name="WH-ZIPPER-BLEEDVALVE" studs={false} />
+      <Pipe from={[hx, d.headerY, zFront + 2.1]} to={[hx - d.bz * 0.62 - 0.1, d.headerY, zFront + 2.1]} r={0.035} mat={MAT.steel} unions={false} />
+      {Array.from({ length: Math.max(1, Math.floor((zBack - zFront - 2.6) / 4) + 1) }).map((_, i) => <Box key={i} size={[0.6, d.headerY - d.bz * 0.55, 0.3]} position={[hx, (d.headerY - d.bz * 0.55) / 2, Math.min(zFront + 2.2 + i * 4, zBack - 0.4)]} mat={MAT.darkSteel} />)}
       {/* Drop 54: the static iron of every leg (base, tee, risers, flanges, bolt rings, elbow and outlet, transducer,
           junction box, gauge, hydraulic hoses) is one instanced set over the legs; the two valves per leg, whose
           state differs, stay per leg. Record names ride on the instanced set, so every leg picks as the zipper leg. */}
@@ -1062,6 +1066,9 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
             ]} />
             <Hose from={[-6.4, D + 0.3, 0.6]} to={[-6.9, 0.2, 0.6]} r={0.06} sag={0.1} segments={6} />
             <Hose from={[-6.4, D + 0.3, -0.4]} to={[-6.9, 0.2, -0.4]} r={0.06} sag={0.1} segments={6} />
+            {/* customer logo on both sides of the VFD cabinet, below the pump number (Drop 82); nothing without a theme logo */}
+            <LogoPlate position={[-5.3, D + 0.7, 1.118]} width={1.6} maxHeight={0.5} />
+            <LogoPlate position={[-5.3, D + 0.7, -1.118]} rotation={[0, Math.PI, 0]} width={1.6} maxHeight={0.5} />
           </>
         ) : (
           <>
@@ -1084,6 +1091,9 @@ export function FracPump({ position, rotation = [0, 0, 0], online = false, rate 
             {!template && <group ref={fan} position={[-5.3, D + 1.0, 0]}>
               <Merged mat={MAT.alu} shadow={false} parts={() => [0, 60, 120].map(a => ({ g: GEO.box(0.04, 1.3, 0.16), r: [THREE.MathUtils.degToRad(a), 0, 0] }))} />
             </group>}
+            {/* customer logo on the enclosure door on both sides, under the pump number (Drop 82); nothing without a theme logo */}
+            <LogoPlate position={[-2.9, D + 0.6, 1.064]} width={1.1} maxHeight={0.42} />
+            <LogoPlate position={[-2.9, D + 0.6, -1.064]} rotation={[0, Math.PI, 0]} width={1.1} maxHeight={0.42} />
           </>
         )}
         <RBox r={0.08} size={[1.5, 1.1, 1.5]} position={[-1.2, D + 0.85, 0]} mat={MAT.darkSteel} name={name + '-TRANSMISSION'} />
@@ -1453,6 +1463,9 @@ export function DataVan({ position, showLabels, lit = false }) {
       <Box size={[1.6, 1.4, 1.2]} position={[-6.6, D + 0.7, 0]} mat={MAT.chassis} />
       <Cyl r={0.05} h={4.0} position={[-4.5, D + 4.7, 0]} mat={MAT.darkSteel} />
       <Box size={[0.5, 0.05, 0.5]} position={[-4.5, D + 6.7, 0]} mat={MAT.darkSteel} />
+      {/* customer logo: under the window band on the pad side, large on the far side (Drop 82) */}
+      <LogoPlate position={[-0.6, D + 0.7, 1.358]} width={3.0} maxHeight={0.8} />
+      <LogoPlate position={[-0.2, D + 1.35, -1.358]} rotation={[0, Math.PI, 0]} width={6.0} maxHeight={1.6} />
       {showLabels && <Label position={[0, D + 4.8, 0]} text={'Data van'} />}
     </Trailer>
   );
@@ -2050,7 +2063,7 @@ export function WaterTransfer({ tanks, count = 8, to, showLabels, source = 'tank
   const pit = source === 'pit', ast = source === 'ast', heated = source === 'heated';
   const hz = pit ? tanks[2] + 2 : ast ? tanks[2] + 10.5 : tanks[2] + 7.4;
   const x0 = tanks[0] - 1.0, x1 = ast ? tanks[0] + 18 : tanks[0] + (count - 1) * 3.5 + 1.6;
-  const pumpPos = pit ? [tanks[0] + 26, 0, hz + 1.0] : [x1 + 4.5, 0, hz + 1.0];
+  const pumpPos = pit ? [tanks[0] + 30, 0, hz + 1.0] : [x1 + 4.5, 0, hz + 1.0];   // Drop 84: the pit's transfer pump stands clear of the berm, not on its slope
   const heaterPos = [pumpPos[0] + 9.5, 0, hz + 2.6];
   const headerPts = useMemo(() => [[x0, 0.5, hz], [x1 + 0.5, 0.5, hz]], [x0, x1, hz]);
   const ground = useMemo(() => {

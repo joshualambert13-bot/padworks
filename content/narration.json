@@ -1,0 +1,332 @@
+{
+  "note": "Narration for the introduction and the lesson demos. Edit the text; keep the ids. The score is shown in the caption at the end of a lesson, not spoken, so every line here is the same every time. scripts/narration-render.mjs turns these lines into the voice clips in public/audio/narration.",
+  "intro": [
+    {
+      "id": "intro-1",
+      "preset": "pad",
+      "text": "Welcome to Padworks. This is a multi-well frac pad, drawn from generic equipment at real proportions. The simulator runs the whole completion: wireline, fracturing, drillout, flowback and the production hookup. Let us walk the pad."
+    },
+    {
+      "id": "intro-2",
+      "preset": "tree",
+      "text": "The frac tree. Lower and upper master valves, the cross with a wing valve each side, the crown valve, and the swab valve on top for lubricator access. Every valve here is live in the simulator, and the interlocks between them are the first thing the lessons teach."
+    },
+    {
+      "id": "intro-3",
+      "preset": "row",
+      "text": "The wellhead row. Each well gets its own tree, and the colors on the valve bodies match the colors on the zipper leg that feeds it, so you can follow a flow path from the manifold to the well."
+    },
+    {
+      "id": "intro-4",
+      "preset": "zipper",
+      "text": "The zipper manifold. The treating line from the missile comes into the inlet isolation valve; each well has a leg with an isolation valve and a working valve. Opening and closing legs is how one frac spread serves several wells without breaking a connection."
+    },
+    {
+      "id": "intro-5",
+      "preset": "pumps",
+      "text": "The pump row and the missile. Pump trucks park nose-in on both sides of the manifold trailer. Low-pressure suction on the outside, high-pressure discharge down the centerline, the relief valve set below the iron rating."
+    },
+    {
+      "id": "intro-6",
+      "preset": "sand",
+      "text": "The sand side. Silos or boxes feed the conveyor to the blender, where water, sand and chemicals become slurry. Proppant concentration is the number you will watch most when you pump a stage."
+    },
+    {
+      "id": "intro-7",
+      "preset": "tanks",
+      "text": "Water. A lined pit, tanks, or storage tanks depending on the basin, with the transfer pump and the lay-flat line to the blender. In winter the Bakken adds a heater on the discharge."
+    },
+    {
+      "id": "intro-8",
+      "preset": "support",
+      "text": "Support: the data van where the job is run, the fuel row, light plants, the chemical totes, and the crew. Everything on the pad opens a record in the library when you hover and click it."
+    },
+    {
+      "id": "intro-9",
+      "preset": "gate",
+      "text": "The gate and the lease road. Trucks come and go through here; the lanes and ruts on the pad come from where they actually drive."
+    },
+    {
+      "id": "intro-10",
+      "preset": "flowback",
+      "text": "Flowback. After drillout the well flows through the choke manifold to the separator and the tanks, and the flare stack takes the gas until the sales line is tied in."
+    },
+    {
+      "id": "intro-11",
+      "preset": "pad",
+      "text": "That is the pad. Press Lessons to be walked through a job one checkpoint at a time, with a score; press Full simulator to run it your own way. Hover anything to name it; click to open its record."
+    }
+  ],
+  "lessons": {
+    "L1": {
+      "title": "First wireline run",
+      "intro": "Lesson 1, First wireline run. Open the tree in the right order, pump the plug and guns down, perforate stage 1, and hand the well to the frac crew. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 10. Go to the wireline phase. The frac stack is rigged and tested. Wireline runs first on a plug-and-perf well.",
+        "Step 2 of 10. Zipper working valve closed. The lubricator sits above the swab valve; the treating line must be isolated from the tree before the swab opens.",
+        "Step 3 of 10. Lower master, upper master, and crown open. The tool string passes through all three on its way into the well.",
+        "Step 4 of 10. Swab valve open (lubricator tested). The swab is the last valve between the lubricator and the well bore.",
+        "Step 5 of 10. Run in hole. The string falls under its own weight in the vertical, then needs pump-down rate to move along the lateral.",
+        "Step 6 of 10. Pump-down rate 15 to 25 bpm. Too slow and the string stalls in the lateral; too fast and you risk the weak point.",
+        "Step 7 of 10. Plug set at depth. The setting tool fires when the string reaches depth. Nothing to do but hold rate.",
+        "Step 8 of 10. Fire the guns bottom-up. Clusters fire from the toe-most up so the string is never below fresh perforations.",
+        "Step 9 of 10. Pull out of hole to the lubricator. Line speed is limited by the pressure control equipment; wait for the string to be back in the lubricator.",
+        "Step 10 of 10. Swap to frac: swab closed, lubricator rigged down. Once the swab is closed the frac crew can open the zipper leg to the inlet block."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L2": {
+      "title": "Pump stage 1",
+      "intro": "Lesson 2, Pump stage 1. Open the flow path from the missile to the perforations, bring the rate up in steps, place the stage design, sand off, and advance. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 7. Zipper working valve open to the inlet block. The swab is closed and the lubricator is down, so the leg can open. The lower isolation valve is already open.",
+        "Step 2 of 7. Pumps online. Pumps come online at zero rate; the missile pressures up against the open path.",
+        "Step 3 of 7. Bring the rate up in steps to 80 bpm or more. Raise the slurry rate 10 to 20 bpm at a time and watch surface treating pressure against the kickout line.",
+        "Step 4 of 7. Add proppant at 0.5 to 1.5 PPA. Slickwater carries sand by velocity: keep the rate up while the concentration climbs. This design averages about 1.2 PPA (2,000 lb/ft in 40 bbl/ft); much above that and the sand lands ahead of the fluid.",
+        "Step 5 of 7. Hold until the stage design is placed. Watch the fracture extend and the pack fill in the downhole view; the stage completes on its own. Sand pumped past the design at any concentration packs the near-wellbore.",
+        "Step 6 of 7. Sand off: proppant to 0 PPA. Pumping sand past the design packs off the near-wellbore. Cut sand and flush the wellbore clean.",
+        "Step 7 of 7. Advance to the next stage. Wireline takes the well back for the next plug and guns."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L3": {
+      "title": "Kickout recovery",
+      "intro": "Lesson 3, Kickout recovery. A valve closes on the flow path while you are pumping. Recover in the right order: rate down, bleed, open the path, acknowledge, restart. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 8. Pumps kicked out: read the alarm and the stopped-job card. Pressure spiked against a closed valve and the pumps tripped at the kickout setting.",
+        "Step 2 of 8. Rate setpoint to zero. A controlled restart starts from zero, not from the rate the pumps tripped at.",
+        "Step 3 of 8. Let the treating line bleed toward static. Watch surface pressure fall below 80 percent of the kickout setting.",
+        "Step 4 of 8. Find the closed valve and reopen the flow path. The valve rows show which valve moved. The path is missile, isolation valve, zipper leg, crown, masters.",
+        "Step 5 of 8. Acknowledge the kickout. The acknowledge clears the trip once the path is open.",
+        "Step 6 of 8. Pumps online.",
+        "Step 7 of 8. Bring the rate back in steps to 80 bpm. Same discipline as the first ramp: steps of 10 to 20 bpm.",
+        "Step 8 of 8. Sand back in at 0.5 PPA. Rebuild the schedule from a low concentration; the near-wellbore may have partly packed during the trip."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L4": {
+      "title": "Screenout",
+      "intro": "Lesson 4, Screenout. Cause a screenout on purpose, then recover: sand off, flush, watch net pressure fall, and stage sand back in lower. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 6. Drop the rate to 40 bpm and raise proppant to 3.5 PPA. Slickwater carries sand by velocity. Too much sand at low rate bridges in the perforations and the near-wellbore packs off.",
+        "Step 2 of 6. Screenout: pressure ramping at constant rate. Cut sand to 0 PPA. Every second of sand now adds to the pack.",
+        "Step 3 of 6. Raise the rate to 60 bpm or more to flush. Clean fluid at rate erodes the pack and carries the sand into the fracture.",
+        "Step 4 of 6. Net pressure falls below 1,500 psi. Watch the net pressure readout; the screenout alarm clears when the near-wellbore opens back up.",
+        "Step 5 of 6. Sand back in at no more than 1 PPA with the rate held. Rebuild the schedule from a low concentration.",
+        "Step 6 of 6. Place the stage design. Hold rate and concentration until the stage completes."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L5": {
+      "title": "Toe sleeve and ball drop",
+      "intro": "Lesson 5, Toe sleeve and ball drop. An openhole sliding sleeve well: open the toe sleeve on pressure, pump stage 1, then drop the first ball and shift sleeve 2. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 13. Go to the toe sleeve step. No wireline on this well: the ball launcher sits on the tree and the toe sleeve opens on casing pressure.",
+        "Step 2 of 13. Flow path open from the missile to the tree. The casing is pressured through the treating line, so the zipper leg, crown, and masters must all be open.",
+        "Step 3 of 13. Pumps online at 10 to 20 bpm. A low rate: the casing is a closed system until the toe ports open.",
+        "Step 4 of 13. Pressure up on the toe sleeve. Watch for the pressure drop when the ports open.",
+        "Step 5 of 13. Toe sleeve open.",
+        "Step 6 of 13. Swap to frac. Keep pumping: there is no wireline to rig down.",
+        "Step 7 of 13. Pump stage 1: 60 bpm or more at about 1 PPA until the design is placed. This design is lean on sand (1,200 lb/ft in 25 bbl/ft, about 1.1 PPA on average): above 1.2 PPA the sand lands ahead of the fluid and the near-wellbore packs off. Fewer entry points than a perforated stage, so watch the pressure.",
+        "Step 8 of 13. Sand off and advance to stage 2. The next sleeve opens with a ball.",
+        "Step 9 of 13. Swab valve open to the ball launcher. The launcher is above the swab; the ball enters the flow stream through it.",
+        "Step 10 of 13. Pumps online at 10 to 20 bpm so the ball travels.",
+        "Step 11 of 13. Release ball 1 from the launcher. Balls go smallest first; each seat is a little larger than the one below.",
+        "Step 12 of 13. Ball on seat: sleeve 2 shifts open. Pressure spikes as the ball lands and the shear screws let go.",
+        "Step 13 of 13. Swap to frac for stage 2."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L6": {
+      "title": "Stuck tool string",
+      "intro": "Lesson 6, Stuck tool string. The pump-down string stops in the lateral. Free it without pulling to the weak point, then finish the run. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 6. String stopped: hold the pump-down rate at 20 to 25 bpm. Rate pushes on the string; do not pull toward the weak point.",
+        "Step 2 of 6. Work the line: tension cycles within the safe pull.",
+        "Step 3 of 6. String free and moving again. Keep the rate on until the plug reaches depth.",
+        "Step 4 of 6. Plug set at depth.",
+        "Step 5 of 6. Fire the guns.",
+        "Step 6 of 6. Pull out of hole to the lubricator."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L7": {
+      "title": "Drillout and flowback",
+      "intro": "Lesson 7, Drillout and flowback. All stages are pumped. Mill the plugs out with coiled tubing, then flow the well back through the choke. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 8. Zipper leg closed: the frac crew is off this well.",
+        "Step 2 of 8. Swab valve open for the coiled tubing stack.",
+        "Step 3 of 8. Wing B open to the flowback spread for returns. Cuttings and debris return up the annulus to the flowback equipment.",
+        "Step 4 of 8. Mill the plugs heel to toe. The coil runs to the heel-most plug first; each plug takes a few minutes of job time.",
+        "Step 5 of 8. Pull out and swap to flowback.",
+        "Step 6 of 8. Open the choke in steps past 32/64 in.. Step the choke open and watch the rate and the sand returns.",
+        "Step 7 of 8. Flow back 200 bbl. The well cleans up as load water and sand return.",
+        "Step 8 of 8. Hand over to production."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L8": {
+      "title": "Production hookup",
+      "intro": "Lesson 8, Production hookup. Frac stack off: rig up the workover rig and BOP stack, run the tubing with the lift hardware, land it, and install the production tree. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 4. Workover rig over the well; BOP stack nippled up and tested on the tubing head. The frac stack is gone: the BOP stack is the pressure control while tubing runs.",
+        "Step 2 of 4. Run the production tubing and land it in the tubing hanger. Joint by joint through the annular. The rod pump and seating nipple go in with the string.",
+        "Step 3 of 4. Nipple down the BOP stack.",
+        "Step 4 of 4. Install and test the production tree; commission the lift."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L9": {
+      "title": "Gun misfire",
+      "intro": "Lesson 9, Gun misfire. The guns come up a cluster short. Read it from the fire count, get the string back to surface, re-arm, and run again for the missed cluster. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 6. Plug set at depth. The string is nearly there; keep the pump-down rate on.",
+        "Step 2 of 6. Fire the guns.",
+        "Step 3 of 6. Fire count short: one cluster did not fire. String back to the lubricator. The event log and the stage table show the fired count against the design. Nothing is re-armed with the string in the hole.",
+        "Step 4 of 6. Inspect, re-arm, and run again for the missed cluster. The tree stays open; the lubricator is still rigged. The string goes back down on the pump.",
+        "Step 5 of 6. Guns armed at depth: fire the missed cluster. The plug is already set; the string only has to reach depth and arm.",
+        "Step 6 of 6. Pull out of hole to the lubricator."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L10": {
+      "title": "Lightning hold",
+      "intro": "Lesson 10, Lightning hold. A strike inside the ten-mile ring in the middle of a stage. Pumps down, crews off the pad, hold for the all clear, then bring the stage back. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 4. Lightning within 10 miles: pumps offline, rate to zero. The weather hold is a stop-work: the stage waits. Shut down cleanly; the fracture will close but the plug and perforations are not at risk.",
+        "Step 2 of 4. Hold until the all clear. Nobody works iron and nothing pumps until the ring has been clear for the hold period. Restarting early is the mistake this lesson is about.",
+        "Step 3 of 4. Pumps back online and the rate back up, 60 bpm or more. Bring the rate up in steps as at the start of the stage; the near-wellbore has to open again.",
+        "Step 4 of 4. Sand back in at 0.5 to 1.5 PPA. The proppant slider on the control panel; the stage design picks up where it left off."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L11": {
+      "title": "Treating iron leak",
+      "intro": "Lesson 11, Treating iron leak. A hammer union on the line from the missile starts to spray mid-stage. Shut down, isolate, bleed to zero, swap the joint, pressure test, then bring the stage back. The two mistakes that cost points: touching the iron live, and pumping on the new joint untested. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 7. Leak on the treating line: rate to zero, pumps offline. The spray is the line telling you a seal has let go. Nobody goes near it; the pumps come down first.",
+        "Step 2 of 7. Isolate the line from the well: close the zipper working valve. With the working valve closed the wellhead stays shut in and only the line between the missile and the zipper has to come down.",
+        "Step 3 of 7. Bleed the treating line to zero. The bleed-off on the missile side. The leak slows and stops as the line comes down; zero is read at the gauge, not assumed from the spray stopping.",
+        "Step 4 of 7. Line at zero: clear the red zone, break out the joint and make up the replacement. The Swap button is live the whole time. Pressing it while the line still holds pressure is the line-of-fire mistake: it costs points and the swap does not happen.",
+        "Step 5 of 7. Pressure test the new iron against the closed zipper valve. The test proves the joint before the crew is near it at treating pressure. Pumps online without it costs points.",
+        "Step 6 of 7. Open the zipper working valve. Back to the stage: the flow path to the well first.",
+        "Step 7 of 7. Pumps online and the rate back up, 60 bpm or more. Steps of 10 to 20 bpm, as at the start of the stage."
+      ],
+      "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    }
+  },
+  "clips": [
+    "L1-end-1b7d0024",
+    "L1-intro-0851934b",
+    "L1-step-1-5fb6557c",
+    "L1-step-10-d3203ded",
+    "L1-step-2-75b4d196",
+    "L1-step-3-1752eac9",
+    "L1-step-4-1b05f932",
+    "L1-step-5-2cd04b1e",
+    "L1-step-6-0cfde0bc",
+    "L1-step-7-80d2ad33",
+    "L1-step-8-d8c8b95a",
+    "L1-step-9-d50ab20d",
+    "L10-end-1b7d0024",
+    "L10-intro-3d0660c5",
+    "L10-step-1-af99c7be",
+    "L10-step-2-64169f06",
+    "L10-step-3-080935e5",
+    "L10-step-4-b0fcaba2",
+    "L11-end-1b7d0024",
+    "L11-intro-26dd3ed5",
+    "L11-step-1-ba58bd07",
+    "L11-step-2-ecfc4e24",
+    "L11-step-3-7001f8e3",
+    "L11-step-4-679eada5",
+    "L11-step-5-30fc8f31",
+    "L11-step-6-1fc8c2c8",
+    "L11-step-7-e3ef486a",
+    "L2-end-1b7d0024",
+    "L2-intro-22998159",
+    "L2-step-1-13c41536",
+    "L2-step-2-542732ce",
+    "L2-step-3-7da9008a",
+    "L2-step-4-361c327c",
+    "L2-step-5-e2463cc5",
+    "L2-step-6-e949c6fb",
+    "L2-step-7-51d641bf",
+    "L3-end-1b7d0024",
+    "L3-intro-6c8c86fb",
+    "L3-step-1-e7de2d38",
+    "L3-step-2-a006c8c9",
+    "L3-step-3-e4c01d6e",
+    "L3-step-4-5b03872d",
+    "L3-step-5-8041dcba",
+    "L3-step-6-06b758c8",
+    "L3-step-7-dd3cd16d",
+    "L3-step-8-0c70bf5b",
+    "L4-end-1b7d0024",
+    "L4-intro-7b5094d0",
+    "L4-step-1-830b27d2",
+    "L4-step-2-edbe4b71",
+    "L4-step-3-5ab9ea83",
+    "L4-step-4-96e688ff",
+    "L4-step-5-294d9954",
+    "L4-step-6-d0e20982",
+    "L5-end-1b7d0024",
+    "L5-intro-3413947d",
+    "L5-step-1-565df837",
+    "L5-step-10-b48e7100",
+    "L5-step-11-f3f2d9ab",
+    "L5-step-12-d3b87158",
+    "L5-step-13-ca1474e7",
+    "L5-step-2-2e5a8bc6",
+    "L5-step-3-41f22eff",
+    "L5-step-4-c9a144d6",
+    "L5-step-5-29da9857",
+    "L5-step-6-1f028410",
+    "L5-step-7-b9b39b3e",
+    "L5-step-8-e50c16f0",
+    "L5-step-9-9f7edfac",
+    "L6-end-1b7d0024",
+    "L6-intro-c2c831e7",
+    "L6-step-1-770aa5bd",
+    "L6-step-2-d52b93ff",
+    "L6-step-3-c043485d",
+    "L6-step-4-0af0fec6",
+    "L6-step-5-f86a8fa9",
+    "L6-step-6-3b3ad9fd",
+    "L7-end-1b7d0024",
+    "L7-intro-5466ba84",
+    "L7-step-1-3afba6d0",
+    "L7-step-2-fd1c6c08",
+    "L7-step-3-4e1585d8",
+    "L7-step-4-78ae5006",
+    "L7-step-5-81b95aca",
+    "L7-step-6-4af87d09",
+    "L7-step-7-52ea98f2",
+    "L7-step-8-d0cbe537",
+    "L8-end-1b7d0024",
+    "L8-intro-27cfe807",
+    "L8-step-1-14d2689c",
+    "L8-step-2-35887710",
+    "L8-step-3-ed24755b",
+    "L8-step-4-2932c3e6",
+    "L9-end-1b7d0024",
+    "L9-intro-701a72a2",
+    "L9-step-1-a2b2c475",
+    "L9-step-2-de26e372",
+    "L9-step-3-e824a47d",
+    "L9-step-4-aaa13a3c",
+    "L9-step-5-1903d477",
+    "L9-step-6-3b3ad9fd",
+    "intro-1-17fe8332",
+    "intro-10-11edf315",
+    "intro-11-703209d9",
+    "intro-2-e1065d3a",
+    "intro-3-c0a377dc",
+    "intro-4-fea5f094",
+    "intro-5-13367665",
+    "intro-6-531d542f",
+    "intro-7-f6efb662",
+    "intro-8-7ea0bdc9",
+    "intro-9-c3b3b592"
+  ]
+}

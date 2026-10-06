@@ -1,16 +1,19 @@
 // Theme panel (Drop 81), on the admin page: pick a theme, load a customer's theme from JSON, export the current one,
 // and copy a pitch link that opens the site in that theme. The colors are documented in theme.js; a customer file
-// is the same shape with their values (and their logo as an SVG or PNG data URL in site.logo).
+// is the same shape with their values (and their logo as an SVG or PNG data URL in site.logo). The Organizations
+// card below it stores the current theme on a customer's organization so their accounts get it everywhere (Drop 82).
 import { useState } from 'react';
 import { Palette, Upload, Download, Link2, Trash2, Check } from 'lucide-react';
 import { useTheme, BUILTIN } from './theme.js';
+import { FOCUS, FOCUS_IDS, focusOf } from './focus.js';
 
 const Swatch = ({ c, label }) => <span className="inline-flex items-center gap-1 text-[11px] text-mute" title={label}><span className="inline-block w-3.5 h-3.5 rounded border border-line" style={{ background: c }} />{label}</span>;
 
 export default function ThemePanel() {
-  const theme = useTheme(s => s.theme), custom = useTheme(s => s.custom), setTheme = useTheme(s => s.setTheme), addCustom = useTheme(s => s.addCustom), removeCustom = useTheme(s => s.removeCustom);
+  const theme = useTheme(s => s.theme), custom = useTheme(s => s.custom), org = useTheme(s => s.org), setTheme = useTheme(s => s.setTheme), addCustom = useTheme(s => s.addCustom), removeCustom = useTheme(s => s.removeCustom);
   const [json, setJson] = useState(''); const [msg, setMsg] = useState(''); const [copied, setCopied] = useState(false);
-  const all = [...BUILTIN, ...custom];
+  // built-ins, then the signed-in account's organization theme (Drop 82), then themes loaded in this browser
+  const all = [...BUILTIN, ...(org && !custom.some(c => c.id === org.id) ? [{ ...org, name: org.name + ' (your organization)' }] : []), ...custom];
   const load = () => {
     try { const t = addCustom(JSON.parse(json)); setMsg('Loaded and applied: ' + t.name); setJson(''); }
     catch (e) { setMsg('Not a theme file: ' + e.message); }
@@ -41,6 +44,12 @@ export default function ThemePanel() {
         <span className="text-mute">Wellhead <span className="text-white">{theme.wellhead.name}</span></span><Swatch c={theme.wellhead.primary} label="trees and zipper" /><Swatch c={theme.wellhead.accent} label="accent" />
         <span className="text-mute">Operator <span className="text-white">{theme.operator.name}</span></span><Swatch c={theme.operator.primary} label="pickups" /><Swatch c={theme.operator.ppe} label="vests" /><Swatch c={theme.operator.hat} label="hard hats" />
         <span className="text-mute">Site <span className="text-white">{theme.site.name}</span></span><Swatch c={theme.site.accent} label="accent" />
+        {/* Drop 83: the focus; changing it on a built-in or custom theme saves a copy of the theme in this browser with the new focus */}
+        <label className="text-mute flex items-center gap-1">Focus
+          <select className="text-xs bg-panel2 border border-line rounded px-1 py-0.5" value={focusOf(theme).id} onChange={e => { const focus = e.target.value; const base = theme.id.replace(/-(pad|pumping|wellhead|operator)$/, ''); addCustom({ ...theme, id: base + '-' + focus, name: theme.name.replace(/ \(focus: [a-z ]+\)$/, '') + ' (focus: ' + FOCUS[focus].label.toLowerCase() + ')', site: { ...theme.site, focus } }); }} data-select="theme-focus" title="Which company the site leads with: their lessons featured, the simulator opening on their equipment">
+            {FOCUS_IDS.map(id => <option key={id} value={id}>{FOCUS[id].label}</option>)}
+          </select>
+        </label>
       </div>
       <details className="text-xs">
         <summary className="cursor-pointer text-mute">Load a customer theme (JSON)</summary>
