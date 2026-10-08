@@ -2,10 +2,14 @@
 // stain map (Drop 44) already puts its marks, so the two agree: `decal_oil.png` under every power end and at the
 // drips, `decal_stain.png` on the wet and muddy spots, `decal_tiretrack.png` along the truck lanes, `decal_crack.png`
 // scattered over the pad. Each kind is one InstancedMesh (one draw call), so a pad with twenty pumps costs four
-// draws. Nothing is drawn for a file that is absent, and Lite draws none of them.
+// draws. Nothing is drawn for a file that is absent, and Lite draws none of them. Since Drop 86 the decals are KTX2
+// files listed in public/textures/index.json (scripts/ktx-pack.mjs); the PNGs are probed only when there is no index.
 import { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { LITE } from './lighting.jsx';
+import { loadKtx2 } from './gpu.js';
+import { TIER } from './tier.js';
+import { textureIndex, textureFile } from './textures.js';
 
 const FILES = ['oil', 'stain', 'tiretrack', 'crack'];
 let loaded = null, probed = false;   // { oil: Texture, ... } for the files that exist, once every probe has answered
@@ -14,12 +18,17 @@ function probeAll() {
   if (loaded || typeof document === 'undefined') return;
   loaded = {}; let left = FILES.length;
   const done = () => { if (--left === 0) { probed = true; waiters.forEach(fn => fn({ ...loaded })); } };
-  for (const k of FILES) {
-    const img = new Image();
-    img.onload = () => { if (img.naturalWidth > 0) { const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; loaded[k] = t; } done(); };
-    img.onerror = () => { done(); };
-    img.src = '/textures/decal_' + k + '.png';
-  }
+  textureIndex().then((index) => {
+    for (const k of FILES) {
+      const file = textureFile(index, 'decal_' + k);
+      if (file) { loadKtx2(file, { anisotropy: TIER.anisotropy }).then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; loaded[k] = t; done(); }, () => done()); continue; }
+      if (index) { done(); continue; }
+      const img = new Image();
+      img.onload = () => { if (img.naturalWidth > 0) { const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = TIER.anisotropy; t.needsUpdate = true; loaded[k] = t; } done(); };
+      img.onerror = () => { done(); };
+      img.src = '/textures/decal_' + k + '.png';
+    }
+  });
 }
 function useDecalTextures() {
   const [tex, setTex] = useState(() => (probed ? { ...loaded } : null));

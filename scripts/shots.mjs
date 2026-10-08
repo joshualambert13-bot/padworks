@@ -22,11 +22,18 @@ const server = spawn('node', ['scripts/dev-server.mjs', String(PORT), process.en
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 await wait(3500);
 
+// Drop 86: the texture budget from the shipped files, before anything renders (scripts/texbudget.mjs)
+const errors = [];
+{
+  const { budget } = await import('./texbudget.mjs');
+  const b = await budget('.');
+  for (const tier of ['phone', 'laptop']) { const t = b[tier]; console.log('texture budget', tier + ':', t.totalMB, 'MB of', t.budgetMB, '(models', t.modelsMB, 'detail', t.detailMB, 'sky', t.skyMB, 'shadow', t.shadowMB + ')'); if (t.totalMB > t.budgetMB) errors.push('texture budget exceeded on ' + tier + ': ' + t.totalMB + ' MB of ' + t.budgetMB); if (t.plain) errors.push(t.plain + ' uncompressed model textures ship for ' + tier); }
+}
+
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'],
 });
-const errors = [];
 const base = `http://localhost:${PORT}`;
 // Sign the context in as the local admin (first time: take the seeded one-time password and set the pass's own).
 const ADMIN = { username: 'admin', seed: 'padworks-admin', password: 'shots-admin-password' };
@@ -170,6 +177,50 @@ await p.getByRole('button', { name: 'Stats' }).click(); await wait(3000);
   if (/SHADER ERROR/.test(txt)) errors.push('stats readout reports a shader error: ' + txt.slice(0, 300));
 }
 await shot(p, '00b-stats');
+// Drop 86: the models carry compressed textures, the card shows the memory line and the tier, the diagnostics record
+// is written, and a visit that ended without closing shows up on the next load with its Copy and Clear buttons
+{
+  const d = await p.evaluate(() => {
+    const sc = window.__padworksScene; const seen = new Set(); let compressed = 0, plain = 0, big = 0;
+    sc.traverse(o => { const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []; for (const m of ms) for (const k in m) { const v = m[k]; if (v && v.isTexture && !seen.has(v)) { seen.add(v); if (v.isCompressedTexture) { compressed++; if ((v.image.width || 0) > 1024) big++; } else plain++; } } });
+    const diag = window.__padworksDiag ? window.__padworksDiag() : null;
+    const card = document.querySelector('[data-stats]'); const txt = card ? card.textContent : '';
+    let stored = null; try { stored = JSON.parse(window.localStorage.getItem('padworks.diag')); } catch { /* none */ }
+    return { compressed, plain, big, record: diag && diag.record, txt, stored: !!stored, copyNow: !!document.querySelector('[data-action="diag-copy-now"]') };
+  });
+  console.log('drop 86:', d.compressed, 'compressed textures,', d.plain, 'plain,', d.record ? 'tier ' + d.record.tier + ' tex ' + d.record.texMB + ' MB geo ' + d.record.geoMB + ' MB rt ' + d.record.rtMB + ' MB' : 'no record');
+  if (d.compressed < 30) errors.push('too few compressed textures in the scene: ' + d.compressed);
+  if (d.big) errors.push(d.big + ' compressed textures over 1024 px on the laptop tier');
+  if (!d.record) errors.push('no diagnostics record');
+  else { if (d.record.tier !== 'laptop') errors.push('desktop pass did not pick the laptop tier: ' + d.record.tier); if (!(d.record.texMB > 0 && d.record.geoMB > 0 && d.record.rtMB > 0)) errors.push('diagnostics record has empty memory figures: ' + JSON.stringify(d.record)); if (!(d.record.textures > 30)) errors.push('diagnostics record texture count: ' + d.record.textures); }
+  if (!/GPU memory, estimated/.test(d.txt) || !/laptop tier/.test(d.txt)) errors.push('stats card lacks the memory line or the tier: ' + d.txt.slice(0, 160));
+  if (!d.stored) errors.push('diagnostics record not in localStorage');
+  if (!d.copyNow) errors.push('stats card has no copy button');
+  if (/Last visit ended/.test(d.txt)) errors.push('stats card shows a last-visit record on a fresh profile');
+  // a visit that ended without closing: this page leaves the simulator first (its own clean close gets written and
+  // its records stop), the record is planted, and the simulator opens in a second tab, which must show it
+  await p.goto(base + '/library'); await wait(1500);
+  await p.evaluate(() => { window.localStorage.setItem('padworks.diag', JSON.stringify({ at: '2026-10-01T15:04:05.000Z', seconds: 184, path: '/simulate', tier: 'laptop', quality: 'full', effects: true, gpu: 'planted', dpr: 1.5, size: [1800, 1000], fps: 9, draws: 400, textures: 300, texMB: 612, geoMB: 98, rtMB: 240, heapMB: 1400, heapLimitMB: 2200, lost: 1, ended: 'running' })); });
+  const p2 = await p.context().newPage(); p2.setDefaultTimeout(360000);
+  p2.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  await p2.goto(base + SIM); await wait(4000); await frames(p2, 2);
+  await p2.getByRole('button', { name: 'Stats' }).click(); await wait(500);
+  const l = await p2.evaluate(() => { const diag = window.__padworksDiag ? window.__padworksDiag() : null; const card = document.querySelector('[data-stats-last]'); return { last: diag && diag.last, txt: card ? card.textContent : '', copy: !!document.querySelector('[data-action="diag-copy"]'), clear: !!document.querySelector('[data-action="diag-clear"]') }; });
+  if (!l.last || l.last.gpu !== 'planted' || !l.last.unclean) errors.push('the planted unclean record was not adopted as the last visit: ' + JSON.stringify(l.last).slice(0, 200));
+  if (!/Last visit ended without the page closing/.test(l.txt) || !/612 MB/.test(l.txt) || !/context lost 1x/.test(l.txt) || !/planted/.test(l.txt)) errors.push('last-visit line wrong: ' + l.txt.slice(0, 300));
+  if (!l.copy || !l.clear) errors.push('last-visit line lacks its Copy or Clear button');
+  await shot(p2, '00c-stats-last-visit');
+  if (l.copy && l.clear) {
+    p2.once('dialog', d => d.dismiss());
+    await p2.click('[data-action="diag-copy"]'); await wait(500);
+    await p2.click('[data-action="diag-clear"]'); await wait(500);
+    const gone = await p2.evaluate(() => ({ el: !!document.querySelector('[data-stats-last]'), last: window.__padworksDiag().last, stored: window.localStorage.getItem('padworks.diag.last') }));
+    if (gone.el || gone.last || gone.stored) errors.push('Clear did not remove the last-visit record');
+  }
+  await p2.close();
+  await p.goto(base + SIM); await wait(4000); await frames(p, 2);
+  await p.getByRole('button', { name: 'Stats' }).click(); await wait(500);
+}
 await p.getByRole('button', { name: 'Stats' }).click(); await wait(300);
 // Drop 56: walk mode puts the camera at eye height and Escape brings the preset back
 {
@@ -446,7 +497,7 @@ await p.addInitScript(() => { window.__padworksDemo = { fast: true }; });
 await p.goto(base + '/simulate?demo=intro' + (process.env.LITE ? '&lite=1' : '')); await wait(6000);
 {
   const seen = new Set(); const t0 = Date.now();
-  while (Date.now() - t0 < 90000) {
+  while (Date.now() - t0 < 240000) {   // fast mode still pays a frame per line, and a frame is several seconds under software GL on a loaded host (Drop 86)
     const c = await p.evaluate(() => { const el = document.querySelector('[data-demo-caption]'); return el ? el.textContent.slice(0, 40) : null; });
     if (c) seen.add(c); else if (seen.size) break;
     await wait(250);
@@ -972,6 +1023,23 @@ if (!process.env.ONLY || process.env.ONLY === 'rest' || process.env.ONLY === 'ta
 p = await page(390, 844, true);
 await p.goto(base + SIM); await wait(5000);
 await shot(p, '21-phone-sim-3d');
+// Drop 86: a phone is classed as one on its own (no ?tier), gets the .phone models (512 px textures), pixel ratio 1 and the 1k shadow map
+{
+  await frames(p, 2); await wait(3500);
+  const d = await p.evaluate(() => {
+    const sc = window.__padworksScene; const seen = new Set(); let compressed = 0, big = 0, shadow = 0;
+    sc.traverse(o => { if (o.isLight && o.shadow && o.shadow.map) shadow = Math.max(shadow, o.shadow.map.width); const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []; for (const m of ms) for (const k in m) { const v = m[k]; if (v && v.isTexture && !seen.has(v) && v.isCompressedTexture) { seen.add(v); compressed++; if ((v.image.width || 0) > 512) big++; } } });
+    const diag = window.__padworksDiag ? window.__padworksDiag() : null;
+    return { compressed, big, shadow, record: diag && diag.record, dpr: window.__padworksGL ? window.__padworksGL.getPixelRatio() : 0 };
+  });
+  console.log('phone tier:', JSON.stringify({ compressed: d.compressed, big: d.big, shadow: d.shadow, dpr: d.dpr, tier: d.record && d.record.tier, texMB: d.record && d.record.texMB, rtMB: d.record && d.record.rtMB }));
+  if (!d.record || d.record.tier !== 'phone') errors.push('phone was not classed as the phone tier: ' + (d.record && d.record.tier));
+  if (d.compressed < 20) errors.push('phone loaded too few compressed textures: ' + d.compressed);
+  if (d.big) errors.push(d.big + ' textures over 512 px on the phone tier');
+  if (d.shadow !== 1024) errors.push('phone shadow map is ' + d.shadow);
+  if (d.dpr !== 1) errors.push('phone pixel ratio is ' + d.dpr);
+  if (d.record && d.record.texMB > 120) errors.push('phone texture memory ' + d.record.texMB + ' MB');
+}
 await p.getByRole('button', { name: 'Controls' }).click(); await wait(800);
 await shot(p, '22-phone-sim-controls');
 await p.goto(base + '/library/equipment/WH-FRACTREE'); await wait(3000);

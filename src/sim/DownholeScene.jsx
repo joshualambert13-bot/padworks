@@ -6,6 +6,7 @@ import { useHover, pickHandlers } from './hover.js';
 import { SceneEnvironment, LITE } from './parts/lighting.jsx';
 import { Effects } from './parts/effects.jsx';
 import { ContextLoss } from './parts/stability.jsx';
+import { TIER } from './parts/tier.js';
 
 const UNDERGROUND = { sky: '#5c6a78', fog: '#3a424c', ground: '#23272c' };
 import { Formation, Casing, Stage, FluidFlow, FlowbackFlow, CuttingsBed, PerfFlash, WirelineString, BallInFlight, ToePressure, CoiledTubing, Dissolving, HeelMarker, ProductionString, clusterX, stageX, plugX, sleeveX, LATERAL } from './parts/downhole.jsx';
@@ -54,11 +55,11 @@ export default function DownholeScene({ showLabels, tickHere = true, follow = tr
   const show = useHover(h => h.show), hide = useHover(h => h.hide);
   const pick = pickHandlers('downhole', show, hide);
   return (
-    <Canvas shadows={LITE ? true : 'soft'} dpr={[1, 1.5]} camera={{ position: [4, 5, 16], fov: 45, near: 0.1, far: 300 }} gl={{ antialias: true, toneMappingExposure: 1.1 }}>
+    <Canvas shadows={LITE ? true : 'soft'} dpr={[1, TIER.dpr]} camera={{ position: [4, 5, 16], fov: 45, near: 0.1, far: 300 }} gl={{ antialias: true, toneMappingExposure: 1.1 }}>
       <color attach="background" args={['#0b0f14']} />
       <SceneEnvironment terrain={UNDERGROUND} intensity={0.55} />
       <ambientLight intensity={LITE ? 0.8 : 0.35} />
-      <directionalLight position={[10, 20, 30]} intensity={2.2} color="#fff1dc" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-24} shadow-camera-right={24} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-camera-near={5} shadow-camera-far={80} shadow-bias={-0.0003} shadow-normalBias={0.02} />
+      <directionalLight position={[10, 20, 30]} intensity={2.2} color="#fff1dc" castShadow shadow-mapSize={[TIER.shadow, TIER.shadow]} shadow-camera-left={-24} shadow-camera-right={24} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-camera-near={5} shadow-camera-far={80} shadow-bias={-0.0003} shadow-normalBias={0.02} />
       <directionalLight position={[-14, 6, 20]} intensity={0.5} color="#cfe0ff" />
       <hemisphereLight args={['#dfe7f2', '#3a2f22', LITE ? 0.7 : 0.4]} />
       <Ticker enabled={tickHere} />

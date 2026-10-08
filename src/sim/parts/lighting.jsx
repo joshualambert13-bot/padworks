@@ -6,7 +6,8 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
 import { Sky } from 'three/addons/objects/Sky.js';
-import { loadHdri, hdriYaw, useHdri, HDRI_LEVEL } from './hdri.js';
+import { loadHdri, hdriYaw, useHdri, HDRI_LEVEL, releaseOtherSkies } from './hdri.js';
+import { TIER } from './tier.js';
 
 // Render quality. Full: sky environment map, soft shadows, bump maps. Lite (?lite=1, or localStorage
 // padworks.lite=1): hard shadows, no environment map, no bump maps; for slow machines and the headless checks.
@@ -782,7 +783,7 @@ export function Exposure({ value = 1.05 }) {
 // pad overview it covers about 220 m, at a valve close-up about 50 m, so the same 2048 map gives centimeter
 // shadow texels up close instead of the 10 cm it gave everywhere (Drop 25). The frustum center snaps to the
 // texel grid so panning does not make the shadow edges swim.
-export function SunLight({ tod = 'day', mapSize = 2048 }) {
+export function SunLight({ tod = 'day', mapSize = TIER.shadow }) {   // 1k on a phone, 2k otherwise (Drop 86)
   const S = sunFor(tod); const intensity = S.intensity, color = S.color, dir = S.dir;
   const light = useRef();
   const target = useMemo(() => new THREE.Object3D(), []);
@@ -1022,6 +1023,7 @@ export function HdriSky({ tod = 'day', season = 'summer' }) {
       scene.background = entry.texture; scene.environment = entry.texture;
       scene.backgroundRotation.set(0, yaw, 0); scene.environmentRotation.set(0, yaw, 0);
       scene.backgroundIntensity = HDRI_LEVEL[tod]; scene.environmentIntensity = HDRI_LEVEL[tod] * 0.9;
+      releaseOtherSkies(tod);
     });
     return () => { gone = true; if (scene.background && scene.background.isTexture) scene.background = null; scene.environment = null; scene.backgroundRotation.set(0, 0, 0); scene.environmentRotation.set(0, 0, 0); };
   }, [active, tod, scene]);

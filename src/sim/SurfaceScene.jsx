@@ -17,6 +17,7 @@ import { installTextureSets } from './parts/textures.js';
 import { SOURCES, thunder } from './sound.js';
 installSnowPatch();
 import { Effects, Diagnostics, COMPOSER_OF } from './parts/effects.jsx';
+import { TIER } from './parts/tier.js';
 import { ContextLoss } from './parts/stability.jsx';
 import { Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
@@ -357,7 +358,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const prodSpots = useMemo(() => roles.map((r, i) => i).filter(i => hasProd[i]).map(i => ({ position: [0, 0, wellZ[i]], tint: i === 0 ? WELL_COLORS[i % WELL_COLORS.length] : dimTint(WELL_COLORS[i % WELL_COLORS.length]) })), [prodKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Canvas shadows={LITE ? true : { type: THREE.PCFShadowMap }} dpr={[1, 1.5]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05 * 1.25 }}>
+    <Canvas shadows={LITE ? true : { type: THREE.PCFShadowMap }} dpr={[1, TIER.dpr]} camera={{ position: [30, 34, 70], fov: 45, near: 0.1, far: 2600 }} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05 * 1.25 }}>
       <HdriSky tod={tod} season={season} />
       {!hdri && <SkyDome terrain={terrain} tod={tod} season={season} weather={weather} />}
       {LITE && <Clouds seed={basin.id.length} count={winter || lid ? 18 : 9} tint={winter || lid ? (tod === 'night' ? '#141822' : rain ? '#9aa1aa' : '#c9cfd8') : tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />}

@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { LITE } from './lighting.jsx';
+import { noteContextLoss } from './effects.jsx';
 
 let handled = false;
 function notice(text) {
@@ -20,6 +21,7 @@ export function ContextLoss() {
     if (!canvas) return;
     const onLost = (e) => {
       e.preventDefault();
+      try { noteContextLoss(); } catch { /* the record is best effort */ }   // Drop 86: into the diagnostics record before the reload
       if (handled) return;
       handled = true;
       try { window.localStorage.setItem('padworks.lite', '1'); window.localStorage.setItem('padworks.fx', 'off'); } catch { /* no storage */ }

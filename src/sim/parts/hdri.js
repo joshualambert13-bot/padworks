@@ -8,9 +8,12 @@
 import * as THREE from 'three';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { create } from 'zustand';
+import { TIER } from './tier.js';
 
 export const HDRI_LEVEL = { day: 1.0, dusk: 1.0, night: 1.0 };
-const FILES = { day: '/textures/sky_day.hdr', dusk: '/textures/sky_dusk.hdr', night: '/textures/sky_night.hdr' };
+// a phone loads the 1k copies (scripts/hdr-half.py; a quarter of the GPU memory of the 2k originals), Drop 86
+const sky = (tod) => '/textures/sky_' + tod + (TIER.sky === '1k' ? '.1k' : '') + '.hdr';
+const FILES = { day: sky('day'), dusk: sky('dusk'), night: sky('night') };
 const cache = new Map();   // tod -> { texture, sunDir } | null (absent)
 
 // store: which skies are available (true), absent (false), or not yet probed (undefined)
@@ -48,6 +51,12 @@ export function loadHdri(tod) {
   });
   cache.set(tod, p);
   return p;
+}
+
+// The skies not on screen give their GPU copies back (Drop 86): a sky is re-uploaded from its cached pixels when it
+// comes back, which costs a frame, not the 20 MB of holding all three
+export function releaseOtherSkies(tod) {
+  for (const [k, v] of cache) if (k !== tod && v && v.texture) v.texture.dispose();
 }
 
 // Yaw (about Y) that puts the HDRI's sun at the azimuth of `sunDir`. three samples the background and the

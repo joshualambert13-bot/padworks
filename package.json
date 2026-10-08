@@ -13,6 +13,9 @@
     "lint": "oxlint",
     "shots": "node scripts/shots.mjs",
     "glb": "node scripts/compress.mjs",
+    "textures": "node scripts/ktx-pack.mjs textures",
+    "models": "node scripts/ktx-pack.mjs models",
+    "texbudget": "node scripts/texbudget.mjs -v",
     "serve": "node scripts/dev-server.mjs 4173",
     "api": "node scripts/dev-server.mjs 4174"
   },

@@ -8,8 +8,10 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Instanced } from './primitives.jsx';
+import { withKtx } from './gpu.js';
+import { TIER } from './tier.js';
 
-const URL = '/models/props/pickup.glb';
+const URL = '/models/props/pickup' + TIER.suffix + '.glb';   // KTX2 textures, 512 px on a phone (Drop 86)
 const isBody = (m) => m && /Bodymat/i.test(m.name);
 
 // a clone of the model with the paint material swapped: `tint` true leaves it white and flags it for the instanced
@@ -29,7 +31,7 @@ function paintedClone(scene, paint) {
 }
 
 function Fleet({ position, count, paint, spacing }) {
-  const gltf = useGLTF(URL);
+  const gltf = useGLTF(URL, undefined, undefined, withKtx);
   const scene = useMemo(() => paintedClone(gltf.scene, true), [gltf.scene]);
   const transforms = useMemo(() => Array.from({ length: count }, (_, i) => ({ position: [0, 0, i * spacing], rotation: [0, 0, 0], tint: paint })), [count, spacing, paint]);
   return (
@@ -45,7 +47,7 @@ export function ParkedPickups({ position, count = 6, paint = '#d7dde5', spacing 
 
 // The crew truck on the lease road: out to the edge of the terrain and back, on the road surface.
 function Rolling({ road, speed, height, paint }) {
-  const gltf = useGLTF(URL);
+  const gltf = useGLTF(URL, undefined, undefined, withKtx);
   const ref = useRef(); const wheels = useRef([]);
   const scene = useMemo(() => {
     const s = paintedClone(gltf.scene, paint || '#d7dde5');

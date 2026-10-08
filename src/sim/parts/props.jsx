@@ -6,11 +6,14 @@
 import { Suspense, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Instanced } from './primitives.jsx';
+import { withKtx } from './gpu.js';
+import { TIER } from './tier.js';
 
-const url = (id) => '/models/props/' + id + '.glb';
+// Drop 86: the GLBs carry KTX2 textures (scripts/ktx-pack.mjs); a phone loads the .phone.glb with 512 px textures
+const url = (id) => '/models/props/' + id + TIER.suffix + '.glb';
 
 function Loaded({ id, transforms, name, scale = 1 }) {
-  const gltf = useGLTF(url(id));
+  const gltf = useGLTF(url(id), undefined, undefined, withKtx);
   const scene = useMemo(() => { const s = gltf.scene.clone(true); s.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); return s; }, [gltf.scene]);
   const tr = useMemo(() => transforms.map(t => ({ position: t.position, rotation: t.rotation || [0, 0, 0] })), [transforms]);
   return (
@@ -67,4 +70,4 @@ export function padProps(MISSILE_X, bZ) {
   ];
 }
 
-export function preloadProps() { for (const id of ['flatbed', 'fueltanker', 'generator', 'pickup', 'telehandler', 'barrel', 'pallet', 'tire', 'extinguisher', 'toolbox', 'trashcan', 'box', 'portapotty', 'dumpster', 'conex', 'watertank', 'cone', 'forklift']) useGLTF.preload(url(id)); }
+export function preloadProps() { for (const id of ['flatbed', 'fueltanker', 'generator', 'pickup', 'telehandler', 'barrel', 'pallet', 'tire', 'extinguisher', 'toolbox', 'trashcan', 'box', 'portapotty', 'dumpster', 'conex', 'watertank', 'cone', 'forklift']) useGLTF.preload(url(id), undefined, undefined, withKtx); }

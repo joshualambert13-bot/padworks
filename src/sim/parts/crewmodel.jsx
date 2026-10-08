@@ -13,11 +13,13 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { LITE } from './lighting.jsx';
 import { Crew, Walker } from './life.jsx';
 import { useTheme } from '../../theme/theme.js';
+import { withKtx } from './gpu.js';
+import { TIER } from './tier.js';
 
 export const CREW_MODELS = ['lewis', 'pete', 'brian', 'kate'];
 // Drop 84: a character whose mesh already wears a hard hat gets no drawn hat on top (pete's model has its own)
 export const OWN_HAT = { pete: true };
-const url = (name) => '/models/crew/' + name + '.glb';
+const url = (name) => '/models/crew/' + name + TIER.suffix + '.glb';   // KTX2 textures, 512 px on a phone (Drop 86)
 const CLIP = { stand: 'idle', point: 'point', kneel: 'kneel', radio: 'radio', hammer: 'hammer', walk: 'walk' };
 const HAT = { white: '#f2f2f2', yellow: '#e8d23a', orange: '#f07a2a', blue: '#2a5d9f' };
 
@@ -33,7 +35,7 @@ function hardHat(color) {
 }
 
 function Model({ name, clip = 'idle', hat = 'white', timeScale = 1, phase = 0 }) {
-  const gltf = useGLTF(url(name));
+  const gltf = useGLTF(url(name), undefined, undefined, withKtx);
   const scene = useMemo(() => cloneSkinned(gltf.scene), [gltf.scene]);
   const group = useRef();
   const { actions, mixer } = useAnimations(gltf.animations, group);
@@ -109,4 +111,4 @@ export function CrewWalker({ path, speed = 1.1, seed = 0, vest, hat }) {
   );
 }
 
-if (!LITE) CREW_MODELS.forEach(n => useGLTF.preload(url(n)));
+if (!LITE) CREW_MODELS.forEach(n => useGLTF.preload(url(n), undefined, undefined, withKtx));

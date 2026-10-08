@@ -1,0 +1,376 @@
+{
+ "concrete_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "concrete_diff.ktx2",
+  "mean": [
+   0.4722,
+   0.4343,
+   0.3589
+  ]
+ },
+ "concrete_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "concrete_nor.ktx2"
+ },
+ "concrete_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "concrete_rough.ktx2",
+  "mean": [
+   0.5194,
+   0.5194,
+   0.5194
+  ]
+ },
+ "decal_oil": {
+  "size": [
+   512,
+   512
+  ],
+  "full": "decal_oil.ktx2"
+ },
+ "decal_stain": {
+  "size": [
+   512,
+   256
+  ],
+  "full": "decal_stain.ktx2"
+ },
+ "decal_tiretrack": {
+  "size": [
+   512,
+   128
+  ],
+  "full": "decal_tiretrack.ktx2"
+ },
+ "fabric_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "fabric_diff.ktx2",
+  "mean": [
+   0.2296,
+   0.3477,
+   0.4681
+  ]
+ },
+ "fabric_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "fabric_nor.ktx2"
+ },
+ "ground_ao": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "ground_ao.ktx2"
+ },
+ "ground_diff": {
+  "size": [
+   2048,
+   2048
+  ],
+  "full": "ground_diff.ktx2",
+  "phone": "ground_diff.1k.ktx2",
+  "mean": [
+   0.6702,
+   0.6536,
+   0.6111
+  ]
+ },
+ "ground_nor": {
+  "size": [
+   2048,
+   2048
+  ],
+  "full": "ground_nor.ktx2",
+  "phone": "ground_nor.1k.ktx2"
+ },
+ "ground_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "ground_rough.ktx2",
+  "mean": [
+   0.4751,
+   0.4751,
+   0.4751
+  ]
+ },
+ "hivis_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "hivis_diff.ktx2",
+  "mean": [
+   0.8846,
+   0.6124,
+   0.0214
+  ]
+ },
+ "hivis_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "hivis_nor.ktx2"
+ },
+ "liner_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "liner_diff.ktx2",
+  "mean": [
+   0.0286,
+   0.0326,
+   0.0404
+  ]
+ },
+ "liner_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "liner_nor.ktx2"
+ },
+ "paint_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "paint_diff.ktx2",
+  "mean": [
+   0.1635,
+   0.2462,
+   0.3024
+  ]
+ },
+ "paint_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "paint_nor.ktx2"
+ },
+ "paint_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "paint_rough.ktx2",
+  "mean": [
+   0.2865,
+   0.2865,
+   0.2865
+  ]
+ },
+ "plastic_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "plastic_diff.ktx2",
+  "mean": [
+   0.6404,
+   0.6522,
+   0.6718
+  ]
+ },
+ "plastic_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "plastic_nor.ktx2"
+ },
+ "plastic_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "plastic_rough.ktx2",
+  "mean": [
+   0.3655,
+   0.3655,
+   0.3655
+  ]
+ },
+ "rubber_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "rubber_diff.ktx2",
+  "mean": [
+   0.1694,
+   0.1715,
+   0.1963
+  ]
+ },
+ "rubber_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "rubber_nor.ktx2"
+ },
+ "rubber_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "rubber_rough.ktx2",
+  "mean": [
+   0.5929,
+   0.5929,
+   0.5929
+  ]
+ },
+ "rust_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "rust_diff.ktx2",
+  "mean": [
+   0.3885,
+   0.2268,
+   0.1268
+  ]
+ },
+ "rust_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "rust_nor.ktx2"
+ },
+ "rust_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "rust_rough.ktx2",
+  "mean": [
+   0.7793,
+   0.7793,
+   0.7793
+  ]
+ },
+ "sand_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "sand_diff.ktx2",
+  "mean": [
+   0.6057,
+   0.4524,
+   0.3242
+  ]
+ },
+ "sand_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "sand_nor.ktx2"
+ },
+ "sand_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "sand_rough.ktx2",
+  "mean": [
+   0.7881,
+   0.7881,
+   0.7881
+  ]
+ },
+ "steel_diff": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "steel_diff.ktx2",
+  "mean": [
+   0.5793,
+   0.5832,
+   0.5989
+  ]
+ },
+ "steel_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "steel_nor.ktx2"
+ },
+ "steel_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "steel_rough.ktx2",
+  "mean": [
+   0.4717,
+   0.4717,
+   0.4717
+  ]
+ },
+ "terrain_diff": {
+  "size": [
+   2048,
+   2048
+  ],
+  "full": "terrain_diff.ktx2",
+  "phone": "terrain_diff.1k.ktx2",
+  "mean": [
+   0.5846,
+   0.4539,
+   0.308
+  ]
+ },
+ "terrain_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "terrain_nor.ktx2"
+ },
+ "terrain_rough": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "terrain_rough.ktx2",
+  "mean": [
+   0.814,
+   0.814,
+   0.814
+  ]
+ },
+ "water_nor": {
+  "size": [
+   1024,
+   1024
+  ],
+  "full": "water_nor.ktx2"
+ }
+}

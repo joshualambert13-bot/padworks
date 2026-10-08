@@ -3,7 +3,8 @@ import { Layers, Mountain, Columns2, Tag, Camera, SlidersHorizontal, Box as BoxI
 import { WALK } from './parts/walk.jsx';
 import { soundOn, toggleSound, onSoundChange, armSoundOnGesture, disableSound } from './sound.js';
 import { LITE, setLite, nextTod } from './parts/lighting.jsx';
-import { useFx, fxOn, FX_LIMIT_MS, useDiag } from './parts/effects.jsx';
+import { useFx, fxOn, FX_LIMIT_MS, useDiag, diagLine } from './parts/effects.jsx';
+import { TIER, setTier } from './parts/tier.js';
 import { Wand2, Maximize2, Minimize2, PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Clapperboard, CloudSun, Cloud, CloudRain } from 'lucide-react';
 import SurfaceScene from './SurfaceScene.jsx';
 import DownholeScene from './DownholeScene.jsx';
@@ -104,6 +105,15 @@ export default function Simulator() {
     return () => { clearTimeout(t); window.removeEventListener('pointermove', arm); window.removeEventListener('pointerdown', arm); window.removeEventListener('keydown', arm); };
   }, [ui.full]);
   const diag = useDiag();
+  // Drop 86: the numbers on the card (and the last session's, when there is one) to the clipboard as text and JSON
+  const [diagCopied, setDiagCopied] = useState(false);
+  const copyDiag = () => {
+    const d = useDiag.getState();
+    const text = 'Padworks diagnostics\nNow: ' + diagLine(d.record) + (d.last ? '\nLast visit (ended without closing): ' + diagLine(d.last) : '') + '\n' + JSON.stringify({ now: d.record, last: d.last }, null, 1);
+    const done = () => { setDiagCopied(true); setTimeout(() => setDiagCopied(false), 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => window.prompt('Copy this', text));
+    else window.prompt('Copy this', text);
+  };
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const token = q.get('s');
@@ -194,8 +204,18 @@ export default function Simulator() {
         {!LITE && <button className={'btn flex items-center gap-1 ' + (fxLive ? '' : 'text-mute')} title={fxLive ? 'Effects on: ambient occlusion and bloom. Click to turn them off.' : fx.auto ? 'Effects turned off automatically: this machine averaged ' + fx.frameMs + ' ms per frame with them on (limit ' + FX_LIMIT_MS + ' ms). Click to try again.' : 'Effects off. Click for ambient occlusion and bloom.'} onClick={() => fx.setWanted(!fxLive)} data-action="effects"><Wand2 size={14} />{fxLive ? 'Effects' : 'Effects off'}</button>}
       </div>
       {statsOpen && (
-        <div className="w-full mt-1 text-[11px] mono px-2 py-1 rounded bg-black/70 text-white pointer-events-none" data-stats>
-          {diag.fps} fps · {diag.frameMs} ms/frame · {diag.calls.toLocaleString()} draws · {(diag.triangles / 1000).toFixed(0)}k tris · {LITE ? 'Lite' : 'Full'}{!LITE ? (fxLive ? ' + effects' : ' (effects off)') : ''} · {window.innerWidth}x{window.innerHeight} @ {diag.dpr || Math.round(window.devicePixelRatio * 100) / 100}x (screen {Math.round(window.devicePixelRatio * 100) / 100}x) · GPU: {diag.gpu || '...'}{diag.shaderError ? ' · SHADER ERROR: ' + diag.shaderError : ''}
+        <div className="w-full mt-1 text-[11px] mono px-2 py-1 rounded bg-black/70 text-white pointer-events-auto" data-stats>
+          <div>{diag.fps} fps · {diag.frameMs} ms/frame · {diag.calls.toLocaleString()} draws · {(diag.triangles / 1000).toFixed(0)}k tris · {LITE ? 'Lite' : 'Full'}{!LITE ? (fxLive ? ' + effects' : ' (effects off)') : ''} · {TIER.id} tier · {window.innerWidth}x{window.innerHeight} @ {diag.dpr || Math.round(window.devicePixelRatio * 100) / 100}x (screen {Math.round(window.devicePixelRatio * 100) / 100}x) · GPU: {diag.gpu || '...'}{diag.shaderError ? ' · SHADER ERROR: ' + diag.shaderError : ''}</div>
+          {/* Drop 86: the memory line and the record of the last session that ended without closing */}
+          <div className="text-mute" data-stats-memory>GPU memory, estimated: {diag.textures} textures ~{diag.texMB} MB · geometry ~{diag.geoMB} MB · frame buffers ~{diag.rtMB} MB · total ~{diag.texMB + diag.geoMB + diag.rtMB} MB{diag.heapMB ? ' · JavaScript heap ' + diag.heapMB + ' MB' : ''}{diag.lost ? ' · graphics context lost ' + diag.lost + 'x' : ''} · written to this browser's storage every 3 s, nowhere else</div>
+          {diag.last && (
+            <div className="flex flex-wrap items-center gap-2 mt-1 text-amber-200" data-stats-last>
+              <span>Last visit ended without the page closing (the tab was probably stopped for memory): {diagLine(diag.last)}</span>
+              <button className="btn px-2 py-0.5 text-[11px]" data-action="diag-copy" onClick={copyDiag}>{diagCopied ? 'Copied' : 'Copy'}</button>
+              <button className="btn px-2 py-0.5 text-[11px]" data-action="diag-clear" onClick={() => useDiag.getState().clearLast()}>Clear</button>
+            </div>
+          )}
+          <div className="mt-0.5"><button className="btn px-2 py-0.5 text-[11px]" data-action="diag-copy-now" onClick={copyDiag}>{diagCopied ? 'Copied' : 'Copy these numbers'}</button> <span className="text-mute">to paste into a report</span>{TIER.id === 'phone' ? <span className="text-mute"> · <button className="underline" data-action="tier-laptop" onClick={() => setTier('laptop')}>try the laptop tier</button> (larger textures; reloads)</span> : <span className="text-mute"> · <button className="underline" data-action="tier-phone" onClick={() => setTier('phone')}>try the phone tier</button> (smaller textures, 1x pixels; reloads)</span>}{TIER.forced ? <span className="text-mute"> · <button className="underline" data-action="tier-auto" onClick={() => setTier(null)}>back to automatic</button></span> : null}</div>
         </div>
       )}
       {walk && view === 'surface' && (
