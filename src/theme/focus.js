@@ -10,8 +10,8 @@ export const FOCUS = {
     line: 'The pump row, the missile and the treating line: pumping a stage, kickouts, screenouts, a treating iron leak and a lightning hold.' },
   wellhead: { id: 'wellhead', label: 'Wellhead and frac tree', lessons: ['L1', 'L6', 'L9', 'L8', 'L5'], preset: 'tree', who: 'wellhead',
     line: 'The tree, the zipper and the wireline: a first run, a stuck tool string, a gun misfire, the production hookup and a toe sleeve.' },
-  operator: { id: 'operator', label: 'Operator', lessons: ['L7', 'L8', 'L2', 'L1', 'L10'], preset: 'pad', who: 'operator',
-    line: 'The whole job as the company man sees it: drillout and flowback, the production hookup, pumping, wireline and a weather hold.' },
+  operator: { id: 'operator', label: 'Operator', lessons: ['L12', 'L7', 'L8', 'L2', 'L10'], preset: 'van', who: 'operator',
+    line: 'The whole job as the company man sees it: a stage called from the data van, drillout and flowback, the production hookup, pumping and a weather hold.' },
 };
 export const FOCUS_IDS = Object.keys(FOCUS);
 

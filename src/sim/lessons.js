@@ -228,6 +228,40 @@ export const LESSONS = [
       { text: 'Pumps online and the rate back up, 60 bpm or more', hint: 'Steps of 10 to 20 bpm, as at the start of the stage.', done: s => s.pumpsOnline && s.pumpRate >= 60, action: 'rateFlush', label: 'Pumps on, 60 bpm' },
     ],
   },
+  {
+    // Drop 89: the company man's lesson. Nothing on the pad is touched by hand: every step is a call over the radio to
+    // the frac engineer, made from the chair in the data van with the treating chart in front of it. The frac engineer
+    // answers each call (the `reply` lines, rendered in a second voice). Twelve seconds after sand goes in the lesson
+    // stages a screenout (exempt: no points off for the alarm itself): the trace bends up at constant rate, and the
+    // call that matters is sand off before the kickout line. The buttons are the same store actions as everywhere
+    // else; the words on them are the calls.
+    id: 'L12', n: 12, title: 'Run the stage from the van', targetSec: 320, exempt: ['screenout', 'outOfZone'], van: true,
+    blurb: 'The company man\'s seat. Call the stage over the radio: pumps online, rate up in steps, sand in, and when the treating pressure bends up at constant rate, sand off before the kickout line. Then place the design, flush, pumps down, and hand the well to wireline.',
+    setup: { basin: 'permian-delaware' }, pad: { wells: 2, mode: 'zipper' },
+    prep: (get, set) => {
+      get().setPhase('wireline');
+      finishStages(set, 3);
+      finishStages(set, 2, { frac: true });
+      set({ stage: 2, wl: { step: 'done', progress: 1 } });
+      get().setPhase('frac');
+      snapValves(set);
+      set(s => ({ valves: { ...s.valves, zipWork: { ...s.valves.zipWork, pos: 1, target: 1 } } }));
+      get().setUi({ preset: 'van', walk: false, tour: false });
+      get().addLog('LESSON: stage 3 is perforated and plugged; the leg is open to the inlet block. You are in the data van.');
+    },
+    events: [{ after: 2, delay: 12, run: g => g.injectEvent('screenout') }],
+    steps: [
+      { text: 'Call the frac engineer: pumps online', hint: 'The leg is open and wireline is clear. The pumps come online at zero rate against the open path.', done: s => s.pumpsOnline, action: 'pumpsOn', label: 'Call: pumps online', reply: 'Van, frac. Pumps are online, zero rate, holding for your call.' },
+      { text: 'Call the rate up in steps to 80 bpm', demo: rateUp(80), hint: 'Twenty barrels at a time. Watch the red trace on the chart against the kickout line as each step lands.', done: s => s.pumpsOnline && s.pumpRate >= 80, reply: 'Coming up. Twenty. Forty. Sixty. Eighty barrels, holding eighty, pressure steady.' },
+      { text: 'Call sand in at 1 PPA', demo: g => g.setPpa(1.0), hint: 'The proppant slider is your call to the blender. One pound per gallon added, no more, on slickwater at this rate.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5, reply: 'One PPA on the blender. Sand is at the wellhead in about a minute.' },
+      { text: 'Pressure bending up at constant rate: call sand off, hold the rate to flush', hint: 'The red trace climbs while the blue one is flat: the near-wellbore is packing. Sand off first, rate stays up to flush the wellbore clean. Waiting is what trips the kickout.', done: s => s.ppa === 0 && !s.alarms.screenout && s.pumpsOnline && s.pumpRate >= 30, action: 'ppaZero', label: 'Call: sand off', reply: 'Sand off, flushing at eighty. Pressure is coming back down.' },
+      { text: 'Pressure settled: call sand back in at 1 PPA', demo: g => g.setPpa(1.0), hint: 'The trace is flat again. Back to the design concentration.', done: s => s.ppa >= 0.5 && s.ppa <= 1.5, reply: 'Back to one PPA.' },
+      { text: 'Hold until the stage design is placed', hint: 'Fluid and sand pumped against the stage design. The stage table on the screen shows the fracture extent.', done: s => cur(s).fracComplete, reply: 'Design is on the ground. Standing by for your call.' },
+      { text: 'Call sand off and flush the wellbore', hint: 'Sand pumped past the design packs the near-wellbore. Cut sand and flush clean.', done: s => s.ppa === 0 && cur(s).fracComplete, action: 'ppaZero', label: 'Call: sand off', reply: 'Sand off, flushing the wellbore.' },
+      { text: 'Call the pumps down: rate to zero, pumps offline', hint: 'The wellbore is clean. Pumps come down before the well goes back to wireline.', done: s => !s.pumpsOnline && s.pumpRate === 0, action: 'stop', label: 'Call: pumps down', reply: 'Pumps down, rate zero. Stage three is complete.' },
+      { text: 'Hand the well to wireline: next stage', hint: 'Your call releases the well. The frac crew swings to the other leg.', done: s => s.stage >= 3, action: 'nextStage', label: 'Call: wireline, you have the well', reply: 'Wireline copies, we have the well. Rigging up on stage four.' },
+    ],
+  },
 ];
 
 export function lessonById(id) { return LESSONS.find(l => l.id === id) || null; }

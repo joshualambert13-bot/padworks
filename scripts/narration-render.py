@@ -19,6 +19,7 @@ ap.add_argument('--only', default='', help='comma-separated line ids to render (
 ap.add_argument('--force', action='store_true', help='render every line again')
 ap.add_argument('--out', default='public/audio/narration')
 ap.add_argument('--bitrate', default='40k')
+ap.add_argument('--radio-speaker', default='3230', help='speaker for the radio replies (a lesson\'s `replies` lines, Drop 89): the frac engineer answering the van')
 args = ap.parse_args()
 
 from piper import PiperVoice
@@ -36,6 +37,8 @@ lines = [(it['id'], it['text']) for it in N['intro']]
 for lid, L in N['lessons'].items():
     lines.append((lid + '-intro', L['intro']))
     for i, t in enumerate(L['steps']): lines.append((lid + '-step-' + str(i + 1), t))
+    for i, t in enumerate(L.get('replies', [])):
+        if t: lines.append((lid + '-reply-' + str(i + 1), t))
     lines.append((lid + '-end', L['end']))
 want = {lid + '-' + line_hash(t): (lid, t) for lid, t in lines}
 
@@ -50,19 +53,25 @@ print(f'{len(want)} lines, {len(todo)} to render, {len(stale)} stale clips remov
 
 if todo:
     voice = PiperVoice.load(args.model, args.model + '.json')
-    spk = json.load(open(args.model + '.json'))['speaker_id_map'].get(args.speaker)
-    if spk is None:
-        sys.exit('speaker not in the model: ' + args.speaker)
+    spk_map = json.load(open(args.model + '.json'))['speaker_id_map']
+    spk = spk_map.get(args.speaker)
+    radio = spk_map.get(args.radio_speaker)
+    if spk is None or radio is None:
+        sys.exit('speaker not in the model: ' + args.speaker + ' / ' + args.radio_speaker)
     cfg = SynthesisConfig(speaker_id=spk, length_scale=args.rate)
+    cfg_radio = SynthesisConfig(speaker_id=radio, length_scale=args.rate * 0.97)
     for n, k in enumerate(todo):
         lid, text = want[k]
+        is_reply = '-reply-' in lid
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
             wav_path = tmp.name
         w = wave.open(wav_path, 'wb')
-        voice.synthesize_wav(text, w, cfg)
+        voice.synthesize_wav(text, w, cfg_radio if is_reply else cfg)
         w.close()
         out = os.path.join(args.out, k + '.mp3')
-        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav_path, '-ac', '1', '-ar', '22050', '-b:a', args.bitrate, out], check=True)
+        # a reply comes over the radio: band-limited, a little compressed, and quieter than the instructor
+        flt = ['-af', 'highpass=f=320,lowpass=f=3300,acompressor=threshold=-18dB:ratio=3:attack=5:release=80,volume=0.9'] if is_reply else []
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav_path, *flt, '-ac', '1', '-ar', '22050', '-b:a', args.bitrate, out], check=True)
         os.remove(wav_path)
         print(f'  {n + 1}/{len(todo)} {k} ({os.path.getsize(out) // 1024} KB)', flush=True)
 

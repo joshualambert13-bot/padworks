@@ -11,7 +11,8 @@ INTRO.forEach((it, i) => { const id = 'intro-' + (i + 1); const prev = have.intr
 for (const L of LESSONS) {
   const prev = (have.lessons || {})[L.id] || {};
   const steps = L.steps.map((s, i) => (prev.steps && prev.steps[i]) || ('Step ' + (i + 1) + ' of ' + L.steps.length + '. ' + s.text + '.' + (s.hint ? ' ' + s.hint : '')));
-  out.lessons[L.id] = { title: L.title, intro: prev.intro || ('Lesson ' + L.n + ', ' + L.title + '. ' + L.blurb + ' Watch first; then try it yourself.'), steps, end: prev.end || 'Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel.' };
+  const replies = L.steps.map((s, i) => (prev.replies && prev.replies[i]) || s.reply || '');   // the radio answers (Drop 89), rendered in the second voice
+  out.lessons[L.id] = { title: L.title, intro: prev.intro || ('Lesson ' + L.n + ', ' + L.title + '. ' + L.blurb + ' Watch first; then try it yourself.'), steps, ...(replies.some(Boolean) ? { replies } : {}), end: prev.end || 'Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel.' };
 }
 out.clips = have.clips || [];   // the rendered clip names (scripts/narration-render.mjs keeps this current)
 fs.writeFileSync(path, JSON.stringify(out, null, 2) + '\n');

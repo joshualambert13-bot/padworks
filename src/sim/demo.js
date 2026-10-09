@@ -102,8 +102,31 @@ export function lessonLines(L) {
     intro: f.intro || ('Lesson ' + L.n + ', ' + L.title + '. ' + L.blurb + ' Watch first; then try it yourself.'),
     steps: L.steps.map((s, i) => (f.steps && f.steps[i]) || ('Step ' + (i + 1) + ' of ' + L.steps.length + '. ' + s.text + '.' + (s.hint ? ' ' + s.hint : ''))),
     end: f.end || 'Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel.',
+    replies: L.steps.map((s, i) => (f.replies && f.replies[i]) || s.reply || ''),   // the radio answers (Drop 89), in the second voice
   };
 }
+
+// Radio replies (Drop 89): a lesson step with a `reply` is answered over the radio when it is met, in free play
+// through this watcher and in a demo by the sequencer itself (so the instructor's next line waits for the answer).
+// Rendered clips only (a second voice from the same model); a line without a clip stays silent rather than
+// borrowing the instructor's voice.
+let replyToken = { cancelled: false };
+export function playReply(L, i) {
+  const text = lessonLines(L).replies[i]; if (!text) return Promise.resolve(false);
+  if (useDemo.getState().muted) return Promise.resolve(false);
+  replyToken = { cancelled: false };
+  return playClip(L.id + '-reply-' + (i + 1), text, replyToken);
+}
+let lastMask = null, lastId = null;
+if (typeof window !== 'undefined') useSim.subscribe((st) => {
+  const ls = st.lesson; if (!ls || !ls.id) { lastMask = null; lastId = null; return; }
+  if (ls.id !== lastId) { lastId = ls.id; lastMask = ls.doneMask.slice(); return; }
+  if (ls.doneMask === lastMask) return;
+  const prev = lastMask || []; lastMask = ls.doneMask.slice();
+  if (st.ui.demo) return;   // the demo plays the reply itself
+  const L = lessonById(ls.id); if (!L) return;
+  for (let i = 0; i < ls.doneMask.length; i++) if (ls.doneMask[i] && !prev[i] && L.steps[i].reply) { playReply(L, i); break; }
+});
 
 // ---------------------------------------------------------------- the sequencer
 let current = null;   // the running demo's token: { cancelled, utterance }
@@ -176,6 +199,7 @@ export async function startDemo(kind) {
     await until(s => !!s.lesson.doneMask[i] || s.lesson.finished || s.lesson.id !== L.id);
     if (!alive(token)) return;
     if (useSim.getState().lesson.id !== L.id) { stopDemo(); return; }
+    if (step.reply && !FAST()) { await playReply(L, i); if (!alive(token)) return; }   // the radio answers before the next line (Drop 89)
     await wait(700);
   }
   if (!alive(token)) return;

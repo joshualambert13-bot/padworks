@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { lessonById } from './lessons.js';
 import { useSim, padRoles, nextSteps, basinOf, spreadSizing, TICK_STEP, tickCatchUp } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
 import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, weatherSky, weatherSun, Rain, Lightning, WET, installSnowPatch, SNOW, GRIME, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
@@ -55,6 +56,7 @@ function presets(rowCenter, rowLen, production = false, k = 1, bZ = 20, rig = fa
     tanks: { pos: [-58, 14, 66], target: [-70, 2, 40] },
     gate: { pos: [78, 7, -12], target: [52, 1, -31] },
     support: { pos: [-2, 16, -60], target: [-22, 2, -34] },
+    van: { pos: [-14.6, 2.45, -30.15], target: [-15.6, 2.3, -8] },   // the company man's chair in the data van, looking out of the window at the pumps (Drop 88)
     flowback: { pos: [4, 12, 14 + rowLen], target: [26, 1.5, 24 + rowLen] },   // from the wells (Drop 66): choke, catcher, separators and the tanks behind, in one diagonal
     basin: { pos: [90, 60, 160 + rowLen], target: [-20, 0, rowCenter] },
   };
@@ -103,7 +105,7 @@ function CameraPreset({ preset, rowCenter, rowLen, production, k, bZ, rig, walk,
 // Tour (Drop 65): the camera visits the presets on its own, a slow drift around each view then an eased move to the
 // next, for a demo loop or a kiosk. The dropdown follows. Any pointer or wheel on the canvas, a preset pick, Walk,
 // or the Tour button ends it, and the view stays where it was.
-const TOUR_ORDER = ['pad', 'tree', 'row', 'zipper', 'pumps', 'sand', 'tanks', 'support', 'gate', 'flowback', 'basin'];
+const TOUR_ORDER = ['pad', 'tree', 'row', 'zipper', 'pumps', 'sand', 'tanks', 'support', 'van', 'gate', 'flowback', 'basin'];
 const TOUR = { hold: 11, move: 3.5 };   // seconds; the headless pass shortens them through window.__padworksTour
 if (typeof window !== 'undefined') window.__padworksTour = TOUR;
 function Tour({ on, preset, rowCenter, rowLen, production, k, bZ, rig }) {
@@ -222,6 +224,9 @@ function FocusCamera({ ctx }) {
   useFrame((state, dt) => {
     const controls = state.controls;
     if (pending.current && controls) {
+      // a lesson run from the data van keeps the camera in the chair (Drop 89): the calls are made from there
+      const st = useSim.getState(); const L = st.lesson.id && !st.lesson.finished ? lessonById(st.lesson.id) : null;
+      if (L && L.van && st.ui.preset === 'van') { pending.current = null; return; }
       const view = focusView(pending.current, ctxRef.current);
       pending.current = null;
       if (view) anim.current = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p1: new THREE.Vector3(...view.pos), t1: new THREE.Vector3(...view.target) };
@@ -443,7 +448,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
         </group>
       ))}
       {/* blender behind the missile, discharge end toward it: two suction hoses from its manifolds to the low-pressure headers; hydration and chemical units beside it, silos and conveyor feeding the hoppers */}
-      <Blender position={[MISSILE_X, 0, bZ]} showLabels={showLabels} lit={tod === 'night'} />
+      <Blender position={[MISSILE_X, 0, bZ]} showLabels={showLabels} lit={tod === 'night'} running={pumping} />
       <Hose from={[MISSILE_X + 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X + 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />
       <Hose from={[MISSILE_X - 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X - 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />
       <Hydration position={[MISSILE_X + 8, 0, bZ + 0.5]} showLabels={showLabels} />
@@ -473,7 +478,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       {water === 'ast' && [0, 1].map(i => <StorageTank key={i} position={[-74 + i * 18, 0, 36]} showLabels={showLabels && i === 0} name={i === 0 ? 'PP-STORAGETANK' : undefined} />)}
       {(water === 'tanks' || water === 'heated') && <WaterTanks position={[-80, 0, 36]} showLabels={showLabels} />}
       <WaterTransfer tanks={water === 'pit' ? PIT_POS : water === 'ast' ? [-74, 0, 36] : [-80, 0, 36]} count={8} source={water} winter={winter} to={[MISSILE_X + 8 + 1.55, 1.48, bZ + 0.5 + 2.0]} showLabels={showLabels} />
-      <DataVan position={[-14, 0, -30]} showLabels={showLabels} lit={tod === 'night'} />
+      <DataVan position={[-14, 0, -30]} showLabels={showLabels} lit={tod === 'night'} pumpCount={pumpCount} />
       {/* accumulator unit outside the red zone with one remote hydraulic stand per tree-and-leg pair on an arc in front of it; supply daisy-chains from the skid stand to stand, and each stand's control hoses run on the ground to its tree trunk (along the containment) and its zipper leg trunk (along the pump side) */}
       <Accumulator position={[ACC[0], 0, ACC[1]]} showLabels={showLabels} />
       {stands.map((st, i) => (
@@ -506,8 +511,8 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <Props items={propItems} />
       <SafetyPoint position={[3.5, 0, -36]} />
       <HoseCoils position={[-56, 0, bZ + 14]} rotation={[0, 0.4, 0]} />
-      <CrewModel position={[-7.2, 0, -27.6]} rotation={-0.6} pose="stand" seed={1} />
-      <CrewModel position={[-8.6, 0, -27.2]} rotation={0.9} pose="point" vest="#e8e83a" seed={2} />
+      <CrewModel position={[-5.4, 0, -27.9]} rotation={-0.6} pose="stand" seed={1} />   {/* beside the van stair, clear of it (Drop 88) */}
+      <CrewModel position={[-4.3, 0, -27.0]} rotation={0.9} pose="point" vest="#e8e83a" seed={2} />
       <CrewModel position={[ACC[0] + 0.4, 0, ACC[1] + 2.1]} rotation={Math.PI} pose="stand" seed={3} />
       <CrewModel position={[-77, 0, bZ - 25.5]} rotation={Math.PI / 2} pose="stand" vest="#e8e83a" seed={4} />   {/* the telehandler's spotter, with it south of the sand station (Drop 84) */}
       {/* crew on the move (Drop 28): data van to the accumulator stand along the red zone edge, and a tank watch along the frac tanks */}

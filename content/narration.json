@@ -43,16 +43,21 @@
     },
     {
       "id": "intro-9",
+      "preset": "van",
+      "text": "Inside the data van, in the company man's chair. The treating chart in front of him, the pump board over the window, and the pad through the glass. Every call on the job gets made from this seat."
+    },
+    {
+      "id": "intro-10",
       "preset": "gate",
       "text": "The gate and the lease road. Trucks come and go through here; the lanes and ruts on the pad come from where they actually drive."
     },
     {
-      "id": "intro-10",
+      "id": "intro-11",
       "preset": "flowback",
       "text": "Flowback. After drillout the well flows through the choke manifold to the separator and the tanks, and the flare stack takes the gas until the sales line is tied in."
     },
     {
-      "id": "intro-11",
+      "id": "intro-12",
       "preset": "pad",
       "text": "That is the pad. Press Lessons to be walked through a job one checkpoint at a time, with a score; press Full simulator to run it your own way. Hover anything to name it; click to open its record."
     }
@@ -213,6 +218,33 @@
         "Step 7 of 7. Pumps online and the rate back up, 60 bpm or more. Steps of 10 to 20 bpm, as at the start of the stage."
       ],
       "end": "Lesson complete. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
+    },
+    "L12": {
+      "title": "Run the stage from the van",
+      "intro": "Lesson 12, Run the stage from the van. This one is the company man's job. You do not touch a valve or a pump; you sit in the data van with the treating chart in front of you and make the calls over the radio. The frac engineer answers each one. Watch first; then try it yourself.",
+      "steps": [
+        "Step 1 of 9. Call the frac engineer: pumps online. Stage three is perforated and plugged, the zipper leg is open to the inlet block, and wireline is clear of the well. The pumps come online at zero rate.",
+        "Step 2 of 9. Call the rate up in steps to 80 barrels a minute. Twenty at a time. Watch the red trace on the chart as each step lands; it should settle well under the dashed kickout line.",
+        "Step 3 of 9. Call sand in at one pound per gallon added. The proppant slider is your call to the blender. Slickwater carries sand by velocity, so one P P A at this rate is the design.",
+        "Step 4 of 9. The red trace is bending up while the blue rate trace stays flat. That is the near-wellbore packing off. Call sand off now and hold the rate to flush. Waiting for the alarm is what trips the kickout.",
+        "Step 5 of 9. The trace has settled. Call sand back in at one P P A.",
+        "Step 6 of 9. Hold until the stage design is placed. The stage table on the screen shows the fracture extent filling in.",
+        "Step 7 of 9. Design placed. Call sand off and flush the wellbore clean; sand pumped past the design packs the near-wellbore.",
+        "Step 8 of 9. Call the pumps down: rate to zero, pumps offline.",
+        "Step 9 of 9. Hand the well to wireline. Your call releases it; the frac crew swings to the other leg."
+      ],
+      "replies": [
+        "Van, frac. Pumps are online, zero rate, holding for your call.",
+        "Coming up. Twenty. Forty. Sixty. Eighty barrels, holding eighty, pressure steady.",
+        "One PPA on the blender. Sand is at the wellhead in about a minute.",
+        "Sand off, flushing at eighty. Pressure is coming back down.",
+        "Back to one PPA.",
+        "Design is on the ground. Standing by for your call.",
+        "Sand off, flushing the wellbore.",
+        "Pumps down, rate zero. Stage three is complete.",
+        "Wireline copies, we have the well. Rigging up on stage four."
+      ],
+      "end": "Lesson complete. That was a stage from the chair: six calls and one catch. Now try it yourself: press Try it on the lessons page, or Reset and start the lesson from the setup panel."
     }
   },
   "clips": [
@@ -243,6 +275,26 @@
     "L11-step-5-30fc8f31",
     "L11-step-6-1fc8c2c8",
     "L11-step-7-e3ef486a",
+    "L12-end-9c5b45d4",
+    "L12-intro-df49faad",
+    "L12-reply-1-51b89e09",
+    "L12-reply-2-6058e38a",
+    "L12-reply-3-87d151c9",
+    "L12-reply-4-2010fe94",
+    "L12-reply-5-3d484972",
+    "L12-reply-6-81a40eb5",
+    "L12-reply-7-324442a3",
+    "L12-reply-8-923d576f",
+    "L12-reply-9-53d3168d",
+    "L12-step-1-6904e65c",
+    "L12-step-2-299c0dbd",
+    "L12-step-3-ced6590c",
+    "L12-step-4-a4295145",
+    "L12-step-5-9d08d4bf",
+    "L12-step-6-e604edb8",
+    "L12-step-7-86889f7c",
+    "L12-step-8-8c44b984",
+    "L12-step-9-639307ce",
     "L2-end-1b7d0024",
     "L2-intro-22998159",
     "L2-step-1-13c41536",
@@ -318,8 +370,9 @@
     "L9-step-5-1903d477",
     "L9-step-6-3b3ad9fd",
     "intro-1-17fe8332",
-    "intro-10-11edf315",
-    "intro-11-703209d9",
+    "intro-10-c3b3b592",
+    "intro-11-11edf315",
+    "intro-12-703209d9",
     "intro-2-e1065d3a",
     "intro-3-c0a377dc",
     "intro-4-fea5f094",
@@ -327,6 +380,6 @@
     "intro-6-531d542f",
     "intro-7-f6efb662",
     "intro-8-7ea0bdc9",
-    "intro-9-c3b3b592"
+    "intro-9-f6d59537"
   ]
 }

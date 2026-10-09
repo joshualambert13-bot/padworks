@@ -38,7 +38,7 @@ export function scoreOf(score, { since = 0, exempt = [] } = {}) {
   return { total, pts, grade: gradeOf(total), deductions: ded };
 }
 const freshScore = () => ({ deductions: [], events: [], open: {}, kickouts: 0, overpressures: 0, screenouts: 0, interlocks: 0, wrongMoves: 0, moves: 0, phaseSec: {}, stages: {}, opEpisode: false });
-const freshLesson = () => ({ id: null, doneMask: [], startedAt: 0, finished: false, result: null });
+const freshLesson = () => ({ id: null, doneMask: [], startedAt: 0, finished: false, result: null, doneAt: {}, fired: {} });   // doneAt and fired (Drop 89): when each step was met, which staged events have run
 
 // ---------------------------------------------------------------------------------------------
 // Pad setup vocabulary. Every value here is an illustrative starting point for a training pad,
@@ -435,7 +435,7 @@ export const useSim = create((set, get) => ({
     if (L.pad) get().setPad(L.pad);
     get().startJob();
     if (L.prep) L.prep(get, set);
-    set(s => ({ lesson: { id: L.id, doneMask: L.steps.map(() => false), startedAt: s.t, finished: false, result: null }, ui: { ...s.ui, summary: false } }));
+    set(s => ({ lesson: { id: L.id, doneMask: L.steps.map(() => false), startedAt: s.t, finished: false, result: null, doneAt: {}, fired: {} }, ui: { ...s.ui, summary: false } }));
     get().addLog('Lesson ' + L.n + ' started: ' + L.title + '. Target ' + L.targetSec + ' s.');
   },
   quitLesson: () => { const L = lessonById(get().lesson.id); set({ lesson: freshLesson() }); if (L) get().addLog('Lesson ' + L.n + ' left; the job continues in free play.'); },
@@ -1048,7 +1048,11 @@ export const useSim = create((set, get) => ({
         const mask = L.steps.map((_, i) => !!s.lesson.doneMask[i]);
         let i = mask.indexOf(false); if (i < 0) i = mask.length;
         let changed = false;
-        while (i < L.steps.length && L.steps[i].done(ns)) { mask[i] = true; changed = true; i++; }
+        const doneAt = { ...(s.lesson.doneAt || {}) }, fired = { ...(s.lesson.fired || {}) };
+        while (i < L.steps.length && L.steps[i].done(ns)) { mask[i] = true; doneAt[i] = t; changed = true; i++; }
+        // staged events (Drop 89): `events: [{ after, delay, run }]` fire `delay` seconds after step `after` is met,
+        // once, outside this tick (the run writes the store itself)
+        (L.events || []).forEach((ev, k) => { if (!fired[k] && doneAt[ev.after] != null && t - doneAt[ev.after] >= ev.delay) { fired[k] = true; changed = true; setTimeout(() => { const g = get(); if (g.lesson.id === L.id && !g.lesson.finished) ev.run(g); }, 0); } });
         if (i >= L.steps.length) {
           const secs = t - s.lesson.startedAt;
           const base = scoreOf(score, { since: s.lesson.startedAt, exempt: L.exempt || [] });
@@ -1056,14 +1060,14 @@ export const useSim = create((set, get) => ({
           const timePts = Math.min(20, Math.ceil(over / (L.targetSec * 0.1)));
           const total = Math.max(0, base.total - timePts);
           const result = { score: total, grade: gradeOf(total), secs: Math.round(secs), targetSec: L.targetSec, timePts, deductions: base.deductions };
-          patch.lesson = { ...s.lesson, doneMask: mask, finished: true, result };
+          patch.lesson = { ...s.lesson, doneMask: mask, doneAt, fired, finished: true, result };
           const entry = { id: L.id, n: L.n, title: L.title, score: total, grade: result.grade, secs: result.secs, targetSec: L.targetSec, when: Date.now() };
           if (!s.ui.demo) {   // a narrated demo (Drop 77) runs the lesson itself; its result is nobody's progress
             patch.lessonResults = [...s.lessonResults, entry];
             postLessonResult(entry, { setup: ns.setup, pad: ns.pad, t: ns.t, phase: ns.phase, stages: ns.stages, score: ns.score, log: ns.log, events: ns.events, lesson: patch.lesson, when: Date.now() });
           }
           get().addLog('Lesson ' + L.n + ' complete: ' + total + ' points, grade ' + result.grade + ', ' + result.secs + ' s (target ' + L.targetSec + ' s).');
-        } else if (changed) patch.lesson = { ...s.lesson, doneMask: mask };
+        } else if (changed) patch.lesson = { ...s.lesson, doneMask: mask, doneAt, fired };
       }
     }
     set(patch);

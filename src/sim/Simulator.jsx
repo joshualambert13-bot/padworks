@@ -185,6 +185,7 @@ export default function Simulator() {
             <option value="tanks">Water supply</option>
             <option value="gate">Pad entrance</option>
             <option value="support">Data van and power</option>
+            <option value="van">Inside the data van</option>
             <option value="flowback">Flowback spread</option>
             <option value="basin">Basin view</option>
           </select>

@@ -148,7 +148,10 @@ let p;
 // ONLY=main runs the walkthrough and the library pages (35 min); ONLY=drop7 the Drop 7 section (35 min); ONLY=tail the
 // accounts and phone sections (10 min); ONLY=rest is drop7 plus tail. Runs of 35 minutes or less survive a sandbox that
 // restarts itself every 70 minutes or so (Drop 71).
-if (process.env.ONLY !== 'drop7' && process.env.ONLY !== 'drop10' && process.env.ONLY !== 'drop16' && process.env.ONLY !== 'rest' && process.env.ONLY !== 'tail') {
+// Drop 88: ONLY=main1 is the simulator walkthrough alone (25 min), ONLY=main2 the library, landing, lessons and demos
+// (25 min); a sandbox that restarts itself inside the hour needs the main run in two halves
+const ONLY = process.env.ONLY;
+if (ONLY !== 'drop7' && ONLY !== 'drop10' && ONLY !== 'drop16' && ONLY !== 'rest' && ONLY !== 'tail' && ONLY !== 'main2') {
 p = await page(1440, 900);
 await p.goto(base + SIM); await wait(4000);
 await shot(p, '00-sim-setup');
@@ -157,8 +160,11 @@ await frames(p, 3); await layoutCheck(p, 'default pad');
 {
   const sample = () => p.evaluate(() => { const T = window.__THREE; let w = null; window.__padworksScene.traverse(o => { if (!w && o.isMesh && /WheelStock_FL/.test(o.name) && !o.isInstancedMesh && o.getWorldPosition(new T.Vector3()).y > -100) w = o; }); if (!w) return null; let root = w; while (root.parent && root.name !== 'LG-PICKUPS') root = root.parent; return { q: w.getWorldQuaternion(new T.Quaternion()).toArray(), rq: root.getWorldQuaternion(new T.Quaternion()).toArray() }; });
   let a = await sample(); if (!a) { await frames(p, 3); a = await sample(); }
-  await frames(p, 2); const b = await sample();
+  await frames(p, 2); let b = await sample();
+  // the truck turns around at the ends of the road; a sample pair that straddles the turn is taken again (Drop 89)
+  for (let k = 0; k < 3 && a && b && a.rq.some((v, i) => Math.abs(v - b.rq[i]) > 1e-3); k++) { a = b; await frames(p, 2); b = await sample(); }
   if (!a || !b) errors.push('road truck not found for the wheel check');
+  else if (a.rq.some((v, i) => Math.abs(v - b.rq[i]) > 1e-3)) console.log('wheel check skipped: the truck kept turning');
   else {
     const T = await import('three');
     const qa = new T.Quaternion().fromArray(a.q), qb = new T.Quaternion().fromArray(b.q), rq = new T.Quaternion().fromArray(b.rq);
@@ -166,6 +172,26 @@ await frames(p, 3); await layoutCheck(p, 'default pad');
     const sn = Math.sqrt(Math.max(0, 1 - d.w * d.w));
     if (sn < 0.01) errors.push('road truck wheels do not turn');
     else if (Math.abs(d.z / sn) < 0.95) errors.push('road truck wheels turn about the wrong axis: ' + [d.x / sn, d.y / sn, d.z / sn].map(v => v.toFixed(2)).join(','));
+  }
+}
+// Drop 87: no boulder on the lease road corridor (the truck drove through them), and the blender's tub drive turns about
+// the vertical axis only while pumping
+{
+  const r = await p.evaluate(() => {
+    const T = window.__THREE; const sc = window.__padworksScene; let rocks = null, drive = null;
+    sc.traverse(o => { if (o.isInstancedMesh && o.name === 'TERRAIN-ROCKS') rocks = o; if (o.name === 'PP-BLENDER-TUBDRIVE') drive = o; });
+    if (!rocks) return { rocks: -1 };
+    const m = new T.Matrix4(), v = new T.Vector3(); let onRoad = 0;
+    const pad = window.__padworksSim.getState().pad;
+    for (let i = 0; i < rocks.count; i++) { rocks.getMatrixAt(i, m); v.setFromMatrixPosition(m).applyMatrix4(rocks.matrixWorld); if (v.x > 44 && Math.abs(v.z - (-44 + 12)) < 6) onRoad++; }
+    return { rocks: rocks.count, onRoad, drive: !!drive, driveY: drive ? drive.rotation.y : null, wells: pad.wells };
+  });
+  if (r.rocks < 0) errors.push('terrain rocks not found'); else if (r.onRoad) errors.push(r.onRoad + ' boulders on the lease road');
+  if (!r.drive) errors.push('blender tub drive not found');
+  else {
+    await frames(p, 2);
+    const y1 = await p.evaluate(() => { let d = null; window.__padworksScene.traverse(o => { if (o.name === 'PP-BLENDER-TUBDRIVE') d = o; }); return d ? d.rotation.y : null; });
+    if (y1 !== r.driveY) errors.push('blender tub drive turns while the pad is idle');
   }
 }
 // Drop 43: the Stats readout must show numbers and no shader error
@@ -232,6 +258,36 @@ await p.getByRole('button', { name: 'Stats' }).click(); await wait(300);
   await p.keyboard.press('Escape'); await frames(p, 1); await wait(500);
   const y2 = (await p.evaluate(() => window.__padworksCam().pos))[1];
   if (Math.abs(y2 - y0) > 0.5) errors.push('leaving walk mode did not restore the preset camera: ' + y2.toFixed(2) + ' vs ' + y0.toFixed(2));
+}
+// Drop 88: the data van has an inside. The seat preset puts the camera in the room; walk mode starts there on the
+// floor, the back wall stops the walker, the room is open along its length, and the door leads out onto the landing.
+{
+  const VAN = { x0: -20.3, x1: -8.1, z0: -31.25, z1: -28.75, floor: 1.28 };
+  const inRoom = (c) => c[0] > VAN.x0 && c[0] < VAN.x1 && c[2] > VAN.z0 && c[2] < VAN.z1;
+  const opts = await p.evaluate(() => Array.from(document.querySelectorAll('select[title="Camera preset"] option')).map(o => o.value));
+  if (!opts.includes('van')) errors.push('camera presets lack the data van seat');
+  await p.selectOption('select[title="Camera preset"]', 'van'); await frames(p, 3);
+  const seat = await p.evaluate(() => window.__padworksCam().pos);
+  if (!inRoom(seat) || Math.abs(seat[1] - 2.45) > 0.3) errors.push('van seat preset is not in the room: ' + seat.map(v => v.toFixed(1)).join(','));
+  await shot(p, '00d-van-seat');
+  const screens = await p.evaluate(() => { const k = new Set(); window.__padworksScene.traverse(o => { const m = o.material; if (m && m.map && /^VAN-SCREEN-/.test(m.map.name)) k.add(m.map.name.slice(11)); }); return [...k].sort(); });
+  if (screens.join(',') !== 'chart,numbers,pumps,stages,wells') errors.push('van screens: ' + screens.join(','));
+  await p.click('[data-action="walk"]'); await frames(p, 2);
+  const pos = () => p.evaluate(() => window.__padworksCam().pos);
+  const c0 = await pos();
+  if (!inRoom(c0) || Math.abs(c0[1] - (VAN.floor + 1.7)) > 0.25) errors.push('walk from the seat did not start on the van floor: ' + c0.map(v => v.toFixed(2)).join(','));
+  const go = async (key, n) => { await p.keyboard.down(key); await frames(p, n); await p.keyboard.up(key); await frames(p, 1); return pos(); };
+  const c1 = await go('KeyS', 7);                                   // back: the back wall stops the walker
+  if (c1[2] < VAN.z0 + 0.15 || !inRoom(c1)) errors.push('the van back wall did not stop the walker: ' + c1.map(v => v.toFixed(2)).join(','));
+  // along the room to the door end (the seat faces the window, so the door is on the left); a frame moves the walker
+  // a variable distance under software GL, so walk in bursts until the door column (x -9.3 to -8.3) is reached
+  let c2 = c1; for (let k = 0; k < 10 && c2[0] < -8.9; k++) c2 = await go('KeyA', 6);
+  if (c2[0] < -9.3 || !inRoom(c2)) errors.push('the walker could not cross the van: ' + c2.map(v => v.toFixed(2)).join(','));
+  let c3 = c2; for (let k = 0; k < 6 && c3[2] < VAN.z1; k++) c3 = await go('KeyW', 6);   // out through the door onto the landing
+  if (c3[2] < VAN.z1 || c3[1] < VAN.floor + 1.4) errors.push('the walker did not leave through the door onto the landing: ' + c3.map(v => v.toFixed(2)).join(','));
+  await shot(p, '00e-van-landing');
+  await p.keyboard.press('Escape'); await frames(p, 1); await wait(500);
+  await p.selectOption('select[title="Camera preset"]', 'pad'); await frames(p, 2);
 }
 // Drop 73: the pad clutter has records; hovering the fuel cube opens one
 {
@@ -324,6 +380,29 @@ await shot(p, '06-sim-frac-split');
 await p.getByRole('button', { name: 'Surface' }).click(); await wait(1500);
 await p.selectOption('select[title="Camera preset"]', 'pumps'); await wait(2000);
 await shot(p, '07-sim-frac-pumps');
+// Drop 89: nothing leaks geometry while pumping (the hoses used to build a new tube per hose per sim tick: thousands
+// of geometries a minute, which is what took the phones down mid-stage)
+{
+  const g0 = await p.evaluate(() => window.__padworksGL.info.memory.geometries); await frames(p, 4); await wait(3000);
+  const g1 = await p.evaluate(() => window.__padworksGL.info.memory.geometries);
+  console.log('geometries while pumping:', g0, '->', g1);
+  if (g1 - g0 > 40) errors.push('geometry count grows while pumping: ' + g0 + ' -> ' + g1);
+  if (g1 > 5000) errors.push('geometry count high while pumping: ' + g1);
+}
+// Drop 88: the van's treating chart redraws from the live job (two pictures a few seconds apart differ)
+{
+  const pic = () => p.evaluate(() => { let c = null; window.__padworksScene.traverse(o => { const m = o.material; if (!c && m && m.map && m.map.name === 'VAN-SCREEN-chart') c = m.map.image; }); return c ? c.toDataURL().length + ':' + c.toDataURL().slice(-80) : null; });
+  const a = await pic(); await wait(2500); await frames(p, 2); const b = await pic();
+  if (!a) errors.push('van chart screen not found while pumping'); else if (a === b) errors.push('van chart screen does not redraw while pumping');
+}
+// Drop 87: with the pumps online the blender's tub drive turns, about the vertical axis
+{
+  const driveY = () => p.evaluate(() => { let d = null; window.__padworksScene.traverse(o => { if (o.name === 'PP-BLENDER-TUBDRIVE') d = o; }); return d ? [d.rotation.x, d.rotation.y, d.rotation.z] : null; });
+  const a = await driveY(); await frames(p, 2); const b = await driveY();
+  if (!a || !b) errors.push('blender tub drive not found while pumping');
+  else if (b[1] === a[1]) errors.push('blender tub drive does not turn while pumping');
+  else if (b[0] !== a[0] || b[2] !== a[2]) errors.push('blender tub drive turns about the wrong axis');
+}
 // Drop 42: a share link of this job opens in a second tab at the same phase and stage
 try {
   const token = await p.evaluate(() => window.__padworksSim.getState().shareToken());
@@ -402,7 +481,8 @@ await p.click('[data-action="weather"]'); await wait(1500);
   await p.getByRole('button', { name: 'Sound' }).click(); await wait(600);
 }
 await p.close();
-
+}
+if (ONLY !== 'drop7' && ONLY !== 'drop10' && ONLY !== 'drop16' && ONLY !== 'rest' && ONLY !== 'tail' && ONLY !== 'main1') {
 // ---------------- Library pages
 p = await page(1440, 900);
 await p.goto(base + '/library'); await wait(1500);
@@ -490,7 +570,7 @@ await shot(p, '37-landing');
 await p.goto(base + '/lessons'); await wait(2500);
 {
   const n = await p.evaluate(() => document.querySelectorAll('[data-lesson-card]').length);
-  if (n !== 12) errors.push('lessons page shows ' + n + ' cards, expected 12 (intro plus 11 lessons)');
+  if (n !== 13) errors.push('lessons page shows ' + n + ' cards, expected 13 (intro plus 12 lessons)');
 }
 await shot(p, '38-lessons-page');
 await p.addInitScript(() => { window.__padworksDemo = { fast: true }; });
@@ -552,14 +632,46 @@ await p.goto(base + '/simulate?lesson=L5' + (process.env.LITE ? '&lite=1' : ''))
 {
   const id = await p.evaluate(() => window.__padworksSim.getState().lesson.id);
   if (id !== 'L5') errors.push('Try it did not start lesson 5: ' + id);
-  await waitText(p, 'Lesson 5 of 11', 30000);
+  await waitText(p, 'Lesson 5 of 12', 30000);
 }
 await shot(p, '41-try-it-lesson5');
+// Drop 89: lesson 12 is run from the data van. Starting it seats the camera in the van, the buttons are the calls, the
+// staged screenout arrives twelve seconds after sand goes in and clears on the sand-off call, and the radio answers
+// have clips in the second voice.
+await p.goto(base + '/simulate?lesson=L12' + (process.env.LITE ? '&lite=1' : '')); await wait(5000); await frames(p, 3);
+{
+  const st = await p.evaluate(() => { const g = window.__padworksSim.getState(); return { id: g.lesson.id, preset: g.ui.preset, stage: g.stage, phase: g.phase, cam: window.__padworksCam().pos }; });
+  if (st.id !== 'L12') errors.push('lesson 12 did not start: ' + st.id);
+  if (st.preset !== 'van') errors.push('lesson 12 did not pick the van preset: ' + st.preset);
+  if (st.stage !== 2 || st.phase !== 'frac') errors.push('lesson 12 did not stage the job: stage ' + st.stage + ' ' + st.phase);
+  if (!(st.cam[0] > -20.3 && st.cam[0] < -8.1 && st.cam[2] > -31.25 && st.cam[2] < -28.75)) errors.push('lesson 12 camera is not in the van: ' + st.cam.map(v => v.toFixed(1)).join(','));
+  const clips = await p.evaluate(() => { const D = window.__padworksDemo; const L = D.lessonLines('L12'); return { replies: L.replies.filter(Boolean).length, have: L.replies.map((t, i) => t && D.hasClip('L12-reply-' + (i + 1), t)).filter(Boolean).length, step4: D.hasClip('L12-step-4', L.steps[3]) }; });
+  if (clips.replies !== 9 || clips.have !== 9 || !clips.step4) errors.push('lesson 12 clips: ' + JSON.stringify(clips));
+  await clickWhenEnabled(p, 'Call: pumps online'); await wait(1200);
+  await setRange(p, 0, 80); await wait(1500);
+  await setRange(p, 1, 1.0); await wait(1500);
+  const m3 = await p.evaluate(() => window.__padworksSim.getState().lesson.doneMask.slice(0, 3));
+  if (m3.join() !== 'true,true,true') errors.push('lesson 12 first three calls not met: ' + m3.join());
+  // the staged screenout: twelve seconds of job time after the sand call; the camera stays in the chair through the calls
+  const t0 = Date.now(); let alarm = false;
+  while (Date.now() - t0 < 120000) { alarm = await p.evaluate(() => window.__padworksSim.getState().alarms.screenout); if (alarm) break; await wait(500); }
+  if (!alarm) errors.push('lesson 12 staged screenout never arrived');
+  const camHold = await p.evaluate(() => window.__padworksCam().pos);
+  if (!(camHold[0] > -20.3 && camHold[0] < -8.1 && camHold[2] > -31.25 && camHold[2] < -28.75)) errors.push('the calls pulled the camera out of the van: ' + camHold.map(v => v.toFixed(1)).join(','));
+  await shot(p, '42-lesson12-screenout');
+  await clickWhenEnabled(p, 'Call: sand off'); await wait(500);
+  const t1 = Date.now(); let m4 = false;
+  while (Date.now() - t1 < 60000) { m4 = await p.evaluate(() => !!window.__padworksSim.getState().lesson.doneMask[3]); if (m4) break; await wait(500); }
+  if (!m4) errors.push('lesson 12 sand-off call did not clear the screenout: ' + JSON.stringify(await p.evaluate(() => { const g = window.__padworksSim.getState(); return { ppa: g.ppa, alarm: g.alarms.screenout, net: Math.round(g.netPsi), rate: g.pumpRate, on: g.pumpsOnline }; })));
+  const ded = await p.evaluate(() => window.__padworksSim.getState().score.deductions.map(d => d.code + ':' + d.pts));
+  if (ded.some(d => d.startsWith('screenout:') && !d.endsWith(':0'))) errors.push('the staged screenout cost points: ' + ded.join(' '));
+  await shot(p, '43-lesson12-sand-off');
+}
 await p.close();
 
 }
 
-if (process.env.ONLY !== 'main' && process.env.ONLY !== 'drop16' && process.env.ONLY !== 'tail') {
+if (ONLY !== 'main' && ONLY !== 'main1' && ONLY !== 'main2' && ONLY !== 'drop16' && ONLY !== 'tail') {
 p = await page(1440, 900);
 if (process.env.ONLY !== 'drop10') {
 // ---------------- Drop 7: pad setup, basins, missile and zipper, sliding sleeve job, records, hover round trip

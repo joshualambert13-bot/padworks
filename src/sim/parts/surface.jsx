@@ -9,6 +9,9 @@ import { Box, Cyl, Pipe, PipeRun, PipeStands, Trailer, Wheel, MAT, Label, Hose, 
 import { noiseTexture, padTexture, BlobShadow, LITE, wearTexture, wrapTexture, glowTexture } from './lighting.jsx';
 import { Sign, HazardStrip, Gauge, HosePair, ExhaustPlume, Stencil } from './life.jsx';
 import { useWaterNormal } from './textures.js';
+import { registerFloors, unregisterFloors } from './walk.jsx';
+import { makeScreen } from './vanscreens.js';
+import { useSim } from '../store.js';
 
 // Pulsing ring drawn around the valve the next-steps guidance is pointing at.
 function PulseRing({ r }) {
@@ -1170,9 +1173,11 @@ export function FracPumpLive({ position, rotation = [0, 0, 0], online = false, r
     </group>
   );
 }
-export function Blender({ position, showLabels, lit = false }) {
+export function Blender({ position, showLabels, lit = false, running = false }) {
+  // the tub drive's shaft coupling turns about the vertical axis while the blender runs (Drop 87: the bar that spun
+  // about its own length on top of the drive, at all times, read as a part flailing)
   const ref = useRef();
-  useFrame((_, dt) => { if (ref.current) ref.current.rotation.x += dt * 2.5; });
+  useFrame((_, dt) => { if (ref.current && running) ref.current.rotation.y += dt * 7; });
   const D = 1.18;
   return (
     <Trailer length={13.4} width={2.8} position={position} rotation={[0, Math.PI / 2, 0]} name="PP-BLENDER" front={-1}>
@@ -1206,7 +1211,9 @@ export function Blender({ position, showLabels, lit = false }) {
       <Box size={[1.4, 0.5, 0.8]} position={[-2.2, D + 0.3, -0.9]} mat={MAT.darkSteel} />
       <Handrail length={6.0} position={[1.2, D, 1.42]} height={1.0} />
       <Ladder height={2.2} position={[-6.7, D, 0.6]} rotation={[0, Math.PI / 2, 0]} />
-      <group ref={ref} position={[-0.6, D + 3.6, 0]}><Box size={[0.9, 0.06, 0.06]} mat={MAT.alu} /></group>
+      {/* tub drive: gearbox on the hopper, the shaft coupling (a disk with a drive bar across it) above it, the vertical hydraulic motor on top */}
+      <group ref={ref} position={[-0.6, D + 3.6, 0]} name="PP-BLENDER-TUBDRIVE"><Cyl r={0.2} h={0.08} mat={MAT.alu} /><Box size={[0.46, 0.05, 0.05]} position={[0, 0.06, 0]} mat={MAT.alu} /></group>
+      <Cyl r={0.15} h={0.5} position={[-0.6, D + 3.92, 0]} mat={MAT.darkSteel} />
       {/* Drop 52: tub rim and hatch, hopper grate, auger drive motors with their hydraulic hoses, discharge piping to
           the pump, butterfly valves on the manifolds, chemical injection pumps, exhaust stack, cabin roof lights and
           console, rear stair to the deck, hazard stripe at the hopper */}
@@ -1448,24 +1455,159 @@ export function WaterTanks({ position, count = 8, showLabels }) {
   );
 }
 
-export function DataVan({ position, showLabels, lit = false }) {
-  const D = 1.18;
+// The data van (rebuilt in Drop 88 with an interior). The body is a shell of slabs with a window band and an open
+// door on the pad side, so the inside is a room: the console desk under the window with five monitors and two
+// boards above it, a chair at each monitor (the company man's is the middle one, at the treating chart), the
+// counter, fridge and whiteboard along the back wall, two ceiling fixtures and one light. The screens are canvas
+// textures drawn from the live job (vanscreens.js). A landing and stair outside the door let walk mode in: the
+// van registers its floors with walk.jsx and carries its walls as force boxes (0.25 m pad, so the door passes),
+// while the furniture that would wall the room off (chairs, the desk's own mesh) is skipped by the obstacle
+// collector and the desk and counter are given as boxes of their own.
+const VAN = { D: 1.18, x0: -6.4, x1: 6.0, hw: 1.35, doorX0: 4.7, doorX1: 5.7, winX0: -5.85, winX1: 4.65 };
+const VAN_MONITORS = [[-4.4, 'stages'], [-2.5, 'wells'], [-0.6, 'chart'], [1.3, 'numbers'], [3.2, 'pumps']];
+const VAN_BOARDS = [[-2.6, 'pumps'], [1.6, 'chart']];
+const VAN_MAT = {
+  floor: { color: '#3a3d42', roughness: 0.92, metalness: 0.0 },
+  wall: { color: '#e9ebee', roughness: 0.85, metalness: 0.0 },
+  desk: { color: '#2b2f35', roughness: 0.55, metalness: 0.1 },
+  chair: { color: '#1f2328', roughness: 0.8, metalness: 0.0 },
+  bezel: { color: '#15181c', roughness: 0.5, metalness: 0.2 },
+  board: { color: '#f4f5f6', roughness: 0.6, metalness: 0.0 },
+  light: { color: '#ffffff', emissive: '#fff4e0', emissiveIntensity: 1.2, roughness: 0.6, metalness: 0.0 },
+  glassClear: { color: '#9fc2dc', roughness: 0.05, metalness: 0.0, transparent: true, opacity: 0.22, depthWrite: false },
+};
+const screens = new Map();   // kind -> screen (one canvas per kind, shared by the monitors and boards that show it)
+function screenOf(kind) { if (!screens.has(kind)) screens.set(kind, makeScreen(kind)); return screens.get(kind); }
+// redraws every screen in use twice a second from the store
+function VanScreenUpdater({ pumpCount }) {
+  const acc = useRef(1);
+  useFrame((_, dt) => {
+    if (typeof window !== 'undefined' && window.__padworksVanScreens === false) return;   // test hook: the screens stand still
+    acc.current += dt; if (acc.current < 0.5) return; acc.current = 0;
+    const st = useSim.getState();
+    for (const sc of screens.values()) if (sc) sc.draw(st, pumpCount);
+  });
+  return null;
+}
+function VanScreen({ kind, width, height, position, rotation = [0, Math.PI, 0] }) {
+  const sc = screenOf(kind);
+  if (!sc) return null;
+  return (
+    <mesh position={position} rotation={rotation} userData={{ walkSkip: true }}>
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial map={sc.tex} toneMapped={false} />
+    </mesh>
+  );
+}
+function OfficeChair({ x, z }) {
+  const D = VAN.D; const skip = { walkSkip: true };
+  return (
+    <group position={[x, 0, z]}>
+      <Box size={[0.5, 0.08, 0.5]} position={[0, D + 0.5, 0]} mat={VAN_MAT.chair} userData={skip} />
+      <Box size={[0.5, 0.52, 0.06]} position={[0, D + 0.82, -0.24]} mat={VAN_MAT.chair} userData={skip} />
+      <Cyl r={0.03} h={0.42} position={[0, D + 0.26, 0]} mat={MAT.darkSteel} userData={skip} />
+      <Cyl r={0.3} h={0.03} position={[0, D + 0.06, 0]} mat={MAT.darkSteel} userData={skip} />
+    </group>
+  );
+}
+export function DataVan({ position, showLabels, lit = false, pumpCount = 12 }) {
+  const D = VAN.D; const { x0, x1, hw } = VAN; const L = x1 - x0, cx = (x0 + x1) / 2;
+  const skip = { walkSkip: true };
+  // walls, rails, desk and counter as the walker's boxes (van frame)
+  const walkBoxes = useMemo(() => {
+    const b = (ax, ay, az, bx, by, bz) => new THREE.Box3(new THREE.Vector3(ax, ay, az), new THREE.Vector3(bx, by, bz));
+    return { force: true, pad: 0.25, mats: [new THREE.Matrix4()], boxes: [
+      b(x0, D, -hw - 0.05, x1, D + 2.6, -hw + 0.08),                 // back wall
+      b(x0, D, hw - 0.08, VAN.doorX0, D + 2.6, hw + 0.05),           // pad-side wall up to the door
+      b(VAN.doorX1, D, hw - 0.08, x1, D + 2.6, hw + 0.05),           // and past it
+      b(x0 - 0.05, D, -hw, x0 + 0.1, D + 2.6, hw), b(x1 - 0.1, D, -hw, x1 + 0.05, D + 2.6, hw),   // end walls
+      b(4.5, D, 1.35, 4.6, D + 1.2, 2.5), b(4.5, D, 2.4, 5.9, D + 1.2, 2.5),                      // landing rails
+      b(5.85, 0, 1.45, 7.2, 2.4, 1.52), b(5.85, 0, 2.38, 7.2, 2.4, 2.45),                        // stair rails
+      b(-5.7, D, 0.52, 4.5, D + 0.8, 1.28),                           // console desk
+      b(-5.9, D, -1.28, -2.9, D + 0.95, -0.72),                       // back counter
+    ] };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // floors for walk mode, in world space (the van stands unrotated)
+  useEffect(() => {
+    const [px, , pz] = position;
+    registerFloors('datavan', [
+      { x0: px + x0 + 0.1, z0: pz - hw + 0.1, x1: px + x1 - 0.1, z1: pz + hw - 0.1, y0: D + 0.1 },
+      { x0: px + 4.55, z0: pz + 1.35, x1: px + 5.85, z1: pz + 2.45, y0: D + 0.05 },
+      { x0: px + 5.85, z0: pz + 1.5, x1: px + 7.13, z1: pz + 2.4, y0: D + 0.05, y1: 0, axis: 'x' },
+    ]);
+    return () => unregisterFloors('datavan');
+  }, [position[0], position[2]]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Trailer length={13.4} width={2.8} position={position} rotation={[0, 0, 0]} name="PP-DATAVAN">
-      {/* office body with a window band on the pad side, two roof air conditioners, entry stair, generator, antenna mast */}
-      <RBox r={0.12} size={[12.4, 2.7, 2.7]} position={[-0.2, D + 1.35, 0]} mat={MAT.paintWhite} />
-      <Box size={[12.5, 0.12, 2.8]} position={[-0.2, D + 2.72, 0]} mat={MAT.chassis} />
-      <Box size={[10.5, 0.8, 0.05]} position={[-0.6, D + 1.7, 1.36]} mat={lit ? MAT.glassLit : MAT.glass} />
-      {[-4.0, -1.5, 1.0, 3.5].map((x, i) => <Box key={i} size={[0.06, 0.9, 0.06]} position={[x, D + 1.7, 1.37]} mat={MAT.chassis} />)}
-      <Box size={[0.9, 2.1, 0.06]} position={[5.2, D + 1.1, 1.37]} mat={MAT.chassis} />
-      <Stair steps={4} rise={0.3} run={0.32} width={0.9} position={[6.4, 0, 1.0]} rotation={[0, Math.PI, 0]} />
-      {[-3.0, 2.5].map((x, i) => <RBox r={0.05} key={i} size={[1.3, 0.5, 1.0]} position={[x, D + 3.0, 0]} mat={MAT.paintWhite} />)}
-      <Box size={[1.6, 1.4, 1.2]} position={[-6.6, D + 0.7, 0]} mat={MAT.chassis} />
-      <Cyl r={0.05} h={4.0} position={[-4.5, D + 4.7, 0]} mat={MAT.darkSteel} />
-      <Box size={[0.5, 0.05, 0.5]} position={[-4.5, D + 6.7, 0]} mat={MAT.darkSteel} />
+      <group userData={{ walkBoxes }}>
+        {/* shell: floor and roof slabs, back and end walls, the pad-side wall in pieces around the window band and the door */}
+        <Box size={[L, 0.1, hw * 2]} position={[cx, D + 0.05, 0]} mat={VAN_MAT.floor} userData={skip} />
+        <Box size={[L, 0.08, hw * 2]} position={[cx, D + 2.68, 0]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[L, 2.6, 0.08]} position={[cx, D + 1.4, -hw + 0.04]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[0.08, 2.6, hw * 2]} position={[x0 + 0.04, D + 1.4, 0]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[0.08, 2.6, hw * 2]} position={[x1 - 0.04, D + 1.4, 0]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[VAN.doorX0 - x0, 1.0, 0.08]} position={[(x0 + VAN.doorX0) / 2, D + 0.55, hw - 0.04]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[x1 - VAN.doorX1, 1.0, 0.08]} position={[(VAN.doorX1 + x1) / 2, D + 0.55, hw - 0.04]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[L, 0.5, 0.08]} position={[cx, D + 2.4, hw - 0.04]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[VAN.winX0 - x0, 1.1, 0.08]} position={[(x0 + VAN.winX0) / 2, D + 1.6, hw - 0.04]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[x1 - VAN.doorX1, 1.1, 0.08]} position={[(VAN.doorX1 + x1) / 2, D + 1.6, hw - 0.04]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[VAN.winX1 - VAN.winX0, 1.1, 0.03]} position={[(VAN.winX0 + VAN.winX1) / 2, D + 1.6, hw - 0.04]} mat={VAN_MAT.glassClear} castShadow={false} userData={skip} />
+        {[-4.0, -1.5, 1.0, 3.5].map((x, i) => <Box key={i} size={[0.06, 1.1, 0.1]} position={[x, D + 1.6, hw - 0.03]} mat={MAT.chassis} userData={skip} />)}
+        {/* inner lining: the room's own clean surfaces over the weathered shell */}
+        <Box size={[L - 0.16, 0.02, hw * 2 - 0.16]} position={[cx, D + 2.63, 0]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        <Box size={[L - 0.16, 2.56, 0.02]} position={[cx, D + 1.38, -hw + 0.09]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        <Box size={[0.02, 2.56, hw * 2 - 0.16]} position={[x0 + 0.09, D + 1.38, 0]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        <Box size={[0.02, 2.56, hw * 2 - 0.16]} position={[x1 - 0.09, D + 1.38, 0]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        <Box size={[VAN.doorX0 - x0 - 0.08, 0.98, 0.02]} position={[(x0 + VAN.doorX0) / 2, D + 0.55, hw - 0.09]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        <Box size={[L - 0.16, 0.48, 0.02]} position={[cx, D + 2.4, hw - 0.09]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        <Box size={[VAN.winX0 - x0 - 0.08, 1.1, 0.02]} position={[(x0 + VAN.winX0) / 2, D + 1.6, hw - 0.09]} mat={VAN_MAT.wall} castShadow={false} userData={skip} />
+        {/* the door, open against the wall; the landing and its stair; roof units, generator, mast */}
+        <Box size={[0.05, 2.1, 1.0]} position={[VAN.doorX1 + 0.03, D + 1.1, hw + 0.52]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[1.3, 0.05, 1.1]} position={[5.2, D + 0.02, 1.9]} mat={MAT.grating} userData={skip} />
+        {[[4.65, 1.45], [4.65, 2.35], [5.75, 2.35]].map(([x, z], i) => <Cyl key={i} r={0.03} h={D} position={[x, D / 2, z]} mat={MAT.darkSteel} userData={skip} />)}
+        <Handrail length={1.1} position={[4.55, D + 0.05, 1.9]} rotation={[0, Math.PI / 2, 0]} height={1.0} posts={2} />
+        <Handrail length={1.3} position={[5.2, D + 0.05, 2.45]} height={1.0} posts={2} />
+        <Stair steps={4} rise={0.295} run={0.32} width={0.9} position={[7.13, 0, 1.95]} rotation={[0, Math.PI, 0]} />
+        {[-3.0, 2.5].map((x, i) => <RBox r={0.05} key={i} size={[1.3, 0.5, 1.0]} position={[x, D + 3.0, 0]} mat={MAT.paintWhite} />)}
+        <Box size={[1.6, 1.4, 1.2]} position={[-6.6, D + 0.7, 0]} mat={MAT.chassis} />
+        <Cyl r={0.05} h={4.0} position={[-4.5, D + 4.7, 0]} mat={MAT.darkSteel} />
+        <Box size={[0.5, 0.05, 0.5]} position={[-4.5, D + 6.7, 0]} mat={MAT.darkSteel} />
+        {/* interior: console desk under the window, monitors on stands, two boards above the window, a chair at each monitor */}
+        <Box size={[10.2, 0.05, 0.75]} position={[-0.6, D + 0.78, 0.9]} mat={VAN_MAT.desk} userData={skip} />
+        <Box size={[10.2, 0.72, 0.04]} position={[-0.6, D + 0.4, 0.55]} mat={VAN_MAT.desk} userData={skip} />
+        {VAN_MONITORS.map(([x, kind]) => (
+          <group key={kind} position={[x, 0, 0]}>
+            <Box size={[0.62, 0.4, 0.03]} position={[0, D + 1.3, 1.08]} rotation={[-0.12, 0, 0]} mat={VAN_MAT.bezel} userData={skip} />
+            <VanScreen kind={kind} width={0.56} height={0.33} position={[0, D + 1.3, 1.06]} rotation={[-0.12, Math.PI, 0]} />
+            <Cyl r={0.03} h={0.32} position={[0, D + 0.96, 1.12]} mat={MAT.darkSteel} userData={skip} />
+            <Box size={[0.26, 0.02, 0.18]} position={[0, D + 0.81, 1.12]} mat={MAT.darkSteel} userData={skip} />
+            <OfficeChair x={0} z={-0.15} />
+          </group>
+        ))}
+        {VAN_BOARDS.map(([x, kind]) => (
+          <group key={kind} position={[x, 0, 0]}>
+            <Box size={[2.6, 0.45, 0.04]} position={[0, D + 2.4, hw - 0.1]} mat={VAN_MAT.bezel} userData={skip} />
+            <VanScreen kind={kind} width={2.5} height={0.38} position={[0, D + 2.4, hw - 0.125]} />
+          </group>
+        ))}
+        {/* radio base and handset on the desk, the back wall's counter, fridge, coffee maker, printer and whiteboard */}
+        <Box size={[0.22, 0.1, 0.16]} position={[0.35, D + 0.86, 0.75]} mat={MAT.darkSteel} userData={skip} />
+        <Cyl r={0.005} h={0.35} position={[0.42, D + 1.08, 0.75]} mat={MAT.darkSteel} userData={skip} />
+        <Box size={[3.0, 0.85, 0.55]} position={[-4.4, D + 0.47, -1.0]} mat={VAN_MAT.desk} userData={skip} />
+        <Box size={[3.0, 0.05, 0.6]} position={[-4.4, D + 0.92, -1.0]} mat={VAN_MAT.board} userData={skip} />
+        <Box size={[0.55, 0.85, 0.55]} position={[-2.2, D + 0.47, -1.0]} mat={MAT.paintWhite} userData={skip} />
+        <Box size={[0.25, 0.35, 0.25]} position={[-5.4, D + 1.12, -1.05]} mat={MAT.chassis} userData={skip} />
+        <Box size={[0.45, 0.25, 0.4]} position={[-3.6, D + 1.07, -1.0]} mat={VAN_MAT.board} userData={skip} />
+        <Box size={[2.0, 1.0, 0.03]} position={[1.0, D + 1.65, -hw + 0.1]} mat={VAN_MAT.board} userData={skip} />
+        <Box size={[0.9, 0.03, 0.3]} position={[4.9, D + 1.7, -hw + 0.23]} mat={VAN_MAT.board} userData={skip} />
+        {/* ceiling fixtures and the room light */}
+        {[-3.0, 2.4].map((x, i) => <Box key={i} size={[1.2, 0.03, 0.3]} position={[x, D + 2.62, 0]} mat={VAN_MAT.light} castShadow={false} userData={skip} />)}
+        <pointLight position={[-0.6, D + 2.3, 0]} intensity={lit ? 16 : 9} distance={9} decay={2} color="#fff3e0" />
+        <VanScreenUpdater pumpCount={pumpCount} />
+      </group>
       {/* customer logo: under the window band on the pad side, large on the far side (Drop 82) */}
-      <LogoPlate position={[-0.6, D + 0.7, 1.358]} width={3.0} maxHeight={0.8} />
-      <LogoPlate position={[-0.2, D + 1.35, -1.358]} rotation={[0, Math.PI, 0]} width={6.0} maxHeight={1.6} />
+      <LogoPlate position={[-0.6, D + 0.55, hw + 0.008]} width={3.0} maxHeight={0.7} />
+      <LogoPlate position={[cx, D + 1.35, -hw - 0.008]} rotation={[0, Math.PI, 0]} width={6.0} maxHeight={1.6} />
       {showLabels && <Label position={[0, D + 4.8, 0]} text={'Data van'} />}
     </Trailer>
   );

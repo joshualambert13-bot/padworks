@@ -125,6 +125,7 @@ export function Vegetation({ terrain, pad, seed }) {
     for (let i = 0; i < nr; i++) {
       const x = (rnd() - 0.5) * 640, z = (rnd() - 0.5) * 640;
       if (x > pad.x0 - 3 && x < pad.x1 + 3 && z > pad.z0 - 3 && z < pad.z1 + 3) continue;
+      if (Math.abs(z - (pad.z0 + 12)) < 7 && x > pad.x1) continue;   // a graded lease road carries no boulders (Drop 87; the truck drove through them)
       const y = terrainHeight(x, z, terrain.relief, pad);
       const s = 0.3 + rnd() * 1.1;
       rocks.push({ p: [x, y + s * 0.2, z], r: [rnd(), rnd() * 3, rnd()], s: [s, s * 0.55, s * 0.8], c: shade(terrain.ground, -0.25 + rnd() * 0.15, 0) });
@@ -143,7 +144,7 @@ export function Vegetation({ terrain, pad, seed }) {
         if (pt.kind === 'tuft') return <Instanced key={k} geom={tuftGeom} mat={{ color: '#ffffff', roughness: 0.9, metalness: 0, alphaMap: tex || undefined, transparent: false, alphaTest: 0.45, side: THREE.DoubleSide }} items={items} shadow={false} />;
         return null;
       })}
-      <Instanced geom={blobGeom} mat={{ color: '#ffffff', roughness: 0.95, metalness: 0, flatShading: true }} items={parts.rocks} />
+      <Instanced geom={blobGeom} mat={{ color: '#ffffff', roughness: 0.95, metalness: 0, flatShading: true }} items={parts.rocks} name="TERRAIN-ROCKS" />
     </group>
   );
 }

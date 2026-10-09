@@ -1,5 +1,5 @@
 // Procedural building blocks shared by the surface and downhole scenes.
-import { useMemo, useRef, useLayoutEffect } from 'react';
+import { useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -261,7 +261,7 @@ export function PipeStands({ points, r = 0.1, every = 3.0, mat = MAT.chassis, na
       }
     }
     return out;
-  }, [points, r, every]);   // eslint-disable-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(points), r, every]);   // eslint-disable-line react-hooks/exhaustive-deps
   if (!specs.length) return null;
   return <Merged mat={mat} deps={[specs]} name={name} parts={() => specs.flatMap(({ x, z, h, yaw }) => [
     { g: G.box(0.5, 0.04, 0.5), p: [x, 0.02, z], r: [0, yaw, 0] },
@@ -308,12 +308,20 @@ export function HydraulicCylinder({ from, to, r = 0.12, barrel = 0.55, mat = MAT
 
 // Flexible hose or cable: a tube along a curve that sags between its ends.
 export function Hose({ from, to, r = 0.06, sag = 0.4, mat = MAT.hose, segments = 16, name }) {
+  // keyed by value (Drop 89): `from` and `to` are fresh arrays on every render of the scene, and the scene renders on
+  // every sim tick, so a memo on the arrays built a new tube per hose per tick and never freed the old one (about
+  // ninety geometries a frame while pumping, thousands a minute, the renderer slowing with every one)
+  const key = JSON.stringify([from, to, r, sag, segments]);
   const geom = useMemo(() => {
     const a = new THREE.Vector3(...from), b = new THREE.Vector3(...to);
     const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5); mid.y -= sag;
     const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
     return new THREE.TubeGeometry(curve, segments, r, 8, false);
-  }, [from, to, r, sag, segments]);
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const prev = useRef(null);
+  if (prev.current && prev.current !== geom) prev.current.dispose();
+  prev.current = geom;
+  useEffect(() => () => { if (prev.current) prev.current.dispose(); }, []);
   return <mesh geometry={geom} name={name}><meshStandardMaterial {...mat} /></mesh>;
 }
 

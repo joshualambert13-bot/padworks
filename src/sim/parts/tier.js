@@ -7,9 +7,8 @@
 //   laptop   everything else: pixel ratio up to 1.5, 2k shadow map, 1k props and crew, 2k ground and terrain, 2k sky
 //
 // `?tier=phone` or `?tier=laptop` on the address forces a class (for a look at the other one, and for the checks);
-// localStorage padworks.tier keeps a choice. The GPU name and the compressed-texture formats come from one probe
+// localStorage padworks.tier keeps a choice. The compressed-texture formats come from one probe
 // context (gpu.js), so nothing here needs the canvas to exist yet.
-import { GPU } from './gpu.js';
 
 const SETTINGS = {
   phone: { id: 'phone', dpr: 1, shadow: 1024, models: 512, detail: 1024, sky: '1k', fx: false, anisotropy: 4, suffix: '.phone' },
@@ -28,7 +27,8 @@ function detect() {
     const touch = (navigator.maxTouchPoints || 0) > 0;
     const small = Math.min(window.screen.width, window.screen.height) < 900;
     if (touch && small) return { id: 'phone' };                       // iPad mini and small Android tablets; an iPad Pro reads as a laptop
-    if (/Mali|Adreno|PowerVR/i.test(GPU.name) && touch) return { id: 'phone' };   // a phone GPU behind a desktop user agent
+    // (Drop 87: no rule on the GPU's name. A Snapdragon laptop carries an Adreno and a touch screen and was being classed
+    // as a phone; a phone behind a desktop user agent is still caught by its small screen above.)
     return { id: 'laptop' };
   } catch { return { id: 'laptop' }; }
 }

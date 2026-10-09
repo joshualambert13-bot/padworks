@@ -25,22 +25,42 @@ const KEYS = { KeyW: ['f', 1], ArrowUp: ['f', 1], KeyS: ['f', -1], ArrowDown: ['
 // Matrix4[] placements, force }) and its descendants `userData.walkSkip`. The instancing baker writes them for
 // every set it bakes (the boxes of the source meshes, one unit each, which a merged set loses), and the water pit
 // writes one forced box over the whole pit, berm included, since a ring is a keep-out and not a box to filter.
+// Drop 88: floors. The walker's feet used to sit on the terrain everywhere; the data van's interior, its landing
+// and its stair register floors here (world rectangles with a height, or a ramp whose height runs along one axis)
+// and the feet take the highest floor under them. Obstacles keep their height range and only count when they cross
+// the body band above the feet, so a trailer's chassis and tires block a walker on the ground and not one standing
+// on the deck above them, and the stair's treads below the feet never block the climb. `walkBoxes` may carry a
+// `pad` of its own (the body radius a door gap is padded by: 0.25 lets a person through a one-meter door).
+export const FLOORS = new Map();   // id -> [{ x0, z0, x1, z1, y0, y1, axis }]
+export function registerFloors(id, list) { FLOORS.set(id, list); }
+export function unregisterFloors(id) { FLOORS.delete(id); }
+export function floorAt(x, z) {
+  let best = -Infinity;
+  for (const list of FLOORS.values()) for (const f of list) {
+    if (x < f.x0 || x > f.x1 || z < f.z0 || z > f.z1) continue;
+    let y = f.y0;
+    if (f.axis === 'x') y = f.y0 + (f.y1 - f.y0) * (x - f.x0) / (f.x1 - f.x0);
+    else if (f.axis === 'z') y = f.y0 + (f.y1 - f.y0) * (z - f.z0) / (f.z1 - f.z0);
+    if (y > best) best = y;
+  }
+  return best;
+}
 const BODY_R = 0.6;
 function collectObstacles(scene) {
   const out = [];
   const box = new THREE.Box3(), m = new THREE.Matrix4(), w = new THREE.Matrix4();
-  const consider = (bb, world, force = false) => {
+  const consider = (bb, world, force = false, pad = BODY_R) => {
     box.copy(bb).applyMatrix4(world);
-    if (box.max.y < 0.7 || box.min.y > 1.3) return;
+    if (box.max.y < 0.7 || box.min.y > 12) return;   // nothing below knee height; a sky-high mast top still carries its own box down to the ground
     const sx = box.max.x - box.min.x, sz = box.max.z - box.min.z;
     if (!force && (sx < 0.5 || sz < 0.5 || sx > 30 || sz > 30 || sx * sz > 400)) return;
-    out.push([box.min.x - BODY_R, box.min.z - BODY_R, box.max.x + BODY_R, box.max.z + BODY_R]);
+    out.push([box.min.x - pad, box.min.z - pad, box.max.x + pad, box.max.z + pad, box.min.y, box.max.y]);
   };
   scene.traverse(o => {
     if (o.userData.walkSkip) return;
     for (let p = o; p; p = p.parent) if (p.visible === false) return;
     const wb = o.userData.walkBoxes;
-    if (wb) { for (const mat of wb.mats) for (const b of wb.boxes) consider(b, w.multiplyMatrices(o.matrixWorld, mat), !!wb.force); return; }
+    if (wb) { for (const mat of wb.mats) for (const b of wb.boxes) consider(b, w.multiplyMatrices(o.matrixWorld, mat), !!wb.force, wb.pad != null ? wb.pad : BODY_R); return; }
     if (!o.isMesh || o.isSprite || !o.geometry) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
     const bb = o.geometry.boundingBox; if (!bb || bb.isEmpty()) return;
@@ -49,9 +69,11 @@ function collectObstacles(scene) {
   });
   return out;
 }
-function pushOut(p, boxes) {
+// `feet` is the walker's ground height: a box counts when it crosses the band 0.7 to 1.3 m above the feet
+function pushOut(p, boxes, feet = 0) {
   for (let pass = 0; pass < 2; pass++) {
-    for (const [x0, z0, x1, z1] of boxes) {
+    for (const [x0, z0, x1, z1, y0, y1] of boxes) {
+      if (y1 < feet + 0.7 || y0 > feet + 1.3) continue;
       if (p.x <= x0 || p.x >= x1 || p.z <= z0 || p.z >= z1) continue;
       const dx0 = p.x - x0, dx1 = x1 - p.x, dz0 = p.z - z0, dz1 = z1 - p.z;
       const dx = Math.min(dx0, dx1), dz = Math.min(dz0, dz1);
@@ -64,18 +86,22 @@ export function WalkControls({ terrain, pad, onExit }) {
   const { camera, gl, scene } = useThree();
   const yaw = useRef(0), pitch = useRef(0), keys = useRef({}), tick = useRef(1), obstacles = useRef([]);
   // start 8 m short of what the orbit camera was looking at, on its side, at eye height, facing it
+  const groundAt = (x, z) => Math.max(terrainHeight(x, z, terrain.relief, pad), floorAt(x, z));
   useEffect(() => {
     const t = LAST_TARGET.clone();
     const back = camera.position.clone().sub(t); back.y = 0; if (back.length() < 1) back.set(0, 0, 1); back.normalize();
-    const x = THREE.MathUtils.clamp(t.x + back.x * 8, pad.x0 - 60, pad.x1 + 60), z = THREE.MathUtils.clamp(t.z + back.z * 8, pad.z0 - 60, pad.z1 + 60);
+    // a camera already standing on a floor (the data van seat preset, Drop 88) walks from where it is; otherwise the
+    // walk starts 8 m short of what was being looked at
+    const inside = floorAt(camera.position.x, camera.position.z) > -Infinity;
+    const x = inside ? camera.position.x : THREE.MathUtils.clamp(t.x + back.x * 8, pad.x0 - 60, pad.x1 + 60), z = inside ? camera.position.z : THREE.MathUtils.clamp(t.z + back.z * 8, pad.z0 - 60, pad.z1 + 60);
     yaw.current = Math.atan2(-(t.x - x), -(t.z - z)); pitch.current = 0;
-    camera.position.set(x, terrainHeight(x, z, terrain.relief, pad) + EYE, z);
+    camera.position.set(x, groundAt(x, z) + EYE, z);
     camera.rotation.set(0, yaw.current, 0, 'YXZ');
     camera.updateProjectionMatrix();
     scene.updateMatrixWorld(true);
     obstacles.current = collectObstacles(scene);
-    if (typeof window !== 'undefined') window.__padworksObstacles = obstacles.current;   // test hook
-    const p = { x, z }; pushOut(p, obstacles.current); camera.position.x = p.x; camera.position.z = p.z;   // never start inside a unit
+    if (typeof window !== 'undefined') { window.__padworksObstacles = obstacles.current; window.__padworksFloorAt = floorAt; }   // test hooks
+    const p = { x, z }; pushOut(p, obstacles.current, groundAt(x, z)); camera.position.x = p.x; camera.position.z = p.z;   // never start inside a unit
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the exit callback lives in a ref: the listeners below are installed once per canvas, not once per scene render
   // (the scene re-renders every sim tick, and re-installing reset the held arrows and the sound listener; Drop 60)
@@ -118,10 +144,10 @@ export function WalkControls({ terrain, pad, onExit }) {
       const fx = -sin, fz = -cos, rx = cos, rz = -sin;
       let x = camera.position.x + (fx * f + rx * s) * step, z = camera.position.z + (fz * f + rz * s) * step;
       x = THREE.MathUtils.clamp(x, pad.x0 - 60, pad.x1 + 60); z = THREE.MathUtils.clamp(z, pad.z0 - 60, pad.z1 + 60);
-      const p = { x, z }; pushOut(p, obstacles.current);
+      const p = { x, z }; pushOut(p, obstacles.current, groundAt(camera.position.x, camera.position.z));
       camera.position.x = p.x; camera.position.z = p.z;
     }
-    const groundY = terrainHeight(camera.position.x, camera.position.z, terrain.relief, pad) + EYE;
+    const groundY = groundAt(camera.position.x, camera.position.z) + EYE;
     camera.position.y += (groundY - camera.position.y) * Math.min(1, dt * 10);
     camera.rotation.set(pitch.current, yaw.current, 0, 'YXZ');
     // positional sound: the walker is the listener (updated a few times a second, not every frame)
