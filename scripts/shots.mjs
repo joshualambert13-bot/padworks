@@ -194,6 +194,27 @@ await frames(p, 3); await layoutCheck(p, 'default pad');
     if (y1 !== r.driveY) errors.push('blender tub drive turns while the pad is idle');
   }
 }
+// Drop 90: the default pad runs an electric fleet, so its pump bodies are the downloaded twin-pump trailers: one
+// instanced set with the record names baked in (motor, drive cabinets, power end, fluid end), ceil(pumps / 2) units
+// whose rear faces stand 2.9 m off the missile centerline on both sides, and a discharge iron run per pump that ends
+// at a rear face. Every mesh keeps its shadow, and nothing of the drawn electric pump is left in the scene.
+{
+  const r = await p.evaluate(() => {
+    const T = window.__THREE; const sc = window.__padworksScene; const S = window.__padworksSim.getState();
+    const names = {}; let vfd = null, template = 0;
+    sc.traverse(o => { if (o.isInstancedMesh && /^PP-FRACPUMP/.test(o.name)) { names[o.name] = (names[o.name] || 0) + 1; if (o.name === 'PP-FRACPUMP-VFD' && !vfd) vfd = o; } if (/^PP-FRACPUMP-TEMPLATE$/.test(o.name)) template++; });
+    const MX = -30; const units = [];
+    if (vfd) { const m = new T.Matrix4(), v = new T.Vector3(); for (let i = 0; i < vfd.count; i++) { vfd.getMatrixAt(i, m); v.setFromMatrixPosition(m); units.push([+v.x.toFixed(2), +v.z.toFixed(2)]); } }
+    const lay = window.__padworksLayout || null;
+    return { names, units, template, fleet: S.setup.fleet, pumps: lay ? lay.pumps : null, twin: lay ? lay.twin : null };
+  });
+  console.log('drop 90:', JSON.stringify(r).slice(0, 400));
+  if (!/^efrac|^grid/.test(r.fleet)) errors.push('default pad is not an electric fleet: ' + r.fleet);
+  for (const part of ['PP-FRACPUMP-MOTOR', 'PP-FRACPUMP-VFD', 'PP-FRACPUMP-POWEREND', 'PP-FRACPUMP-FLUIDEND']) if (!r.names[part]) errors.push('no baked twin-trailer mesh named ' + part);
+  if (r.twin !== true) errors.push('scene layout is not the twin-trailer layout: ' + JSON.stringify(r));
+  if (r.pumps != null && r.units.length !== Math.ceil(r.pumps / 2)) errors.push('twin trailers: ' + r.units.length + ' for ' + r.pumps + ' pumps');
+  for (const [x, z] of r.units) { const side = x > -30 ? 1 : -1; const rear = x - side * 8.12; if (Math.abs(Math.abs(rear + 30) - 2.9) > 0.05) errors.push('twin trailer at x ' + x + ' z ' + z + ' has its rear face ' + Math.abs(rear + 30).toFixed(2) + ' m off the missile'); }
+}
 // Drop 43: the Stats readout must show numbers and no shader error
 await p.getByRole('button', { name: 'Stats' }).click(); await wait(3000);
 {
@@ -1151,6 +1172,9 @@ await shot(p, '21-phone-sim-3d');
   if (d.shadow !== 1024) errors.push('phone shadow map is ' + d.shadow);
   if (d.dpr !== 1) errors.push('phone pixel ratio is ' + d.dpr);
   if (d.record && d.record.texMB > 120) errors.push('phone texture memory ' + d.record.texMB + ' MB');
+  // Drop 90: the twin-pump trailer comes from its phone file (less geometry as well as smaller textures)
+  const got = await p.evaluate(() => performance.getEntriesByType('resource').map(e => e.name).filter(n => /efracpump/.test(n)).map(n => n.replace(/^.*\//, '')));
+  if (!got.includes('efracpump.phone.glb')) errors.push('phone did not load the twin trailer phone file: ' + got.join(','));
 }
 await p.getByRole('button', { name: 'Controls' }).click(); await wait(800);
 await shot(p, '22-phone-sim-controls');

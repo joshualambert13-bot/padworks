@@ -22,6 +22,7 @@ import { TIER } from './parts/tier.js';
 import { ContextLoss } from './parts/stability.jsx';
 import { Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
+import { EfracTrailers, EfracLive, EFRAC } from './parts/efrac.jsx';
 import { useLogo } from './parts/logo.jsx';
 import { terrainHeight } from './parts/terrain.js';
 import { Ground, FracTree, FracTreeIron, FracTreeTop, ProductionTreeIron, dimTint, lubricatorTopY, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, FracPumpLive, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxStation, ShuttleForklift, CRADLE_X, CRADLE_Z, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, FlangedRun, WELL_COLORS, Accumulator, HydraulicStand, standLayout, HOSE_BUNDLE_X, ZIPPER_BUNDLE_X, WaterTransfer, WaterPit, StorageTank } from './parts/surface.jsx';
@@ -285,20 +286,36 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const coneSpots = useMemo(() => [...Array.from({ length: 8 }, (_, i) => [-34 + i * 6.3, -15.6]), ...Array.from({ length: 8 }, (_, i) => [-34 + i * 6.3, rowLen + 11.6])], [rowLen]);   // red zone corners (Drop 48)
   const treeTop = [0, d.topY, 0];
   const lubTop = lubricatorTopY(d, bore);
-  // pumps: nose-in on both sides of the missile, one per pitch
+  // pumps: nose-in on both sides of the missile, one per pitch. Drop 90: an electric fleet runs twin-pump trailers
+  // (efrac.jsx), each across two pitches with two pumps hooked to the missile, so the missile is sized by pitches
+  // (`perSide`), and `pumps` holds one entry per pump (its own pitch, the trailer it rides on) for the hookups
   const pumpCount = spread.pumps;
-  const perSide = Math.ceil(pumpCount / 2);
+  const twin = spread.electric;
+  const trailerCount = twin ? Math.ceil(pumpCount / 2) : pumpCount;
+  const perSide = twin ? 2 * Math.ceil(trailerCount / 2) : Math.ceil(pumpCount / 2);
   const md = missileDims(perSide);
   const missileOutletZ = -8;                                            // the high-pressure outlet end stays near the zipper front
   const missileZ = missileOutletZ + perSide * MISSILE_PITCH / 2 + 0.9;
-  const pumps = [];
-  for (let i = 0; i < pumpCount; i++) {
-    const side = i % 2 === 0 ? 1 : -1;
-    const k = Math.floor(i / 2);
-    const zLocal = (k - (perSide - 1) / 2) * MISSILE_PITCH;
-    pumps.push({ side, z: missileZ - zLocal, x: MISSILE_X + side * 8.0 });
+  const slotZ = (j) => missileZ - (j - (perSide - 1) / 2) * MISSILE_PITCH;   // pitch j along a side
+  const pumps = [], trailers = [];
+  if (twin) {
+    for (let t = 0; t < trailerCount; t++) {
+      const side = t % 2 === 0 ? 1 : -1, k = Math.floor(t / 2);
+      const z = (slotZ(2 * k) + slotZ(2 * k + 1)) / 2;
+      const x = MISSILE_X + side * (EFRAC.standoff + EFRAC.half);
+      const numbers = [2 * t + 1, 2 * t + 2].filter(n => n <= pumpCount);
+      trailers.push({ side, x, z, numbers });
+      numbers.forEach((n, i) => pumps.push({ side, x, z: slotZ(2 * k + i), trailer: t, slot: i }));
+    }
+  } else {
+    for (let i = 0; i < pumpCount; i++) {
+      const side = i % 2 === 0 ? 1 : -1;
+      const k = Math.floor(i / 2);
+      pumps.push({ side, z: slotZ(k), x: MISSILE_X + side * 8.0 });
+    }
   }
-  const pumpTransforms = useMemo(() => pumps.map(p => ({ position: [p.x, 0, p.z], rotation: [0, p.side === 1 ? Math.PI : 0, 0] })), [pumps.length, missileZ, perSide]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (typeof window !== 'undefined') window.__padworksLayout = { pumps: pumpCount, twin, trailers: trailers.length, perSide };   // test hook (Drop 90)
+  const pumpTransforms = useMemo(() => (twin ? trailers.map(t => ({ position: [t.x, 0, t.z], rotation: [0, t.side === 1 ? 0 : Math.PI, 0] })) : pumps.map(p => ({ position: [p.x, 0, p.z], rotation: [0, p.side === 1 ? Math.PI : 0, 0] }))), [twin, pumps.length, missileZ, perSide]); // eslint-disable-line react-hooks/exhaustive-deps
   const wlWells = roles.filter(r => r.role === 'wireline');
   const show = useHover(h => h.show), hide = useHover(h => h.hide);
   const pick = pickHandlers('surface', show, hide);
@@ -318,7 +335,11 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       [[26, -32], [26, rowLen + 36]],                                                                  // wellhead service lane (wireline, coil, flowback)
     ];
     const spots = [];
-    pumps.forEach(p => {
+    if (twin) trailers.forEach(t => {
+      spots.push({ x: t.x - t.side * 3.1, z: t.z, rx: 3.0, rz: 1.3, a: 0.28, drips: 14 });              // oil under the two power ends (Drop 90)
+      spots.push({ x: t.x, z: t.z, rx: 8.2, rz: 1.5, a: 0.12 });                                         // compaction under the trailer
+    });
+    else pumps.forEach(p => {
       spots.push({ x: p.x + p.side * 3.0, z: p.z, rx: 2.4, rz: 1.2, a: 0.32, drips: 14 });              // oil under the power end
       spots.push({ x: p.x, z: p.z, rx: 6.5, rz: 1.5, a: 0.12 });                                         // compaction under the trailer
     });
@@ -338,7 +359,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
     const rects = [{ x0: 26, z0: -38.5, x1: 34, z1: -36 + 7 * 3.2, a: 0.1 }];                             // pickups
     if (fuelCount) rects.push({ x0: 5.5, z0: -41, x1: 18.5, z1: -39.5 + fuelCount * 3.6 - 1.8, a: 0.08 });
     return { pad, lanes, spots, rects };
-  }, [pad, rowLen, bZ, pumps.length, missileZ, perSide, wellZ, water, sandMode, fuelCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pad, rowLen, bZ, pumps.length, twin, missileZ, perSide, wellZ, water, sandMode, fuelCount]); // eslint-disable-line react-hooks/exhaustive-deps
   const zipperFrontZ = rowCenter - (rowLen + 6.0) / 2;
   const propItems = useMemo(() => padProps(MISSILE_X, bZ), [bZ]);   // downloaded props (Drops 79 and 80)
   const ACC = [-2, -22];
@@ -435,18 +456,42 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <PipeStands points={treatingLine} r={0.14} every={3.0} />
       <IronLeak position={[LEAK_X, 0.9, missileOutletZ - 2.6]} />
       <Missile position={[MISSILE_X, 0, missileZ]} showLabels={showLabels} perSide={perSide} prvLifted={s.alarms.prvLifted} pumping={pumping} />
-      {/* pump bodies as one instanced set (Drop 41); fans, lamps, plumes, and numbers per pump on top */}
-      <Instanced transforms={pumpTransforms} version={(spread.electric ? 1 : 0) + (logo ? 2 : 0)} name="PP-FRACPUMP">
-        <FracPump position={[0, 0, 0]} name="PP-FRACPUMP" electric={spread.electric} template />
-      </Instanced>
-      {pumps.map((p, i) => (
-        <group key={i}>
-          <FracPumpLive position={[p.x, 0, p.z]} rotation={[0, p.side === 1 ? Math.PI : 0, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} rate={s.pumpRate} name={'PP-FRACPUMP-' + (i + 1)} electric={spread.electric} number={i + 1} night={tod === 'night'} />
-          {/* discharge: swivel arm from the missile feed port over to the end of the pump's own discharge iron (at its nose, 2.18 m up, offset to its +z side); suction: hose from the low-pressure outlet down to the pump's suction hose end at ground level */}
-          <PipeRun points={[[MISSILE_X + p.side * 1.06, md.hpY, p.z], [MISSILE_X + p.side * 2.0, 2.95, p.z - p.side * 0.55], [MISSILE_X + p.side * 1.4, 2.18, p.z - p.side * 1.2]]} r={0.07} mat={MAT.redIron} />
-          <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[MISSILE_X + p.side * (8.0 - 3.4), 1.18 + 0.3, p.z + p.side * 1.2]} r={0.14} sag={0.45} segments={10} />
-        </group>
-      ))}
+      {/* pump bodies as one instanced set (Drop 41); fans, lamps, plumes, and numbers per pump on top. Drop 90: an electric
+          fleet's bodies are the downloaded twin-pump trailers (efrac.jsx); each pump's swivel iron runs from its own missile
+          feed port to its discharge line end at the trailer's rear face, and its suction hose from the LP outlet to the
+          suction manifold end there (the second pump's hose lands 0.8 m along the manifold) */}
+      {twin ? (
+        <>
+          <EfracTrailers transforms={pumpTransforms} version={logo ? 1 : 0} />
+          {trailers.map((t, i) => <EfracLive key={i} position={[t.x, 0, t.z]} rotation={[0, t.side === 1 ? 0 : Math.PI, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} numbers={t.numbers} night={tod === 'night'} name={'PP-FRACPUMP-' + t.numbers[0]} />)}
+          {pumps.map((p, i) => {
+            const xr = MISSILE_X + p.side * EFRAC.standoff, [yd, zd] = EFRAC.discharge[p.slot], [ys, zs] = EFRAC.suction;
+            const zT = trailers[p.trailer].z, zDisc = zT + p.side * zd, zSuc = zT + p.side * zs;   // the unit is turned by its side, so its local z follows the side
+            return (
+              <group key={i}>
+                <PipeRun points={[[MISSILE_X + p.side * 1.37, md.hpY, p.z], [MISSILE_X + p.side * 2.0, md.hpY, p.z], [MISSILE_X + p.side * 2.45, yd, zDisc], [xr, yd, zDisc]]} r={0.07} mat={MAT.redIron} />
+                {p.slot === 0
+                  ? <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[xr, ys, zSuc]} r={0.14} sag={0.4} segments={10} />
+                  : <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[xr + p.side * 0.8, ys, zSuc - p.side * 0.2]} r={0.14} sag={0.4} segments={10} />}
+              </group>
+            );
+          })}
+        </>
+      ) : (
+        <>
+          <Instanced transforms={pumpTransforms} version={(spread.electric ? 1 : 0) + (logo ? 2 : 0)} name="PP-FRACPUMP">
+            <FracPump position={[0, 0, 0]} name="PP-FRACPUMP" electric={spread.electric} template />
+          </Instanced>
+          {pumps.map((p, i) => (
+            <group key={i}>
+              <FracPumpLive position={[p.x, 0, p.z]} rotation={[0, p.side === 1 ? Math.PI : 0, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} rate={s.pumpRate} name={'PP-FRACPUMP-' + (i + 1)} electric={spread.electric} number={i + 1} night={tod === 'night'} />
+              {/* discharge: swivel arm from the missile feed port over to the end of the pump's own discharge iron (at its nose, 2.18 m up, offset to its +z side); suction: hose from the low-pressure outlet down to the pump's suction hose end at ground level */}
+              <PipeRun points={[[MISSILE_X + p.side * 1.06, md.hpY, p.z], [MISSILE_X + p.side * 2.0, 2.95, p.z - p.side * 0.55], [MISSILE_X + p.side * 1.4, 2.18, p.z - p.side * 1.2]]} r={0.07} mat={MAT.redIron} />
+              <Hose from={[MISSILE_X + p.side * 1.85, md.lpY, p.z]} to={[MISSILE_X + p.side * (8.0 - 3.4), 1.18 + 0.3, p.z + p.side * 1.2]} r={0.14} sag={0.45} segments={10} />
+            </group>
+          ))}
+        </>
+      )}
       {/* blender behind the missile, discharge end toward it: two suction hoses from its manifolds to the low-pressure headers; hydration and chemical units beside it, silos and conveyor feeding the hoppers */}
       <Blender position={[MISSILE_X, 0, bZ]} showLabels={showLabels} lit={tod === 'night'} running={pumping} />
       <Hose from={[MISSILE_X + 1.25, 1.53, bZ - 5.3]} to={[MISSILE_X + 1.15, md.lpY, rear - 0.2]} r={0.16} sag={0.25} mat={MAT.hose} segments={10} />

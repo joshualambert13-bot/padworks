@@ -1,9 +1,9 @@
-// Pack the downloaded CC0 and CC-BY models for the pad (Drop 79): one GLB per model in public/models/props, scaled
+// Pack the downloaded CC0 and CC-BY models for the pad (Drop 79): one GLB per model in assets/models/props, scaled
 // to a known real size, standing on y 0 and centered on x and z, textures no larger than the model deserves and
 // JPEG where there is no alpha, geometry welded and quantized, and a credits entry written to content/credits.json
 // from the Sketchfab license.txt (title, author, source, license) or the Poly Haven CC0 note.
 //
-//   node scripts/props-pack.mjs "<folder with polyhaven/ and sketchfab/>"
+//   node scripts/props-pack.mjs "<folder with polyhaven/ and sketchfab/>" [id ...]    (ids: only those models)
 //
 // SPEC names each model folder, the dimension to size by ('y' height or 'max' largest extent) and the size in
 // meters, the texture size, and the id the scene uses. A model not in SPEC is skipped.
@@ -12,7 +12,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { prune, dedup, quantize, weld, getBounds, simplify } from '@gltf-transform/functions';
+import { prune, dedup, quantize, weld, getBounds, simplify, simplifyPrimitive } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 
 const SPEC = {
@@ -38,11 +38,26 @@ const SPEC = {
   'sketchfab/flatbed_trailer': { id: 'flatbed', dim: 'max', size: 14.6, tex: 1024 },
   'sketchfab/fuel_tanker_trailer': { id: 'fueltanker', dim: 'max', size: 12.5, tex: 1024 },
   'sketchfab/telehandler': { id: 'telehandler', dim: 'max', size: 6.0, tex: 1024 },
-  'sketchfab/frac_pump_electric': { id: 'efracpump', dim: 'max', size: 16.0, tex: 1024 },
+  // Drop 90: the twin-pump electric frac trailer. Kept at the author's scale (16.24 m over the trailer, 4.19 m tall,
+  // 2.88 m over the body, which is what a real one measures). Centered on the body, not the bounds, since the access
+  // stair hangs 0.9 m off one side. The running gear carried 98,000 of its 210,000 triangles (wheel hubs modeled
+  // bolt by bolt): it comes down twelve to one, the rest about three to one, and the result is the pad's budget for
+  // a unit that is instanced twelve times. The handrails, stair, mast and frame are thin tubes that collapse into bars
+  // under any simplification, so they keep every triangle.
+  'sketchfab/frac_pump_electric': { id: 'efracpump', dim: 'max', size: 16.24, tex: 1024, centerSkip: /Access_stair/, simplify: { ratio: 0.32, error: 0.004, rules: [[/Running_gear/, 0.08], [/Work_platform|Access_stair|Lighting_mast|Trailer_frame/, 1.0], [/Reflectors/, 0.3]] } },
 };
 
+// bounds of the scene without the nodes (and their subtrees) whose name matches `re`
+function boundsExcluding(scene, re) {
+  const skip = (n) => { for (let x = n; x; x = x.getParentNode()) if (re.test(x.getName() || '')) return true; return false; };
+  const b = { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
+  scene.traverse(n => { if (!n.getMesh() || skip(n)) return; const nb = getBounds(n); for (let i = 0; i < 3; i++) { b.min[i] = Math.min(b.min[i], nb.min[i]); b.max[i] = Math.max(b.max[i], nb.max[i]); } });
+  return b;
+}
+
 const root = process.argv[2];
-const outDir = 'public/models/props'; fs.mkdirSync(outDir, { recursive: true });
+const onlyIds = new Set(process.argv.slice(3));
+const outDir = 'assets/models/props'; fs.mkdirSync(outDir, { recursive: true });   // the uncompressed source; scripts/ktx-pack.mjs writes public/models/props (Drop 86)
 const creditsFile = 'content/credits.json';
 const credits = fs.existsSync(creditsFile) ? JSON.parse(fs.readFileSync(creditsFile, 'utf8')) : [];
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
@@ -59,6 +74,7 @@ function licenseOf(folder, rel) {
 
 for (const rel of Object.keys(SPEC)) {
   const spec = SPEC[rel]; const folder = path.join(root, rel);
+  if (onlyIds.size && !onlyIds.has(spec.id)) continue;
   if (!fs.existsSync(folder)) { console.log('absent ', rel); continue; }
   const gltf = fs.readdirSync(folder).find(f => f.endsWith('.gltf') || f.endsWith('.glb'));
   if (!gltf) { console.log('no gltf', rel); continue; }
@@ -68,9 +84,18 @@ for (const rel of Object.keys(SPEC)) {
   if (spec.drop) for (const n of doc.getRoot().listNodes()) if (spec.drop.test(n.getName() || '')) n.dispose();
   // heavy meshes come down to a pad-sized budget (a porta potty does not need 61,000 triangles)
   const tris0 = doc.getRoot().listMeshes().reduce((n, m) => n + m.listPrimitives().reduce((k, p) => k + (p.getIndices() ? p.getIndices().getCount() / 3 : 0), 0), 0);
-  if (tris0 > 20000) { await MeshoptSimplifier.ready; await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: Math.max(0.15, 12000 / tris0), error: 0.001 })); }
+  if (spec.simplify) {
+    // Drop 90: a ratio per named part (the first rule whose pattern matches a node on the way up wins), else the default
+    await MeshoptSimplifier.ready; await doc.transform(weld());
+    const ratioOf = (node) => { for (let n = node; n; n = n.getParentNode ? n.getParentNode() : null) for (const [re, r] of spec.simplify.rules || []) if (re.test(n.getName() || '')) return r; return spec.simplify.ratio; };
+    for (const node of doc.getRoot().listNodes()) {
+      const mesh = node.getMesh(); if (!mesh) continue;
+      const ratio = ratioOf(node);
+      for (const prim of mesh.listPrimitives()) simplifyPrimitive(prim, { simplifier: MeshoptSimplifier, ratio, error: spec.simplify.error || 0.002 });
+    }
+  } else if (tris0 > 20000) { await MeshoptSimplifier.ready; await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: Math.max(0.15, 12000 / tris0), error: 0.001 })); }
   // size and place: wrap every scene root in one node that scales and moves the model
-  const b = getBounds(scene);
+  const b = spec.centerSkip ? boundsExcluding(scene, spec.centerSkip) : getBounds(scene);
   const ext = [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]];
   const cur = spec.dim === 'y' ? ext[1] : Math.max(...ext);
   const s = spec.size / (cur || 1);

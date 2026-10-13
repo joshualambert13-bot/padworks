@@ -21,7 +21,15 @@ import { execFileSync } from 'node:child_process';
 import sharp from 'sharp';
 import { NodeIO, Logger } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, KHRTextureBasisu } from '@gltf-transform/extensions';
-import { prune } from '@gltf-transform/functions';
+import { prune, weld, simplifyPrimitive } from '@gltf-transform/functions';
+import { MeshoptSimplifier } from 'meshoptimizer';
+
+// Drop 90: a phone also gets less geometry where a model is heavy. Per model: the ratio for the phone file, the
+// simplifier's error bound, and the parts that keep every triangle (thin tubes collapse into bars under any ratio).
+// `drop` names the parts a phone does without (marker reflectors, piping under the deck, the hose runs between modules).
+const GEO_LOD = {
+  efracpump: { ratio: 0.5, error: 0.006, keep: /Work_platform|Access_stair|Lighting_mast|Trailer_frame|Running_gear/, drop: /Reflectors|Underdeck_utilities|Service_lines/ },
+};
 
 const TOKTX = process.env.TOKTX || 'toktx';
 const TIERS = { laptop: { models: 1024, detail: 2048, suffix: '' }, phone: { models: 512, detail: 1024, suffix: '.phone' } };
@@ -69,6 +77,14 @@ async function packModels() {
         for (const m of doc.getRoot().listMaterials()) { const e = m.getExtension('KHR_materials_specular'); if (e) e.dispose(); }
         for (const e of doc.getRoot().listExtensionsUsed()) if (e.extensionName === 'KHR_materials_specular') e.dispose();
         await doc.transform(prune());   // textures nothing references (a specular map, a blanked badge nobody uses) never ship
+        const lod = tier === 'phone' ? GEO_LOD[id] : null;
+        if (lod) {
+          if (lod.drop) for (const node of doc.getRoot().listNodes()) if (lod.drop.test(node.getName() || '')) node.dispose();
+          await MeshoptSimplifier.ready; await doc.transform(weld());
+          const kept = (node) => { for (let n = node; n; n = n.getParentNode()) if (lod.keep && lod.keep.test(n.getName() || '')) return true; return false; };
+          for (const node of doc.getRoot().listNodes()) { const mesh = node.getMesh(); if (!mesh || kept(node)) continue; for (const prim of mesh.listPrimitives()) simplifyPrimitive(prim, { simplifier: MeshoptSimplifier, ratio: lod.ratio, error: lod.error }); }
+          await doc.transform(prune());
+        }
         const slots = new Map();   // texture -> { normal, srgb }
         for (const m of doc.getRoot().listMaterials()) {
           for (const t of [m.getBaseColorTexture(), m.getEmissiveTexture()]) if (t) slots.set(t, { ...(slots.get(t) || {}), srgb: true });
@@ -86,7 +102,8 @@ async function packModels() {
         const outDir = path.join('public/models', kind); fs.mkdirSync(outDir, { recursive: true });
         const out = path.join(outDir, id + T.suffix + '.glb');
         await io.write(out, doc);
-        console.log('packed', kind + '/' + id + T.suffix, String(n).padStart(2), 'textures', (fs.statSync(out).size / 1024).toFixed(0).padStart(6), 'KB');
+        const tris = doc.getRoot().listMeshes().reduce((a, m) => a + m.listPrimitives().reduce((k, p) => k + (p.getIndices() ? p.getIndices().getCount() / 3 : p.getAttribute('POSITION').getCount() / 3), 0), 0);
+        console.log('packed', kind + '/' + id + T.suffix, String(n).padStart(2), 'textures', (fs.statSync(out).size / 1024).toFixed(0).padStart(6), 'KB', String(Math.round(tris)).padStart(6), 'tris');
       }
     }
   }
