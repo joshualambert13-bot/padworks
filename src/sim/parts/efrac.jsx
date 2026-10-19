@@ -17,7 +17,7 @@
 import { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Instanced, MAT, stdProps } from './primitives.jsx';
+import { Instanced, Merged, GEO, MAT, stdProps } from './primitives.jsx';
 import { LITE, glowTexture } from './lighting.jsx';
 import { Sign } from './life.jsx';
 import { LogoPlate } from './logo.jsx';
@@ -41,6 +41,7 @@ const partOf = (name) => { for (const [re, p] of PART_OF) if (re.test(name)) ret
 // a three material from a palette entry (what <Mat> renders, built in code)
 function fromPalette(entry, extra = {}) {
   const p = { ...entry, ...extra }; const ud = { ...(p.userData || {}) }; delete p.userData;
+  for (const k of Object.keys(p)) if (p[k] === undefined) delete p[k];   // a palette entry carries `undefined` for maps Lite leaves out; the constructor warns on those
   const m = (!LITE && p.clearcoat != null) ? new THREE.MeshPhysicalMaterial(p) : new THREE.MeshStandardMaterial(stdProps(p));
   m.userData = ud; return m;
 }
@@ -126,4 +127,52 @@ export function EfracLive({ position, rotation = [0, 0, 0], online = false, numb
       )}
     </group>
   );
+}
+
+// Power cables (Drop 91). An electric fleet's pumps run on cable, and on a real pad the cable is what you trip over:
+// bundles from the switchgear along the ground to each trailer, rising into the drive cabinets at the gooseneck end.
+// Three cables per run. The switchgear's cabinet end is the anchor (per fleet); a west trunk runs north just outside the
+// west row's cabinet ends, an east trunk crosses south of the row and runs north between the east row's cabinet ends
+// and the treating line riser; each trailer takes three drops from its trunk up the cabinet face. Straight legs are
+// cylinders merged into one mesh (about 2,000 triangles for a fleet), with a bead at every bend.
+const CABLE_R = 0.045, CABLE_Y = 0.07;
+function legs(points, r) {
+  const out = []; const up = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion(), e = new THREE.Euler();
+  for (let i = 0; i + 1 < points.length; i++) {
+    const a = new THREE.Vector3(...points[i]), b = new THREE.Vector3(...points[i + 1]);
+    const d = new THREE.Vector3().subVectors(b, a); const len = d.length(); if (len < 0.01) continue;
+    q.setFromUnitVectors(up, d.clone().normalize()); e.setFromQuaternion(q);
+    const m = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+    out.push({ g: GEO.cyl(r, len, 7), p: [m.x, m.y, m.z], r: [e.x, e.y, e.z] });
+    if (i + 2 < points.length) out.push({ g: GEO.sphere(r, 6, 5), p: points[i + 1] });
+  }
+  return out;
+}
+// `trailers`: [{ side, x, z }] (scene frame); `anchor`: [x, y, z] where the cables leave the switchgear; `missileX`
+export function EfracCables({ trailers, anchor, missileX }) {
+  // keyed by value: the scene renders every sim tick and builds `trailers` fresh each time (the Drop 89 lesson)
+  const key = JSON.stringify([trailers.map(t => [t.side, +t.x.toFixed(2), +t.z.toFixed(2)]), anchor, missileX]);
+  const parts = useMemo(() => {
+    const east = trailers.filter(t => t.side === 1), west = trailers.filter(t => t.side === -1);
+    const frontE = missileX + EFRAC.standoff + 2 * EFRAC.half, frontW = missileX - EFRAC.standoff - 2 * EFRAC.half;   // the cabinet faces
+    const trunkE = frontE + 0.56, trunkW = frontW - 1.2;
+    const [ax, ay, az] = anchor;
+    const zC = -24.5;                                                        // the east crossing, south of the row
+    const zEnd = (list) => Math.max(...list.map(t => t.z)) + 0.8;
+    const runs = [];
+    if (west.length) runs.push([[ax, ay, az], [ax + 0.6, CABLE_Y, az], [ax + 0.6, CABLE_Y, -21], [trunkW, CABLE_Y, -21], [trunkW, CABLE_Y, zEnd(west)]]);
+    if (east.length) runs.push([[ax, ay, az], [ax + 0.6, CABLE_Y, az], [ax + 0.6, CABLE_Y, zC], [trunkE, CABLE_Y, zC], [trunkE, CABLE_Y, zEnd(east)]]);
+    const all = [];
+    for (const run of runs) for (let k = -1; k <= 1; k++) all.push(...legs(run.map(([x, y, z]) => [x + k * 0.11, y, z + k * 0.11]), CABLE_R));
+    for (const t of trailers) {
+      const trunk = t.side === 1 ? trunkE : trunkW, face = t.side === 1 ? frontE : frontW;
+      const fx = face + t.side * 0.08;                                     // the risers hug the cabinet face
+      for (let k = -1; k <= 1; k++) {
+        const z = t.z + k * 0.32;
+        all.push(...legs([[trunk, CABLE_Y, z], [fx, CABLE_Y, z], [fx, EFRAC.cabinet.y0 + 0.08, z]], CABLE_R));
+      }
+    }
+    return all;
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <Merged mat={MAT.rubber} parts={() => parts} deps={[parts]} name="PP-POWERGEN-CABLES" />;
 }

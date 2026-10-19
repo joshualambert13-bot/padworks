@@ -62,7 +62,7 @@ export function padProps(MISSILE_X, bZ) {
     { id: 'box', name: 'LG-WELFARE', spots: at([[21.9, 0, -37.8, 0.5], [21.6, 0.5, -37.9, 1.1]]) },
     { id: 'portapotty', name: 'LG-WELFARE', spots: at([[36.6, 0, -43.2, Math.PI], [38.0, 0, -43.2, Math.PI]]) },
     { id: 'dumpster', name: 'LG-WELFARE', spots: at([[13.5, 0, -43.3, Math.PI / 2]]) },
-    { id: 'conex', name: 'LG-IRONRACK', spots: at([[-50, 0, -17, 0]]) },
+    { id: 'conex', name: 'LG-IRONRACK', spots: at([[-59, 0, -17, 0]]) },   // west of the west pump lane (Drop 91)
     { id: 'watertank', name: 'LG-WELFARE', spots: at([[9.6, 0, -43.2, 0]]) },
     // the cone model stands on its base as packed (Drop 84 turned it over by mistake: the drawn cones were the ones on their points); between the drawn red zone cones
     { id: 'cone', name: 'LG-CONES', spots: at([[-26, 0, -14, 0], [-17, 0, -14, 0.4], [-8, 0, -14, 0.9]]) },

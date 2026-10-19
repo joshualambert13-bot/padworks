@@ -327,6 +327,13 @@ export function strataTexture() {
 export const SNOW = { value: 0 };
 export const GRIME = { value: 0 };
 export const WET = { value: 0 };   // rain (Drop 68): up-facing surfaces darken and go glossy, the pad's ruts and spots turn to puddles
+// Pad dust (Drop 91): everything that stands on the pad wears the pad. The lower meter of every unit takes a splash
+// band of the basin's own ground color (caliche in the Permian, red clay in Oklahoma), blotched by the grime noise and
+// strongest on tires and frames, and up-facing surfaces near the ground take a thin settled layer. The color is the
+// basin's pad color (the scene sets it); `DUST.value` 0 turns it off. Materials with `grime` 0 (the ground, decals,
+// glass) take none, as with the grime.
+export const DUST = { value: 1 };
+export const DUST_COLOR = { value: new THREE.Color('#cfc4a8') };
 let snowPatched = false;
 // Photographic detail (Drop 76): a material names its family in `userData.family` (paint, steel, rust, rubber,
 // ground, terrain, sand, concrete, plastic, liner, fabric, hivis). Each family owns one CC0 texture set (color,
@@ -363,7 +370,7 @@ export function installSnowPatch() {
     const terrain = ud.terrain || 0, mesa = ud.mesa || 0;   // Drop 49: ground and horizon rock
     const detail = !LITE && ud.family && DETAIL[ud.family] ? DETAIL[ud.family] : null;
     const world = grime > 0 || rust > 0 || stain || terrain || mesa || detail;
-    shader.uniforms.uSnow = SNOW; shader.uniforms.uGrime = GRIME; shader.uniforms.uWet = WET;
+    shader.uniforms.uSnow = SNOW; shader.uniforms.uGrime = GRIME; shader.uniforms.uWet = WET; shader.uniforms.uDust = DUST; shader.uniforms.uDustColor = DUST_COLOR;
     shader.uniforms.uGrimeK = { value: grime }; shader.uniforms.uRustK = { value: rust };
     if (stain) { shader.uniforms.uStain = stain.uniform; shader.uniforms.uStainRect = stain.rect; }
     if (detail) {
@@ -383,7 +390,7 @@ export function installSnowPatch() {
     }
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
-uniform float uSnow; uniform float uGrime; uniform float uGrimeK; uniform float uRustK; uniform float uWet;
+uniform float uSnow; uniform float uGrime; uniform float uGrimeK; uniform float uRustK; uniform float uWet; uniform float uDust; uniform vec3 uDustColor;
 ${world ? 'varying vec3 vPadW;' : ''}
 ${stain ? 'uniform sampler2D uStain; uniform vec4 uStainRect;' : ''}
 ${detail ? 'uniform sampler2D uDetailMap; uniform sampler2D uDetailNormal; uniform sampler2D uDetailRough; uniform sampler2D uDetailAO; uniform float uDetailScale; uniform float uDetailColorK; uniform vec3 uDetailGain; uniform float uDetailK; uniform float uDetailNK; uniform float uDetailRGain;' : ''}
@@ -442,6 +449,17 @@ float padNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0
     diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.55, 0.5, 0.44) + vec3(0.04, 0.035, 0.03), gK);
     roughnessFactor = mix(roughnessFactor, 0.95, gK * 0.8);
     metalnessFactor = mix(metalnessFactor, 0.0, gK * 0.7);
+    // pad dust (Drop 91): a splash band of the ground's color over the lower meter, blotched; settled dust on tops near the ground
+    if (uDust > 0.001) {
+      vec3 upD = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+      float dH = 1.0 - smoothstep(0.05, 1.15, vPadW.y);
+      float dT = smoothstep(0.35, 0.9, dot(normal, upD)) * (1.0 - smoothstep(1.2, 4.5, vPadW.y)) * 0.45;
+      float dN = padNoise(vPadW.xz * 2.6 + vPadW.y * 1.3) * 0.5 + gS * 0.5;
+      float dK = uDust * uGrimeK * clamp(dH * smoothstep(0.18, 0.68, dN) * 0.95 + dT * smoothstep(0.4, 0.8, dN), 0.0, 0.9);
+      diffuseColor.rgb = mix(diffuseColor.rgb, uDustColor * (0.8 + 0.2 * dN), dK);
+      roughnessFactor = mix(roughnessFactor, 0.96, dK);
+      metalnessFactor = mix(metalnessFactor, 0.0, dK);
+    }
   }` : ''}
   if (uWet > 0.001) {
     vec3 upW = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
@@ -801,6 +819,9 @@ export function SunLight({ tod = 'day', mapSize = TIER.shadow }) {   // 1k on a 
     target.position.set(x, 0, z); target.updateMatrixWorld();
     L.position.set(x + dir.x * 160, dir.y * 160, z + dir.z * 160);
     const c = L.shadow.camera; c.left = -extent; c.right = extent; c.top = extent; c.bottom = -extent; c.near = 1; c.far = 420; c.updateProjectionMatrix();
+    // Drop 91: with the soft shadows on, `radius` carries the world scale the penumbra needs (texels of penumbra per
+    // meter of gap between the caster and the receiver), which follows the frustum as it zooms
+    if (SOFT_SUN.on) L.shadow.radius = SOFT_SUN.spread / ((2 * extent) / mapSize);
   });
   return (
     <>
@@ -808,6 +829,51 @@ export function SunLight({ tod = 'day', mapSize = TIER.shadow }) {   // 1k on a 
       <primitive object={target} />
     </>
   );
+}
+
+// Soft sun shadows (Drop 91): percentage-closer soft shadows on the sun's map, in Full on the laptop tier. The
+// shadow chunk's basic path (a plain depth texture, which is what a blocker search needs) gets a blocker search over
+// 8 taps and a 12-tap Vogel-disk filter whose radius grows with the distance between the caster and the receiver: a
+// handrail's shadow stays crisp on the deck beside it and goes soft on the ground three meters down, as the sun's
+// disc does it (exaggerated about four times, as every renderer does, or nothing would read as soft at all). The
+// penumbra scale comes through the light's `shadow.radius`, which SunLight sets from its frustum every frame
+// (`SOFT_SUN.spread` meters of penumbra per meter of gap, over the texel size). The shadow camera's depth span is
+// fixed at 419 m (near 1, far 420), so a depth difference reads back into meters. A phone keeps the hardware map.
+export const SOFT_SUN = { on: false, spread: 0.045 };
+const PCSS_GLSL = `
+#define PW_SHADOW_SPAN 419.0
+float pwIGN(vec2 p) { return fract(52.9829189 * fract(0.06711056 * p.x + 0.00583715 * p.y)); }
+vec2 pwVogel(int i, int n, float phi) { float r = sqrt((float(i) + 0.5) / float(n)); float t = float(i) * 2.399963 + phi; return vec2(cos(t), sin(t)) * r; }
+float pwPCSS(sampler2D shadowMap, vec2 shadowMapSize, float shadowRadius, vec4 shadowCoord) {
+  vec2 texel = 1.0 / shadowMapSize;
+  float phi = pwIGN(gl_FragCoord.xy) * 6.2831853;
+  float sum = 0.0, cnt = 0.0;
+  for (int i = 0; i < 8; i++) { vec2 o = pwVogel(i, 8, phi) * texel * 7.0; float d = texture2D(shadowMap, shadowCoord.xy + o).r; if (d < shadowCoord.z) { sum += d; cnt += 1.0; } }
+  if (cnt < 0.5) return 1.0;
+  float gap = (shadowCoord.z - sum / cnt) * PW_SHADOW_SPAN;
+  float pen = clamp(gap * shadowRadius, 0.8, 14.0);
+  float s = 0.0;
+  for (int i = 0; i < 12; i++) { vec2 o = pwVogel(i, 12, phi + 1.7) * texel * pen; s += step(shadowCoord.z, texture2D(shadowMap, shadowCoord.xy + o).r); }
+  return s / 12.0;
+}
+`;
+export function SoftSunShadows() {
+  const gl = useThree(st => st.gl), scene = useThree(st => st.scene), camera = useThree(st => st.camera);
+  useEffect(() => {
+    const original = THREE.ShaderChunk.shadowmap_pars_fragment;
+    const start = original.lastIndexOf('float getShadow( sampler2D shadowMap');
+    const at = original.indexOf('if ( frustumTest ) {', start);
+    if (start < 0 || at < 0) return undefined;
+    const cut = at + 'if ( frustumTest ) {'.length;
+    const patched = (original.slice(0, cut) + '\n return mix( 1.0, pwPCSS( shadowMap, shadowMapSize, shadowRadius, shadowCoord ), shadowIntensity );\n' + original.slice(cut)).replace('#ifdef USE_SHADOWMAP', '#ifdef USE_SHADOWMAP\n' + PCSS_GLSL);
+    const type = gl.shadowMap.type;
+    THREE.ShaderChunk.shadowmap_pars_fragment = patched;
+    gl.shadowMap.type = THREE.BasicShadowMap; SOFT_SUN.on = true;
+    const reset = () => { scene.traverse(o => { if (!o.material) return; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) { gl.properties.remove(m); m.needsUpdate = true; } }); gl.info.programs.length = 0; gl.compile(scene, camera); };
+    reset();
+    return () => { THREE.ShaderChunk.shadowmap_pars_fragment = original; gl.shadowMap.type = type; SOFT_SUN.on = false; reset(); };
+  }, [gl, scene, camera]);
+  return null;
 }
 
 // Lightning (Drop 69): while it rains, a flash every 20 to 60 s. The flash is a short pulse on an extra ambient

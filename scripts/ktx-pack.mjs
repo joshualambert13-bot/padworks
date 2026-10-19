@@ -29,6 +29,8 @@ import { MeshoptSimplifier } from 'meshoptimizer';
 // `drop` names the parts a phone does without (marker reflectors, piping under the deck, the hose runs between modules).
 const GEO_LOD = {
   efracpump: { ratio: 0.5, error: 0.006, keep: /Work_platform|Access_stair|Lighting_mast|Trailer_frame|Running_gear/, drop: /Reflectors|Underdeck_utilities|Service_lines/ },
+  blender: { ratio: 0.5, error: 0.006, keep: /Walkway_and_rails|Augers|Running_gear|Tractor_Chassis|Hose_racks/, drop: /ChromeAccessories|RearServices/ },
+  wltruck: { ratio: 0.5, error: 0.006, keep: /Truck_Wheels|Loose_Cable|Rollup_door_tracks/, drop: /Gun_Preparation_(Trestles|Inert|Red_Collar|Protective)/ },
 };
 
 const TOKTX = process.env.TOKTX || 'toktx';

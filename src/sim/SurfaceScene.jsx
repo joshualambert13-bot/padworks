@@ -5,7 +5,7 @@ import { OrbitControls } from '@react-three/drei';
 import { lessonById } from './lessons.js';
 import { useSim, padRoles, nextSteps, basinOf, spreadSizing, TICK_STEP, tickCatchUp } from './store.js';
 import { useHover, pickHandlers } from './hover.js';
-import { SkyDome, SceneEnvironment, Clouds, SunLight, Exposure, skyFor, sunFor, seasonSky, seasonSun, weatherSky, weatherSun, Rain, Lightning, WET, installSnowPatch, SNOW, GRIME, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
+import { SkyDome, SceneEnvironment, Clouds, SunLight, SoftSunShadows, Exposure, skyFor, sunFor, seasonSky, seasonSun, weatherSky, weatherSun, Rain, Lightning, WET, installSnowPatch, SNOW, GRIME, DUST, DUST_COLOR, Flurries, LITE, HdriSky, hdriActive, glowTexture } from './parts/lighting.jsx';
 import { Totes, IronRack, Cones, Barricades, CrewTrailer, LandingGear, FuelCube, SafetyPoint, HoseCoils } from './parts/padlife.jsx';
 import { useHdri } from './parts/hdri.js';
 import { WalkControls, LAST_TARGET } from './parts/walk.jsx';
@@ -22,7 +22,7 @@ import { TIER } from './parts/tier.js';
 import { ContextLoss } from './parts/stability.jsx';
 import { Windsock, Flag, Flagpoles, Sign, PLUME } from './parts/life.jsx';
 import { ParkedPickups, RoadTruck } from './parts/vehicles.jsx';
-import { EfracTrailers, EfracLive, EFRAC } from './parts/efrac.jsx';
+import { EfracTrailers, EfracLive, EfracCables, EFRAC } from './parts/efrac.jsx';
 import { useLogo } from './parts/logo.jsx';
 import { terrainHeight } from './parts/terrain.js';
 import { Ground, FracTree, FracTreeIron, FracTreeTop, ProductionTreeIron, dimTint, lubricatorTopY, ProductionTree, BopStack, WorkoverRig, ZipperManifold, ZIPPER_X, zipperDims, Missile, MISSILE_PITCH, missileDims, FracPump, FracPumpLive, PowerGen, Blender, Hydration, ChemAdd, SandSilos, SandBoxStation, ShuttleForklift, CRADLE_X, CRADLE_Z, SandBoxes, WaterTanks, DataVan, WirelineUnit, CTUnit, FlowbackSpread, RedZone, treeDims, BORE_M, Containment, FuelTrailers, LightTower, FlangedRun, WELL_COLORS, Accumulator, HydraulicStand, standLayout, HOSE_BUNDLE_X, ZIPPER_BUNDLE_X, WaterTransfer, WaterPit, StorageTank } from './parts/surface.jsx';
@@ -173,11 +173,13 @@ function focusView(f, c) {
 // the ground its lamps are aimed at. Both wellhead row ends, both ends of the pump row, the sand and water side, the
 // hydration and chemical side, the data van, and the flowback spread. Ten towers against the four of Drop 31.
 const PIT_POS = [-112, 0, 26];
+// debug switches on the address (Drop 91): ?pcss=0 turns the soft shadows off, ?grain=0 the film grain, ?dust=0 the pad dust
+const DEBUG = (() => { try { const q = new URLSearchParams(window.location.search); return { pcss: q.get('pcss') !== '0', grain: q.get('grain') !== '0', dust: q.get('dust') !== '0' }; } catch { return { pcss: true, grain: true, dust: true }; } })();
 const TOWERS = (rowLen, bZ) => [
   [6, -11, -2, -3], [-16, -20, -6, -4],                       // wellhead row, south end (treating line runs at z -12.6, kept clear)
   // wellhead row, north end: the west tower steps east of the chemical area when the row runs that far north (Drop 84)
   [6, rowLen + 11, -2, rowLen + 3], [rowLen + 11 < bZ - 8 ? -14 : -6, rowLen + 11, -6, rowLen + 3],
-  [-46, -12, -32, -2], [-50, 19, -32, 12],                     // pump row, west side, both ends (the north one west of the sand conveyor, Drop 84)
+  [-46, -12, -32, -2], [-55.5, 8, -32, 10],                    // pump row, west side, both ends (the north one west of the twin trailers and the west lane, Drop 91)
   [-44, bZ + 8, -56, bZ - 1], [-22, bZ + 9, -24, bZ + 1],      // sand and water side; hydration and chemical side
   [-20, -40, -14, -30], [26, rowLen + 28, 16, rowLen + 22],   // data van; flowback spread
 ];
@@ -205,13 +207,15 @@ function LampGlow({ towers, strength = 1 }) {
 }
 // Sets the shared snow and grime uniforms for this scene's draws only (the downhole section and the viewer stay
 // bare and clean)
-function SnowSetter({ amount, wet = 0 }) {
+function SnowSetter({ amount, wet = 0, dust = '#cfc4a8' }) {
   const scene = useThree(st => st.scene);
   useEffect(() => {
-    scene.onBeforeRender = () => { SNOW.value = amount; GRIME.value = 1; WET.value = wet; };
-    scene.onAfterRender = () => { SNOW.value = 0; GRIME.value = 0; WET.value = 0; };
-    return () => { scene.onBeforeRender = () => {}; scene.onAfterRender = () => {}; SNOW.value = 0; GRIME.value = 0; WET.value = 0; };
-  }, [scene, amount, wet]);
+    // Drop 91: the pad's own color as the dust on everything that stands on it; rain turns it to mud (darker, less of it)
+    DUST_COLOR.value.set(dust).multiplyScalar(wet ? 0.55 : 0.92);
+    scene.onBeforeRender = () => { SNOW.value = amount; GRIME.value = 1; WET.value = wet; DUST.value = !DEBUG.dust ? 0 : amount > 0.3 ? 0.35 : wet ? 0.7 : 1; if (typeof window !== 'undefined') window.__padworksDust = { seen: DUST.value > 0, color: DUST_COLOR }; };   // test hook
+    scene.onAfterRender = () => { SNOW.value = 0; GRIME.value = 0; WET.value = 0; DUST.value = 0; };
+    return () => { scene.onBeforeRender = () => {}; scene.onAfterRender = () => {}; SNOW.value = 0; GRIME.value = 0; WET.value = 0; DUST.value = 0; };
+  }, [scene, amount, wet, dust]);
   return null;
 }
 function FocusCamera({ ctx }) {
@@ -330,8 +334,11 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
   const stainLayout = useMemo(() => {
     const lanes = [
       [[pad.x1 + 2, -32], [38, -32], [38, rowLen + 36], [-62, rowLen + 36], [-62, -36], [-4, -36]],   // entrance, east service loop, north and west legs
-      [[-14, -33], [-14, bZ - 6]],                                                                     // east pump lane (trucks back in from here)
-      [[-47, -33], [-47, bZ - 19], [Math.max(pad.x0 + 4, -88), bZ - 19]],                              // west pump lane, on to the sand and water side
+      // pump lanes: trucks back the drawn single units in from lanes along their noses; the twin trailers (Drop 90) reach
+      // to x -11 on the east, two meters short of the treating line riser, so the east row is backed in from the lane ends
+      // and the west lane steps out to x -54 (Drop 91)
+      ...(twin ? [] : [[[-14, -33], [-14, bZ - 6]]]),                                                  // east pump lane (trucks back in from here)
+      [[twin ? -54 : -47, -33], [twin ? -54 : -47, bZ - 19], [Math.max(pad.x0 + 4, -88), bZ - 19]],    // west pump lane, on to the sand and water side
       [[26, -32], [26, rowLen + 36]],                                                                  // wellhead service lane (wireline, coil, flowback)
     ];
     const spots = [];
@@ -388,7 +395,9 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       <HdriSky tod={tod} season={season} />
       {!hdri && <SkyDome terrain={terrain} tod={tod} season={season} weather={weather} />}
       {LITE && <Clouds seed={basin.id.length} count={winter || lid ? 18 : 9} tint={winter || lid ? (tod === 'night' ? '#141822' : rain ? '#9aa1aa' : '#c9cfd8') : tod === 'dusk' ? '#f2a988' : tod === 'night' ? '#1c2235' : '#ffffff'} />}
-      <SnowSetter amount={snow} wet={rain ? 1 : 0} />
+      <SnowSetter amount={snow} wet={rain ? 1 : 0} dust={basin.terrain.pad} />
+      {/* Drop 91: contact-hardening soft shadows (PCSS) on the laptop tier in Full; a phone keeps the plain map */}
+      {!LITE && TIER.fx && DEBUG.pcss && <SoftSunShadows />}
       {winter && snow >= 0.5 && <Flurries density={snow} />}
       {rain && <Rain />}
       {rain && <Lightning onThunder={thunder} />}
@@ -463,6 +472,8 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       {twin ? (
         <>
           <EfracTrailers transforms={pumpTransforms} version={logo ? 1 : 0} />
+          {/* Drop 91: power cables from the switchgear to every trailer; the anchor is the cabinet end of the fleet's switchgear (PowerGen at [-52, 0, -34]) */}
+          <EfracCables trailers={trailers} missileX={MISSILE_X} anchor={s.setup.fleet === 'efrac-genset' ? [-45.8, 1.0, -20.8] : s.setup.fleet === 'grid' ? [-45.7, 1.2, -34] : [-46.9, 1.2, -23.4]} />
           {trailers.map((t, i) => <EfracLive key={i} position={[t.x, 0, t.z]} rotation={[0, t.side === 1 ? 0 : Math.PI, 0]} online={s.pumpsOnline && !s.alarms.kickout && s.phase !== 'setup'} numbers={t.numbers} night={tod === 'night'} name={'PP-FRACPUMP-' + t.numbers[0]} />)}
           {pumps.map((p, i) => {
             const xr = MISSILE_X + p.side * EFRAC.standoff, [yd, zd] = EFRAC.discharge[p.slot], [ys, zs] = EFRAC.suction;
@@ -591,7 +602,7 @@ export default function SurfaceScene({ showLabels, preset, tickHere = true }) {
       {walk
         ? <WalkControls terrain={terrain} pad={pad} onExit={() => useSim.getState().setUi({ walk: false })} />
         : <OrbitControls makeDefault maxPolarAngle={Math.PI / 2 - 0.02} minDistance={3} maxDistance={420} enableDamping dampingFactor={0.08} />}
-      <Effects ao={{ aoRadius: 1.4, distanceFalloff: 1.0, intensity: 2.4 }} bloom={{ intensity: 0.25, luminanceThreshold: 1.3 }} />
+      <Effects ao={{ aoRadius: 1.4, distanceFalloff: 1.0, intensity: 2.4 }} bloom={{ intensity: 0.25, luminanceThreshold: 1.3 }} grain={DEBUG.grain} />
     </Canvas>
   );
 }

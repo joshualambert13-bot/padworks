@@ -8,7 +8,8 @@
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { EffectComposer, N8AO, Bloom, BrightnessContrast, HueSaturation, Vignette, SMAA } from '@react-three/postprocessing';
+import { EffectComposer, N8AO, Bloom, BrightnessContrast, HueSaturation, Vignette, SMAA, Noise } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import { create } from 'zustand';
 import { LITE, DETAIL } from './lighting.jsx';
 import { TIER } from './tier.js';
@@ -50,13 +51,13 @@ function ComposerHook() {
   return null;
 }
 // `ao` and `bloom` override the defaults per scene (radius in world units).
-export function Effects({ ao = {}, bloom = {}, guard = true }) {
+export function Effects({ ao = {}, bloom = {}, guard = true, grain = true }) {
   const on = useFx(fxOn);
   if (!on) return null;
   return (
     <>
       <ComposerHook />
-      <EffectComposer multisampling={0} ref={(c) => { if (c && c.getRenderer) COMPOSER_OF.set(c.getRenderer(), c); }}>
+      <EffectComposer multisampling={0} ref={(c) => { if (c && c.getRenderer) { COMPOSER_OF.set(c.getRenderer(), c); if (typeof window !== 'undefined') window.__padworksComposer = c; } }}>
         <N8AO halfRes quality="performance" aoRadius={1.7} distanceFalloff={0.9} intensity={3.0} {...ao} />
         <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.15} intensity={0.35} radius={0.6} {...bloom} />
         {/* grade (Drop 45): a touch of contrast and saturation back after the AgX tone curve, and a soft vignette;
@@ -64,6 +65,8 @@ export function Effects({ ao = {}, bloom = {}, guard = true }) {
         <BrightnessContrast brightness={0} contrast={0.07} />
         <HueSaturation hue={0} saturation={0.07} />
         <Vignette offset={0.32} darkness={0.42} eskil={false} />
+        {/* Drop 91: a grain of sensor noise over the frame (soft light, faint); a rendered frame without it reads as a render */}
+        {grain && <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.22} />}
         <SMAA />
       </EffectComposer>
       {guard && <Guard />}

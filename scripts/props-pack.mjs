@@ -45,6 +45,11 @@ const SPEC = {
   // a unit that is instanced twelve times. The handrails, stair, mast and frame are thin tubes that collapse into bars
   // under any simplification, so they keep every triangle.
   'sketchfab/frac_pump_electric': { id: 'efracpump', dim: 'max', size: 16.24, tex: 1024, centerSkip: /Access_stair/, simplify: { ratio: 0.32, error: 0.004, rules: [[/Running_gear/, 0.08], [/Work_platform|Access_stair|Lighting_mast|Trailer_frame/, 1.0], [/Reflectors/, 0.3]] } },
+  // Drop 92: the frac blender with its tractor (same author, same scale; centered on the blender trailer, the tractor
+  // hangs off the gooseneck end) and the wireline logging truck (centered on the truck; the gun-preparation gear
+  // beside it comes along as dressing). The wheel sets carry most of the triangles in both.
+  'sketchfab/frac_blender_with_tractor__hydraulic_fracturing': { id: 'blender', dim: 'max', size: 22.22, tex: 1024, centerSkip: /^Tractor_/, simplify: { ratio: 0.3, error: 0.004, rules: [[/Running_gear|Tractor_Chassis/, 0.08], [/ChromeAccessories/, 0.15], [/Walkway_and_rails|Augers|Hose_racks/, 1.0]] } },
+  'sketchfab/wireline_logger_truck__oilfield_equipment': { id: 'wltruck', dim: 'max', size: 10.24, tex: 1024, centerSkip: /^Gun_Preparation|Access_steps|Rear_access|Entry_door/, simplify: { ratio: 0.3, error: 0.004, rules: [[/Truck_Wheels/, 0.08], [/Wireline_drum_82/, 0.25], [/Loose_Cable|Trestles|Rollup_door_tracks/, 1.0]] } },
 };
 
 // bounds of the scene without the nodes (and their subtrees) whose name matches `re`
@@ -69,6 +74,9 @@ function licenseOf(folder, rel) {
     const pick = (k) => { const m = t.match(new RegExp('\\* ' + k + ':\\s*(.+)')); return m ? m[1].trim() : ''; };
     return { title: pick('title'), author: pick('author').replace(/\s*\(.*\)$/, ''), authorUrl: (pick('author').match(/\((.*)\)/) || [])[1] || '', source: pick('source'), license: pick('license type').split(' ')[0], via: 'Sketchfab' };
   }
+  // Drop 91: models generated from a text prompt in Tripo3D (assets-in/models/tripo/<name>); the project's own
+  // output, credited as generated so the About page says what it is
+  if (/^tripo\//.test(rel)) return { title: path.basename(rel).replace(/_/g, ' '), author: 'Padworks (text to 3D)', authorUrl: '', source: 'https://www.tripo3d.ai', license: 'Generated', via: 'Tripo3D' };
   return { title: path.basename(rel).replace(/_/g, ' '), author: 'Poly Haven', authorUrl: 'https://polyhaven.com', source: 'https://polyhaven.com/a/' + path.basename(rel), license: 'CC0', via: 'Poly Haven' };
 }
 
@@ -95,11 +103,12 @@ for (const rel of Object.keys(SPEC)) {
     }
   } else if (tris0 > 20000) { await MeshoptSimplifier.ready; await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: Math.max(0.15, 12000 / tris0), error: 0.001 })); }
   // size and place: wrap every scene root in one node that scales and moves the model
-  const b = spec.centerSkip ? boundsExcluding(scene, spec.centerSkip) : getBounds(scene);
-  const ext = [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]];
+  const bAll = getBounds(scene);
+  const b = spec.centerSkip ? boundsExcluding(scene, spec.centerSkip) : bAll;   // the body the placement centers on (Drop 90)
+  const ext = [bAll.max[0] - bAll.min[0], bAll.max[1] - bAll.min[1], bAll.max[2] - bAll.min[2]];   // the size is the whole model's
   const cur = spec.dim === 'y' ? ext[1] : Math.max(...ext);
   const s = spec.size / (cur || 1);
-  const wrap = doc.createNode('prop-root').setScale([s, s, s]).setTranslation([-(b.min[0] + b.max[0]) / 2 * s, -b.min[1] * s, -(b.min[2] + b.max[2]) / 2 * s]);
+  const wrap = doc.createNode('prop-root').setScale([s, s, s]).setTranslation([-(b.min[0] + b.max[0]) / 2 * s, -bAll.min[1] * s, -(b.min[2] + b.max[2]) / 2 * s]);
   for (const n of scene.listChildren()) { scene.removeChild(n); wrap.addChild(n); }
   scene.addChild(wrap);
   // textures: cap the size, JPEG where the material is opaque

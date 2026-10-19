@@ -431,11 +431,16 @@ try {
   console.log('share link: token', token.length, 'chars', new Date().toISOString());
   // same context as p: a fresh context has a cold shader cache, and under software GL its first frames take minutes
   const q = await p.context().newPage(); q.setDefaultTimeout(240000);
-  q.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  q.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) errors.push('console: ' + m.text().slice(0, 300)); });
+  q.on('pageerror', e => { errors.push('pageerror: ' + e.message); console.log('share link: pageerror', e.message.slice(0, 300)); });
+  q.on('console', m => { if (m.type() === 'error' && !/status of (401|403|429)/.test(m.text())) { errors.push('console: ' + m.text().slice(0, 300)); console.log('share link: console error', m.text().slice(0, 300)); } });
   console.log('share link: page ready', new Date().toISOString());
   await q.goto(base + '/simulate?s=' + token + (process.env.LITE ? '&lite=1' : ''), { timeout: 120000, waitUntil: 'domcontentloaded' }); console.log('share link: loaded', new Date().toISOString());
-  await q.waitForFunction(() => window.__padworksSim && window.__padworksSim.getState().phase !== 'setup', null, { timeout: 120000, polling: 1000 }); console.log('share link: phase set', new Date().toISOString());
+  // the second page compiles every program of the pad in one synchronous block on its first frame, minutes under
+  // software GL when a poll lands inside it (Drop 91 made the block long enough to pass the old two-minute wait)
+  const tq = Date.now();
+  try { await q.waitForFunction(() => window.__padworksSim && window.__padworksSim.getState().phase !== 'setup', null, { timeout: 600000, polling: 1000 }); console.log('share link: phase seen after', ((Date.now() - tq) / 1000).toFixed(0), 's'); }
+  catch (e) { const st = await q.evaluate(() => window.__padworksSim ? JSON.stringify({ phase: window.__padworksSim.getState().phase, tour: !!document.querySelector('[data-action="tour"]'), body: document.body.innerText.slice(0, 200) }) : 'no store').catch(err => 'evaluate failed: ' + err.message); console.log('share link: phase wait failed', st); throw e; }
+  console.log('share link: phase set', new Date().toISOString());
   await wait(4000);
   const st = await q.evaluate(() => { const g = window.__padworksSim.getState(); return { phase: g.phase, stage: g.stage, basin: g.setup.basin }; });
   if (st.phase !== want.phase || st.stage !== want.stage || st.basin !== want.basin) errors.push('share link mismatch: ' + JSON.stringify(st) + ' vs ' + JSON.stringify(want));
@@ -1186,6 +1191,38 @@ await p.goto(base + '/library'); await wait(1500);
 await shot(p, '38-phone-library');
 await p.goto(base + '/checks'); await wait(1500);
 await shot(p, '39-phone-checks');
+await p.close();
+}
+
+// Drop 91: the look, in Full quality on the laptop tier (the rest of the pass runs Lite). Soft shadows: the PCSS code is
+// in the shadow chunk and the renderer runs the basic map it needs. Film grain: a noise effect in the composer. Pad
+// dust: the shared uniform carries the basin's pad color and is on during the surface render. Power cables: one mesh
+// for the electric fleet, none for a diesel one. A frame in Full on software GL costs seconds, so this is one page,
+// a few frames, and no screenshots beyond one.
+if (!process.env.ONLY || process.env.ONLY === 'rest' || process.env.ONLY === 'tail') {
+p = await page(1200, 760);
+await p.goto(base + '/simulate'); await wait(6000); await frames(p, 3);
+{
+  const d = await p.evaluate(() => {
+    const T = window.__THREE; const gl = window.__padworksGL; const sc = window.__padworksScene;
+    const chunk = T.ShaderChunk.shadowmap_pars_fragment;
+    let cables = null, cableTris = 0; sc.traverse(o => { if (o.isMesh && o.name === 'PP-POWERGEN-CABLES') { cables = o; cableTris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } });
+    const comp = window.__padworksComposer; const effects = comp ? comp.passes.flatMap(ps => (ps.effects || []).map(e => e.name)) : null;
+    const dust = window.__padworksDust ? { on: window.__padworksDust.seen, color: '#' + window.__padworksDust.color.value.getHexString() } : null;
+    const fleet = window.__padworksSim.getState().setup.fleet;
+    return { pcss: /PCSS/.test(chunk), basic: gl ? gl.shadowMap.type === T.BasicShadowMap : null, effects, cables: !!cables, cableTris, dust, fleet };
+  });
+  console.log('drop 91 full:', JSON.stringify(d));
+  if (!d.pcss || !d.basic) errors.push('soft shadows not active in Full on the laptop tier: ' + JSON.stringify({ pcss: d.pcss, basic: d.basic }));
+  if (!d.effects || !d.effects.includes('NoiseEffect')) errors.push('no film grain in the composer: ' + JSON.stringify(d.effects));
+  if (!d.dust || !d.dust.on) errors.push('pad dust not on during the surface render: ' + JSON.stringify(d.dust));
+  if (!/^efrac|^grid/.test(d.fleet)) errors.push('default pad is not electric for the cable check: ' + d.fleet);
+  else if (!d.cables || d.cableTris < 800) errors.push('no power cables on the electric pad: ' + d.cableTris);
+  await shot(p, '50-full-look');
+  await p.evaluate(() => window.__padworksSim.getState().setSetup({ fleet: 'diesel' })); await frames(p, 3);
+  const diesel = await p.evaluate(() => { let n = 0; window.__padworksScene.traverse(o => { if (o.isMesh && o.name === 'PP-POWERGEN-CABLES') n++; }); return n; });
+  if (diesel) errors.push('power cables drawn on a diesel pad');
+}
 await p.close();
 }
 
